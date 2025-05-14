@@ -1,9 +1,11 @@
 
 // Facility Location Types
-export interface FacilityLocation {
-  id: string;
-  code: string;
-  name: string;
+export interface Facility {
+  id: number;
+  location_code: string;
+  location_name: string | null;
+  is_active: boolean | null;
+  project_id: number | null;
 }
 
 // System Types

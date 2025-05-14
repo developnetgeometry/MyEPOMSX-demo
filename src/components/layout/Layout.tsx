@@ -16,9 +16,14 @@ const getPageTitle = (pathname: string): string => {
   
   if (paths.length === 0) return 'Dashboard';
   
-  // Extract the last segment and format it
   const lastSegment = paths[paths.length - 1];
-  return lastSegment
+  const isIdPattern = /^\d+$/.test(lastSegment) || lastSegment.match(/^[a-f0-9-]{8,}$/i);
+  
+  const titleSegment = isIdPattern && paths.length > 1 
+    ? paths[paths.length - 2] 
+    : lastSegment;
+  
+  return titleSegment
     .split('-')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');

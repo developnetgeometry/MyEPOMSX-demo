@@ -27,7 +27,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   subtitle,
   icon,
   onAddNew,
-  addNewLabel = "+ Add New",
+  addNewLabel = "Add New",
   onSearch,
   searchPlaceholder = "Search...",
   actions,
