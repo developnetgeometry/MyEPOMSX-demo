@@ -370,7 +370,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
             "mr-0": isCollapsed
           })} />
           {!isCollapsed && <>
-            <span className="flex-1">{item.name}</span>
+            <span >{item.name}</span>
             {item.children && <div className="ml-auto">
               <ChevronRight size={16} className={cn('transition-transform duration-200', {
                 'rotate-90': isSubmenuOpen
@@ -381,7 +381,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
       }
 
       {isSubmenuOpen && item.children && !isCollapsed && (
-        <ul className={cn("bg-[#242b3d] py-1", {
+        <ul className={cn("bg-[#242b3d] bg-opacity-50 py-1", {
           "bg-[#1A1F2C]": isSpecialSection,
           "bg-[#2a314a]": depth === 1 && !isSpecialSection
         })}>
@@ -443,7 +443,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
               <span className={cn("text-xl font-bold text-white", {
               "sr-only": isCollapsed
             })}>MyEPOMSX</span>
-              {isCollapsed && <span className="font-bold text-white text-2xl">E</span>}
+              {isCollapsed && <span></span>}
             </div>
             
             {!isMobile && <button onClick={onToggle} className={cn("ml-auto p-1 rounded-md text-white hover:bg-[#2a314a] focus:outline-none transition-colors duration-200", {
