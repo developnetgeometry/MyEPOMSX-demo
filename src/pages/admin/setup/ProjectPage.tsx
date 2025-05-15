@@ -17,7 +17,6 @@ import { useToast } from "@/hooks/use-toast";
 const ProjectPage: React.FC = () => {
   const navigate = useNavigate();
   const { data: projects, isLoading, refetch } = useProjectData();
-  console.log("Project data:", projects);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<any | null>(null);

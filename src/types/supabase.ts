@@ -1199,9 +1199,9 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "e_facility_e_project_fk"
-            columns: ["id"]
-            isOneToOne: true
+            foreignKeyName: "e_facility_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
             referencedRelation: "e_project"
             referencedColumns: ["id"]
           },
