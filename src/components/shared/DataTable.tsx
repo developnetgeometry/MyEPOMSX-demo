@@ -131,25 +131,20 @@ const DataTable: React.FC<DataTableProps> = ({
   };
 
   // Process cell value to apply Malaysian Ringgit formatting automatically
-  const formatCellValue = (column: Column, row: any): React.ReactNode => {
-    const value = row[column.accessorKey];
-    
+const formatCellValue = (column: Column, row: any): React.ReactNode => {
+    const accessorKey = column.accessorKey;
+
+    // Handle nested keys (e.g., "project_type.name")
+    const value = accessorKey.split('.').reduce((obj, key) => obj?.[key], row);
+
     // If a custom cell renderer is defined, use it
     if (column.cell) {
-      return column.cell(value);
+        return column.cell(value);
     }
-    
-    // Check if this is a monetary field (based on column name)
-    if (
-      isMonetaryField(column.header) &&
-      typeof value === 'number'
-    ) {
-      return formatCurrency(value);
-    }
-    
+
     // Return the value as-is for non-monetary fields
     return value;
-  };
+};
 
   return (
     <div className="w-full">

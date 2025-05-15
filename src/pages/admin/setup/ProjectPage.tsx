@@ -1,286 +1,158 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import PageHeader from '@/components/shared/PageHeader';
-import DataTable, { Column } from '@/components/shared/DataTable';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import PageHeader from "@/components/shared/PageHeader";
+import DataTable, { Column } from "@/components/shared/DataTable";
+import { useProjectData, insertProjectData, updateProjectData, deleteProjectData } from "./hooks/use-project-data";
+import ProjectDialogForm from "./ProjectDialogForm";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import StatusBadge from '@/components/shared/StatusBadge';
-import { Database } from 'lucide-react';
-
-// Sample data
-const initialProjects = [
-  {
-    id: '1',
-    projectCode: 'PRJ001',
-    projectName: 'Refinery Upgrade Project',
-    client: 'TechOil Solutions',
-    clientId: '1',
-    startDate: '2025-01-15',
-    endDate: '2025-07-30',
-    status: 'Active',
-    description: 'Major upgrade of refinery equipment and control systems',
-  },
-  {
-    id: '2',
-    projectCode: 'PRJ002',
-    projectName: 'Pipeline Integrity Assessment',
-    client: 'GlobalEnergy Services',
-    clientId: '3',
-    startDate: '2025-03-01',
-    endDate: '2025-06-15',
-    status: 'Active',
-    description: 'Comprehensive integrity assessment of transportation pipelines',
-  },
-  {
-    id: '3',
-    projectCode: 'PRJ003',
-    projectName: 'Offshore Platform Maintenance',
-    client: 'Offshore Systems Ltd.',
-    clientId: '4',
-    startDate: '2025-02-10',
-    endDate: '2025-04-10',
-    status: 'Completed',
-    description: 'Scheduled maintenance of offshore production platform',
-  },
-  {
-    id: '4',
-    projectCode: 'PRJ004',
-    projectName: 'Control System Upgrade',
-    client: 'Industrial Automation Corp.',
-    clientId: '2',
-    startDate: '2025-05-01',
-    endDate: '2025-08-31',
-    status: 'Planned',
-    description: 'Upgrade of DCS and safety systems to latest version',
-  },
-  {
-    id: '5',
-    projectCode: 'PRJ005',
-    projectName: 'Equipment Reliability Analysis',
-    client: 'PetroMaintain Inc.',
-    clientId: '5',
-    startDate: '2025-04-15',
-    endDate: '2025-07-15',
-    status: 'Active',
-    description: 'Analysis of critical equipment reliability and improvement recommendations',
-  },
-];
+} from "@/components/ui/dialog";
+import Loading from "@/components/shared/Loading";
+import { useToast } from "@/hooks/use-toast";
 
 const ProjectPage: React.FC = () => {
   const navigate = useNavigate();
-  const [projects, setProjects] = useState(initialProjects);
+  const { data: projects, isLoading, refetch } = useProjectData();
+  console.log("Project data:", projects);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [formData, setFormData] = useState({
-    id: '',
-    projectCode: '',
-    projectName: '',
-    client: '',
-    clientId: '',
-    startDate: '',
-    endDate: '',
-    status: 'Planned',
-    description: '',
-  });
-
-  const handleAddNew = () => {
-    setIsEditMode(false);
-    setFormData({
-      id: `${projects.length + 1}`,
-      projectCode: `PRJ${String(projects.length + 1).padStart(3, '0')}`,
-      projectName: '',
-      client: '',
-      clientId: '',
-      startDate: '',
-      endDate: '',
-      status: 'Planned',
-      description: '',
-    });
-    setIsDialogOpen(true);
-  };
-
-  const handleEdit = (row: any) => {
-    setIsEditMode(true);
-    setFormData({
-      ...row
-    });
-    setIsDialogOpen(true);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (isEditMode) {
-      setProjects(prev => 
-        prev.map(item => item.id === formData.id ? formData : item)
-      );
-    } else {
-      setProjects(prev => [...prev, formData]);
-    }
-    
-    setIsDialogOpen(false);
-  };
+  const [editingProject, setEditingProject] = useState<any | null>(null);
+  const { toast } = useToast();
 
   const handleRowClick = (row: any) => {
     navigate(`/admin/setup/project/${row.id}`);
   };
 
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  const handleAddNew = () => {
+    setEditingProject(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleEditProject = (project: any) => {
+    setEditingProject(project);
+    setIsDialogOpen(true);
+  };
+
+  const handleDeleteProject = async (project: any) => {
+    try {
+      await deleteProjectData(project.id);
+      toast({
+        title: "Success",
+        description: "Project deleted successfully!",
+        variant: "default",
+      });
+      refetch();
+    } catch (error) {
+      console.error("Failed to delete project data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete project data.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleFormSubmit = async (formData: any) => {
+    try {
+      if (editingProject) {
+        await updateProjectData(editingProject.id, formData);
+        toast({
+          title: "Success",
+          description: "Project updated successfully!",
+          variant: "default",
+        });
+      } else {
+        await insertProjectData(formData);
+        toast({
+          title: "Success",
+          description: "Project added successfully!",
+          variant: "default",
+        });
+      }
+      setIsDialogOpen(false);
+      refetch();
+    } catch (error) {
+      console.error("Failed to save project data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save project data.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const filteredProjects = useMemo(() => {
+    if (!projects) return [];
+    if (!searchQuery) return projects;
+    const lower = searchQuery.toLowerCase();
+    return projects.filter(
+      (project: any) =>
+        project.project_code?.toLowerCase().includes(lower) ||
+        project.project_name?.toLowerCase().includes(lower) ||
+        project.short_name?.toLowerCase().includes(lower) ||
+        project.project_type?.name.toLowerCase().includes(lower) ||
+        project.start_date?.toLowerCase().includes(lower) ||
+        project.end_date?.toLowerCase().includes(lower) ||
+        project.fund_code?.toLowerCase().includes(lower) ||
+        project.project_purpose?.toLowerCase().includes(lower) ||
+        project.remark?.toLowerCase().includes(lower)
+    );
+  }, [projects, searchQuery]);
+
   const columns: Column[] = [
-    { id: 'projectCode', header: 'Project Code', accessorKey: 'projectCode' },
-    { id: 'projectName', header: 'Project Name', accessorKey: 'projectName' },
-    { id: 'client', header: 'Client', accessorKey: 'client' },
-    { id: 'startDate', header: 'Start Date', accessorKey: 'startDate' },
-    { id: 'endDate', header: 'End Date', accessorKey: 'endDate' },
-    { 
-      id: 'status', 
-      header: 'Status', 
-      accessorKey: 'status',
-      cell: (value) => <StatusBadge status={value} />
-    },
+    { id: "project_code", header: "Project Code", accessorKey: "project_code" },
+    { id: "project_name", header: "Project Name", accessorKey: "project_name" },
+    { id: "short_name", header: "Short Name", accessorKey: "short_name" },
+    { id: "project_type", header: "Project Type", accessorKey: "project_type.name" },
+    { id: "start_date", header: "Start Date", accessorKey: "start_date" },
+    { id: "end_date", header: "End Date", accessorKey: "end_date" },
+    { id: "fund_code", header: "Fund Code", accessorKey: "fund_code" },
   ];
 
   return (
     <div className="space-y-6">
-      <PageHeader 
-        title="Project Setup" 
-        subtitle="Manage project information and timelines"
-        icon={<Database className="h-6 w-6" />}
+      <PageHeader
+        title="Project Setup"
         onAddNew={handleAddNew}
-        addNewLabel="+ New Project"
-        onSearch={(query) => console.log('Search:', query)}
+        addNewLabel="New Project"
+        onSearch={handleSearch}
       />
-      
-      <DataTable 
-        columns={columns}
-        data={projects}
-        onEdit={handleEdit}
-        onRowClick={handleRowClick}
-      />
-      
+
+      {isLoading ? (
+        <Loading />
+      ) : (
+        <DataTable
+          columns={columns}
+          data={filteredProjects}
+          onRowClick={handleRowClick}
+          onEdit={handleEditProject}
+          onDelete={handleDeleteProject}
+        />
+      )}
+
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>
-              {isEditMode ? 'Edit Project' : 'Add New Project'}
-            </DialogTitle>
+            <DialogTitle>{editingProject ? "Edit Project" : "Add New Project"}</DialogTitle>
             <DialogDescription>
-              Fill in the project details. Click save when you're done.
+              {editingProject
+                ? "Update the details of the project."
+                : "Fill in the details to add a new project."}
             </DialogDescription>
           </DialogHeader>
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="projectCode">Project Code</Label>
-                <Input
-                  id="projectCode"
-                  name="projectCode"
-                  value={formData.projectCode}
-                  onChange={handleInputChange}
-                  readOnly={isEditMode}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="projectName">Project Name</Label>
-                <Input
-                  id="projectName"
-                  name="projectName"
-                  value={formData.projectName}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="client">Client</Label>
-                <Input
-                  id="client"
-                  name="client"
-                  value={formData.client}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <select
-                  id="status"
-                  name="status"
-                  value={formData.status}
-                  onChange={handleInputChange}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  required
-                >
-                  <option value="Planned">Planned</option>
-                  <option value="Active">Active</option>
-                  <option value="On Hold">On Hold</option>
-                  <option value="Completed">Completed</option>
-                  <option value="Cancelled">Cancelled</option>
-                </select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="startDate">Start Date</Label>
-                <Input
-                  id="startDate"
-                  name="startDate"
-                  type="date"
-                  value={formData.startDate}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="endDate">End Date</Label>
-                <Input
-                  id="endDate"
-                  name="endDate"
-                  type="date"
-                  value={formData.endDate}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows={3}
-                  required
-                />
-              </div>
-            </div>
-            
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit">Save</Button>
-            </DialogFooter>
-          </form>
+          <ProjectDialogForm
+            onSubmit={handleFormSubmit}
+            onCancel={() => setIsDialogOpen(false)}
+            initialData={editingProject}
+          />
         </DialogContent>
       </Dialog>
     </div>

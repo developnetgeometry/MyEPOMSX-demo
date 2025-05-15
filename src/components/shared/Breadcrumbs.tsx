@@ -18,7 +18,6 @@ const pathMap: Record<string, string> = {
   "measure": "Measure",
   "monitor": "Monitor",
   "integrity": "Integrity",
-  "vendor": "Vendor",
   "assets": "Assets",
   "asset-hierarchy": "Asset Hierarchy",
   "asset-register": "Asset Register",

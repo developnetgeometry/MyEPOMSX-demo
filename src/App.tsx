@@ -1,5 +1,6 @@
 
 import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Layout from '@/components/layout/Layout';
 import Index from '@/pages/Index';
 import NotFound from '@/pages/NotFound';
@@ -32,8 +33,6 @@ import ProjectPage from '@/pages/admin/setup/ProjectPage';
 import ProjectDetailPage from '@/pages/admin/setup/ProjectDetailPage';
 import WorkCenterPage from '@/pages/admin/setup/WorkCenterPage';
 import WorkCenterDetailPage from '@/pages/admin/setup/WorkCenterDetailPage';
-import VendorPage from '@/pages/admin/setup/VendorPage';
-import VendorDetailPage from '@/pages/admin/setup/VendorDetailPage';
 import SensorPage from '@/pages/admin/setup/SensorPage';
 import SensorDetailPage from '@/pages/admin/setup/SensorDetailPage';
 
@@ -85,98 +84,100 @@ import WorkRequestDetailPage from '@/pages/maintain/WorkRequestDetailPage';
 import WorkOrderListPage from '@/pages/maintain/WorkOrderListPage';
 import WorkOrderDetailPage from '@/pages/maintain/WorkOrderDetailPage';
 
+const queryClient = new QueryClient();
+
 function App() {
   return (
-    <ProjectProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Layout><Outlet /></Layout>}>
-            <Route index element={<Index />} />
-            {/* Manage Routes */}
-            <Route path="/manage/facilities" element={<FacilitiesPage />} />
-            <Route path="/manage/facilities/:id" element={<FacilityDetailPage />} />
-            <Route path="/manage/system" element={<SystemPage />} />
-            <Route path="/manage/system/:id" element={<SystemDetailPage />} />
-            <Route path="/manage/package" element={<PackagePage />} />
-            <Route path="/manage/package/:id" element={<PackageDetailPage />} />
-            <Route path="/manage/asset-register" element={<AssetRegisterPage />} />
-            <Route path="/manage/asset-register/:id" element={<AssetRegisterDetailPage />} />
-            <Route path="/manage/assets" element={<AssetsPage />} />
-            <Route path="/manage/assets/:id" element={<AssetDetailPage />} />
-            <Route path="/manage/bom-assembly" element={<BomAssemblyPage />} />
-            <Route path="/manage/bom-assembly/:id" element={<BomAssemblyDetailPage />} />
-            <Route path="/manage/items-master" element={<ItemsMasterPage />} />
-            <Route path="/manage/items-master/:id" element={<ItemsMasterDetailPage />} />
-            <Route path="/manage/inventory" element={<InventoryPage />} />
-            <Route path="/manage/inventory/:id" element={<InventoryDetailPage />} />
-            <Route path="/manage/inventory/item/:id" element={<InventoryItemDetailPage />} />
-            
-            {/* Admin Setup Routes */}
-            <Route path="/admin/setup/client" element={<ClientPage />} />
-            <Route path="/admin/setup/client/:id" element={<ClientDetailPage />} />
-            <Route path="/admin/setup/project" element={<ProjectPage />} />
-            <Route path="/admin/setup/project/:id" element={<ProjectDetailPage />} />
-            <Route path="/admin/setup/work-center" element={<WorkCenterPage />} />
-            <Route path="/admin/setup/work-center/:id" element={<WorkCenterDetailPage />} />
-            <Route path="/admin/setup/vendor" element={<VendorPage />} />
-            <Route path="/admin/setup/vendor/:id" element={<VendorDetailPage />} />
-            <Route path="/admin/setup/sensor" element={<SensorPage />} />
-            <Route path="/admin/setup/sensor/:id" element={<SensorDetailPage />} />
-            
-            {/* Admin Settings Routes */}
-            <Route path="/admin/settings/asset-class" element={<AssetClassPage />} />
-            <Route path="/admin/settings/asset-class/:id" element={<AssetClassDetailPage />} />
-            <Route path="/admin/settings/asset-tag" element={<AssetTagPage />} />
-            <Route path="/admin/settings/asset-tag/:id" element={<AssetTagDetailPage />} />
-            <Route path="/admin/settings/corrosion-group" element={<CorrosionGroupPage />} />
-            <Route path="/admin/settings/corrosion-group/:id" element={<CorrosionGroupDetailPage />} />
-            <Route path="/admin/settings/data-category" element={<DataCategoryPage />} />
-            <Route path="/admin/settings/data-category/:id" element={<DataCategoryDetailPage />} />
-            <Route path="/admin/settings/discipline" element={<DisciplinePage />} />
-            <Route path="/admin/settings/discipline/:id" element={<DisciplineDetailPage />} />
-            <Route path="/admin/settings/frequency-setup" element={<FrequencySetupPage />} />
-            <Route path="/admin/settings/frequency-setup/:id" element={<FrequencySetupDetailPage />} />
-            <Route path="/admin/settings/maintenance-type" element={<MaintenanceTypePage />} />
-            <Route path="/admin/settings/maintenance-type/:id" element={<MaintenanceTypeDetailPage />} />
-            <Route path="/admin/settings/average-uars" element={<AverageUARSPage />} />
-            <Route path="/admin/settings/average-uars/:id" element={<AverageUARSDetailPage />} />
-            
-            {/* Integrity Routes */}
-            <Route path="/integrity/module" element={<IntegrityModulePage />} />
-            
-            {/* Monitor Routes */}
-            <Route path="/monitor/inventory-groups" element={<InventoryGroupsPage />} />
-            <Route path="/monitor/integrity" element={<IntegrityPage />} />
-            <Route path="/monitor/integrity/:type/:id" element={<AssetIntegrityDetailPage />} />
-            <Route path="/monitor/ims-dashboard" element={<IMSDashboardPage />} />
-            <Route path="/monitor/rbi-assessment" element={<RBIAssessmentPage />} />
-            <Route path="/monitor/rbi-assessment/:id" element={<RBIAssessmentDetailPage />} />
-            <Route path="/monitor/corrosion-studies" element={<CorrosionStudiesPage />} />
-            <Route path="/monitor/corrosion-studies/:id" element={<CorrosionStudiesDetailPage />} />
-            <Route path="/monitor/inspection-data" element={<InspectionDataPage />} />
-            <Route path="/monitor/rms-asset-list" element={<RMSAssetListPage />} />
-            <Route path="/monitor/rms-asset-detail/:id" element={<RMSAssetDetailPage />} />
-            <Route path="/monitor/critical-assets" element={<CriticalAssetsPage />} />
-            <Route path="/monitor/rms-dashboard" element={<RMSDashboardPage />} />
-            
-            {/* Maintain Routes */}
-            <Route path="/maintain/wo-history" element={<WOHistoryPage />} />
-            <Route path="/maintain/wo-history/:id" element={<WOHistoryDetailPage />} />
-            <Route path="/maintain/task-library" element={<TaskLibraryPage />} />
-            <Route path="/maintain/task-library/:id" element={<TaskLibraryDetailPage />} />
-            <Route path="/maintain/pm-schedule" element={<PMSchedulePage />} />
-            <Route path="/maintain/pm-schedule/:id" element={<PMScheduleDetailPage />} />
-            <Route path="/maintain/work-request" element={<WorkRequestPage />} />
-            <Route path="/maintain/work-request/:id" element={<WorkRequestDetailPage />} />
-            <Route path="/maintain/work-order-list" element={<WorkOrderListPage />} />
-            <Route path="/maintain/work-order-list/:id" element={<WorkOrderDetailPage />} />
-            
-            <Route path="*" element={<NotFound />} />
-          </Route>
-        </Routes>
-        <Toaster />
-      </Router>
-    </ProjectProvider>
+    <QueryClientProvider client={queryClient}>
+      <ProjectProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Layout><Outlet /></Layout>}>
+              <Route index element={<Index />} />
+              {/* Manage Routes */}
+              <Route path="/manage/facilities" element={<FacilitiesPage />} />
+              <Route path="/manage/facilities/:id" element={<FacilityDetailPage />} />
+              <Route path="/manage/system" element={<SystemPage />} />
+              <Route path="/manage/system/:id" element={<SystemDetailPage />} />
+              <Route path="/manage/package" element={<PackagePage />} />
+              <Route path="/manage/package/:id" element={<PackageDetailPage />} />
+              <Route path="/manage/asset-register" element={<AssetRegisterPage />} />
+              <Route path="/manage/asset-register/:id" element={<AssetRegisterDetailPage />} />
+              <Route path="/manage/assets" element={<AssetsPage />} />
+              <Route path="/manage/assets/:id" element={<AssetDetailPage />} />
+              <Route path="/manage/bom-assembly" element={<BomAssemblyPage />} />
+              <Route path="/manage/bom-assembly/:id" element={<BomAssemblyDetailPage />} />
+              <Route path="/manage/items-master" element={<ItemsMasterPage />} />
+              <Route path="/manage/items-master/:id" element={<ItemsMasterDetailPage />} />
+              <Route path="/manage/inventory" element={<InventoryPage />} />
+              <Route path="/manage/inventory/:id" element={<InventoryDetailPage />} />
+              <Route path="/manage/inventory/item/:id" element={<InventoryItemDetailPage />} />
+
+              {/* Admin Setup Routes */}
+              <Route path="/admin/setup/client" element={<ClientPage />} />
+              <Route path="/admin/setup/client/:id" element={<ClientDetailPage />} />
+              <Route path="/admin/setup/project" element={<ProjectPage />} />
+              <Route path="/admin/setup/project/:id" element={<ProjectDetailPage />} />
+              <Route path="/admin/setup/work-center" element={<WorkCenterPage />} />
+              <Route path="/admin/setup/work-center/:id" element={<WorkCenterDetailPage />} />
+              <Route path="/admin/setup/sensor" element={<SensorPage />} />
+              <Route path="/admin/setup/sensor/:id" element={<SensorDetailPage />} />
+
+              {/* Admin Settings Routes */}
+              <Route path="/admin/settings/asset-class" element={<AssetClassPage />} />
+              <Route path="/admin/settings/asset-class/:id" element={<AssetClassDetailPage />} />
+              <Route path="/admin/settings/asset-tag" element={<AssetTagPage />} />
+              <Route path="/admin/settings/asset-tag/:id" element={<AssetTagDetailPage />} />
+              <Route path="/admin/settings/corrosion-group" element={<CorrosionGroupPage />} />
+              <Route path="/admin/settings/corrosion-group/:id" element={<CorrosionGroupDetailPage />} />
+              <Route path="/admin/settings/data-category" element={<DataCategoryPage />} />
+              <Route path="/admin/settings/data-category/:id" element={<DataCategoryDetailPage />} />
+              <Route path="/admin/settings/discipline" element={<DisciplinePage />} />
+              <Route path="/admin/settings/discipline/:id" element={<DisciplineDetailPage />} />
+              <Route path="/admin/settings/frequency-setup" element={<FrequencySetupPage />} />
+              <Route path="/admin/settings/frequency-setup/:id" element={<FrequencySetupDetailPage />} />
+              <Route path="/admin/settings/maintenance-type" element={<MaintenanceTypePage />} />
+              <Route path="/admin/settings/maintenance-type/:id" element={<MaintenanceTypeDetailPage />} />
+              <Route path="/admin/settings/average-uars" element={<AverageUARSPage />} />
+              <Route path="/admin/settings/average-uars/:id" element={<AverageUARSDetailPage />} />
+
+              {/* Integrity Routes */}
+              <Route path="/integrity/module" element={<IntegrityModulePage />} />
+
+              {/* Monitor Routes */}
+              <Route path="/monitor/inventory-groups" element={<InventoryGroupsPage />} />
+              <Route path="/monitor/integrity" element={<IntegrityPage />} />
+              <Route path="/monitor/integrity/:type/:id" element={<AssetIntegrityDetailPage />} />
+              <Route path="/monitor/ims-dashboard" element={<IMSDashboardPage />} />
+              <Route path="/monitor/rbi-assessment" element={<RBIAssessmentPage />} />
+              <Route path="/monitor/rbi-assessment/:id" element={<RBIAssessmentDetailPage />} />
+              <Route path="/monitor/corrosion-studies" element={<CorrosionStudiesPage />} />
+              <Route path="/monitor/corrosion-studies/:id" element={<CorrosionStudiesDetailPage />} />
+              <Route path="/monitor/inspection-data" element={<InspectionDataPage />} />
+              <Route path="/monitor/rms-asset-list" element={<RMSAssetListPage />} />
+              <Route path="/monitor/rms-asset-detail/:id" element={<RMSAssetDetailPage />} />
+              <Route path="/monitor/critical-assets" element={<CriticalAssetsPage />} />
+              <Route path="/monitor/rms-dashboard" element={<RMSDashboardPage />} />
+
+              {/* Maintain Routes */}
+              <Route path="/maintain/wo-history" element={<WOHistoryPage />} />
+              <Route path="/maintain/wo-history/:id" element={<WOHistoryDetailPage />} />
+              <Route path="/maintain/task-library" element={<TaskLibraryPage />} />
+              <Route path="/maintain/task-library/:id" element={<TaskLibraryDetailPage />} />
+              <Route path="/maintain/pm-schedule" element={<PMSchedulePage />} />
+              <Route path="/maintain/pm-schedule/:id" element={<PMScheduleDetailPage />} />
+              <Route path="/maintain/work-request" element={<WorkRequestPage />} />
+              <Route path="/maintain/work-request/:id" element={<WorkRequestDetailPage />} />
+              <Route path="/maintain/work-order-list" element={<WorkOrderListPage />} />
+              <Route path="/maintain/work-order-list/:id" element={<WorkOrderDetailPage />} />
+
+              <Route path="*" element={<NotFound />} />
+            </Route>
+          </Routes>
+          <Toaster />
+        </Router>
+      </ProjectProvider>
+    </QueryClientProvider>
   );
 }
 

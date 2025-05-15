@@ -153,22 +153,6 @@ const sidebarItems: SidebarItemType[] = [{
       icon: Wrench,
       children: [
         {
-          name: 'Company',
-          path: '/admin/setup/company',
-          icon: () => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M2 22h20"></path>
-              <path d="M6 18V2h12v16"></path>
-              <path d="M9 10h1"></path>
-              <path d="M9 6h1"></path>
-              <path d="M9 14h1"></path>
-              <path d="M14 10h1"></path>
-              <path d="M14 6h1"></path>
-              <path d="M14 14h1"></path>
-            </svg>
-          )
-        }, 
-        {
           name: 'Client',
           path: '/admin/setup/client',
           icon: () => (
@@ -187,17 +171,6 @@ const sidebarItems: SidebarItemType[] = [{
               <path d="M22 12.5V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8"></path>
               <path d="M16 12h-5a2 2 0 1 0 0 4h5"></path>
               <path d="M22 15h-5a2 2 0 1 0 0 4h5"></path>
-            </svg>
-          )
-        }, 
-        {
-          name: 'Vendor',
-          path: '/admin/setup/vendor',
-          icon: () => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="m7 9 4-6 4 6"></path>
-              <path d="M3 18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3H3v3Z"></path>
-              <path d="M5 15V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8"></path>
             </svg>
           )
         }, 
