@@ -72,7 +72,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
                 className="w-full sm:w-64"
               />
               <Button
-                className="absolute right-0 top-0 h-full rounded-l-none"
+                className="absolute right-0 top-0 rounded-l-none"
                 onClick={handleSearch}
               >
                 Search
