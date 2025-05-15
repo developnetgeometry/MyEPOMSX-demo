@@ -13,11 +13,6 @@ type SetupNavItem = {
 
 const setupNavItems: SetupNavItem[] = [
   {
-    name: 'Company',
-    path: '/admin/setup/company',
-    icon: <Building className="mr-2 h-4 w-4" />
-  },
-  {
     name: 'Client',
     path: '/admin/setup/client',
     icon: <User className="mr-2 h-4 w-4" />
@@ -26,11 +21,6 @@ const setupNavItems: SetupNavItem[] = [
     name: 'Project',
     path: '/admin/setup/project',
     icon: <Ship className="mr-2 h-4 w-4" />
-  },
-  {
-    name: 'Vendor',
-    path: '/admin/setup/vendor',
-    icon: <Wrench className="mr-2 h-4 w-4" />
   },
   {
     name: 'Sensor',

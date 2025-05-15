@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import PageHeader from '@/components/shared/PageHeader';
@@ -7,165 +6,159 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, Database } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import StatusBadge from '@/components/shared/StatusBadge';
-import { formatDate } from '@/utils/formatters';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabaseClient';
+import Loading from '@/components/shared/Loading';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Project {
-  id: string;
-  projectCode: string;
-  projectName: string;
-  client: string;
-  clientId: string;
-  startDate: string;
-  endDate: string;
-  status: string;
-  description: string;
+  id: number;
+  project_code: string;
+  project_name: string | null;
+  client_id: number | null;
+  client_name: string | null;
+  project_type: number | null;
+  project_type_name: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  fund_code: string | null;
+  project_purpose: string | null;
+  remark: string | null;
 }
-
-// Sample project data
-const initialProjects = [
-  {
-    id: '1',
-    projectCode: 'PRJ001',
-    projectName: 'Refinery Upgrade Project',
-    client: 'TechOil Solutions',
-    clientId: '1',
-    startDate: '2025-01-15',
-    endDate: '2025-07-30',
-    status: 'Active',
-    description: 'Major upgrade of refinery equipment and control systems',
-  },
-  {
-    id: '2',
-    projectCode: 'PRJ002',
-    projectName: 'Pipeline Integrity Assessment',
-    client: 'GlobalEnergy Services',
-    clientId: '3',
-    startDate: '2025-03-01',
-    endDate: '2025-06-15',
-    status: 'Active',
-    description: 'Comprehensive integrity assessment of transportation pipelines',
-  },
-  {
-    id: '3',
-    projectCode: 'PRJ003',
-    projectName: 'Offshore Platform Maintenance',
-    client: 'Offshore Systems Ltd.',
-    clientId: '4',
-    startDate: '2025-02-10',
-    endDate: '2025-04-10',
-    status: 'Completed',
-    description: 'Scheduled maintenance of offshore production platform',
-  },
-  {
-    id: '4',
-    projectCode: 'PRJ004',
-    projectName: 'Control System Upgrade',
-    client: 'Industrial Automation Corp.',
-    clientId: '2',
-    startDate: '2025-05-01',
-    endDate: '2025-08-31',
-    status: 'Planned',
-    description: 'Upgrade of DCS and safety systems to latest version',
-  },
-  {
-    id: '5',
-    projectCode: 'PRJ005',
-    projectName: 'Equipment Reliability Analysis',
-    client: 'PetroMaintain Inc.',
-    clientId: '5',
-    startDate: '2025-04-15',
-    endDate: '2025-07-15',
-    status: 'Active',
-    description: 'Analysis of critical equipment reliability and improvement recommendations',
-  },
-];
 
 const ProjectDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [project, setProject] = useState<Project | null>(null);
-  
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    // In a real app, this would be an API call
-    const foundProject = initialProjects.find(p => p.id === id);
-    
-    if (foundProject) {
-      setProject(foundProject);
-    } else {
-      toast.error("Project not found");
-      navigate('/admin/setup/project');
-    }
+    const fetchProject = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('e_project')
+        .select(`
+          id,
+          project_code,
+          project_name,
+          client_id,
+          client: e_client(name),
+          project_type,
+          project_type_name: e_project_type(name),
+          start_date,
+          end_date,
+          fund_code,
+          project_purpose,
+          remark
+        `)
+        .eq('id', Number(id))
+        .single();
+
+      if (error || !data) {
+        toast.error("Project not found");
+        navigate('/admin/setup/project');
+      } else {
+        setProject({
+          ...data,
+          client_name: data.client?.name || null,
+          project_type_name: data.project_type_name?.name || null,
+        });
+      }
+      setLoading(false);
+    };
+
+    if (id) fetchProject();
   }, [id, navigate]);
-  
-  if (!project) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <PageHeader 
-          title="Project Information" 
+        <PageHeader
+          title="Project Details"
           icon={<Database className="h-6 w-6" />}
         />
-        <Button 
-          variant="outline" 
-          onClick={() => navigate('/admin/setup/project')} 
+        <Button
+          variant="outline"
+          onClick={() => navigate('/admin/setup/project')}
           className="flex items-center gap-2"
         >
           <ArrowLeft className="h-4 w-4" /> Back to Projects
         </Button>
       </div>
-      
-      <Card>
-        <CardContent className="pt-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[200px]">Field</TableHead>
-                <TableHead>Value</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell className="font-medium">Project Code</TableCell>
-                <TableCell>{project.projectCode}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">Project Name</TableCell>
-                <TableCell>{project.projectName}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">Client</TableCell>
-                <TableCell>
-                  <Link to={`/admin/setup/client/${project.clientId}`} className="text-blue-600 hover:underline">
-                    {project.client}
-                  </Link>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">Start Date</TableCell>
-                <TableCell>{formatDate(new Date(project.startDate))}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">End Date</TableCell>
-                <TableCell>{formatDate(new Date(project.endDate))}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">Status</TableCell>
-                <TableCell>
-                  <StatusBadge status={project.status} />
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">Description</TableCell>
-                <TableCell>{project.description}</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+
+      {loading ? (
+        <Skeleton className="h-[200px] w-full" />
+      ) : project ? (
+        <Card>
+          <CardContent className="pt-6">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[200px]">Field</TableHead>
+                  <TableHead>Value</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell className="font-medium">Project Code</TableCell>
+                  <TableCell>{project.project_code}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Project Name</TableCell>
+                  <TableCell>{project.project_name ?? "N/A"}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Project Type</TableCell>
+                  <TableCell>{project.project_type_name ?? "N/A"}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Client</TableCell>
+                  <TableCell>
+                    {project.client_id ? (
+                      <Link
+                        to={`/admin/setup/client/${project.client_id}`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        {project.client_name ?? "N/A"}
+                      </Link>
+                    ) : (
+                      "N/A"
+                    )}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Start Date</TableCell>
+                  <TableCell>
+                    {project.start_date
+                      ? new Date(project.start_date).toLocaleDateString("en-GB").replace(/\//g, "-")
+                      : "N/A"}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">End Date</TableCell>
+                  <TableCell>
+                    {project.end_date
+                      ? new Date(project.end_date).toLocaleDateString("en-GB").replace(/\//g, "-")
+                      : "N/A"}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Fund Code</TableCell>
+                  <TableCell>{project.fund_code ?? "N/A"}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Project Purpose</TableCell>
+                  <TableCell>{project.project_purpose ?? "N/A"}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Remark</TableCell>
+                  <TableCell>{project.remark ?? "N/A"}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   );
 };
