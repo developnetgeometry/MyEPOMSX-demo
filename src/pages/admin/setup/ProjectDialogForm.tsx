@@ -28,6 +28,8 @@ const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ onSubmit, onCance
     fund_code: initialData?.fund_code || "",
     project_purpose: initialData?.project_purpose || "",
     remark: initialData?.remark || "",
+    latitude: initialData?.latitude || "",
+    longitude: initialData?.longitude || "",
   });
 
   const [isLoading, setIsLoading] = useState(false); // Loading state
@@ -148,6 +150,24 @@ const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ onSubmit, onCance
                 id="fund_code"
                 name="fund_code"
                 value={formData.fund_code}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="latitude">Latitude</Label>
+              <Input
+                id="latitude"
+                name="latitude"
+                value={formData.latitude}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="longitude">Longitude</Label>
+              <Input
+                id="longitude"
+                name="longitude"
+                value={formData.longitude}
                 onChange={handleInputChange}
               />
             </div>
