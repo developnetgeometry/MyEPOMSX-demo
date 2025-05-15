@@ -45,6 +45,7 @@ import AverageUARSDetailPage from './pages/admin/settings/AverageUARSDetailPage'
 import IntegrityModulePage from './pages/integrity/IntegrityModulePage';
 import InventoryGroupsPage from './pages/monitor/InventoryGroupsPage';
 import IntegrityPage from './pages/monitor/IntegrityPage';
+import AssetIntegrityDetailPage from './pages/monitor/AssetIntegrityDetailPage';
 import RBIAssessmentPage from './pages/monitor/RBIAssessmentPage';
 import RBIAssessmentDetailPage from './pages/monitor/RBIAssessmentDetailPage';
 import CorrosionStudiesPage from './pages/monitor/CorrosionStudiesPage';
@@ -133,6 +134,7 @@ function App() {
         {/* Monitor Routes */}
         <Route path="/monitor/inventory-groups" element={<Layout><InventoryGroupsPage /></Layout>} />
         <Route path="/monitor/integrity" element={<Layout><IntegrityPage /></Layout>} />
+        <Route path="/monitor/integrity/:type/:id" element={<Layout><AssetIntegrityDetailPage /></Layout>} />
         <Route path="/monitor/ims-dashboard" element={<Layout><IMSDashboardPage /></Layout>} />
         <Route path="/monitor/rbi-assessment" element={<Layout><RBIAssessmentPage /></Layout>} />
         <Route path="/monitor/rbi-assessment/:id" element={<Layout><RBIAssessmentDetailPage /></Layout>} />

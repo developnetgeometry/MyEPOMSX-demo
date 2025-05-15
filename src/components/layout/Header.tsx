@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Bell, Settings, User, Search, Menu } from 'lucide-react';
+import { Bell, Settings, User, Search, Menu, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -11,6 +11,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuItem
 } from '@/components/ui/dropdown-menu';
+import { useNavigate } from 'react-router-dom';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface HeaderProps {
   title?: string;
@@ -19,11 +27,27 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ title, isSidebarOpen, toggleSidebar }) => {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([
     { id: 1, text: 'Work order WO-2023-4582 is overdue', time: '10 min ago' },
     { id: 2, text: 'Asset PM-102 requires maintenance', time: '1 hour ago' },
     { id: 3, text: 'New task assigned by John Doe', time: '3 hours ago' },
   ]);
+
+  const [currentProject, setCurrentProject] = useState('Project Alpha');
+  const projects = [
+    { id: 1, name: 'Project Alpha', route: '/admin/setup/project/1' },
+    { id: 2, name: 'Project Beta', route: '/admin/setup/project/2' },
+    { id: 3, name: 'Project Gamma', route: '/admin/setup/project/3' },
+  ];
+
+  const handleProjectChange = (projectId: string) => {
+    const selectedProject = projects.find(p => p.id.toString() === projectId);
+    if (selectedProject) {
+      setCurrentProject(selectedProject.name);
+      navigate(selectedProject.route);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-30 h-16 bg-white border-b border-gray-200 flex items-center px-4 transition-all duration-300">
@@ -43,6 +67,22 @@ const Header: React.FC<HeaderProps> = ({ title, isSidebarOpen, toggleSidebar }) 
         </div>
         
         <div className="flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-2">
+            <Building className="h-5 w-5 text-gray-500" />
+            <Select onValueChange={handleProjectChange} defaultValue="1">
+              <SelectTrigger className="w-[180px] h-9 border-none focus-visible:ring-0 focus-visible:ring-offset-0">
+                <SelectValue placeholder="Select Project" />
+              </SelectTrigger>
+              <SelectContent>
+                {projects.map((project) => (
+                  <SelectItem key={project.id} value={project.id.toString()}>
+                    {project.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
           <div className="hidden md:block relative w-64">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
             <Input 
