@@ -11,7 +11,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuItem
 } from '@/components/ui/dropdown-menu';
-import { useNavigate } from 'react-router-dom';
 import {
   Select,
   SelectContent,
@@ -19,6 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useProject } from '@/contexts/ProjectContext';
+import { toast } from '@/components/ui/use-toast';
 
 interface HeaderProps {
   title?: string;
@@ -27,25 +28,22 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ title, isSidebarOpen, toggleSidebar }) => {
-  const navigate = useNavigate();
+  const { currentProject, setCurrentProject, projects } = useProject();
+  
   const [notifications, setNotifications] = useState([
     { id: 1, text: 'Work order WO-2023-4582 is overdue', time: '10 min ago' },
     { id: 2, text: 'Asset PM-102 requires maintenance', time: '1 hour ago' },
     { id: 3, text: 'New task assigned by John Doe', time: '3 hours ago' },
   ]);
 
-  const [currentProject, setCurrentProject] = useState('Project Alpha');
-  const projects = [
-    { id: 1, name: 'Project Alpha', route: '/admin/setup/project/1' },
-    { id: 2, name: 'Project Beta', route: '/admin/setup/project/2' },
-    { id: 3, name: 'Project Gamma', route: '/admin/setup/project/3' },
-  ];
-
   const handleProjectChange = (projectId: string) => {
-    const selectedProject = projects.find(p => p.id.toString() === projectId);
+    const selectedProject = projects.find(p => p.id === projectId);
     if (selectedProject) {
-      setCurrentProject(selectedProject.name);
-      navigate(selectedProject.route);
+      setCurrentProject(selectedProject);
+      toast({
+        title: "Project Changed",
+        description: `Switched to ${selectedProject.name}`,
+      });
     }
   };
 
@@ -67,22 +65,6 @@ const Header: React.FC<HeaderProps> = ({ title, isSidebarOpen, toggleSidebar }) 
         </div>
         
         <div className="flex items-center space-x-4">
-          <div className="hidden md:flex items-center space-x-2">
-            <Building className="h-5 w-5 text-gray-500" />
-            <Select onValueChange={handleProjectChange} defaultValue="1">
-              <SelectTrigger className="w-[180px] h-9 border-none focus-visible:ring-0 focus-visible:ring-offset-0">
-                <SelectValue placeholder="Select Project" />
-              </SelectTrigger>
-              <SelectContent>
-                {projects.map((project) => (
-                  <SelectItem key={project.id} value={project.id.toString()}>
-                    {project.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
           <div className="hidden md:block relative w-64">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
             <Input 
@@ -142,12 +124,33 @@ const Header: React.FC<HeaderProps> = ({ title, isSidebarOpen, toggleSidebar }) 
                 <span className="hidden md:inline-block text-sm font-medium">John Doe</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Profile</DropdownMenuItem>
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuItem>Activity Log</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuLabel className="flex items-center space-x-2">
+                <Building className="h-4 w-4" />
+                <span>Current Project</span>
+              </DropdownMenuLabel>
+              <div className="px-2 py-1.5">
+                <Select onValueChange={handleProjectChange} defaultValue={currentProject.id}>
+                  <SelectTrigger className="w-full border focus-visible:ring-0">
+                    <SelectValue placeholder={currentProject.name} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects.map((project) => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
               <DropdownMenuSeparator />
               <DropdownMenuItem>Sign out</DropdownMenuItem>
             </DropdownMenuContent>
