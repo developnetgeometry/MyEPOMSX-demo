@@ -32,8 +32,6 @@ import ProjectPage from '@/pages/admin/setup/ProjectPage';
 import ProjectDetailPage from '@/pages/admin/setup/ProjectDetailPage';
 import WorkCenterPage from '@/pages/admin/setup/WorkCenterPage';
 import WorkCenterDetailPage from '@/pages/admin/setup/WorkCenterDetailPage';
-import VendorPage from '@/pages/admin/setup/VendorPage';
-import VendorDetailPage from '@/pages/admin/setup/VendorDetailPage';
 import SensorPage from '@/pages/admin/setup/SensorPage';
 import SensorDetailPage from '@/pages/admin/setup/SensorDetailPage';
 
@@ -130,8 +128,6 @@ function App() {
               <Route path="/admin/setup/project/:id" element={<ProjectDetailPage />} />
               <Route path="/admin/setup/work-center" element={<WorkCenterPage />} />
               <Route path="/admin/setup/work-center/:id" element={<WorkCenterDetailPage />} />
-              <Route path="/admin/setup/vendor" element={<VendorPage />} />
-              <Route path="/admin/setup/vendor/:id" element={<VendorDetailPage />} />
               <Route path="/admin/setup/sensor" element={<SensorPage />} />
               <Route path="/admin/setup/sensor/:id" element={<SensorDetailPage />} />
 
