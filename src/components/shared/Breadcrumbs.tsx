@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useLocation, Link } from "react-router-dom";
 import { 
@@ -19,7 +18,6 @@ const pathMap: Record<string, string> = {
   "measure": "Measure",
   "monitor": "Monitor",
   "integrity": "Integrity",
-  "vendor": "Vendor",
   "assets": "Assets",
   "asset-hierarchy": "Asset Hierarchy",
   "asset-register": "Asset Register",
@@ -73,7 +71,7 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ showHome = true, overrideItem
       <Breadcrumb className="mb-4">
         <BreadcrumbList>
           {overrideItems.map((item, index) => (
-            <React.Fragment key={index}>
+            <div key={index} className="flex items-center">
               <BreadcrumbItem>
                 {item.href ? (
                   <BreadcrumbLink asChild>
@@ -83,8 +81,8 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ showHome = true, overrideItem
                   <span className="text-muted-foreground">{item.label}</span>
                 )}
               </BreadcrumbItem>
-              {index < overrideItems.length - 1 && <BreadcrumbSeparator />}
-            </React.Fragment>
+              {index < overrideItems.length - 1 && <BreadcrumbSeparator className="ml-2"/>}
+            </div>
           ))}
         </BreadcrumbList>
       </Breadcrumb>
@@ -105,8 +103,8 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ showHome = true, overrideItem
     const displayName = formatSegment(segment);
     
     return (
-      <React.Fragment key={path}>
-        <BreadcrumbItem>
+      <div key={path} className="flex items-center">
+        <BreadcrumbItem >
           {isLast ? (
             <span className="text-muted-foreground">{displayName}</span>
           ) : (
@@ -115,8 +113,8 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ showHome = true, overrideItem
             </BreadcrumbLink>
           )}
         </BreadcrumbItem>
-        {!isLast && <BreadcrumbSeparator />}
-      </React.Fragment>
+        {!isLast && <BreadcrumbSeparator className="ml-2" />}
+      </div>
     );
   });
   

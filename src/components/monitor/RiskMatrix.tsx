@@ -141,7 +141,7 @@ const RiskMatrix: React.FC<RiskMatrixProps> = ({ className }) => {
                 
                 {/* Risk matrix cells */}
                 {probabilityLevels.map((probLevel) => (
-                  <React.Fragment key={probLevel.id}>
+                  <div key={probLevel.id}>
                     {/* Y-axis label (Probability) */}
                     <div className="col-span-1 flex items-center pr-2 mb-1">
                       <span 
@@ -177,7 +177,7 @@ const RiskMatrix: React.FC<RiskMatrixProps> = ({ className }) => {
                         </div>
                       );
                     })}
-                  </React.Fragment>
+                  </div>
                 ))}
               </div>
               

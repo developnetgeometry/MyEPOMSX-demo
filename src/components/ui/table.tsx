@@ -1,7 +1,7 @@
 
 import * as React from "react"
-
 import { cn } from "@/lib/utils"
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react"
 
 const Table = React.forwardRef<
   HTMLTableElement,
@@ -59,7 +59,7 @@ const TableRow = React.forwardRef<
   <tr
     ref={ref}
     className={cn(
-      "transition-colors data-[state=selected]:bg-muted",
+      "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
       className
     )}
     {...props}
@@ -67,18 +67,41 @@ const TableRow = React.forwardRef<
 ))
 TableRow.displayName = "TableRow"
 
+interface TableHeadProps extends React.ThHTMLAttributes<HTMLTableCellElement> {
+  sortable?: boolean
+  sorted?: "asc" | "desc" | null
+  onSort?: () => void
+}
+
 const TableHead = React.forwardRef<
   HTMLTableCellElement,
-  React.ThHTMLAttributes<HTMLTableCellElement>
->(({ className, ...props }, ref) => (
+  TableHeadProps
+>(({ className, children, sortable, sorted, onSort, ...props }, ref) => (
   <th
     ref={ref}
     className={cn(
-      "h-12 text-left align-middle font-semibold text-gray-900 [&:has([role=checkbox])]:pr-0",
+      "h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0",
+      sortable && "cursor-pointer select-none",
       className
     )}
+    onClick={sortable && onSort ? onSort : undefined}
     {...props}
-  />
+  >
+    {sortable ? (
+      <div className="flex items-center gap-2">
+        {children}
+        {sorted === 'asc' ? (
+          <ArrowUp className="h-4 w-4" />
+        ) : sorted === 'desc' ? (
+          <ArrowDown className="h-4 w-4" />
+        ) : (
+          <ArrowUpDown className="h-4 w-4 opacity-50" />
+        )}
+      </div>
+    ) : (
+      children
+    )}
+  </th>
 ))
 TableHead.displayName = "TableHead"
 
@@ -88,7 +111,7 @@ const TableCell = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <td
     ref={ref}
-    className={cn("align-middle [&:has([role=checkbox])]:pr-0", className)}
+    className={cn("p-4 align-middle [&:has([role=checkbox])]:pr-0", className)}
     {...props}
   />
 ))

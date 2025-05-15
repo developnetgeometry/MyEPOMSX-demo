@@ -1,5 +1,5 @@
-
 import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Layout from '@/components/layout/Layout';
 import Index from '@/pages/Index';
 import NotFound from '@/pages/NotFound';
@@ -84,7 +84,6 @@ import WorkRequestPage from '@/pages/maintain/WorkRequestPage';
 import WorkRequestDetailPage from '@/pages/maintain/WorkRequestDetailPage';
 import WorkOrderListPage from '@/pages/maintain/WorkOrderListPage';
 import WorkOrderDetailPage from '@/pages/maintain/WorkOrderDetailPage';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -96,16 +95,15 @@ const queryClient = new QueryClient({
   },
 });
 
-
 function App() {
   return (
-    
     <QueryClientProvider client={queryClient}>
       <ProjectProvider>
-      <Router>
+        <Router>
           <Routes>
             <Route path="/" element={<Layout><Outlet /></Layout>}>
-          <Route index element={<Index />} />
+              <Route index element={<Index />} />
+              
               {/* Manage Routes */}
               <Route path="/manage/facilities" element={<FacilitiesPage />} />
               <Route path="/manage/facilities/:id" element={<FacilityDetailPage />} />
@@ -124,7 +122,7 @@ function App() {
               <Route path="/manage/inventory" element={<InventoryPage />} />
               <Route path="/manage/inventory/:id" element={<InventoryDetailPage />} />
               <Route path="/manage/inventory/item/:id" element={<InventoryItemDetailPage />} />
-          
+
               {/* Admin Setup Routes */}
               <Route path="/admin/setup/client" element={<ClientPage />} />
               <Route path="/admin/setup/client/:id" element={<ClientDetailPage />} />
@@ -136,7 +134,7 @@ function App() {
               <Route path="/admin/setup/vendor/:id" element={<VendorDetailPage />} />
               <Route path="/admin/setup/sensor" element={<SensorPage />} />
               <Route path="/admin/setup/sensor/:id" element={<SensorDetailPage />} />
-          
+
               {/* Admin Settings Routes */}
               <Route path="/admin/settings/asset-class" element={<AssetClassPage />} />
               <Route path="/admin/settings/asset-class/:id" element={<AssetClassDetailPage />} />
@@ -154,13 +152,13 @@ function App() {
               <Route path="/admin/settings/maintenance-type/:id" element={<MaintenanceTypeDetailPage />} />
               <Route path="/admin/settings/average-uars" element={<AverageUARSPage />} />
               <Route path="/admin/settings/average-uars/:id" element={<AverageUARSDetailPage />} />
-          
+
               {/* Integrity Routes */}
               <Route path="/integrity/module" element={<IntegrityModulePage />} />
-          
+
               {/* Monitor Routes */}
               <Route path="/monitor/inventory-groups" element={<InventoryGroupsPage />} />
-            <Route path="/monitor/integrity" element={<IntegrityPage />} />
+              <Route path="/monitor/integrity" element={<IntegrityPage />} />
               <Route path="/monitor/integrity/:type/:id" element={<AssetIntegrityDetailPage />} />
               <Route path="/monitor/ims-dashboard" element={<IMSDashboardPage />} />
               <Route path="/monitor/rbi-assessment" element={<RBIAssessmentPage />} />
@@ -172,7 +170,7 @@ function App() {
               <Route path="/monitor/rms-asset-detail/:id" element={<RMSAssetDetailPage />} />
               <Route path="/monitor/critical-assets" element={<CriticalAssetsPage />} />
               <Route path="/monitor/rms-dashboard" element={<RMSDashboardPage />} />
-          
+
               {/* Maintain Routes */}
               <Route path="/maintain/wo-history" element={<WOHistoryPage />} />
               <Route path="/maintain/wo-history/:id" element={<WOHistoryDetailPage />} />
@@ -184,16 +182,14 @@ function App() {
               <Route path="/maintain/work-request/:id" element={<WorkRequestDetailPage />} />
               <Route path="/maintain/work-order-list" element={<WorkOrderListPage />} />
               <Route path="/maintain/work-order-list/:id" element={<WorkOrderDetailPage />} />
-          
+
               <Route path="*" element={<NotFound />} />
-          </Route>
+            </Route>
           </Routes>
-        <Toaster />
+          <Toaster />
         </Router>
-    </ProjectProvider>
+      </ProjectProvider>
     </QueryClientProvider>
-
-
   );
 }
 
