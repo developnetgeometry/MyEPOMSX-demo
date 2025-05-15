@@ -1,255 +1,107 @@
 import React, { useState } from 'react';
+import { format } from 'date-fns';
 import PageHeader from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { LineChart, PieChart, BarChart, Line, Pie, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, TooltipProps } from 'recharts';
 import KpiCard from '@/components/shared/KpiCard';
-import { Database, Activity, AlertTriangle, Gauge, AirVent, SeparatorHorizontal, Gauge as PumpIcon } from 'lucide-react';
+import { Calendar, Database, Activity, AlertTriangle, Gauge } from 'lucide-react';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
-import StatusBadge from '@/components/shared/StatusBadge';
-import { formatDateTime } from '@/utils/formatters';
+import Breadcrumbs from '@/components/shared/Breadcrumbs';
 import { cn } from '@/lib/utils';
+import { DatePickerWithRange } from '@/components/ui/date-range-picker';
+import { addDays, subDays } from 'date-fns';
 
-// Sample data for telemetry charts
-const temperatureData = [
-  { time: '00:00', value: 82 },
-  { time: '01:00', value: 83 },
-  { time: '02:00', value: 85 },
-  { time: '03:00', value: 84 },
-  { time: '04:00', value: 83 },
-  { time: '05:00', value: 82 },
-  { time: '06:00', value: 81 },
-  { time: '07:00', value: 83 },
-  { time: '08:00', value: 85 },
-  { time: '09:00', value: 87 },
-  { time: '10:00', value: 89 },
-  { time: '11:00', value: 90 },
-  { time: '12:00', value: 92 },
-];
-
-const pressureData = [
-  { time: '00:00', value: 12.5 },
-  { time: '01:00', value: 12.6 },
-  { time: '02:00', value: 12.7 },
-  { time: '03:00', value: 12.6 },
-  { time: '04:00', value: 12.5 },
-  { time: '05:00', value: 12.4 },
-  { time: '06:00', value: 12.3 },
-  { time: '07:00', value: 12.4 },
-  { time: '08:00', value: 12.6 },
-  { time: '09:00', value: 12.8 },
-  { time: '10:00', value: 13.0 },
-  { time: '11:00', value: 13.1 },
-  { time: '12:00', value: 13.2 },
-];
-
-const vibrationData = [
-  { time: '00:00', value: 2.5 },
-  { time: '01:00', value: 2.3 },
-  { time: '02:00', value: 2.6 },
-  { time: '03:00', value: 2.4 },
-  { time: '04:00', value: 2.2 },
-  { time: '05:00', value: 2.3 },
-  { time: '06:00', value: 2.5 },
-  { time: '07:00', value: 2.8 },
-  { time: '08:00', value: 3.0 },
-  { time: '09:00', value: 3.5 },
-  { time: '10:00', value: 4.0 },
-  { time: '11:00', value: 4.5 },
-  { time: '12:00', value: 5.0 },
-];
-
-// Health status distribution
-const healthStatusData = [
-  { name: 'Good', value: 75, color: '#22c55e' },
-  { name: 'Fair', value: 15, color: '#f59e0b' },
-  { name: 'Poor', value: 7, color: '#f97316' },
-  { name: 'Critical', value: 3, color: '#ef4444' },
-];
-
-// Alert trends over time
-const alertTrendsData = [
-  { day: 'Mon', critical: 2, warning: 5, info: 12 },
-  { day: 'Tue', critical: 1, warning: 4, info: 10 },
-  { day: 'Wed', critical: 3, warning: 7, info: 15 },
-  { day: 'Thu', critical: 2, warning: 6, info: 13 },
-  { day: 'Fri', critical: 4, warning: 8, info: 16 },
-  { day: 'Sat', critical: 2, warning: 5, info: 11 },
-  { day: 'Sun', critical: 1, warning: 3, info: 9 },
-];
-
-// Systems with active alerts
-const systemAlertsData = [
-  { name: 'Compressor System', alerts: 8 },
-  { name: 'Cooling System', alerts: 5 },
-  { name: 'Separator System', alerts: 3 },
-  { name: 'Pump System', alerts: 7 },
-  { name: 'Control System', alerts: 4 },
-];
-
-// Asset health status for table display
-const assetHealthData = [
-  { 
-    id: '1',
-    assetNo: 'RMS-A001',
-    assetName: 'Compressor Station Alpha',
-    system: 'Compressor System',
-    healthStatus: 'Good',
-    lastUpdated: '2025-05-12 09:15:22'
+// Sample data for utilization, availability & reliability asset wise
+const assetPerformanceData = [
+  {
+    name: 'Asset A',
+    utilization: 78,
+    availability: 92,
+    reliability: 87,
   },
-  { 
-    id: '2',
-    assetNo: 'RMS-A002',
-    assetName: 'Flow Control Valve FCV-201',
-    system: 'Flow Control',
-    healthStatus: 'Fair',
-    lastUpdated: '2025-05-12 08:45:30'
+  {
+    name: 'Asset B',
+    utilization: 82,
+    availability: 94,
+    reliability: 89,
   },
-  { 
-    id: '3',
-    assetNo: 'RMS-A003',
-    assetName: 'Pressure Transmitter PT-305',
-    system: 'Pressure Monitoring',
-    healthStatus: 'Poor',
-    lastUpdated: '2025-05-11 23:10:45'
+  {
+    name: 'Asset C',
+    utilization: 76,
+    availability: 90,
+    reliability: 85,
   },
-  { 
-    id: '4',
-    assetNo: 'RMS-A004',
-    assetName: 'Storage Tank Level Sensor',
-    system: 'Level Monitoring',
-    healthStatus: 'Good',
-    lastUpdated: '2025-05-12 10:30:15'
+  {
+    name: 'Asset D',
+    utilization: 85,
+    availability: 96,
+    reliability: 92,
   },
-  { 
-    id: '5',
-    assetNo: 'RMS-A005',
-    assetName: 'Pump Motor Temperature Sensor',
-    system: 'Pump System',
-    healthStatus: 'Critical',
-    lastUpdated: '2025-05-12 07:50:38'
+  {
+    name: 'Asset E',
+    utilization: 74,
+    availability: 88,
+    reliability: 79,
   },
-  { 
-    id: '6',
-    assetNo: 'RMS-A006',
-    assetName: 'Cooling Tower Fan Motor',
-    system: 'Cooling System',
-    healthStatus: 'Good',
-    lastUpdated: '2025-05-12 11:22:05'
+];
+
+// Sample data for average metrics
+const averageMetricsData = [
+  {
+    name: 'Critical Assets',
+    utilization: 79,
+    availability: 92,
+    reliability: 86,
+  },
+];
+
+// Sample data for system reliability & availability
+const systemReliabilityData = [
+  {
+    name: 'System 1',
+    availability: 94,
+    reliability: 90,
+  },
+  {
+    name: 'System 2',
+    availability: 92,
+    reliability: 87,
+  },
+  {
+    name: 'System 3',
+    availability: 96,
+    reliability: 91,
+  },
+  {
+    name: 'System 4',
+    availability: 90,
+    reliability: 84,
+  },
+];
+
+// Fix the type error with the tooltip
+const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white p-3 border border-gray-200 rounded shadow-sm">
+        <p className="font-medium">{label}</p>
+        {payload.map((entry, index) => (
+          <p key={index} style={{ color: entry.color }}>
+            {entry.name}: {entry.value}%
+          </p>
+        ))}
+      </div>
+    );
   }
-];
-
-// Alert list for analysis tab
-const alertListData = [
-  { 
-    id: '1',
-    assetNo: 'RMS-A001',
-    assetName: 'Compressor Station Alpha',
-    metric: 'Temperature',
-    value: '92.5°C',
-    threshold: '90.0°C',
-    alertLevel: 'Warning',
-    timestamp: '2025-05-12 09:15:22',
-    system: 'Compressor System'
-  },
-  { 
-    id: '2',
-    assetNo: 'RMS-A002',
-    assetName: 'Flow Control Valve FCV-201',
-    metric: 'Pressure',
-    value: '13.8 MPa',
-    threshold: '13.5 MPa',
-    alertLevel: 'Warning',
-    timestamp: '2025-05-12 08:45:30',
-    system: 'Flow Control'
-  },
-  { 
-    id: '3',
-    assetNo: 'RMS-A003',
-    assetName: 'Pressure Transmitter PT-305',
-    metric: 'Accuracy',
-    value: '1.8%',
-    threshold: '1.5%',
-    alertLevel: 'Warning',
-    timestamp: '2025-05-11 23:10:45',
-    system: 'Pressure Monitoring'
-  },
-  { 
-    id: '5',
-    assetNo: 'RMS-A005',
-    assetName: 'Pump Motor Temperature Sensor',
-    metric: 'Temperature',
-    value: '110.5°C',
-    threshold: '95.0°C',
-    alertLevel: 'Critical',
-    timestamp: '2025-05-12 07:50:38',
-    system: 'Pump System'
-  },
-  { 
-    id: '5',
-    assetNo: 'RMS-A005',
-    assetName: 'Pump Motor Temperature Sensor',
-    metric: 'Current',
-    value: '42.3 A',
-    threshold: '40.0 A',
-    alertLevel: 'Critical',
-    timestamp: '2025-05-12 06:58:12',
-    system: 'Pump System'
-  }
-];
-
-// System options for filter tabs with icons
-const systemOptions = [
-  { id: "All Systems", label: "All Systems", icon: <Database className="h-4 w-4 mr-2" /> },
-  { id: "Compressor System", label: "Compressor System", icon: <AirVent className="h-4 w-4 mr-2" /> },
-  { id: "Cooling System", label: "Cooling System", icon: <AirVent className="h-4 w-4 mr-2" /> },
-  { id: "Separator System", label: "Separator System", icon: <SeparatorHorizontal className="h-4 w-4 mr-2" /> },
-  { id: "Pump System", label: "Pump System", icon: <PumpIcon className="h-4 w-4 mr-2" /> }
-];
-
-// Filter assets by system
-const filterAssetsBySystem = (system: string) => {
-  if (system === 'All Systems') return assetHealthData;
-  return assetHealthData.filter(asset => asset.system === system);
+  return null;
 };
 
-// Filter alerts by system
-const filterAlertsBySystem = (system: string) => {
-  if (system === 'All Systems') return alertListData;
-  
-  // Find assets in the specified system
-  const systemAssets = assetHealthData.filter(asset => asset.system === system);
-  const systemAssetIds = systemAssets.map(asset => asset.id);
-  
-  // Filter alerts for those assets
-  return alertListData.filter(alert => systemAssetIds.includes(alert.id));
-};
-
-// Filter telemetry data based on system (simulated different data patterns for systems)
-const filterTelemetryData = (data: any[], system: string, factor: number = 1) => {
-  if (system === 'All Systems') return data;
-  
-  // Create system-specific variations
-  return data.map(point => ({
-    ...point,
-    value: system === 'Compressor System' ? point.value * 1.2 :
-           system === 'Cooling System' ? point.value * 0.8 :
-           system === 'Separator System' ? point.value * 0.9 :
-           system === 'Pump System' ? point.value * 1.1 :
-           point.value
-  }));
-};
-
-const RMSDashboardPage: React.FC = () => {
-  const [activeViewTab, setActiveViewTab] = useState("telemetry");
-  const [activeSystem, setActiveSystem] = useState("All Systems");
-
-  // Filtered data based on active system
-  const filteredAssets = filterAssetsBySystem(activeSystem);
-  const filteredAlerts = filterAlertsBySystem(activeSystem);
-  const filteredTemperatureData = filterTelemetryData(temperatureData, activeSystem, 1);
-  const filteredPressureData = filterTelemetryData(pressureData, activeSystem, 1);
-  const filteredVibrationData = filterTelemetryData(vibrationData, activeSystem, 1);
+const RMSDashboardPage = () => {
+  const [dateRange, setDateRange] = useState({
+    from: subDays(new Date(), 30),
+    to: new Date(),
+  });
 
   return (
     <div className="space-y-6">
@@ -258,8 +110,19 @@ const RMSDashboardPage: React.FC = () => {
         subtitle="Real-time monitoring system overview"
         icon={<Database className="h-6 w-6" />}
       />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      
+      <Breadcrumbs />
+      
+      <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
+        <div>
+          <DatePickerWithRange 
+            dateRange={dateRange}
+            setDateRange={setDateRange}
+          />
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <KpiCard 
           title="Connected Assets" 
           value="24/26" 
@@ -294,215 +157,169 @@ const RMSDashboardPage: React.FC = () => {
           changeLabel="vs last week"
         />
       </div>
-
-      {/* System Filter Tabs */}
-      <Tabs 
-        value={activeSystem} 
-        onValueChange={setActiveSystem}
-        className="w-full mb-6"
-      >
-        <TabsList className="w-full md:w-auto flex flex-wrap bg-muted/50 p-1">
-          {systemOptions.map(system => (
-            <TabsTrigger
-              key={system.id}
-              value={system.id}
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex items-center"
-            >
-              {system.icon}
-              {system.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
-
-      <Tabs value={activeViewTab} onValueChange={setActiveViewTab} className="w-full">
-        <TabsList className="grid w-full md:w-[500px] grid-cols-3">
-          <TabsTrigger value="telemetry">Live Telemetry</TabsTrigger>
-          <TabsTrigger value="health">Health Status</TabsTrigger>
-          <TabsTrigger value="alerts">Alert Analysis</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="telemetry" className="mt-6 animate-fade-in">
-          <div className="grid grid-cols-1 gap-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Temperature Trends</CardTitle>
-                <div className="text-sm font-medium text-muted-foreground">{activeSystem}</div>
-              </CardHeader>
-              <CardContent className="p-6 pt-0">
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={filteredTemperatureData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="time" />
-                    <YAxis domain={['auto', 'auto']} label={{ value: '°C', angle: -90, position: 'insideLeft' }} />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="value" name="Temperature" stroke="#ef4444" strokeWidth={2} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Pressure Readings</CardTitle>
-                  <div className="text-sm font-medium text-muted-foreground">{activeSystem}</div>
-                </CardHeader>
-                <CardContent className="p-6 pt-0">
-                  <ResponsiveContainer width="100%" height={250}>
-                    <LineChart data={filteredPressureData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="time" />
-                      <YAxis domain={['auto', 'auto']} label={{ value: 'MPa', angle: -90, position: 'insideLeft' }} />
-                      <Tooltip />
-                      <Legend />
-                      <Line type="monotone" dataKey="value" name="Pressure" stroke="#3b82f6" strokeWidth={2} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Vibration Readings</CardTitle>
-                  <div className="text-sm font-medium text-muted-foreground">{activeSystem}</div>
-                </CardHeader>
-                <CardContent className="p-6 pt-0">
-                  <ResponsiveContainer width="100%" height={250}>
-                    <LineChart data={filteredVibrationData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="time" />
-                      <YAxis domain={['auto', 'auto']} label={{ value: 'mm/s', angle: -90, position: 'insideLeft' }} />
-                      <Tooltip />
-                      <Legend />
-                      <Line type="monotone" dataKey="value" name="Vibration" stroke="#8b5cf6" strokeWidth={2} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="health" className="mt-6 animate-fade-in">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Asset Health Status</CardTitle>
-              <div className="text-sm font-medium text-muted-foreground">{activeSystem}</div>
-            </CardHeader>
-            <CardContent className="p-6 pt-0">
-              <div className="relative overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Asset No</TableHead>
-                      <TableHead>Asset Name</TableHead>
-                      <TableHead>System</TableHead>
-                      <TableHead>Health Status</TableHead>
-                      <TableHead>Last Updated</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredAssets.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center py-6">
-                          No assets found for this system
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredAssets.map((asset) => (
-                        <TableRow key={asset.id}>
-                          <TableCell className="font-medium">{asset.assetNo}</TableCell>
-                          <TableCell>{asset.assetName}</TableCell>
-                          <TableCell>{asset.system}</TableCell>
-                          <TableCell>
-                            <StatusBadge status={asset.healthStatus} />
-                          </TableCell>
-                          <TableCell>{formatDateTime(asset.lastUpdated)}</TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="alerts" className="mt-6 animate-fade-in">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Alert Analysis</CardTitle>
-              <div className="text-sm font-medium text-muted-foreground">{activeSystem}</div>
-            </CardHeader>
-            <CardContent className="p-6 pt-0">
-              <div className="relative overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Asset</TableHead>
-                      <TableHead>Metric</TableHead>
-                      <TableHead>Current Value</TableHead>
-                      <TableHead>Threshold</TableHead>
-                      <TableHead>Alert Level</TableHead>
-                      <TableHead>Timestamp</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredAlerts.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-6">
-                          No alerts found for this system
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredAlerts.map((alert, index) => (
-                        <TableRow key={`${alert.id}-${index}`}>
-                          <TableCell className="font-medium">{alert.assetName}</TableCell>
-                          <TableCell>{alert.metric}</TableCell>
-                          <TableCell className={
-                            alert.alertLevel === 'Critical' ? 'text-red-500 font-semibold' : 
-                            alert.alertLevel === 'Warning' ? 'text-orange-500 font-semibold' : ''
-                          }>
-                            {alert.value}
-                          </TableCell>
-                          <TableCell>{alert.threshold}</TableCell>
-                          <TableCell>
-                            <StatusBadge status={alert.alertLevel} />
-                          </TableCell>
-                          <TableCell>{formatDateTime(alert.timestamp)}</TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="mt-6">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Alert Trends (Last 7 Days)</CardTitle>
-              <div className="text-sm font-medium text-muted-foreground">{activeSystem}</div>
-            </CardHeader>
-            <CardContent className="p-6 pt-0">
-              <ResponsiveContainer width="100%" height={350}>
-                <BarChart data={alertTrendsData}>
+      
+      {/* Bar Charts Section */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+        {/* Utilization, Availability & Reliability Asset Wise */}
+        <Card className="col-span-1 xl:col-span-2">
+          <CardHeader>
+            <CardTitle>Utilization, Availability & Reliability Asset Wise</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80 mb-6">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart 
+                  data={assetPerformanceData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="day" />
-                  <YAxis />
-                  <Tooltip />
+                  <XAxis dataKey="name" />
+                  <YAxis domain={[0, 100]} label={{ value: '%', angle: -90, position: 'insideLeft' }} />
+                  <Tooltip content={<CustomTooltip />} />
                   <Legend />
-                  <Bar dataKey="critical" name="Critical" stackId="a" fill="#ef4444" />
-                  <Bar dataKey="warning" name="Warning" stackId="a" fill="#f59e0b" />
-                  <Bar dataKey="info" name="Info" stackId="a" fill="#3b82f6" />
+                  <Bar dataKey="utilization" name="Utilization" fill="#8884d8" />
+                  <Bar dataKey="availability" name="Availability" fill="#82ca9d" />
+                  <Bar dataKey="reliability" name="Reliability" fill="#ffc658" />
                 </BarChart>
               </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            </div>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Metric</TableHead>
+                    {assetPerformanceData.map((asset) => (
+                      <TableHead key={asset.name}>{asset.name}</TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell className="font-medium">Utilization %</TableCell>
+                    {assetPerformanceData.map((asset) => (
+                      <TableCell key={`${asset.name}-util`}>{asset.utilization}%</TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Availability %</TableCell>
+                    {assetPerformanceData.map((asset) => (
+                      <TableCell key={`${asset.name}-avail`}>{asset.availability}%</TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Reliability %</TableCell>
+                    {assetPerformanceData.map((asset) => (
+                      <TableCell key={`${asset.name}-rel`}>{asset.reliability}%</TableCell>
+                    ))}
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Average Critical Asset Metrics */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Average Critical Asset Performance</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={averageMetricsData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                  layout="vertical"
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" domain={[0, 100]} />
+                  <YAxis dataKey="name" type="category" width={100} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend />
+                  <Bar dataKey="utilization" name="Avg. Utilization" fill="#8884d8" />
+                  <Bar dataKey="availability" name="Avg. Availability" fill="#82ca9d" />
+                  <Bar dataKey="reliability" name="Avg. Reliability" fill="#ffc658" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="mt-4">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Metric</TableHead>
+                    <TableHead>Value</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell className="font-medium">Average Utilization</TableCell>
+                    <TableCell>{averageMetricsData[0].utilization}%</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Average Availability</TableCell>
+                    <TableCell>{averageMetricsData[0].availability}%</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Average Reliability</TableCell>
+                    <TableCell>{averageMetricsData[0].reliability}%</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* System Reliability & Availability */}
+        <Card>
+          <CardHeader>
+            <CardTitle>System Reliability & Availability</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={systemReliabilityData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis domain={[0, 100]} label={{ value: '%', angle: -90, position: 'insideLeft' }} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend />
+                  <Bar dataKey="availability" name="Availability" fill="#82ca9d" />
+                  <Bar dataKey="reliability" name="Reliability" fill="#ffc658" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="mt-4 overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Metric</TableHead>
+                    {systemReliabilityData.map((system) => (
+                      <TableHead key={system.name}>{system.name}</TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell className="font-medium">Availability %</TableCell>
+                    {systemReliabilityData.map((system) => (
+                      <TableCell key={`${system.name}-avail`}>{system.availability}%</TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Reliability %</TableCell>
+                    {systemReliabilityData.map((system) => (
+                      <TableCell key={`${system.name}-rel`}>{system.reliability}%</TableCell>
+                    ))}
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

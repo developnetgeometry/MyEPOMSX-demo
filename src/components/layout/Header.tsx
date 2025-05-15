@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Bell, Settings, User, Search, Menu } from 'lucide-react';
+import { Bell, Settings, User, Search, Menu, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -11,6 +11,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuItem
 } from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useProject } from '@/contexts/ProjectContext';
+import { toast } from '@/components/ui/use-toast';
 
 interface HeaderProps {
   title?: string;
@@ -19,11 +28,24 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ title, isSidebarOpen, toggleSidebar }) => {
+  const { currentProject, setCurrentProject, projects } = useProject();
+  
   const [notifications, setNotifications] = useState([
     { id: 1, text: 'Work order WO-2023-4582 is overdue', time: '10 min ago' },
     { id: 2, text: 'Asset PM-102 requires maintenance', time: '1 hour ago' },
     { id: 3, text: 'New task assigned by John Doe', time: '3 hours ago' },
   ]);
+
+  const handleProjectChange = (projectId: string) => {
+    const selectedProject = projects.find(p => p.id === projectId);
+    if (selectedProject) {
+      setCurrentProject(selectedProject);
+      toast({
+        title: "Project Changed",
+        description: `Switched to ${selectedProject.name}`,
+      });
+    }
+  };
 
   return (
     <header className="sticky top-0 z-30 h-16 bg-white border-b border-gray-200 flex items-center px-4 transition-all duration-300">
@@ -102,12 +124,33 @@ const Header: React.FC<HeaderProps> = ({ title, isSidebarOpen, toggleSidebar }) 
                 <span className="hidden md:inline-block text-sm font-medium">John Doe</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Profile</DropdownMenuItem>
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuItem>Activity Log</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuLabel className="flex items-center space-x-2">
+                <Building className="h-4 w-4" />
+                <span>Current Project</span>
+              </DropdownMenuLabel>
+              <div className="px-2 py-1.5">
+                <Select onValueChange={handleProjectChange} defaultValue={currentProject.id}>
+                  <SelectTrigger className="w-full border focus-visible:ring-0">
+                    <SelectValue placeholder={currentProject.name} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects.map((project) => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
               <DropdownMenuSeparator />
               <DropdownMenuItem>Sign out</DropdownMenuItem>
             </DropdownMenuContent>

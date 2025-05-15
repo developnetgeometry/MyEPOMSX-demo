@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PageHeader from '@/components/shared/PageHeader';
 import DataTable, { Column } from '@/components/shared/DataTable';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -96,6 +97,7 @@ const pipingData = [
 ];
 
 const IntegrityPage: React.FC = () => {
+  const navigate = useNavigate();
   const columns: Column[] = [
     { id: 'assetCode', header: 'Asset Code', accessorKey: 'assetCode' },
     { id: 'assetName', header: 'Asset Name', accessorKey: 'assetName' },
@@ -109,8 +111,11 @@ const IntegrityPage: React.FC = () => {
     },
   ];
 
-  const handleEdit = (row: any) => {
-    console.log('Editing:', row);
+  const handleRowClick = (row: any) => {
+    // Navigate to the asset integrity detail page with the current tab type and row id
+    const currentTab = document.querySelector('[data-state="active"][role="tab"]')?.getAttribute('data-value');
+    const assetType = currentTab === 'piping' ? 'piping' : 'pressureVessel';
+    navigate(`/monitor/integrity/${assetType}/${row.id}`);
   };
 
   return (
@@ -134,7 +139,7 @@ const IntegrityPage: React.FC = () => {
               <DataTable
                 columns={columns}
                 data={pressureVesselData}
-                onEdit={handleEdit}
+                onRowClick={handleRowClick}
               />
             </CardContent>
           </Card>
@@ -146,7 +151,7 @@ const IntegrityPage: React.FC = () => {
               <DataTable
                 columns={columns}
                 data={pipingData}
-                onEdit={handleEdit}
+                onRowClick={handleRowClick}
               />
             </CardContent>
           </Card>
