@@ -69,6 +69,7 @@ import BomAssemblyPage from './pages/manage/BomAssemblyPage';
 import AssetsPage from './pages/manage/AssetsPage';
 import AssetDetailPage from './pages/manage/AssetDetailsPage';
 import BomAssemblyDetailPage from './pages/manage/BomAssemblyPage';
+import CompanyPage from './pages/admin/setup/CompanyPage';
 
 function App() {
   return (
@@ -96,6 +97,7 @@ function App() {
         <Route path="/manage/inventory/item/:id" element={<Layout><InventoryItemDetailPage /></Layout>} />
         
         {/* Admin Setup Routes */}
+        <Route path="/admin/setup/company" element={<Layout><CompanyPage /></Layout>} />
         <Route path="/admin/setup/client" element={<Layout><ClientPage /></Layout>} />
         <Route path="/admin/setup/client/:id" element={<Layout><ClientDetailPage /></Layout>} />
         <Route path="/admin/setup/project" element={<Layout><ProjectPage /></Layout>} />
