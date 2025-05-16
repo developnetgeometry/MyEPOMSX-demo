@@ -1,4 +1,3 @@
-
 // Facility Location Types
 export interface Facility {
   id: number;
@@ -8,18 +7,13 @@ export interface Facility {
   project_id: number | null;
 }
 
-// System Types
 export interface System {
-  id: string;
-  systemNo: string;
-  name: string;
-  code: string;
-  facilityLocationId: string;
-  facilityLocation?: string;
-  // Add support for the fields used in sample data
-  tag?: string;
-  facilityId?: string;
-  facilityName?: string;
+  id: number;
+  facility_id?: number | null;
+  system_code: string;
+  system_no: string | null;
+  system_name: string | null;
+  is_active: boolean | null;
 }
 
 // Package Types
@@ -70,8 +64,8 @@ export interface ItemsMaster {
   id: string;
   itemsNo: string;
   name: string;
-  manufacturerPartsNo?: string;  // Make this optional to support both property names
-  manufacturer_part_no?: string;  // Alternative property name
+  manufacturerPartsNo?: string; // Make this optional to support both property names
+  manufacturer_part_no?: string; // Alternative property name
   manufacturer: string;
   type: string;
   category: string;

@@ -8,7 +8,6 @@ import { Column } from '@/components/shared/DataTable';
 import { Facility } from '@/types/manage';
 import ManageDialog from '@/components/manage/ManageDialog';
 import * as z from 'zod';
-import { toast } from "sonner";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLoadingState } from '@/hooks/use-loading-state';
@@ -19,10 +18,12 @@ import {
 } from '@/hooks/queries/useFacilities';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
+import { useToast } from '@/hooks/use-toast';
 
 const FacilitiesPage: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   
   // State
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -56,7 +57,11 @@ const FacilitiesPage: React.FC = () => {
     setFilteredData(filtered);
     
     if (filtered.length === 0 && searchTerm.trim() !== '') {
-      toast.info("No matching facilities found");
+      toast({
+        title: "No matching facilities found",
+        description: "Please try a different search term.",
+        variant: "destructive",
+      })
     }
   }, [facilities, searchTerm]);
 
@@ -84,9 +89,16 @@ const FacilitiesPage: React.FC = () => {
         
         // Refresh data after deletion
         queryClient.invalidateQueries({ queryKey: ['facilities'] });
-        toast.success("Facility deleted successfully");
+        toast({
+          title: "Facility deleted successfully",
+          variant: "default",
+        });
       } catch (error: any) {
-        toast.error(`Error deleting facility: ${error.message}`);
+        toast({
+          title: "Error deleting facility",
+          description: error.message,
+          variant: "destructive",
+        });
       }
     });
   };
@@ -107,7 +119,10 @@ const FacilitiesPage: React.FC = () => {
             is_active: currentItem.is_active,
             project_id: currentItem.project_id
           });
-          toast.success("Facility updated successfully");
+          toast({
+            title: "Facility updated successfully",
+            variant: "default",
+          });
         } else {
           // Create new record
           await addFacilityMutation.mutateAsync({
@@ -116,12 +131,19 @@ const FacilitiesPage: React.FC = () => {
             is_active: true,
             project_id: null
           });
-          toast.success("Facility created successfully");
+          toast({
+            title: "Facility added successfully",
+            variant: "default",
+          });
         }
         
         setIsDialogOpen(false);
       } catch (error: any) {
-        toast.error(`Error: ${error.message}`);
+        toast({
+          title: "Error saving facility",
+          description: error.message,
+          variant: "destructive",
+        });
       }
     });
   };
@@ -144,13 +166,12 @@ const FacilitiesPage: React.FC = () => {
     setFilteredData(filtered);
     
     if (filtered.length === 0) {
-      toast.info("No matching facilities found");
+      toast({
+        title: "No matching facilities found",
+        description: "Please try a different search term.",
+        variant: "destructive",
+      });
     }
-  };
-
-  const handleExport = () => {
-    toast.success("Facilities exported successfully");
-    // In a real app, this would generate and download a CSV file
   };
 
   const columns: Column[] = [{
@@ -225,7 +246,6 @@ const FacilitiesPage: React.FC = () => {
             columns={columns} 
             onEdit={handleEdit} 
             onDelete={handleDelete} 
-            onExport={handleExport}
             onRowClick={handleRowClick} 
           />
         </CardContent>
