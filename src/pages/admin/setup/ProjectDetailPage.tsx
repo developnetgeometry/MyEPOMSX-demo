@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import PageHeader from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Database } from 'lucide-react';
+import { ArrowLeft, Database, MapPin } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import StatusBadge from '@/components/shared/StatusBadge';
 import { toast } from 'sonner';
@@ -24,6 +24,8 @@ interface Project {
   fund_code: string | null;
   project_purpose: string | null;
   remark: string | null;
+  latitude: string | null;
+  longitude: string | null;
 }
 
 const ProjectDetailPage: React.FC = () => {
@@ -49,7 +51,9 @@ const ProjectDetailPage: React.FC = () => {
           end_date,
           fund_code,
           project_purpose,
-          remark
+          remark,
+          latitude,
+          longitude
         `)
         .eq('id', Number(id))
         .single();
@@ -145,6 +149,26 @@ const ProjectDetailPage: React.FC = () => {
                 <TableRow>
                   <TableCell className="font-medium">Fund Code</TableCell>
                   <TableCell>{project.fund_code ?? "N/A"}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Latitude and Longitude</TableCell>
+                  <TableCell className='flex'>
+                    {project.latitude && project.longitude ? (
+                      <>
+                        {`${project.latitude}, ${project.longitude}`}
+                        <a
+                          href={`https://www.google.com/maps?q=${project.latitude},${project.longitude}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="ml-4 text-blue-600 hover:text-blue-800"
+                        >
+                          <MapPin className="w-5 h-5" />
+                        </a>
+                      </>
+                    ) : (
+                      "N/A"
+                    )}
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className="font-medium">Project Purpose</TableCell>

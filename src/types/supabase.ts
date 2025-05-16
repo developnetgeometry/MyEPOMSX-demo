@@ -3069,6 +3069,8 @@ export type Database = {
           end_date: string | null
           fund_code: string | null
           id: number
+          latitude: string | null
+          longitude: string | null
           project_code: string
           project_name: string | null
           project_purpose: string | null
@@ -3082,6 +3084,8 @@ export type Database = {
           end_date?: string | null
           fund_code?: string | null
           id?: number
+          latitude?: string | null
+          longitude?: string | null
           project_code: string
           project_name?: string | null
           project_purpose?: string | null
@@ -3095,6 +3099,8 @@ export type Database = {
           end_date?: string | null
           fund_code?: string | null
           id?: number
+          latitude?: string | null
+          longitude?: string | null
           project_code?: string
           project_name?: string | null
           project_purpose?: string | null

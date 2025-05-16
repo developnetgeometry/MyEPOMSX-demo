@@ -18,7 +18,9 @@ export const useProjectData = () => {
                     end_date,
                     fund_code,
                     project_purpose,
-                    remark
+                    remark,
+                    latitude,
+                    longitude
                 `)
                 .order("id", { ascending: false });
 
@@ -43,6 +45,8 @@ export const insertProjectData = async (projectData: {
     fund_code?: string;
     project_purpose?: string;
     remark?: string;
+    latitude?: string;
+    longitude?: string;
 }) => {
     try {
         const { data, error } = await supabase
@@ -72,6 +76,8 @@ export const updateProjectData = async (id: number, updatedData: Partial<{
     fund_code?: string;
     project_purpose?: string;
     remark?: string;
+    latitude?: string;
+    longitude?: string;
 }>) => {
     try {
         const { data, error } = await supabase
