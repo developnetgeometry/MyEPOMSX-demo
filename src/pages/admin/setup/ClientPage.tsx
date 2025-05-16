@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import Loading from "@/components/shared/Loading";
 import { useToast } from "@/hooks/use-toast";
+import { formatDate } from "@/utils/formatters";
 
 const ClientPage: React.FC = () => {
   const navigate = useNavigate();
@@ -108,7 +109,7 @@ const ClientPage: React.FC = () => {
     { id: "name", header: "Client Name", accessorKey: "name" },
     { id: "email", header: "Email", accessorKey: "email" },
     { id: "office_no", header: "Office No.", accessorKey: "office_no" },
-    { id: "onboard_date", header: "Onboard Date", accessorKey: "onboard_date" },
+    { id: "onboard_date", header: "Onboard Date", accessorKey: "onboard_date", cell: (value: any) => formatDate(value)},
     { id: "type", header: "Type", accessorKey: "type" },
   ];
 

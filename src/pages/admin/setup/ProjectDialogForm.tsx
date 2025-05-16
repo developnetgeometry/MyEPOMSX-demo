@@ -23,8 +23,12 @@ const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ onSubmit, onCance
     project_type: initialData?.project_type?.id || "",
     project_name: initialData?.project_name || "",
     short_name: initialData?.short_name || "",
-    start_date: initialData?.start_date || "",
-    end_date: initialData?.end_date || "",
+    start_date: initialData?.start_date
+      ? new Date(initialData.start_date).toISOString().split("T")[0] // Format to YYYY-MM-DD
+      : "",
+    end_date: initialData?.end_date
+      ? new Date(initialData.end_date).toISOString().split("T")[0] // Format to YYYY-MM-DD
+      : "",
     fund_code: initialData?.fund_code || "",
     project_purpose: initialData?.project_purpose || "",
     remark: initialData?.remark || "",
@@ -83,6 +87,25 @@ const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ onSubmit, onCance
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="project_name">Project Name</Label>
+              <Input
+                id="project_name"
+                name="project_name"
+                value={formData.project_name}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="short_name">Short Name</Label>
+              <Input
+                id="short_name"
+                name="short_name"
+                value={formData.short_name}
+                onChange={handleInputChange}
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="project_type">Project Type</Label>
               <Select
@@ -107,24 +130,6 @@ const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ onSubmit, onCance
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="project_name">Project Name</Label>
-              <Input
-                id="project_name"
-                name="project_name"
-                value={formData.project_name}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="short_name">Short Name</Label>
-              <Input
-                id="short_name"
-                name="short_name"
-                value={formData.short_name}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="start_date">Start Date</Label>
               <Input
                 id="start_date"
@@ -145,15 +150,6 @@ const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ onSubmit, onCance
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="fund_code">Fund Code</Label>
-              <Input
-                id="fund_code"
-                name="fund_code"
-                value={formData.fund_code}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="latitude">Latitude</Label>
               <Input
                 id="latitude"
@@ -168,6 +164,15 @@ const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ onSubmit, onCance
                 id="longitude"
                 name="longitude"
                 value={formData.longitude}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="fund_code">Fund Code</Label>
+              <Input
+                id="fund_code"
+                name="fund_code"
+                value={formData.fund_code}
                 onChange={handleInputChange}
               />
             </div>

@@ -64,8 +64,8 @@ const ProjectDetailPage: React.FC = () => {
       } else {
         setProject({
           ...data,
-          client_name: data.client?.name || null,
-          project_type_name: data.project_type_name?.name || null,
+          client_name: data.client?.name ?? null,
+          project_type_name: data.project_type_name?.name ?? null,
         });
       }
       setLoading(false);

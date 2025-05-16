@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {Select, SelectTrigger, SelectContent, SelectItem, SelectValue} from "@/components/ui/select";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import Loading from "@/components/shared/Loading"; // Import the Loading component
 
 interface ClientDialogFormProps {
@@ -17,7 +17,9 @@ const ClientDialogForm: React.FC<ClientDialogFormProps> = ({ onSubmit, onCancel,
     name: initialData?.name || "",
     email: initialData?.email || "",
     office_no: initialData?.office_no || "",
-    onboard_date: initialData?.onboard_date || "",
+    onboard_date: initialData?.onboard_date
+      ? new Date(initialData.onboard_date).toISOString().split("T")[0] // Format to YYYY-MM-DD
+      : "",
     type: initialData?.type || "",
   });
 
