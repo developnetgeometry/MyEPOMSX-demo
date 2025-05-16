@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Layout from '@/components/layout/Layout';
@@ -84,7 +83,15 @@ import WorkRequestDetailPage from '@/pages/maintain/WorkRequestDetailPage';
 import WorkOrderListPage from '@/pages/maintain/WorkOrderListPage';
 import WorkOrderDetailPage from '@/pages/maintain/WorkOrderDetailPage';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function App() {
   return (
@@ -94,6 +101,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Layout><Outlet /></Layout>}>
               <Route index element={<Index />} />
+              
               {/* Manage Routes */}
               <Route path="/manage/facilities" element={<FacilitiesPage />} />
               <Route path="/manage/facilities/:id" element={<FacilityDetailPage />} />
