@@ -5,10 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, Database, MapPin } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import StatusBadge from '@/components/shared/StatusBadge';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
-import Loading from '@/components/shared/Loading';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface Project {

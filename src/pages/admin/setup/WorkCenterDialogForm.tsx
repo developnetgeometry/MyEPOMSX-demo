@@ -31,10 +31,6 @@ const WorkCenterDialogForm: React.FC<WorkCenterDialogFormProps> = ({ onSubmit, o
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleTypeChange = (value: string) => {
-        setFormData((prev) => ({ ...prev, type: value }));
-    };
-
     const handleIsActiveChange = (value: string) => {
         setFormData((prev) => ({ ...prev, is_active: value === "true" }));
     };
