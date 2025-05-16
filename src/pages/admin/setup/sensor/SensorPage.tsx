@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable, { Column } from "@/components/shared/DataTable";
-import { useSensorData, insertSensorData, updateSensorData, deleteSensorData } from "./hooks/use-sensor-data";
+import { useSensorData, insertSensorData, updateSensorData, deleteSensorData } from "../hooks/use-sensor-data";
 import SensorDialogForm from "./SensorDialogForm";
 import {
   Dialog,

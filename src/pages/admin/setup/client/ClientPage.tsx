@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable, { Column } from "@/components/shared/DataTable";
-import { useClientData, insertClientData, updateClientData, deleteClientData } from "./hooks/use-client-data";
+import { useClientData, insertClientData, updateClientData, deleteClientData } from "../hooks/use-client-data";
 import ClientDialogForm from "./ClientDialogForm";
 import {
   Dialog,

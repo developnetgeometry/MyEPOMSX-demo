@@ -4,7 +4,7 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Loading from "@/components/shared/Loading"; // Import the Loading component
-import { useClientData } from "./hooks/use-client-data";
+import { useClientData } from "../hooks/use-client-data";
 import { useProjectTypeData } from "@/hooks/lookup/lookup-project_type";
 import { Textarea } from "@/components/ui/textarea";
 

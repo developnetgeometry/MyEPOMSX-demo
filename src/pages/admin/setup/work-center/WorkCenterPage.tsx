@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable, { Column } from "@/components/shared/DataTable";
-import { useWorkCenterData, insertWorkCenterData, updateWorkCenterData, deleteWorkCenterData } from "./hooks/use-work-center-data";
+import { useWorkCenterData, insertWorkCenterData, updateWorkCenterData, deleteWorkCenterData } from "../hooks/use-work-center-data";
 import WorkCenterDialogForm from "./WorkCenterDialogForm";
 import {
   Dialog,

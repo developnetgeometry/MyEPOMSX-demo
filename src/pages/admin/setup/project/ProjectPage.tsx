@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable, { Column } from "@/components/shared/DataTable";
-import { useProjectData, insertProjectData, updateProjectData, deleteProjectData } from "./hooks/use-project-data";
+import { useProjectData, insertProjectData, updateProjectData, deleteProjectData } from "../hooks/use-project-data";
 import ProjectDialogForm from "./ProjectDialogForm";
 import {
   Dialog,

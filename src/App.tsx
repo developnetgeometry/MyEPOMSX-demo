@@ -27,14 +27,14 @@ import InventoryDetailPage from '@/pages/manage/InventoryDetailPage';
 import InventoryItemDetailPage from '@/pages/manage/InventoryItemDetailPage';
 
 // Admin Setup imports
-import ClientPage from '@/pages/admin/setup/ClientPage';
-import ClientDetailPage from '@/pages/admin/setup/ClientDetailPage';
-import ProjectPage from '@/pages/admin/setup/ProjectPage';
-import ProjectDetailPage from '@/pages/admin/setup/ProjectDetailPage';
-import WorkCenterPage from '@/pages/admin/setup/WorkCenterPage';
-import WorkCenterDetailPage from '@/pages/admin/setup/WorkCenterDetailPage';
-import SensorPage from '@/pages/admin/setup/SensorPage';
-import SensorDetailPage from '@/pages/admin/setup/SensorDetailPage';
+import ClientPage from '@/pages/admin/setup/client/ClientPage';
+import ClientDetailPage from '@/pages/admin/setup/client/ClientDetailPage';
+import ProjectPage from '@/pages/admin/setup/project/ProjectPage';
+import ProjectDetailPage from '@/pages/admin/setup/project/ProjectDetailPage';
+import WorkCenterPage from '@/pages/admin/setup/work-center/WorkCenterPage';
+import WorkCenterDetailPage from '@/pages/admin/setup/work-center/WorkCenterDetailPage';
+import SensorPage from '@/pages/admin/setup/sensor/SensorPage';
+import SensorDetailPage from '@/pages/admin/setup/sensor/SensorDetailPage';
 
 // Admin Settings imports
 import AssetClassPage from '@/pages/admin/settings/AssetClassPage';

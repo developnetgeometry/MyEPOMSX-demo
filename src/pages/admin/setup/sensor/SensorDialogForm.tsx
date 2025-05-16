@@ -6,7 +6,7 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@
 import Loading from "@/components/shared/Loading";
 import { useSensorTypeData } from "@/hooks/lookup/lookup-sensor_type";
 import { useManufacturerData } from "@/hooks/lookup/lookup-manufacturer";
-import { useClientData } from "./hooks/use-client-data";
+import { useClientData } from "../hooks/use-client-data";
 import { Textarea } from "@/components/ui/textarea";
 
 interface SensorDialogFormProps {
