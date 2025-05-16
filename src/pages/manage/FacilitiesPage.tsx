@@ -1,31 +1,64 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '@/components/shared/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Building, Plus, Filter } from 'lucide-react';
+import { Building, Plus } from 'lucide-react';
 import DataTable from '@/components/shared/DataTable';
-import { facilityLocations } from '@/data/sampleData';
-import { FacilityLocation } from '@/types/manage';
-import ManageDialog from '@/components/manage/ManageDialog';
 import { Column } from '@/components/shared/DataTable';
+import { Facility } from '@/types/manage';
+import ManageDialog from '@/components/manage/ManageDialog';
 import * as z from 'zod';
 import { toast } from "sonner";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLoadingState } from '@/hooks/use-loading-state';
+import { 
+  useFacilities, 
+  useAddFacility, 
+  useUpdateFacility 
+} from '@/hooks/queries/useFacilities';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabaseClient';
 
 const FacilitiesPage: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  
+  // State
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [currentItem, setCurrentItem] = useState<FacilityLocation | null>(null);
-  const [data, setData] = useState<FacilityLocation[]>(facilityLocations);
+  const [currentItem, setCurrentItem] = useState<Facility | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredData, setFilteredData] = useState<FacilityLocation[]>(facilityLocations);
+  const [filteredData, setFilteredData] = useState<Facility[]>([]);
   
+  // Custom hooks
   const { isLoading: isProcessing, withLoading } = useLoadingState();
+  
+  // TanStack Query hooks
+  const { data: facilities, isLoading, error } = useFacilities();
+  const addFacilityMutation = useAddFacility();
+  const updateFacilityMutation = useUpdateFacility();
+
+  // Update filtered data when facilities data changes or search term is applied
+  useEffect(() => {
+    if (!facilities) return;
+    
+    if (!searchTerm.trim()) {
+      setFilteredData(facilities);
+      return;
+    }
+    
+    const filtered = facilities.filter(item => 
+      (item.location_name?.toLowerCase().includes(searchTerm.toLowerCase()) || false) || 
+      item.location_code.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    setFilteredData(filtered);
+    
+    if (filtered.length === 0 && searchTerm.trim() !== '') {
+      toast.info("No matching facilities found");
+    }
+  }, [facilities, searchTerm]);
 
   const handleAddNew = () => {
     setIsEditMode(false);
@@ -33,72 +66,79 @@ const FacilitiesPage: React.FC = () => {
     setIsDialogOpen(true);
   };
 
-  const handleEdit = (item: FacilityLocation) => {
+  const handleEdit = (item: Facility) => {
     setIsEditMode(true);
     setCurrentItem(item);
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (item: FacilityLocation) => {
+  const handleDelete = async (item: Facility) => {
     withLoading(async () => {
-      // Simulate API call with delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setData(data.filter(facility => facility.id !== item.id));
-      setFilteredData(filteredData.filter(facility => facility.id !== item.id));
-      toast.success("Facility deleted successfully");
+      try {
+        const { data, error } = await supabase
+          .from('e_facility')
+          .delete()
+          .eq('id', item.id);
+          
+        if (error) throw error;
+        
+        // Refresh data after deletion
+        queryClient.invalidateQueries({ queryKey: ['facilities'] });
+        toast.success("Facility deleted successfully");
+      } catch (error: any) {
+        toast.error(`Error deleting facility: ${error.message}`);
+      }
     });
   };
 
-  const handleRowClick = (row: FacilityLocation) => {
+  const handleRowClick = (row: Facility) => {
     navigate(`/manage/facilities/${row.id}`);
   };
 
   const handleSubmit = (values: any) => {
     withLoading(async () => {
-      // Simulate API call with delay
-      await new Promise(resolve => setTimeout(resolve, 700));
-
-      if (isEditMode && currentItem) {
-        // Update existing record
-        const updatedData = data.map(item => item.id === currentItem.id ? {
-          ...item,
-          ...values
-        } : item);
-        setData(updatedData);
-        setFilteredData(searchTerm ? updatedData.filter(item => 
-          item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-          item.code.toLowerCase().includes(searchTerm.toLowerCase())
-        ) : updatedData);
-        toast.success("Facility updated successfully");
-      } else {
-        // Create new record
-        const newItem = {
-          id: String(data.length + 1),
-          ...values
-        };
-        const newData = [...data, newItem];
-        setData(newData);
-        setFilteredData(searchTerm ? newData.filter(item => 
-          item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-          item.code.toLowerCase().includes(searchTerm.toLowerCase())
-        ) : newData);
-        toast.success("Facility created successfully");
+      try {
+        if (isEditMode && currentItem) {
+          // Update existing record
+          await updateFacilityMutation.mutateAsync({
+            id: Number(currentItem.id),
+            location_code: values.code,
+            location_name: values.name,
+            is_active: currentItem.is_active,
+            project_id: currentItem.project_id
+          });
+          toast.success("Facility updated successfully");
+        } else {
+          // Create new record
+          await addFacilityMutation.mutateAsync({
+            location_code: values.code,
+            location_name: values.name,
+            is_active: true,
+            project_id: null
+          });
+          toast.success("Facility created successfully");
+        }
+        
+        setIsDialogOpen(false);
+      } catch (error: any) {
+        toast.error(`Error: ${error.message}`);
       }
-      
-      setIsDialogOpen(false);
     });
   };
 
   const handleSearch = () => {
+    // The filtering happens in the useEffect
+    // This is just to trigger immediate search on button click
+    if (!facilities) return;
+    
     if (!searchTerm.trim()) {
-      setFilteredData(data);
+      setFilteredData(facilities);
       return;
     }
     
-    const filtered = data.filter(item => 
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      item.code.toLowerCase().includes(searchTerm.toLowerCase())
+    const filtered = facilities.filter(item => 
+      (item.location_name?.toLowerCase().includes(searchTerm.toLowerCase()) || false) || 
+      item.location_code.toLowerCase().includes(searchTerm.toLowerCase())
     );
     
     setFilteredData(filtered);
@@ -114,13 +154,13 @@ const FacilitiesPage: React.FC = () => {
   };
 
   const columns: Column[] = [{
-    id: 'code',
+    id: 'location_code',
     header: 'Facility Location Code',
-    accessorKey: 'code'
+    accessorKey: 'location_code'
   }, {
-    id: 'name',
+    id: 'location_name',
     header: 'Facility Location',
-    accessorKey: 'name'
+    accessorKey: 'location_name'
   }];
 
   const formSchema = z.object({
@@ -137,6 +177,29 @@ const FacilitiesPage: React.FC = () => {
     label: 'Facility Location',
     type: 'text' as const
   }];
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-64">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+        <p className="mt-2">Loading facilities...</p>
+      </div>
+    </div>;
+  }
+
+  if (error) {
+    return <div className="flex items-center justify-center h-64">
+      <div className="text-center text-red-500">
+        <p>Error loading facilities: {(error as Error).message}</p>
+        <Button 
+          onClick={() => queryClient.invalidateQueries({ queryKey: ['facilities'] })}
+          className="mt-4"
+        >
+          Retry
+        </Button>
+      </div>
+    </div>;
+  }
 
   return <div className="space-y-6">
       <PageHeader title="Facilities" icon={<Building className="h-6 w-6" />} onAddNew={handleAddNew} />
@@ -175,14 +238,17 @@ const FacilitiesPage: React.FC = () => {
         }} 
         title={isEditMode ? "Edit Facility" : "Add New Facility"} 
         formSchema={formSchema} 
-        defaultValues={currentItem || {
+        defaultValues={currentItem ? {
+          code: currentItem.location_code,
+          name: currentItem.location_name || ""
+        } : {
           code: "",
           name: ""
         }} 
         formFields={formFields} 
         onSubmit={handleSubmit} 
         isEdit={isEditMode} 
-        isProcessing={isProcessing} 
+        isProcessing={isProcessing || addFacilityMutation.isPending || updateFacilityMutation.isPending} 
       />
     </div>;
 };

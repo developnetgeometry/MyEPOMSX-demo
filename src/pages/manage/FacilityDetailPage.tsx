@@ -1,39 +1,95 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import PageHeader from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, Building, Pencil } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { FacilityLocation } from '@/types/manage';
-import { facilityLocations } from '@/data/sampleData';
 import { toast } from 'sonner';
+import { useFacility, useUpdateFacility } from '@/hooks/queries/useFacilities';
+import { z } from 'zod';
+import ManageDialog from '@/components/manage/ManageDialog';
 
 const FacilityDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [facility, setFacility] = useState<FacilityLocation | null>(null);
-  
-  useEffect(() => {
-    // Fetch facility data based on id
-    const foundFacility = facilityLocations.find(f => f.id === id);
-    
-    if (foundFacility) {
-      setFacility(foundFacility);
-    } else {
-      toast.error("Facility not found");
-      navigate('/manage/facilities');
-    }
-  }, [id, navigate]);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  const { data: facility, isLoading, error } = useFacility(Number(id));
+  const updateFacilityMutation = useUpdateFacility();
+
+  const handleGoBack = () => {
+    navigate('/manage/facilities');
+  };
 
   const handleEdit = () => {
-    // In a real application, this would open an edit form
-    toast.info("Edit functionality would be implemented here");
+    setIsEditDialogOpen(true);
   };
+
+  const handleSubmit = async (values: any) => {
+    if (!facility) return;
+    
+    try {
+      await updateFacilityMutation.mutateAsync({
+        id: facility.id,
+        location_code: values.code,
+        location_name: values.name,
+        is_active: facility.is_active,
+        project_id: facility.project_id
+      });
+      
+      toast.success("Facility updated successfully");
+      setIsEditDialogOpen(false);
+    } catch (error: any) {
+      toast.error(`Error updating facility: ${error.message}`);
+    }
+  };
+
+  const formSchema = z.object({
+    code: z.string().min(1, "Facility Location Code is required"),
+    name: z.string().min(1, "Facility Location is required")
+  });
+
+  const formFields = [{
+    name: 'code',
+    label: 'Facility Location Code',
+    type: 'text' as const
+  }, {
+    name: 'name',
+    label: 'Facility Location',
+    type: 'text' as const
+  }];
   
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-64">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+        <p className="mt-2">Loading facility details...</p>
+      </div>
+    </div>;
+  }
+
+  if (error) {
+    return <div className="flex items-center justify-center h-64">
+      <div className="text-center text-red-500">
+        <p>Error loading facility: {(error as Error).message}</p>
+        <Button onClick={handleGoBack} className="mt-4">
+          Back to Facilities
+        </Button>
+      </div>
+    </div>;
+  }
+
   if (!facility) {
-    return <div>Loading...</div>;
+    return <div className="flex items-center justify-center h-64">
+      <div className="text-center">
+        <p>Facility not found</p>
+        <Button onClick={handleGoBack} className="mt-4">
+          Back to Facilities
+        </Button>
+      </div>
+    </div>;
   }
 
   return (
@@ -45,7 +101,7 @@ const FacilityDetailPage: React.FC = () => {
         />
         <Button 
           variant="outline" 
-          onClick={() => navigate('/manage/facilities')} 
+          onClick={handleGoBack} 
           className="flex items-center gap-2"
         >
           <ArrowLeft className="h-4 w-4" /> Back to Facilities
@@ -65,7 +121,7 @@ const FacilityDetailPage: React.FC = () => {
             <TableBody>
               <TableRow>
                 <TableCell className="font-medium">Facility Location Code</TableCell>
-                <TableCell>{facility.code}</TableCell>
+                <TableCell>{facility.location_code}</TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="sm" onClick={handleEdit}>
                     <Pencil className="h-4 w-4" />
@@ -75,7 +131,7 @@ const FacilityDetailPage: React.FC = () => {
               </TableRow>
               <TableRow>
                 <TableCell className="font-medium">Facility Location</TableCell>
-                <TableCell>{facility.name}</TableCell>
+                <TableCell>{facility.location_name}</TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="sm" onClick={handleEdit}>
                     <Pencil className="h-4 w-4" />
@@ -87,6 +143,21 @@ const FacilityDetailPage: React.FC = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <ManageDialog 
+        open={isEditDialogOpen} 
+        onOpenChange={setIsEditDialogOpen} 
+        title="Edit Facility" 
+        formSchema={formSchema} 
+        defaultValues={{
+          code: facility.location_code,
+          name: facility.location_name || ""
+        }} 
+        formFields={formFields} 
+        onSubmit={handleSubmit} 
+        isEdit={true} 
+        isProcessing={updateFacilityMutation.isPending} 
+      />
     </div>
   );
 };
