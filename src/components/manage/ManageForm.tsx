@@ -31,7 +31,7 @@ interface ManageFormProps {
   fields: {
     name: string;
     label: string;
-    type: "text" | "number" | "select" | "date" | "textarea";
+    type: "text" | "number" | "select" | "date" | "textarea" | "checkbox";
     options?: { value: string; label: string }[];
     required?: boolean;
     placeholder?: string;
