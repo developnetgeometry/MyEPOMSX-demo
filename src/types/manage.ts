@@ -18,13 +18,34 @@ export interface System {
 
 // Package Types
 export interface Package {
-  id: string;
-  packageNo: string;
+  id: number;
+  package_no: string;
+  package_name: string | null;
+  package_tag: string | null;
+  system_id: number | null;
+  package_type_id: number | null;
+  package_type?: {
+    name: string
+  } | null;
+
+}
+
+export interface PackageType {
+  id: number;
   name: string;
-  tag: string;
-  systemId: string;
-  systemName?: string;
-  type: string;
+}
+
+export interface PackageData {
+  id: number;
+  package_no: string;
+  package_name: string;
+  package_tag: string;
+  system_id: number;
+  package_type_id: number;
+  is_active?: boolean;
+  // Related data that might be included
+  system?: { id: number; system_name: string; system_code: string };
+  package_type?: { id: number; name: string };
 }
 
 // Asset Types

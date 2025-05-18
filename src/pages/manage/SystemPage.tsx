@@ -42,6 +42,7 @@ const SystemPage: React.FC = () => {
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentItem, setCurrentItem] = useState<System | null>(null);
+  
 
   // Search state
   const [searchTerm, setSearchTerm] = useState("");
