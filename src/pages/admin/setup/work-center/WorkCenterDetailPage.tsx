@@ -3,73 +3,69 @@ import { useParams, useNavigate } from 'react-router-dom';
 import PageHeader from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Users } from 'lucide-react';
+import { ArrowLeft, Building } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import StatusBadge from '@/components/shared/StatusBadge';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
-import Loading from '@/components/shared/Loading';
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface Client {
+interface WorkCenter {
   id: number;
   code: string;
   name: string | null;
-  email: string | null;
-  office_no: string | null;
-  onboard_date: string | null;
   type: string | null;
-  // Add other fields if needed
+  effective_date: string | null;
+  remark: string | null;
+  is_active: boolean | null;
 }
 
-const ClientDetailPage: React.FC = () => {
+const WorkCenterDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [client, setClient] = useState<Client | null>(null);
+  const [workCenter, setWorkCenter] = useState<WorkCenter | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchClient = async () => {
+    const fetchWorkCenter = async () => {
       setLoading(true);
       const { data, error } = await supabase
-        .from('e_client')
+        .from('e_work_center')
         .select('*')
         .eq('id', Number(id))
         .single();
 
       if (error || !data) {
-        toast.error("Client not found");
-        navigate('/admin/setup/client');
+        toast.error("Work Center not found");
+        navigate('/admin/setup/work-center');
       } else {
-        setClient(data);
+        setWorkCenter(data);
       }
       setLoading(false);
     };
 
-    if (id) fetchClient();
+    if (id) fetchWorkCenter();
   }, [id, navigate]);
-
-
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <PageHeader
-          title="Client Details"
-          icon={<Users className="h-6 w-6" />}
+          title="Work Center Details"
+          icon={<Building className="h-6 w-6" />}
         />
         <Button
           variant="outline"
-          onClick={() => navigate('/admin/setup/client')}
+          onClick={() => navigate('/admin/setup/work-center')}
           className="flex items-center gap-2"
         >
-          <ArrowLeft className="h-4 w-4" /> Back to Clients
+          <ArrowLeft className="h-4 w-4" /> Back to Work Centers
         </Button>
       </div>
 
       {loading ? (
-          <Skeleton className="h-[200px] w-full" />
-      ) : client ? (
+        <Skeleton className="h-[200px] w-full" />
+      ) : workCenter ? (
         <Card>
           <CardContent className="pt-6">
             <Table>
@@ -81,34 +77,36 @@ const ClientDetailPage: React.FC = () => {
               </TableHeader>
               <TableBody>
                 <TableRow>
-                  <TableCell className="font-medium">Client Code</TableCell>
-                  <TableCell>{client.code ?? "N/A"}</TableCell>
+                  <TableCell className="font-medium">Code</TableCell>
+                  <TableCell>{workCenter.code}</TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className="font-medium">Client Name</TableCell>
-                  <TableCell>{client.name ?? "N/A"}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Email</TableCell>
-                  <TableCell>{client.email ?? "N/A"}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Office No.</TableCell>
-                  <TableCell>{client.office_no ?? "N/A"}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Onboard Date</TableCell>
-                  <TableCell>
-                    {client.onboard_date
-                      ? new Date(client.onboard_date).toLocaleDateString("en-GB") // dd/mm/yyyy
-                        .replace(/\//g, "-") // convert to dd-mm-yyyy
-                      : "N/A"}
-                  </TableCell>
-
+                  <TableCell className="font-medium">Name</TableCell>
+                  <TableCell>{workCenter.name ?? "N/A"}</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className="font-medium">Type</TableCell>
-                  <TableCell>{client.type ?? "N/A"}</TableCell>
+                  <TableCell>{workCenter.type ?? "N/A"}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Effective Date</TableCell>
+                  <TableCell>
+                    {workCenter.effective_date
+                      ? new Date(workCenter.effective_date).toLocaleDateString("en-GB").replace(/\//g, "-")
+                      : "N/A"}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Remark</TableCell>
+                  <TableCell>{workCenter.remark ?? "N/A"}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Is Active</TableCell>
+                  <TableCell>
+                    {workCenter.is_active !== null ? (
+                      <StatusBadge status={workCenter.is_active ? "Active" : "Inactive"} />
+                    ) : "N/A"}
+                  </TableCell>
                 </TableRow>
               </TableBody>
             </Table>
@@ -117,7 +115,6 @@ const ClientDetailPage: React.FC = () => {
       ) : null}
     </div>
   );
-
 };
 
-export default ClientDetailPage;
+export default WorkCenterDetailPage;

@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable, { Column } from "@/components/shared/DataTable";
-import { useProjectData, insertProjectData, updateProjectData, deleteProjectData } from "./hooks/use-project-data";
+import { useProjectData, insertProjectData, updateProjectData, deleteProjectData } from "../hooks/use-project-data";
 import ProjectDialogForm from "./ProjectDialogForm";
 import {
   Dialog,
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import Loading from "@/components/shared/Loading";
 import { useToast } from "@/hooks/use-toast";
+import { formatDate } from "@/utils/formatters";
 
 const ProjectPage: React.FC = () => {
   const navigate = useNavigate();
@@ -111,8 +112,8 @@ const ProjectPage: React.FC = () => {
     { id: "project_name", header: "Project Name", accessorKey: "project_name" },
     { id: "short_name", header: "Short Name", accessorKey: "short_name" },
     { id: "project_type", header: "Project Type", accessorKey: "project_type.name" },
-    { id: "start_date", header: "Start Date", accessorKey: "start_date" },
-    { id: "end_date", header: "End Date", accessorKey: "end_date" },
+    { id: "start_date", header: "Start Date", accessorKey: "start_date", cell: (value: any) => formatDate(value) },
+    { id: "end_date", header: "End Date", accessorKey: "end_date", cell: (value: any) => formatDate(value) },
     { id: "fund_code", header: "Fund Code", accessorKey: "fund_code" },
   ];
 
