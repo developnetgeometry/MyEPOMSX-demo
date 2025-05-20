@@ -203,6 +203,14 @@ export interface AssetWithRelations extends Asset {
   asset_group?: AssetGroup | null;
   asset_installation?: AssetInstallation[] | null;
   asset_details?: AssetDetailWithRelations | null;
+  asset_sce?: AssetSce[] | null;
+}
+
+export interface AssetHierarchyNode {
+  id: string;
+  name: string;
+  type: 'facility' | 'system' | 'package' | 'asset';
+  children: AssetHierarchyNode[];
 }
 
 export type CreateAssetDTO = Omit<Asset, 'id'>;

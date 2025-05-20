@@ -232,8 +232,6 @@ const AssetDetailPage: React.FC = () => {
 
   const commissionDate = asset?.commission_date ? formatDate(asset.commission_date) : "";
 
-  console.log(asset);
-  
   const handleWorkRequest = () => {
     toast.info("Opening work request for this asset");
     navigate(`/maintain/work-request?assetId=${id}`);

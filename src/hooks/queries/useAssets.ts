@@ -11,6 +11,7 @@ export const assetKeys = {
   details: () => [...assetKeys.all, "detail"] as const,
   detail: (id: number) => [...assetKeys.details(), id] as const,
   withRelations: () => [...assetKeys.all, "withRelations"] as const,
+  hierarchy: () => [...assetKeys.all, 'hierarchy'] as const,
 };
 
 export const useAssets = () => {
@@ -39,6 +40,13 @@ export const useAssetsWithRelations = () => {
   return useQuery({
     queryKey: assetKeys.withRelations(),
     queryFn: () => assetService.getAssetsWithRelations(),
+  });
+};
+
+export const useAssetHierarchy = () => {
+  return useQuery({
+    queryKey: assetKeys.hierarchy(), // You'll need to add this to your assetKeys
+    queryFn: () => assetService.getAssetHierarchy(),
   });
 };
 
