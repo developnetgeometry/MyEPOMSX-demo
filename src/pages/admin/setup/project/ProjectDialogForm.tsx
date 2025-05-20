@@ -95,6 +95,7 @@ const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ onSubmit, onCance
                 name="project_name"
                 value={formData.project_name}
                 onChange={handleInputChange}
+                required
               />
             </div>
             <div className="space-y-2">
@@ -137,6 +138,7 @@ const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ onSubmit, onCance
                 type="date"
                 value={formData.start_date}
                 onChange={handleInputChange}
+                required
               />
             </div>
             <div className="space-y-2">
@@ -147,6 +149,7 @@ const ProjectDialogForm: React.FC<ProjectDialogFormProps> = ({ onSubmit, onCance
                 type="date"
                 value={formData.end_date}
                 onChange={handleInputChange}
+                required
               />
             </div>
             <div className="space-y-2">

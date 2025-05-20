@@ -98,6 +98,7 @@ const ClientDialogForm: React.FC<ClientDialogFormProps> = ({ onSubmit, onCancel,
                 type="date"
                 value={formData.onboard_date}
                 onChange={handleInputChange}
+                required
               />
             </div>
             <div className="space-y-2">

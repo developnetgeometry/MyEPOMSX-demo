@@ -144,6 +144,7 @@ const SensorDialogForm: React.FC<SensorDialogFormProps> = ({
                                 type="date"
                                 value={formData.calibration_date}
                                 onChange={handleInputChange}
+                                required
                             />
                         </div>
                         <div className="space-y-2 md:col-span-2">

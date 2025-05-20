@@ -88,6 +88,7 @@ const WorkCenterDialogForm: React.FC<WorkCenterDialogFormProps> = ({ onSubmit, o
                                 type="date"
                                 value={formData.effective_date}
                                 onChange={handleInputChange}
+                                required
                             />
                         </div>
                         <div className="space-y-2">
