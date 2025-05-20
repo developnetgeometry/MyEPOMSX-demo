@@ -119,6 +119,10 @@ export interface AssetArea { id: number; name: string; }
 export interface AssetClass { id: number; name: string; }
 export interface SensorType { id: number; name: string; }
 export interface AssetSce { id: number; group_name: string; sce_code: string; }
+export interface Unit{ id: number; name: string; }
+export interface Criticality{ id: number; name: string; }
+export interface ItemGroup{ id: number; name: string; }
+
 export interface Client {
   id: number;
   code: string;
@@ -231,20 +235,31 @@ export interface SparePart {
 }
 
 // Items Master Types
-export interface ItemsMaster {
-  id: string;
-  itemsNo: string;
-  name: string;
-  manufacturerPartsNo?: string; // Make this optional to support both property names
-  manufacturer_part_no?: string; // Alternative property name
-  manufacturer: string;
-  type: string;
-  category: string;
-  // Add support for other fields in sample data
-  supplier?: string;
-  uom?: string;
-  price?: number;
+export interface ItemMaster {
+  id: number;
+  item_no: string;
+  item_name: string;
+  category_id: number;
+  type_id: number;
+  item_group_id: number;
+  manufacturer_id: number;
+  manufacturer_part_no: string;
+  model_no: string;
+  specification: string;
+  unit_id: number;
+  criticality_id: number;
+  is_active: boolean;
 }
+
+export interface ItemMasterWithRelations extends ItemMaster {
+  item_group?: ItemGroup | null;
+  category?: AssetCategory | null;
+  type?: AssetType | null;
+  manufacturer?: Manufacturer | null;
+  unit?: Unit | null;
+  criticality?: Criticality | null;
+}
+
 
 // Inventory Types
 export interface Inventory {

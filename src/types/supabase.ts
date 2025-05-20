@@ -1772,10 +1772,10 @@ export type Database = {
           criticality_id: number | null
           id: number
           is_active: boolean | null
-          item_group: number | null
+          item_group_id: number | null
           item_name: string | null
           item_no: string
-          manufacturer: number | null
+          manufacturer_id: number | null
           manufacturer_part_no: string | null
           model_no: string | null
           specification: string | null

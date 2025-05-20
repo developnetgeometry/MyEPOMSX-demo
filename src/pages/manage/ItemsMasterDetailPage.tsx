@@ -15,6 +15,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { itemsMaster } from '@/data/sampleData';
 import InventoryTabList from '@/components/shared/InventoryTabList';
+import { useItemMasterDetail } from '@/hooks/queries/useItemsMaster';
 
 const ItemsMasterDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +24,10 @@ const ItemsMasterDetailPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('itemMaster');
   const [files, setFiles] = useState<File[]>([]);
   const [attachments, setAttachments] = useState<{id: string, name: string, size: string, type: string, uploadDate: string}[]>([]);
+
+  const { data, isLoading, error } = useItemMasterDetail(Number(id));
+  console.log(data);
+  
 
   // Find the item in sample data
   const item = itemsMaster.find(item => item.id === id);
@@ -41,23 +46,33 @@ const ItemsMasterDetailPage: React.FC = () => {
   });
 
   type FormValues = z.infer<typeof formSchema>;
-
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      itemsNo: item?.itemsNo || "",
-      name: item?.name || "",
-      category: item?.category || "",
-      type: item?.type || "",
-      manufacturer: item?.manufacturer || "",
-      // Handle both possible property names for manufacturer parts number
-      manufacturerPartsNo: item?.manufacturerPartsNo || item?.manufacturer_part_no || "",
-      modelNo: "",
-      unit: "Each",
-      specification: "",
-      criticality: "Medium",
+      itemsNo: "",
+      name: "",
+      type: "",
+      manufacturer: "",
+      manufacturerPartsNo: "",
+      unit: "",
+      criticality: "",
     }
   });
+  
+  // Update form values when data loads
+  useEffect(() => {
+    if (data) {
+      form.reset({
+        itemsNo: data.item_no || "",
+        name: data.item_name || "",
+        type: data.type?.name || "",
+        manufacturer: data.manufacturer?.name || "",
+        manufacturerPartsNo: data.manufacturer_part_no || "",
+        unit: data.unit?.name || "",
+        criticality: data.criticality?.name || "",
+      });
+    }
+  }, [data, form]);
 
   const onSubmit = (values: FormValues) => {
     console.log("Form values:", values);
@@ -144,6 +159,18 @@ const ItemsMasterDetailPage: React.FC = () => {
     { value: 'Medium', label: 'Medium' },
     { value: 'Low', label: 'Low' },
   ];
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
+
+  if(!data) {
+    return <div>Item master not found</div>;
+  }
 
   return (
     <div className="space-y-6">
