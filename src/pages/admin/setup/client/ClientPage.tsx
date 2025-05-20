@@ -14,6 +14,8 @@ import {
 import Loading from "@/components/shared/Loading";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/utils/formatters";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 const ClientPage: React.FC = () => {
   const navigate = useNavigate();
@@ -109,7 +111,7 @@ const ClientPage: React.FC = () => {
     { id: "name", header: "Client Name", accessorKey: "name" },
     { id: "email", header: "Email", accessorKey: "email" },
     { id: "office_no", header: "Office No.", accessorKey: "office_no" },
-    { id: "onboard_date", header: "Onboard Date", accessorKey: "onboard_date", cell: (value: any) => formatDate(value)},
+    { id: "onboard_date", header: "Onboard Date", accessorKey: "onboard_date", cell: (value: any) => formatDate(value) },
     { id: "type", header: "Type", accessorKey: "type" },
   ];
 
@@ -137,13 +139,21 @@ const ClientPage: React.FC = () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>{editingClient ? "Edit Client" : "Add New Client"}</DialogTitle>
-            <DialogDescription>
-              {editingClient
-                ? "Update the details of the client."
-                : "Fill in the details to add a new client."}
-            </DialogDescription>
+            <div className="flex items-start justify-between w-full">
+              <div>
+                <DialogTitle>{editingClient ? "Edit Client" : "Add New Client"}</DialogTitle>
+                <DialogDescription>
+                  {editingClient
+                    ? "Update the details of the client."
+                    : "Fill in the details to add a new client."}
+                </DialogDescription>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setIsDialogOpen(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </DialogHeader>
+
           <ClientDialogForm
             onSubmit={handleFormSubmit}
             onCancel={() => setIsDialogOpen(false)}

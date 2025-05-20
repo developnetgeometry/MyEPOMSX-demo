@@ -13,7 +13,9 @@ import {
 } from "@/components/ui/dialog";
 import Loading from "@/components/shared/Loading";
 import { useToast } from "@/hooks/use-toast";
-import { formatDate} from "@/utils/formatters";
+import { formatDate } from "@/utils/formatters";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 const SensorPage: React.FC = () => {
   const navigate = useNavigate();
@@ -110,7 +112,8 @@ const SensorPage: React.FC = () => {
     { id: "description", header: "Description", accessorKey: "description" },
     { id: "manufacturer", header: "Manufacturer", accessorKey: "manufacturer_id.name" },
     { id: "model", header: "Model", accessorKey: "model" },
-    { id: "calibration_date", header: "Calibration Date", accessorKey: "calibration_date", cell: (value: any) => formatDate(value) // Use the formatter here
+    {
+      id: "calibration_date", header: "Calibration Date", accessorKey: "calibration_date", cell: (value: any) => formatDate(value) // Use the formatter here
     },
   ];
 
@@ -138,13 +141,21 @@ const SensorPage: React.FC = () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>{editingSensor ? "Edit Sensor" : "Add New Sensor"}</DialogTitle>
-            <DialogDescription>
-              {editingSensor
-                ? "Update the details of the sensor."
-                : "Fill in the details to add a new sensor."}
-            </DialogDescription>
+            <div className="flex items-start justify-between w-full">
+              <div>
+                <DialogTitle>{editingSensor ? "Edit Sensor" : "Add New Sensor"}</DialogTitle>
+                <DialogDescription>
+                  {editingSensor
+                    ? "Update the details of the sensor."
+                    : "Fill in the details to add a new sensor."}
+                </DialogDescription>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setIsDialogOpen(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </DialogHeader>
+
           <SensorDialogForm
             onSubmit={handleFormSubmit}
             onCancel={() => setIsDialogOpen(false)}
