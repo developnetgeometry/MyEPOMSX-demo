@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Archive, ChevronDown, ChevronRight, Printer } from 'lucide-react';
 import DataTable from '@/components/shared/DataTable';
 import { assets, packages, systems, facilityLocations, assetHierarchy } from '@/data/sampleData';
-import { Asset } from '@/types/manage';
+import { Asset, AssetWithRelations } from '@/types/manage';
 import ManageDialog from '@/components/manage/ManageDialog';
 import { Column } from '@/components/shared/DataTable';
 import * as z from 'zod';
@@ -28,6 +28,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Badge } from "@/components/ui/badge";
+import { useAssets, useAssetsWithRelations } from '@/hooks/queries/useAssets';
 
 type HierarchyNodeProps = {
   node: any;
@@ -99,12 +100,13 @@ const HierarchyNode: React.FC<HierarchyNodeProps> = ({ node, level = 0, onSelect
 const AssetsPage: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [currentItem, setCurrentItem] = useState<Asset | null>(null);
-  const [data, setData] = useState<Asset[]>(assets);
+  const [currentItem, setCurrentItem] = useState<AssetWithRelations | null>(null);
   const [selectedNode, setSelectedNode] = useState<any | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+  const [selectedAsset, setSelectedAsset] = useState<AssetWithRelations | null>(null);
   const navigate = useNavigate();
+
+  const { data: assets, isLoading, isError, error } = useAssetsWithRelations();
 
   const handleNodeSelect = (node: any) => {
     setSelectedNode(node);
@@ -138,64 +140,68 @@ const AssetsPage: React.FC = () => {
 
   const handleSubmit = (values: any) => {
     if (isEditMode && currentItem) {
-      setData(data.map(item => item.id === currentItem.id ? { ...item, ...values } : item));
+      console.log("Update asset with values:", values);
     } else {
-      setData([...data, { id: String(data.length + 1), ...values }]);
+      console.log("Create new asset with values:", values);
     }
   };
 
   const columns: Column[] = [
     {
-      id: 'assetNo',
+      id: 'asset_no',
       header: 'Asset No',
-      accessorKey: 'assetNo',
+      accessorKey: 'asset_no',
     },
     {
-      id: 'name',
+      id: 'asset_name',
       header: 'Asset Name',
-      accessorKey: 'name',
+      accessorKey: 'asset_name',
     },
     {
       id: 'package',
       header: 'Package',
       accessorKey: 'package',
+      cell: (value) => value.package_name || '-'
     },
     {
       id: 'system',
       header: 'System',
       accessorKey: 'system',
+      cell: (value) => value.system_name || '-'
     },
     {
       id: 'facility',
       header: 'Facility',
       accessorKey: 'facility',
+      cell: (value) => value.location_name || '-'
     },
     {
-      id: 'assetTag',
+      id: 'asset_tag',
       header: 'Asset Tag',
-      accessorKey: 'assetTag',
+      accessorKey: 'asset_tag',
+      cell: (value) => value.name || '-'
     },
+    // {
+    //   id: 'model',
+    //   header: 'Model',
+    //   accessorKey: 'model',
+    // },
     {
-      id: 'model',
-      header: 'Model',
-      accessorKey: 'model',
-    },
-    {
-      id: 'status',
+      id: 'asset_status',
       header: 'Status',
-      accessorKey: 'status',
-      cell: (value) => <StatusBadge status={value} />
+      accessorKey: 'asset_status',
+      cell: (value) => <StatusBadge status={value.name || 'Unknown'} />
     },
-    {
-      id: 'sceCode',
-      header: 'SCE Code',
-      accessorKey: 'sceCode',
-    },
-    {
-      id: 'criticalityCode',
-      header: 'Criticality Code',
-      accessorKey: 'criticalityCode',
-    },
+    // {
+    //   id: 'sceCode',
+    //   header: 'SCE Code',
+    //   accessorKey: 'sceCode',
+    // },
+    // {
+    //   id: 'criticalityCode',
+    //   header: 'Criticality Code',
+    //   accessorKey: 'criticalityCode',
+    // },
   ];
 
   const formSchema = z.object({
@@ -277,6 +283,15 @@ const AssetsPage: React.FC = () => {
     }
   ];
 
+  if (isLoading) {
+    return <div>Loading assets...</div>;
+  }
+  
+  // If there was an error fetching the data
+  if (isError) {
+    return <div>Error loading assets: {error?.message}</div>;
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader 
@@ -294,7 +309,7 @@ const AssetsPage: React.FC = () => {
             </TabsList>
             <TabsContent value="list" className="pt-4">
               <DataTable 
-                data={data} 
+                data={assets} 
                 columns={columns} 
                 onEdit={handleEdit}
                 onRowClick={handleRowClick}
@@ -401,9 +416,9 @@ const AssetsPage: React.FC = () => {
       <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
         <DrawerContent className="max-h-[85vh]">
           <DrawerHeader className="border-b border-gray-200 pb-4">
-            <DrawerTitle className="text-xl font-semibold">{selectedAsset?.name || 'Asset Details'}</DrawerTitle>
+            {/* <DrawerTitle className="text-xl font-semibold">{selectedAsset?.name || 'Asset Details'}</DrawerTitle> */}
             <DrawerDescription>
-              Asset ID: {selectedAsset?.assetNo}
+              {/* Asset ID: {selectedAsset?.assetNo} */}
             </DrawerDescription>
           </DrawerHeader>
           
@@ -416,19 +431,19 @@ const AssetsPage: React.FC = () => {
                     <div className="space-y-3">
                       <div className="bg-gray-50 p-3 rounded-md">
                         <span className="text-xs text-gray-500 block">Asset Name</span>
-                        <span className="text-sm font-medium">{selectedAsset.name}</span>
+                        {/* <span className="text-sm font-medium">{selectedAsset.name}</span> */}
                       </div>
                       <div className="bg-gray-50 p-3 rounded-md">
                         <span className="text-xs text-gray-500 block">Asset Tag</span>
-                        <span className="text-sm font-medium">{selectedAsset.assetTag}</span>
+                        {/* <span className="text-sm font-medium">{selectedAsset.assetTag}</span> */}
                       </div>
                       <div className="bg-gray-50 p-3 rounded-md">
                         <span className="text-xs text-gray-500 block">Model</span>
-                        <span className="text-sm font-medium">{selectedAsset.model}</span>
+                        {/* <span className="text-sm font-medium">{selectedAsset.model}</span> */}
                       </div>
                       <div className="bg-gray-50 p-3 rounded-md">
                         <span className="text-xs text-gray-500 block">Status</span>
-                        <StatusBadge status={selectedAsset.status} />
+                        {/* <StatusBadge status={selectedAsset.status} /> */}
                       </div>
                     </div>
                   </div>
@@ -440,15 +455,15 @@ const AssetsPage: React.FC = () => {
                     <div className="space-y-3">
                       <div className="bg-gray-50 p-3 rounded-md">
                         <span className="text-xs text-gray-500 block">System</span>
-                        <span className="text-sm font-medium">{selectedAsset.system}</span>
+                        {/* <span className="text-sm font-medium">{selectedAsset.system}</span> */}
                       </div>
                       <div className="bg-gray-50 p-3 rounded-md">
                         <span className="text-xs text-gray-500 block">Package</span>
-                        <span className="text-sm font-medium">{selectedAsset.package}</span>
+                        {/* <span className="text-sm font-medium">{selectedAsset.package}</span> */}
                       </div>
                       <div className="bg-gray-50 p-3 rounded-md">
                         <span className="text-xs text-gray-500 block">Facility</span>
-                        <span className="text-sm font-medium">{selectedAsset.facility}</span>
+                        {/* <span className="text-sm font-medium">{selectedAsset.facility}</span> */}
                       </div>
                     </div>
                   </div>
@@ -461,17 +476,17 @@ const AssetsPage: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="bg-gray-50 p-3 rounded-md">
                       <span className="text-xs text-gray-500 block">SCE Code</span>
-                      <span className="text-sm font-medium">{selectedAsset.sceCode}</span>
+                      {/* <span className="text-sm font-medium">{selectedAsset.sceCode}</span> */}
                     </div>
                     <div className="bg-gray-50 p-3 rounded-md">
                       <span className="text-xs text-gray-500 block">Criticality Code</span>
-                      <Badge variant={
+                      {/* <Badge variant={
                         selectedAsset.criticalityCode === 'A' ? 'danger' :
                         selectedAsset.criticalityCode === 'B' ? 'warning' : 'success'
                       }>
                         {selectedAsset.criticalityCode === 'A' ? 'A - Critical' :
                          selectedAsset.criticalityCode === 'B' ? 'B - Important' : 'C - Standard'}
-                      </Badge>
+                      </Badge> */}
                     </div>
                   </div>
                 </div>
@@ -486,7 +501,7 @@ const AssetsPage: React.FC = () => {
                   if (selectedAsset) handleEdit(selectedAsset);
                   setIsDrawerOpen(false);
                 }}
-                variant="outline-indigo"
+                variant="outline"
               >
                 Edit Asset
               </Button>
