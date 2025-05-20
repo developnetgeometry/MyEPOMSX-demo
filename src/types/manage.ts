@@ -202,7 +202,7 @@ export interface AssetWithRelations extends Asset {
   asset_status?: AssetStatus | null;
   asset_group?: AssetGroup | null;
   asset_installation?: AssetInstallation[] | null;
-  asset_details?: AssetDetailWithRelations | null;
+  asset_detail?: AssetDetailWithRelations | null;
   asset_sce?: AssetSce[] | null;
 }
 

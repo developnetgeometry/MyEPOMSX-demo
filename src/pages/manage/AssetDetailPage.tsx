@@ -220,7 +220,8 @@ const AssetDetailPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("installation");
 
   const { data: asset, isLoading, error } = useAssetWithRelations(Number(id));
-  const assetDetails = asset?.asset_details;
+  
+  const assetDetails = asset?.asset_detail;
   const assetInstallation = asset?.asset_installation;
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
