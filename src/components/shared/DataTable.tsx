@@ -185,9 +185,7 @@ const formatCellValue = (column: Column, row: any): React.ReactNode => {
                         key={`${rowIndex}-${column.id}`}
                         className="py-4 px-6 text-sm text-gray-900"
                       >
-                        {column.accessorKey.includes('status') 
-                          ? <StatusBadge status={row[column.accessorKey]} /> 
-                          : formatCellValue(column, row)}
+                        {formatCellValue(column, row)}
                       </TableCell>
                     ))}
                     {(onEdit || onDelete || onViewDetails) && (
