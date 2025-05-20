@@ -220,7 +220,7 @@ const AssetDetailPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("installation");
 
   const { data: asset, isLoading, error } = useAssetWithRelations(Number(id));
-  const assetDetails = asset?.asset_details[0];
+  const assetDetails = asset?.asset_details;
   const assetInstallation = asset?.asset_installation;
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -311,9 +311,9 @@ const AssetDetailPage: React.FC = () => {
                     <SelectValue placeholder="Select asset tag" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="TAG-001">TAG-001</SelectItem>
-                    <SelectItem value="TAG-002">TAG-002</SelectItem>
-                    <SelectItem value="TAG-003">TAG-003</SelectItem>
+                    <SelectItem value="TAG-1001">TAG-1001</SelectItem>
+                    <SelectItem value="TAG-1002">TAG-1002</SelectItem>
+                    <SelectItem value="TAG-1003">TAG-1003</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -325,6 +325,7 @@ const AssetDetailPage: React.FC = () => {
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="Operational">Operational</SelectItem>
                     <SelectItem value="Active">Active</SelectItem>
                     <SelectItem value="Inactive">Inactive</SelectItem>
                     <SelectItem value="Maintenance">Maintenance</SelectItem>
@@ -384,20 +385,20 @@ const AssetDetailPage: React.FC = () => {
                 <Input value={assetDetails.asset_class.name} />
               </div>
 
-              <div className="space-y-1.5">
+              {/* <div className="space-y-1.5">
                 <label className="text-sm font-medium">Drawing No</label>
                 <Input value={assetInstallation.drawing_no} />
-              </div>
+              </div> */}
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">HCode</label>
                 <Input value={assetDetails.hs_code} />
               </div>
 
-              <div className="space-y-1.5">
+              {/* <div className="space-y-1.5">
                 <label className="text-sm font-medium">Axis</label>
                 <Input value={assetInstallation.orientation} />
-              </div>
+              </div> */}
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Specification</label>
@@ -411,7 +412,7 @@ const AssetDetailPage: React.FC = () => {
                     <SelectValue placeholder="Select sensor" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="PRE-110">PRE-110</SelectItem>
+                    <SelectItem value={assetDetails.iot_sensor.sensor_type.name}>{assetDetails.iot_sensor.sensor_type.name}</SelectItem>
                     <SelectItem value="TEMP-110">TEMP-110</SelectItem>
                     <SelectItem value="LVL-110">LVL-110</SelectItem>
                   </SelectContent>
@@ -420,13 +421,13 @@ const AssetDetailPage: React.FC = () => {
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">EC Class</label>
-                <Input value={assetInstallation.ex_class} />
+                <Input value={assetDetails.asset_class.name} />
               </div>
 
-              <div className="space-y-1.5">
+              {/* <div className="space-y-1.5">
                 <label className="text-sm font-medium">EC Certificate</label>
                 <Input value={assetInstallation.ex_certificate} />
-              </div>
+              </div> */}
 
               <div className="col-span-2 grid grid-cols-2 gap-4 pt-2">
                 <div className="flex items-center space-x-2">

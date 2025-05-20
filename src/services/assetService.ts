@@ -50,7 +50,7 @@ export const assetService = {
         asset_status:e_asset_status(*),
         asset_group:e_asset_group(*),
         asset_installation:e_asset_installation(*),
-        asset_details:e_asset_detail(
+        asset_detail:e_asset_detail(
           *,
           category:e_asset_category(*),
           type:e_asset_type(
