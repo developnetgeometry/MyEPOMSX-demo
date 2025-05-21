@@ -195,7 +195,7 @@ export interface AssetDetailWithRelations extends AssetDetail {
   area?: AssetArea | null;
   asset_class?: AssetClass | null;
   iot_sensor?: IotSensor | null;
-  sce?: AssetSce[] | null;
+  child_assets?: ChildAssets[] | null;
 }
 
 export interface AssetWithRelations extends Asset {
@@ -208,6 +208,16 @@ export interface AssetWithRelations extends Asset {
   asset_installation?: AssetInstallation[] | null;
   asset_detail?: AssetDetailWithRelations | null;
   asset_sce?: AssetSce[] | null;
+}
+
+export interface ChildAssets {
+  id: number;
+  asset_no: string;
+  asset_name: string | null;
+  asset_tag_id: number | null;
+  status_id: number | null;
+  asset_group_id: number | null;
+  commission_date: string | null;
 }
 
 export interface AssetHierarchyNode {
