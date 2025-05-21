@@ -113,7 +113,7 @@ export interface Asset {
 
 // Core Tables
 export interface AssetCategory { id: number; name: string; }
-export interface AssetType { id: number; asset_category_id: number | null; name: string | null; category?: AssetCategory | null; }
+export interface AssetType { id: number; asset_category_id?: number | null; name: string | null; category?: AssetCategory | null; }
 export interface Manufacturer { id: number; name: string; }
 export interface AssetArea { id: number; name: string; }
 export interface AssetClass { id: number; name: string; }
@@ -251,8 +251,23 @@ export interface ItemMaster {
   is_active: boolean;
 }
 
+export interface CreateItemMasterDTO {
+  item_no: string;
+  item_name: string;
+  item_group: number;
+  category_id: number;
+  type_id: number;
+  manufacturer: number;
+  manufacturer_part_no: string;
+  model_no: string;
+  specification: string;
+  unit_id: number;
+  criticality_id: number;
+  is_active: boolean;
+}
+
 export interface ItemMasterWithRelations extends ItemMaster {
-  item_group?: ItemGroup | null;
+  group?: ItemGroup | null;
   category?: AssetCategory | null;
   type?: AssetType | null;
   manufacturer?: Manufacturer | null;

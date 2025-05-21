@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
-import { ItemMasterDetaiWithRelations, ItemMasterWithRelations } from "@/types/manage";
+import { CreateItemMasterDTO, ItemMasterDetaiWithRelations, ItemMasterWithRelations } from "@/types/manage";
 
 export const itemMasterService = {
   async getItemMaster(): Promise<ItemMasterWithRelations[]> {
@@ -7,12 +7,12 @@ export const itemMasterService = {
       .from("e_item_master")
       .select(
         `*, 
-        item_category: e_item_category(name),
-        item_type: e_item_type(name),
-        item_unit: e_unit(name),
-        group: e_item_group(name),
-        item_criticality: e_criticality(name),
-        item_manufacturer: e_manufacturer(name)
+        item_category: e_item_category(*),
+        item_type: e_item_type(*),
+        item_unit: e_unit(*),
+        group: e_item_group(*),
+        item_criticality: e_criticality(*),
+        item_manufacturer: e_manufacturer(*)
         `
       )
       .order("item_no");
@@ -29,12 +29,12 @@ export const itemMasterService = {
       .from("e_item_master")
       .select(
         `*, 
-        item_category: e_item_category(name),
-        item_type: e_item_type(name),
-        item_unit: e_unit(name),
-        group: e_item_group(name),
-        item_criticality: e_criticality(name),
-        item_manufacturer: e_manufacturer(name)
+        item_category: e_item_category(*),
+        item_type: e_item_type(*),
+        item_unit: e_unit(*),
+        group: e_item_group(*),
+        item_criticality: e_criticality(*),
+        item_manufacturer: e_manufacturer(*)
         `
       )
       .eq("id", id)
@@ -50,4 +50,19 @@ export const itemMasterService = {
 
     return data;
   },
+
+  async createItemMaster(item: CreateItemMasterDTO) {
+
+    const { data, error } = await supabase
+      .from("e_item_master")
+      .insert(item)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Error creating item master: ${error.message}`);
+    }
+
+    return data;
+  }
 };

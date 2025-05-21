@@ -1,15 +1,17 @@
-import React, { act, useState } from "react";
+import React, { act, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import DataTable, { Column } from "@/components/shared/DataTable";
 import { Database } from "lucide-react";
-import { itemsMaster } from "@/data/sampleData";
-import { useItemMaster } from "@/hooks/queries/useItemsMaster";
+import { useAddItemMaster, useItemMaster } from "@/hooks/queries/useItemsMaster";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { ItemMasterWithRelations } from "@/types/manage";
 import ManageDialog from "@/components/manage/ManageDialog";
 import { z } from "zod";
+import { createUniqueOptions } from "@/utils/dropdown";
+import { useLoadingState } from "@/hooks/use-loading-state";
+import { toast } from "@/hooks/use-toast";
 
 interface ItemsMasterPageProps {
   hideHeader?: boolean;
@@ -27,6 +29,9 @@ const ItemsMasterPage: React.FC<ItemsMasterPageProps> = ({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const { data, isLoading, error } = useItemMaster();
+  const { withLoading } = useLoadingState();
+  const addItemMasterMutation = useAddItemMaster();
+  
 
   // Define columns for items master table
   const columns: Column[] = [
@@ -97,10 +102,35 @@ const ItemsMasterPage: React.FC<ItemsMasterPageProps> = ({
     is_active: z.string().min(1, "Item active status is required"),
   });
   
+  const groupOptions = useMemo(() => createUniqueOptions(data, 'group'), [data]);
+  const categoryOptions = useMemo(() => createUniqueOptions(data, 'item_category'), [data]);
+  const typeOptions = useMemo(() => createUniqueOptions(data, 'item_type'), [data]);
+  const manufacturerOptions = useMemo(() => createUniqueOptions(data, 'item_manufacturer'), [data]);
+  const unitOptions = useMemo(() => createUniqueOptions(data, 'item_unit'), [data]);
+  const criticalityOptions = useMemo(() => createUniqueOptions(data, 'item_criticality'), [data]);
+
+
   const activeOptions = [
-    { value: "Active", label: "Active" },
-    { value: "Inactive", label: "Inactive" },
+    { value: "true", label: "Active" },
+    { value: "false", label: "Inactive" },
   ];
+
+  const emptyDefaultValues = {
+    item_no: "",
+    item_name: "",
+    group: "",
+    item_category: "",
+    item_type: "",
+    item_manufacturer: "",
+    manufacturer_part_no: "",
+    model_no: "",
+    specification: "",
+    item_unit: "",
+    item_criticality: "",
+    is_active: "",
+  };
+
+  
 
   const formFields = [
     {
@@ -118,26 +148,26 @@ const ItemsMasterPage: React.FC<ItemsMasterPageProps> = ({
     {
       name: "group",
       label: "Item Group",
-      type: "text" as const,
-      placeholder: "Item Group",
+      type: "select" as const,
+      options: groupOptions,
     },
     {
       name: "item_category",
       label: "Category",
-      type: "text" as const,
-      placeholder: "Item Category",
+      type: "select" as const,
+      options: categoryOptions,
     },
     {
       name: "item_type",
       label: "Type",
-      type: "text" as const,
-      placeholder: "Item Type",
+      type: "select" as const,
+      options: typeOptions
     },
     {
       name: "item_manufacturer",
       label: "Manufacturer",
-      type: "text" as const,
-      placeholder: "Item Manufacturer",
+      type: "select" as const,
+      options: manufacturerOptions
     },
     {
       name: "manufacturer_part_no",
@@ -160,14 +190,14 @@ const ItemsMasterPage: React.FC<ItemsMasterPageProps> = ({
     {
       name: "item_unit",
       label: "Unit",
-      type: "text" as const,
-      placeholder: "Item Unit",
+      type: "select" as const,
+      options: unitOptions
     },
     {
       name: "item_criticality",
       label: "Criticality",
-      type: "text" as const,
-      placeholder: "Item Criticality",
+      type: "select" as const,
+      options: criticalityOptions
     },
     {
       name: "is_active",
@@ -181,6 +211,38 @@ const ItemsMasterPage: React.FC<ItemsMasterPageProps> = ({
     setCurrentItem(null);
     setIsDialogOpen(true);
   };
+
+  const handleSubmit = async (values: any) => {
+    console.log(values)
+    withLoading(async () => {
+      try {
+        await addItemMasterMutation.mutateAsync({
+          item_no: values.item_no,
+          item_name: values.item_name,
+          item_group: Number(values.group),
+          category_id: Number(values.item_category),
+          type_id: Number(values.item_type),
+          manufacturer: Number(values.item_manufacturer),
+          manufacturer_part_no: values.manufacturer_part_no,
+          model_no: values.model_no,
+          specification: values.specification,
+          unit_id: Number(values.item_unit),
+          criticality_id: Number(values.item_criticality),
+          is_active: Boolean(values.is_active)
+        });
+        toast({
+          title: "Facility added successfully",
+          variant: "default",
+        });
+      } catch (error: any) {
+        toast({
+          title: "Error adding item master",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    })
+  }
 
   // Handle search
   const handleSearch = (query: string) => {
@@ -232,9 +294,9 @@ const ItemsMasterPage: React.FC<ItemsMasterPageProps> = ({
         onOpenChange={setIsDialogOpen}
         title="Add New Item"
         formSchema={formSchema}
-        defaultValues={currentItem || {}}
+        defaultValues={currentItem || emptyDefaultValues}
         formFields={formFields}
-        onSubmit={() => {}}
+        onSubmit={handleSubmit}
       />
     </div>
   );

@@ -1,5 +1,6 @@
 import { itemMasterService } from "@/services/itemMasterService";
-import { useQuery } from "@tanstack/react-query";
+import { CreateItemMasterDTO } from "@/types/manage";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 
 export const itemMasterKeys = {
@@ -21,4 +22,15 @@ export const useItemMasterDetail = (id: number) => {
         queryFn: () => itemMasterService.getItemMasterById(id),
         enabled: !!id
     })
+}
+
+export const useAddItemMaster = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (newItemMaster: CreateItemMasterDTO) =>
+            await itemMasterService.createItemMaster(newItemMaster),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: itemMasterKeys.list() });
+        },
+    });
 }
