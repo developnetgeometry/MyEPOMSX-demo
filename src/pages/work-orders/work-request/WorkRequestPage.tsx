@@ -1,0 +1,186 @@
+import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import PageHeader from "@/components/shared/PageHeader";
+import DataTable, { Column } from "@/components/shared/DataTable";
+import { useWorkRequestData, insertWorkRequestData, updateWorkRequestData, deleteWorkRequestData } from "../hooks/use-work-request-data";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import Loading from "@/components/shared/Loading";
+import { useToast } from "@/hooks/use-toast";
+import StatusBadge from "@/components/shared/StatusBadge";
+import { formatDate } from "@/utils/formatters";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
+import WorkRequestDialogForm from "./WorkRequestDialogForm";
+
+const WorkRequestPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { data: workRequests, isLoading, refetch } = useWorkRequestData();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingWorkRequest, setEditingWorkRequest] = useState<any | null>(null);
+  const { toast } = useToast();
+
+  const handleRowClick = (row: any) => {
+    navigate(`/work-orders/work-request/${row.id}`);
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  const handleAddNew = () => {
+    setEditingWorkRequest(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleEditWorkRequest = (workRequest: any) => {
+    setEditingWorkRequest(workRequest);
+    setIsDialogOpen(true);
+  };
+
+  const handleDeleteWorkRequest = async (workRequest: any) => {
+    try {
+      await deleteWorkRequestData(workRequest.id);
+      toast({
+        title: "Success",
+        description: "Work request deleted successfully!",
+        variant: "default",
+      });
+      refetch();
+    } catch (error) {
+      console.error("Failed to delete work request data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete work request data.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleFormSubmit = async (formData: any) => {
+    try {
+      if (editingWorkRequest) {
+        await updateWorkRequestData(editingWorkRequest.id, formData);
+        toast({
+          title: "Success",
+          description: "Work request updated successfully!",
+          variant: "default",
+        });
+      } else {
+        await insertWorkRequestData(formData);
+        toast({
+          title: "Success",
+          description: "Work request added successfully!",
+          variant: "default",
+        });
+      }
+      setIsDialogOpen(false);
+      refetch();
+    } catch (error) {
+      console.error("Failed to save work request data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save work request data.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const filteredWorkRequests = useMemo(() => {
+    if (!workRequests) return [];
+    if (!searchQuery) return workRequests;
+    const lower = searchQuery.toLowerCase();
+    return workRequests.filter(
+      (workRequest: any) =>
+        workRequest.noWorkRequest?.toLowerCase().includes(lower) ||
+        workRequest.description?.toLowerCase().includes(lower) ||
+        workRequest.status?.toLowerCase().includes(lower) ||
+        workRequest.requestedBy?.toLowerCase().includes(lower) ||
+        workRequest.workCenter?.toLowerCase().includes(lower) ||
+        workRequest.workOrderNo?.toLowerCase().includes(lower) ||
+        workRequest.asset?.toLowerCase().includes(lower) ||
+        workRequest.requestDate?.toLowerCase().includes(lower) ||
+        workRequest.dateFinding?.toLowerCase().includes(lower)
+    );
+  }, [workRequests, searchQuery]);
+
+  const columns: Column[] = [
+    { id: "noWorkRequest", header: "Work Request No", accessorKey: "noWorkRequest" },
+    { id: "description", header: "Description", accessorKey: "description" },
+    {
+      id: "status",
+      header: "Status",
+      accessorKey: "status",
+      cell: (value) => <StatusBadge status={value} />,
+    },
+    { id: "requestedBy", header: "Requested By", accessorKey: "requestedBy" },
+    { id: "workCenter", header: "Work Center", accessorKey: "workCenter" },
+    { id: "workOrderNo", header: "Work Order No", accessorKey: "workOrderNo" },
+    {
+      id: "woStatus",
+      header: "WO Status",
+      accessorKey: "woStatus",
+      cell: (value) => (value ? <StatusBadge status={value} /> : "-"),
+    },
+    { id: "asset", header: "Asset", accessorKey: "asset" },
+    { id: "requestDate", header: "Request Date", accessorKey: "requestDate", cell: (value: any) => formatDate(value) },
+    { id: "dateFinding", header: "Date Finding", accessorKey: "dateFinding", cell: (value: any) => formatDate(value) },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Work Requests"
+        onAddNew={handleAddNew}
+        addNewLabel="New Work Request"
+        onSearch={handleSearch}
+      />
+
+      {isLoading ? (
+        <Loading />
+      ) : (
+        <DataTable
+          columns={columns}
+          data={filteredWorkRequests}
+          onRowClick={handleRowClick}
+          onEdit={handleEditWorkRequest}
+          onDelete={handleDeleteWorkRequest}
+        />
+      )}
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <div className="flex items-start justify-between w-full">
+              <div>
+                <DialogTitle>{editingWorkRequest ? "Edit Work Request" : "Add New Work Request"}</DialogTitle>
+                <DialogDescription>
+                  {editingWorkRequest
+                    ? "Update the details of the work request."
+                    : "Fill in the details to add a new work request."}
+                </DialogDescription>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setIsDialogOpen(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+
+          <WorkRequestDialogForm
+            onSubmit={handleFormSubmit}
+            onCancel={() => setIsDialogOpen(false)}
+            initialData={editingWorkRequest}
+          />
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default WorkRequestPage;

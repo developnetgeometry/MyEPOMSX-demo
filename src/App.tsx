@@ -72,16 +72,16 @@ import CriticalAssetsPage from '@/pages/monitor/CriticalAssetsPage';
 import RMSDashboardPage from '@/pages/monitor/RMSDashboardPage';
 
 // Maintain imports
-import WOHistoryPage from '@/pages/maintain/WOHistoryPage';
-import WOHistoryDetailPage from '@/pages/maintain/WOHistoryDetailPage';
+import WOHistoryPage from '@/pages/work-orders/work-order-history/WOHistoryPage';
+import WOHistoryDetailPage from '@/pages/work-orders/work-order-history/WOHistoryDetailPage';
 import TaskLibraryPage from '@/pages/maintain/TaskLibraryPage';
 import TaskLibraryDetailPage from '@/pages/maintain/TaskLibraryDetailPage';
 import PMSchedulePage from '@/pages/maintain/PMSchedulePage';
 import PMScheduleDetailPage from '@/pages/maintain/PMScheduleDetailPage';
-import WorkRequestPage from '@/pages/maintain/WorkRequestPage';
-import WorkRequestDetailPage from '@/pages/maintain/WorkRequestDetailPage';
-import WorkOrderListPage from '@/pages/maintain/WorkOrderListPage';
-import WorkOrderDetailPage from '@/pages/maintain/WorkOrderDetailPage';
+import WorkRequestPage from '@/pages/work-orders/work-request/WorkRequestPage';
+import WorkRequestDetailPage from '@/pages/work-orders/work-request/WorkRequestDetailPage';
+import WorkOrderListPage from '@/pages/work-orders/work-order-list/WorkOrderListPage';
+import WorkOrderDetailPage from '@/pages/work-orders/work-order-list/WorkOrderDetailPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {

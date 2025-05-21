@@ -41,9 +41,11 @@ export type Database = {
       }
       e_asset: {
         Row: {
+          asset_detail_id: number | null
           asset_group_id: number | null
           asset_name: string | null
           asset_no: string
+          asset_sce_id: number | null
           asset_tag_id: number | null
           commission_date: string | null
           facility_id: number | null
@@ -53,9 +55,11 @@ export type Database = {
           system_id: number | null
         }
         Insert: {
+          asset_detail_id?: number | null
           asset_group_id?: number | null
           asset_name?: string | null
           asset_no: string
+          asset_sce_id?: number | null
           asset_tag_id?: number | null
           commission_date?: string | null
           facility_id?: number | null
@@ -65,9 +69,11 @@ export type Database = {
           system_id?: number | null
         }
         Update: {
+          asset_detail_id?: number | null
           asset_group_id?: number | null
           asset_name?: string | null
           asset_no?: string
+          asset_sce_id?: number | null
           asset_tag_id?: number | null
           commission_date?: string | null
           facility_id?: number | null
@@ -78,10 +84,24 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "e_asset_e_asset_group_fk"
-            columns: ["id"]
-            isOneToOne: true
+            foreignKeyName: "e_asset_asset_detail_id_fkey"
+            columns: ["asset_detail_id"]
+            isOneToOne: false
+            referencedRelation: "e_asset_detail"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "e_asset_asset_group_id_fkey"
+            columns: ["asset_group_id"]
+            isOneToOne: false
             referencedRelation: "e_asset_group"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "e_asset_asset_sce_id_fkey"
+            columns: ["asset_sce_id"]
+            isOneToOne: false
+            referencedRelation: "e_asset_sce"
             referencedColumns: ["id"]
           },
           {
@@ -170,7 +190,6 @@ export type Database = {
         Row: {
           area_id: number | null
           asset_class_id: number | null
-          asset_id: number | null
           category_id: number | null
           hs_code: string | null
           id: number
@@ -188,7 +207,6 @@ export type Database = {
         Insert: {
           area_id?: number | null
           asset_class_id?: number | null
-          asset_id?: number | null
           category_id?: number | null
           hs_code?: string | null
           id?: number
@@ -206,7 +224,6 @@ export type Database = {
         Update: {
           area_id?: number | null
           asset_class_id?: number | null
-          asset_id?: number | null
           category_id?: number | null
           hs_code?: string | null
           id?: number
@@ -241,13 +258,6 @@ export type Database = {
             columns: ["asset_class_id"]
             isOneToOne: false
             referencedRelation: "e_asset_class"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "e_asset_detail_e_asset_fk"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "e_asset"
             referencedColumns: ["id"]
           },
           {
@@ -2183,7 +2193,15 @@ export type Database = {
           work_request_date?: string | null
           work_request_no?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "e_new_work_request_cm_status_id_fkey"
+            columns: ["cm_status_id"]
+            isOneToOne: false
+            referencedRelation: "e_cm_status"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       e_new_work_task_detail: {
         Row: {
@@ -3420,11 +3438,11 @@ export type Database = {
           name: string
         }
         Insert: {
-          id?: never
+          id?: number
           name: string
         }
         Update: {
-          id?: never
+          id?: number
           name?: string
         }
         Relationships: []
