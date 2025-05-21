@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
-import { ItemMasterWithRelations } from "@/types/manage";
+import { ItemMasterDetaiWithRelations, ItemMasterWithRelations } from "@/types/manage";
 
 export const itemMasterService = {
   async getItemMaster(): Promise<ItemMasterWithRelations[]> {
@@ -24,7 +24,7 @@ export const itemMasterService = {
     return data || [];
   },
 
-  async getItemMasterById(id: number): Promise<ItemMasterWithRelations> {
+  async getItemMasterById(id: number): Promise<ItemMasterDetaiWithRelations> {
     const { data, error } = await supabase
       .from("e_item_master")
       .select(

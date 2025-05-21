@@ -260,6 +260,15 @@ export interface ItemMasterWithRelations extends ItemMaster {
   criticality?: Criticality | null;
 }
 
+export interface ItemMasterDetaiWithRelations extends ItemMaster {
+  item_group?: ItemGroup | null;
+  item_category?: AssetCategory | null;
+  item_type?: AssetType | null;
+  item_manufacturer?: Manufacturer | null;
+  item_unit?: Unit | null;
+  item_criticality?: Criticality | null;
+}
+
 
 // Inventory Types
 export interface Inventory {
