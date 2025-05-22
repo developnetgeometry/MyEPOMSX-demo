@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
-import { CreateItemMasterDTO, ItemMasterDetaiWithRelations, ItemMasterWithRelations } from "@/types/manage";
+import { CreateItemMasterDTO, ItemMasterDetaiWithRelations, ItemMasterWithRelations } from "@/types/material";
 
 export const itemMasterService = {
   async getItemMaster(): Promise<ItemMasterWithRelations[]> {

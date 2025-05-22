@@ -230,69 +230,6 @@ export interface AssetHierarchyNode {
 export type CreateAssetDTO = Omit<Asset, 'id'>;
 export type UpdateAssetDTO = Partial<Omit<Asset, 'id'>>;
 
-// BOM Assembly Types
-export interface BomAssembly {
-  id: string;
-  code: string;
-  name: string;
-}
-
-export interface SparePart {
-  id: string;
-  bomAssemblyId: string;
-  name: string;
-  description: string;
-}
-
-// Items Master Types
-export interface ItemMaster {
-  id: number;
-  item_no: string;
-  item_name: string;
-  category_id: number;
-  type_id: number;
-  item_group_id: number;
-  manufacturer_id: number;
-  manufacturer_part_no: string;
-  model_no: string;
-  specification: string;
-  unit_id: number;
-  criticality_id: number;
-  is_active: boolean;
-}
-
-export interface CreateItemMasterDTO {
-  item_no: string;
-  item_name: string;
-  item_group: number;
-  category_id: number;
-  type_id: number;
-  manufacturer: number;
-  manufacturer_part_no: string;
-  model_no: string;
-  specification: string;
-  unit_id: number;
-  criticality_id: number;
-  is_active: boolean;
-}
-
-export interface ItemMasterWithRelations extends ItemMaster {
-  group?: ItemGroup | null;
-  category?: AssetCategory | null;
-  type?: AssetType | null;
-  manufacturer?: Manufacturer | null;
-  unit?: Unit | null;
-  criticality?: Criticality | null;
-}
-
-export interface ItemMasterDetaiWithRelations extends ItemMaster {
-  item_group?: ItemGroup | null;
-  item_category?: AssetCategory | null;
-  item_type?: AssetType | null;
-  item_manufacturer?: Manufacturer | null;
-  item_unit?: Unit | null;
-  item_criticality?: Criticality | null;
-}
 
 
 // Inventory Types
