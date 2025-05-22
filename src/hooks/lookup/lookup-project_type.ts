@@ -8,7 +8,7 @@ export const useProjectTypeData = () => {
             const { data, error } = await supabase
                 .from("e_project_type")
                 .select("id, name")
-                .order("id", { ascending: false });
+                .order("id");
 
             if (error) {
                 console.error("Error fetching e_project_type data:", error);

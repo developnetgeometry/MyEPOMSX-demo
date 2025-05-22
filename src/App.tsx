@@ -101,7 +101,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Layout><Outlet /></Layout>}>
               <Route index element={<Index />} />
-              
+
               {/* Manage Routes */}
               <Route path="/manage/facilities" element={<FacilitiesPage />} />
               <Route path="/manage/facilities/:id" element={<FacilityDetailPage />} />
@@ -168,16 +168,19 @@ function App() {
               <Route path="/monitor/rms-dashboard" element={<RMSDashboardPage />} />
 
               {/* Maintain Routes */}
-              <Route path="/maintain/wo-history" element={<WOHistoryPage />} />
-              <Route path="/maintain/wo-history/:id" element={<WOHistoryDetailPage />} />
               <Route path="/maintain/task-library" element={<TaskLibraryPage />} />
               <Route path="/maintain/task-library/:id" element={<TaskLibraryDetailPage />} />
               <Route path="/maintain/pm-schedule" element={<PMSchedulePage />} />
               <Route path="/maintain/pm-schedule/:id" element={<PMScheduleDetailPage />} />
-              <Route path="/maintain/work-request" element={<WorkRequestPage />} />
-              <Route path="/maintain/work-request/:id" element={<WorkRequestDetailPage />} />
-              <Route path="/maintain/work-order-list" element={<WorkOrderListPage />} />
-              <Route path="/maintain/work-order-list/:id" element={<WorkOrderDetailPage />} />
+
+
+              {/* Work Order Routes */}
+              <Route path="/work-orders/work-request" element={<WorkRequestPage />} />
+              <Route path="/work-orders/work-request/:id" element={<WorkRequestDetailPage />} />
+              <Route path="/work-orders/work-order-list" element={<WorkOrderListPage />} />
+              <Route path="/work-orders/work-order-list/:id" element={<WorkOrderDetailPage />} />
+              <Route path="/work-orders/wo-history" element={<WOHistoryPage />} />
+              <Route path="/work-orders/wo-history/:id" element={<WOHistoryDetailPage />} />
 
               <Route path="*" element={<NotFound />} />
             </Route>

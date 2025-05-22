@@ -8,7 +8,7 @@ export const useMaintenanceTypePmData = () => {
             const { data, error } = await supabase
                 .from("e_maintenance")
                 .select("id, code, name")
-                .order("id", { ascending: false })
+                .order("id")
                 .eq("maintenance_type_id", 1);
 
             if (error) {
@@ -28,7 +28,7 @@ export const useMaintenanceTypeCmData = () => {
             const { data, error } = await supabase
                 .from("e_maintenance")
                 .select("id, code, name")
-                .order("id", { ascending: false })
+                .order("id")
                 .eq("maintenance_type_id", 2);
 
             if (error) {

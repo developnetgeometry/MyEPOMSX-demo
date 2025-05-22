@@ -2195,10 +2195,38 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "e_new_work_request_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "e_asset"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "e_new_work_request_cm_status_id_fkey"
             columns: ["cm_status_id"]
             isOneToOne: false
             referencedRelation: "e_cm_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "e_new_work_request_facility_id_fkey"
+            columns: ["facility_id"]
+            isOneToOne: false
+            referencedRelation: "e_facility"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "e_new_work_request_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "e_package"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "e_new_work_request_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "e_system"
             referencedColumns: ["id"]
           },
         ]

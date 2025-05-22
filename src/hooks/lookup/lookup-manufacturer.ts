@@ -8,7 +8,7 @@ export const useManufacturerData = () => {
             const { data, error } = await supabase
                 .from("e_manufacturer")
                 .select("id, name")
-                .order("id", { ascending: false });
+                .order("id");
 
             if (error) {
                 console.error("Error fetching e_manufacturer data:", error);

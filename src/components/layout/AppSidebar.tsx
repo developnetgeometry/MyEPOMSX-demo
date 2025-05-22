@@ -68,15 +68,15 @@ const sidebarItems: SidebarItemType[] = [{
   icon: ListOrdered,
   children: [{
     name: 'Work Request',
-    path: '/maintain/work-request',
+    path: '/work-orders/work-request',
     icon: ClipboardList
   }, {
     name: 'Work Order List',
-    path: '/maintain/work-order-list',
+    path: '/work-orders/work-order-list',
     icon: ClipboardList
   }, {
     name: 'WO History',
-    path: '/maintain/wo-history',
+    path: '/work-orders/wo-history',
     icon: ClipboardList
   }]
 }, {
