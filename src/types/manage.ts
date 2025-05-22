@@ -113,12 +113,16 @@ export interface Asset {
 
 // Core Tables
 export interface AssetCategory { id: number; name: string; }
-export interface AssetType { id: number; asset_category_id: number | null; name: string | null; category?: AssetCategory | null; }
+export interface AssetType { id: number; asset_category_id?: number | null; name: string | null; category?: AssetCategory | null; }
 export interface Manufacturer { id: number; name: string; }
 export interface AssetArea { id: number; name: string; }
 export interface AssetClass { id: number; name: string; }
 export interface SensorType { id: number; name: string; }
 export interface AssetSce { id: number; group_name: string; sce_code: string; }
+export interface Unit{ id: number; name: string; }
+export interface Criticality{ id: number; name: string; }
+export interface ItemGroup{ id: number; name: string; }
+
 export interface Client {
   id: number;
   code: string;
@@ -191,7 +195,7 @@ export interface AssetDetailWithRelations extends AssetDetail {
   area?: AssetArea | null;
   asset_class?: AssetClass | null;
   iot_sensor?: IotSensor | null;
-  sce?: AssetSce[] | null;
+  child_assets?: ChildAssets[] | null;
 }
 
 export interface AssetWithRelations extends Asset {
@@ -204,6 +208,16 @@ export interface AssetWithRelations extends Asset {
   asset_installation?: AssetInstallation[] | null;
   asset_detail?: AssetDetailWithRelations | null;
   asset_sce?: AssetSce[] | null;
+}
+
+export interface ChildAssets {
+  id: number;
+  asset_no: string;
+  asset_name: string | null;
+  asset_tag_id: number | null;
+  status_id: number | null;
+  asset_group_id: number | null;
+  commission_date: string | null;
 }
 
 export interface AssetHierarchyNode {
@@ -231,20 +245,55 @@ export interface SparePart {
 }
 
 // Items Master Types
-export interface ItemsMaster {
-  id: string;
-  itemsNo: string;
-  name: string;
-  manufacturerPartsNo?: string; // Make this optional to support both property names
-  manufacturer_part_no?: string; // Alternative property name
-  manufacturer: string;
-  type: string;
-  category: string;
-  // Add support for other fields in sample data
-  supplier?: string;
-  uom?: string;
-  price?: number;
+export interface ItemMaster {
+  id: number;
+  item_no: string;
+  item_name: string;
+  category_id: number;
+  type_id: number;
+  item_group_id: number;
+  manufacturer_id: number;
+  manufacturer_part_no: string;
+  model_no: string;
+  specification: string;
+  unit_id: number;
+  criticality_id: number;
+  is_active: boolean;
 }
+
+export interface CreateItemMasterDTO {
+  item_no: string;
+  item_name: string;
+  item_group: number;
+  category_id: number;
+  type_id: number;
+  manufacturer: number;
+  manufacturer_part_no: string;
+  model_no: string;
+  specification: string;
+  unit_id: number;
+  criticality_id: number;
+  is_active: boolean;
+}
+
+export interface ItemMasterWithRelations extends ItemMaster {
+  group?: ItemGroup | null;
+  category?: AssetCategory | null;
+  type?: AssetType | null;
+  manufacturer?: Manufacturer | null;
+  unit?: Unit | null;
+  criticality?: Criticality | null;
+}
+
+export interface ItemMasterDetaiWithRelations extends ItemMaster {
+  item_group?: ItemGroup | null;
+  item_category?: AssetCategory | null;
+  item_type?: AssetType | null;
+  item_manufacturer?: Manufacturer | null;
+  item_unit?: Unit | null;
+  item_criticality?: Criticality | null;
+}
+
 
 // Inventory Types
 export interface Inventory {
