@@ -48,7 +48,7 @@ export function SearchableSelect<T>({
           className="w-full justify-between border-gray-300 text-black font-normal hover:bg-gray-50 hover:text-black"
           disabled={disabled}
         >
-          {selectedLabel}
+          <span className="truncate overflow-hidden whitespace-nowrap">{selectedLabel}</span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -73,7 +73,7 @@ export function SearchableSelect<T>({
                       value === getValue(item) ? "opacity-100" : "opacity-0"
                     )}
                   />
-                  {getLabel(item)}
+                  <span className="truncate overflow-hidden whitespace-nowrap">{getLabel(item)}</span>
                 </CommandItem>
 
               ))}

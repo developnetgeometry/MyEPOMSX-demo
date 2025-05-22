@@ -2,117 +2,116 @@ import { supabase } from "@/lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 
 export const useAssetData = () => {
-    return useQuery({
-        queryKey: ["e-asset-data"],
-        queryFn: async () => {
-            const { data, error } = await supabase
-                .from("e_asset")
-                .select(`
-                    id,
-                    asset_name,
-                    asset_no,
-                    asset_sce_id (id, sce_code),
-                    package_id (
-                        id,
-                        package_name,
-                        package_no,
-                        package_tag,
-                        system_id (
-                            id,
-                            system_code,
-                            system_no,
-                            system_name,
-                            facility_id (
-                                id,
-                                location_code,
-                                location_name,
-                                project_id (
-                                    id,
-                                    project_code,
-                                    project_name
-                                )
-                            )
-                        )
-                    )
-                `)
-                .order("id", { ascending: false });
+  return useQuery({
+    queryKey: ["e-asset-data", 21], // Include project ID in the query key for caching
+    queryFn: async () => {
+      // Fetch project data
+      const { data: projects, error: projectError } = await supabase
+        .from("e_project")
+        .select("id, project_code, project_name")
+        .eq("id", 21); // Filter by project ID
 
-            if (error) {
-                console.error("Error fetching nd_asset data:", error);
-                throw error;
-            }
+      if (projectError) {
+        console.error("Error fetching e_project data:", projectError);
+        throw projectError;
+      }
 
-            // Transform the data to match the requested structure
-            const transformedData = data?.reduce((projects, asset) => {
-                const project = asset.package_id?.system_id?.facility_id?.project_id;
-                const facility = asset.package_id?.system_id?.facility_id;
-                const system = asset.package_id?.system_id;
-                const packageData = asset.package_id;
+      if (!projects || projects.length === 0) {
+        return [];
+      }
 
-                if (!project) return projects;
+      const project = projects[0]; // There should only be one project with ID 21
 
-                // Find or create the project
-                let projectEntry = projects.find((p) => p.id === project.id);
-                if (!projectEntry) {
-                    projectEntry = {
-                        id: project.id,
-                        project_code: project.project_code,
-                        project_name: project.project_name,
-                        facilities: [],
-                    };
-                    projects.push(projectEntry);
-                }
+      // Fetch facility data
+      const { data: facilities, error: facilityError } = await supabase
+        .from("e_facility")
+        .select("id, location_code, location_name, project_id")
+        .eq("project_id", project.id); // Filter by project ID
 
-                // Find or create the facility
-                let facilityEntry = projectEntry.facilities.find((f) => f.id === facility.id);
-                if (!facilityEntry) {
-                    facilityEntry = {
-                        id: facility.id,
-                        location_code: facility.location_code,
-                        location_name: facility.location_name,
-                        systems: [],
-                    };
-                    projectEntry.facilities.push(facilityEntry);
-                }
+      if (facilityError) {
+        console.error("Error fetching e_facility data:", facilityError);
+        throw facilityError;
+      }
 
-                // Find or create the system
-                let systemEntry = facilityEntry.systems.find((s) => s.id === system.id);
-                if (!systemEntry) {
-                    systemEntry = {
-                        id: system.id,
-                        system_code: system.system_code,
-                        system_no: system.system_no,
-                        system_name: system.system_name,
-                        packages: [],
-                    };
-                    facilityEntry.systems.push(systemEntry);
-                }
+      // Fetch system data
+      const { data: systems, error: systemError } = await supabase
+        .from("e_system")
+        .select("id, system_code, system_no, system_name, facility_id")
+        .in(
+          "facility_id",
+          facilities.map((facility) => facility.id)
+        ); // Filter by facility IDs
 
-                // Find or create the package
-                let packageEntry = systemEntry.packages.find((p) => p.id === packageData.id);
-                if (!packageEntry) {
-                    packageEntry = {
-                        id: packageData.id,
-                        package_name: packageData.package_name,
-                        package_no: packageData.package_no,
-                        package_tag: packageData.package_tag,
-                        assets: [],
-                    };
-                    systemEntry.packages.push(packageEntry);
-                }
+      if (systemError) {
+        console.error("Error fetching e_system data:", systemError);
+        throw systemError;
+      }
 
-                // Add the asset to the package
-                packageEntry.assets.push({
-                    id: asset.id,
-                    asset_name: asset.asset_name,
-                    asset_no: asset.asset_no,
-                    asset_sce_id: asset.asset_sce_id,
-                });
+      // Fetch package data
+      const { data: packages, error: packageError } = await supabase
+        .from("e_package")
+        .select("id, package_name, package_no, package_tag, system_id")
+        .in(
+          "system_id",
+          systems.map((system) => system.id)
+        ); // Filter by system IDs
 
-                return projects;
-            }, []);
+      if (packageError) {
+        console.error("Error fetching e_package data:", packageError);
+        throw packageError;
+      }
 
-            return transformedData;
-        },
-    });
+      // Fetch asset data
+      const { data: assets, error: assetError } = await supabase
+        .from("e_asset")
+        .select("id, asset_name, asset_no, asset_sce_id (id, sce_code), package_id")
+        .in(
+          "package_id",
+          packages.map((pkg) => pkg.id)
+        ); // Filter by package IDs
+
+      if (assetError) {
+        console.error("Error fetching e_asset data:", assetError);
+        throw assetError;
+      }
+
+      // Map the data into the desired structure
+      const transformedData = {
+        id: project.id,
+        project_code: project.project_code,
+        project_name: project.project_name,
+        facilities: facilities.map((facility) => ({
+          id: facility.id,
+          location_code: facility.location_code,
+          location_name: facility.location_name,
+          systems: systems
+            .filter((system) => system.facility_id === facility.id)
+            .map((system) => ({
+              id: system.id,
+              system_code: system.system_code,
+              system_no: system.system_no,
+              system_name: system.system_name,
+              packages: packages
+                .filter((pkg) => pkg.system_id === system.id)
+                .map((pkg) => ({
+                  id: pkg.id,
+                  package_name: pkg.package_name,
+                  package_no: pkg.package_no,
+                  package_tag: pkg.package_tag,
+                  assets: assets
+                    .filter((asset) => asset.package_id === pkg.id)
+                    .map((asset) => ({
+                      id: asset.id,
+                      asset_name: asset.asset_name,
+                      asset_no: asset.asset_no,
+                      asset_sce_id: asset.asset_sce_id,
+                    })),
+                })),
+            })),
+        })),
+      };
+
+      return [transformedData];
+    },
+  });
 };

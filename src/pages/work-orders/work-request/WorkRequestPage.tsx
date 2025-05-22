@@ -99,42 +99,41 @@ const WorkRequestPage: React.FC = () => {
     return workRequests.filter(
       (workRequest: any) =>
         workRequest.noWorkRequest?.toLowerCase().includes(lower) ||
-        workRequest.description?.toLowerCase().includes(lower) ||
         workRequest.status?.toLowerCase().includes(lower) ||
         workRequest.requestedBy?.toLowerCase().includes(lower) ||
         workRequest.workCenter?.toLowerCase().includes(lower) ||
         workRequest.workOrderNo?.toLowerCase().includes(lower) ||
-        workRequest.asset?.toLowerCase().includes(lower) ||
-        workRequest.requestDate?.toLowerCase().includes(lower) ||
+        workRequest.asset_id?.asset_name?.toLowerCase().includes(lower) ||
+        workRequest.work_request_date?.toLowerCase().includes(lower) ||
         workRequest.dateFinding?.toLowerCase().includes(lower)
     );
   }, [workRequests, searchQuery]);
 
   const columns: Column[] = [
-    { id: "noWorkRequest", header: "Work Request No", accessorKey: "noWorkRequest" },
+    {
+      id: "index",
+      header: "No.",
+      accessorKey: "index",
+    },
+    { id: "work_request_no", header: "Work Request No", accessorKey: "work_request_no" },
     { id: "description", header: "Description", accessorKey: "description" },
     {
-      id: "status",
+      id: "cm_status",
       header: "Status",
-      accessorKey: "status",
+      accessorKey: "cm_status_id.name", // Accessing the nested `name` field in `cm_status_id`
       cell: (value) => <StatusBadge status={value} />,
     },
-    { id: "requestedBy", header: "Requested By", accessorKey: "requestedBy" },
-    { id: "workCenter", header: "Work Center", accessorKey: "workCenter" },
-    { id: "workOrderNo", header: "Work Order No", accessorKey: "workOrderNo" },
-    {
-      id: "woStatus",
-      header: "WO Status",
-      accessorKey: "woStatus",
-      cell: (value) => (value ? <StatusBadge status={value} /> : "-"),
-    },
-    { id: "asset", header: "Asset", accessorKey: "asset" },
-    { id: "requestDate", header: "Request Date", accessorKey: "requestDate", cell: (value: any) => formatDate(value) },
-    { id: "dateFinding", header: "Date Finding", accessorKey: "dateFinding", cell: (value: any) => formatDate(value) },
+    { id: "requested_by", header: "Requested By", accessorKey: "requested_by" },
+    { id: "work_center", header: "Work Center", accessorKey: "work_center_id.name" }, // Accessing `name` in `work_center_id`
+    { id: "asset", header: "Asset", accessorKey: "asset_id.asset_name" }, // Accessing `asset_name` in `asset_id`
+    { id: "request_date", header: "Request Date", accessorKey: "work_request_date", cell: (value: any) => formatDate(value) },
+    { id: "maintenance_type", header: "Maintenance Type", accessorKey: "maintenance_type.name" }, // Accessing `name` in `maintenance_type`
+    { id: "date_finding", header: "Date Finding", accessorKey: "date_finding", cell: (value: any) => formatDate(value) },
   ];
-
   return (
     <div className="space-y-6">
+      {/* <pre>{JSON.stringify(workRequests, null, 2)}</pre> */}
+
       <PageHeader
         title="Work Requests"
         onAddNew={handleAddNew}
@@ -155,7 +154,7 @@ const WorkRequestPage: React.FC = () => {
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-start justify-between w-full">
               <div>

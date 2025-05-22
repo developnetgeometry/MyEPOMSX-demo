@@ -8,7 +8,16 @@ export const useWorkRequestData = () => {
             const { data, error } = await supabase
                 .from("e_new_work_request")
                 .select(
-                    `id, cm_status_id, description, work_request_date, target_due_date, facility_id, system_id, package_id, asset_id, cm_sce_code, work_center_id, date_finding, maintenance_type, requested_by, criticality_id, finding_detail, anomaly_report, quick_incident_report, work_request_no`
+                    `id, cm_status_id (id, name), 
+                    description, work_request_date, target_due_date, 
+                    facility_id (id, location_code, location_name), system_id (id, system_name), 
+                    package_id (id, package_no, package_tag, package_name), 
+                    asset_id (id, asset_name), cm_sce_code (id, cm_group_name, cm_sce_code ), 
+                    work_center_id (id, code, name), date_finding, 
+                    maintenance_type (id, code, name), requested_by, 
+                    criticality_id (id, name), 
+                    finding_detail, anomaly_report, quick_incident_report,
+                    work_request_no, work_request_prefix`
                 )
                 .order("id", { ascending: false });
 
@@ -17,10 +26,17 @@ export const useWorkRequestData = () => {
                 throw error;
             }
 
-            return data;
+            // Add index to each row (starting from 1)
+            const indexedData = data?.map((item, index) => ({
+                index: index + 1, // 1-based index
+                ...item,
+            }));
+
+            return indexedData;
         },
     });
 };
+
 
 export const insertWorkRequestData = async (workRequestData: {
     cm_status_id?: number;
@@ -40,7 +56,7 @@ export const insertWorkRequestData = async (workRequestData: {
     finding_detail?: string;
     anomaly_report?: boolean;
     quick_incident_report?: boolean;
-    work_request_no: string;
+    work_request_prefix?: string;
 }) => {
     try {
         const { data, error } = await supabase
@@ -79,7 +95,7 @@ export const updateWorkRequestData = async (
         finding_detail?: string;
         anomaly_report?: boolean;
         quick_incident_report?: boolean;
-        work_request_no?: string;
+        work_request_prefix?: string;
     }>
 ) => {
     try {
