@@ -15,6 +15,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { itemsMaster } from '@/data/sampleData';
 import InventoryTabList from '@/components/shared/InventoryTabList';
+import { useItemMasterDetail } from '@/hooks/queries/useItemsMaster';
 
 const ItemsMasterDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +24,9 @@ const ItemsMasterDetailPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('itemMaster');
   const [files, setFiles] = useState<File[]>([]);
   const [attachments, setAttachments] = useState<{id: string, name: string, size: string, type: string, uploadDate: string}[]>([]);
+
+  const { data, isLoading, error } = useItemMasterDetail(Number(id));
+  
 
   // Find the item in sample data
   const item = itemsMaster.find(item => item.id === id);
@@ -45,19 +49,31 @@ const ItemsMasterDetailPage: React.FC = () => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      itemsNo: item?.itemsNo || "",
-      name: item?.name || "",
-      category: item?.category || "",
-      type: item?.type || "",
-      manufacturer: item?.manufacturer || "",
-      // Handle both possible property names for manufacturer parts number
-      manufacturerPartsNo: item?.manufacturerPartsNo || item?.manufacturer_part_no || "",
+      itemsNo: "",
+      name: "",
+      category: "",
+      type: "",
+      manufacturer: "",
+      manufacturerPartsNo: "",
       modelNo: "",
-      unit: "Each",
-      specification: "",
-      criticality: "Medium",
+      unit: "",
+      criticality: "",
     }
   });
+
+  useEffect(() => {
+    if (data){
+      form.setValue("itemsNo", data?.item_no);
+      form.setValue("name", data?.item_name);
+      form.setValue("category", data?.item_category.name);
+      form.setValue("type", data?.item_type.name);
+      form.setValue("manufacturer", data?.item_manufacturer.name);
+      form.setValue("manufacturerPartsNo", data?.manufacturer_part_no);
+      form.setValue("modelNo", data?.model_no);
+      form.setValue("unit", data?.item_unit.name);
+      form.setValue("criticality", data?.item_criticality.name);
+    }
+  })
 
   const onSubmit = (values: FormValues) => {
     console.log("Form values:", values);
@@ -108,6 +124,7 @@ const ItemsMasterDetailPage: React.FC = () => {
   };
 
   const typeOptions = [
+    { value: 'Circuit Breaker', label: 'Circuit Breaker' },
     { value: 'Mechanical', label: 'Mechanical' },
     { value: 'Electrical', label: 'Electrical' },
     { value: 'Instrumentation', label: 'Instrumentation' },
@@ -116,6 +133,7 @@ const ItemsMasterDetailPage: React.FC = () => {
   ];
 
   const categoryOptions = [
+    { value: 'Electrical', label: 'Electrical' },
     { value: 'Rotating Equipment', label: 'Rotating Equipment' },
     { value: 'Sealing', label: 'Sealing' },
     { value: 'Protection', label: 'Protection' },
@@ -124,6 +142,7 @@ const ItemsMasterDetailPage: React.FC = () => {
   ];
 
   const manufacturerOptions = [
+    { value: 'Toshiba', label: 'Toshiba' },
     { value: 'ABB', label: 'ABB' },
     { value: 'Siemens', label: 'Siemens' },
     { value: 'GE', label: 'General Electric' },
@@ -144,6 +163,18 @@ const ItemsMasterDetailPage: React.FC = () => {
     { value: 'Medium', label: 'Medium' },
     { value: 'Low', label: 'Low' },
   ];
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
+
+  if(!data) {
+    return <div>Item with id {id} not found</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -206,7 +237,7 @@ const ItemsMasterDetailPage: React.FC = () => {
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select category" />
+                                <SelectValue placeholder={field.value} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -229,7 +260,7 @@ const ItemsMasterDetailPage: React.FC = () => {
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select type" />
+                                <SelectValue placeholder={field.value} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -252,7 +283,7 @@ const ItemsMasterDetailPage: React.FC = () => {
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select manufacturer" />
+                                <SelectValue placeholder={field.value} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -303,7 +334,7 @@ const ItemsMasterDetailPage: React.FC = () => {
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select unit" />
+                                <SelectValue placeholder={field.value} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -326,7 +357,7 @@ const ItemsMasterDetailPage: React.FC = () => {
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select criticality" />
+                                <SelectValue placeholder={field.value} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>

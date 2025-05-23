@@ -96,8 +96,8 @@ export const assetService = {
       packageNode.children.push({
         id: asset.id,
         name: asset.name || asset.asset_tag?.name || `Asset ${asset.asset_no}`,
-        type: 'asset',
-        children: []
+        type: "asset",
+        children: [],
       });
     });
 
@@ -107,12 +107,14 @@ export const assetService = {
   },
 
   async getAssetByIdWithRelations(id: number): Promise<AssetWithRelations> {
+    // @ts-ignore
     const { data, error } = await supabase
       .from("e_asset")
       .select(
         `
         *,
         facility:e_facility(*),
+        asset_sce:e_asset_sce(*),
         system:e_system(*),
         package:e_package(*),
         asset_tag:e_asset_tag(*),
@@ -135,7 +137,23 @@ export const assetService = {
             manufacturer:e_manufacturer(*),
             client:e_client(*)
           ),
-          sce:e_asset_sce(*)
+          child_assets:e_asset_detail!parent_asset_id(
+            *,
+            asset:e_asset(
+              *,
+              facility:e_facility(*),
+              asset_sce:e_asset_sce(*),
+              system:e_system(*),
+              package:e_package(*),
+              asset_tag:e_asset_tag(*),
+              asset_status:e_asset_status(*),
+              asset_group:e_asset_group(*),
+              asset_installation:e_asset_installation(*)
+            ),
+            type:e_asset_type(
+              *
+            )
+          )
         )
       `
       )

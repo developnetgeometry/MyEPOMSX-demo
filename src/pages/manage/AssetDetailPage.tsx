@@ -220,8 +220,11 @@ const AssetDetailPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("installation");
 
   const { data: asset, isLoading, error } = useAssetWithRelations(Number(id));
+  console.log(asset);
   
+
   const assetDetails = asset?.asset_detail;
+  const childAssets = assetDetails?.child_assets;
   const assetInstallation = asset?.asset_installation;
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -429,12 +432,12 @@ const AssetDetailPage: React.FC = () => {
               </div> */}
 
               <div className="col-span-2 grid grid-cols-2 gap-4 pt-2">
-                <div className="flex items-center space-x-2">
+                {/* <div className="flex items-center space-x-2">
                   <Checkbox id="sce" checked={true} />
                   <label htmlFor="sce" className="text-sm font-medium">
                     SCE Code
                   </label>
-                </div>
+                </div> */}
 
                 <div className="flex items-center space-x-2">
                   <Checkbox
@@ -625,18 +628,18 @@ const AssetDetailPage: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y">
-                      {/* {asset.childAssets.map((item) => (
+                      {childAssets.map((item) => (
                         <tr key={item.id} className="hover:bg-muted/30">
-                          <td className="p-3">{item.assetNo}</td>
-                          <td className="p-3">{item.name}</td>
-                          <td className="p-3">{item.type}</td>
+                          <td className="p-3">{item.asset[0].asset_no}</td>
+                          <td className="p-3">{item.asset[0].asset_name}</td>
+                          <td className="p-3">{item.type.name}</td>
                           <td className="p-3">
                             <Button variant="ghost" size="sm">
                               <Settings className="h-4 w-4" />
                             </Button>
                           </td>
                         </tr>
-                      ))} */}
+                      ))}
                     </tbody>
                   </table>
                 </div>

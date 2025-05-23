@@ -1,3 +1,60 @@
+export const assetDetails = {
+  facilityLocation: "Central Processing Process",
+  system: "Production",
+  package: "V-110 Test Separator",
+  parentAssetNo: "P-100",
+  assetNo: "V-110",
+  assetName: "Test Separator",
+  assetTag: "TAG-001",
+  assetStatus: "Active",
+  commissioningDate: "01/01/2001",
+  assetGroup: "Processing Vessels",
+  // Asset Details
+  category: "Equipment",
+  type: "DRUM",
+  manufacturer: "ABC Manufacturing",
+  makerNo: "MK-12345",
+  model: "Model X-900",
+  serialNumber: "SN-78601",
+  assetClass: "Vessel",
+  drawingNo: "DWG-110-001",
+  // Classification & Tags
+  hCode: "HC-001",
+  axis: "Vertical",
+  specification: "ASME VIII",
+  sensor: "PRE-110",
+  ecClass: "Class 2",
+  ecCertificate: "EC-2023-001",
+  sceCode: true,
+  criticality: true,
+  active: true,
+  integrity: false,
+  reliability: true,
+  // Mock subtable data
+  childAssets: [{
+    id: "1",
+    assetNo: "V-110-1",
+    name: "Pressure Gauge",
+    type: "Instrument"
+  }, {
+    id: "2",
+    assetNo: "V-110-2",
+    name: "Level Transmitter",
+    type: "Instrument"
+  }],
+  workOrders: [{
+    id: "WO-001",
+    date: "15/03/2025",
+    type: "Corrective",
+    status: "Completed"
+  }, {
+    id: "WO-002",
+    date: "22/04/2025",
+    type: "Preventive",
+    status: "Planned"
+  }]
+};
+
 // Sample inventory data
 export const inventory = [
   {
