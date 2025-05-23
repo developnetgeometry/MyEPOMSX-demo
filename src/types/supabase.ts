@@ -3913,25 +3913,31 @@ export type Database = {
       }
       e_task: {
         Row: {
+          created_at: string | null
           discipline_id: number | null
           id: number
           is_active: boolean | null
           task_code: string
           task_name: string | null
+          updated_at: string | null
         }
         Insert: {
+          created_at?: string | null
           discipline_id?: number | null
           id?: number
           is_active?: boolean | null
           task_code: string
           task_name?: string | null
+          updated_at?: string | null
         }
         Update: {
+          created_at?: string | null
           discipline_id?: number | null
           id?: number
           is_active?: boolean | null
           task_code?: string
           task_name?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -3947,22 +3953,30 @@ export type Database = {
         Row: {
           id: number
           seq: number | null
-          task_id: number | null
+          task_id: number
           task_list: string | null
         }
         Insert: {
           id?: number
           seq?: number | null
-          task_id?: number | null
+          task_id: number
           task_list?: string | null
         }
         Update: {
           id?: number
           seq?: number | null
-          task_id?: number | null
+          task_id?: number
           task_list?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "e_task_detail_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "e_task"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       e_toxicity: {
         Row: {
