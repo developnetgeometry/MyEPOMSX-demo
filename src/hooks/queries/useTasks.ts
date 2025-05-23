@@ -5,7 +5,7 @@ export const taskKeys = {
   all: ["tasks"] as const,
   lists: () => [...taskKeys.all, "list"] as const,
   details: () => [...taskKeys.all, "detail"] as const,
-  detail: (id: string) => [...taskKeys.details(), id] as const,
+  detail: (id: number) => [...taskKeys.details(), id] as const,
 };
 
 export const useTasks = () => {
@@ -36,11 +36,59 @@ export const useUpdateTask = () => {
 };
 
 export const useDeleteTask = () => {
-    const queryClient = useQueryClient();
-    return useMutation({
-      mutationFn: taskService.deleteTask,
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
-      },
-    });
-  }
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: taskService.deleteTask,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
+    },
+  });
+};
+
+export const useDisciplineOptions = () => {
+  return useQuery({
+    queryKey: ["disciplineOptions"],
+    queryFn: () => taskService.getDisciplineOptions(),
+  });
+};
+
+export const useTaskWithDetails = (id: number) => {
+  return useQuery({
+    queryKey: taskKeys.detail(id),
+    queryFn: () => taskService.getTaskWithDetails(id),
+  });
+};
+
+
+export const useAddDetailToTask = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: taskService.addDetailsToTask,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: taskKeys.details() });
+    },
+  });
+};
+
+export const useUpdateTaskDetail = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: taskService.updateTaskDetail,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: taskKeys.details() });
+    },
+  });
+};
+
+export const useDeleteTaskDetail = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: taskService.deleteTaskDetail,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: taskKeys.details() });
+    },
+  });
+};

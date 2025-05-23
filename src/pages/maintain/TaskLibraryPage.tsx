@@ -25,93 +25,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Task } from "@/types/maintain";
-import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from "@/hooks/queries/useTasks";
+import { createTaskDTO, Task } from "@/types/maintain";
+import { useTasks, useCreateTask, useUpdateTask, useDeleteTask, useDisciplineOptions } from "@/hooks/queries/useTasks";
 import ManageDialog from "@/components/manage/ManageDialog";
 import * as z from "zod";
 
-// Define form schema for validation
-const taskFormSchema = z.object({
-  taskCode: z.string().min(1, "Task code is required"),
-  taskName: z.string().min(1, "Task name is required"),
-  discipline: z.string().min(1, "Discipline is required"),
-  counter: z.number().min(0, "Counter must be positive"),
-  noManPower: z.number().min(0, "Man power must be positive"),
-  manHour: z.number().min(0, "Man hour must be positive"),
-  totalHourRequire: z.number().min(0, "Total hours must be positive"),
-  active: z.boolean(),
-});
-
-// Define form fields configuration
-const taskFormFields = [
-  {
-    name: "taskCode",
-    label: "Task Code",
-    type: "text" as const,
-    required: true,
-    section: "main" as const,
-  },
-  {
-    name: "counter",
-    label: "Counter",
-    type: "number" as const,
-    required: true,
-    section: "main" as const,
-    width: "half" as const,
-  },
-  {
-    name: "taskName",
-    label: "Task Name",
-    type: "text" as const,
-    required: true,
-    section: "main" as const,
-  },
-  {
-    name: "discipline",
-    label: "Discipline",
-    type: "select" as const,
-    required: true,
-    options: [
-      { value: "SOP", label: "SOP" },
-      { value: "Mechanical", label: "Mechanical" },
-      { value: "Electrical", label: "Electrical" },
-      { value: "Instrumentation", label: "Instrumentation" },
-      { value: "HVAC", label: "HVAC" },
-      { value: "Piping", label: "Piping" },
-      { value: "Civil", label: "Civil" },
-    ],
-    section: "main" as const,
-  },
-  {
-    name: "noManPower",
-    label: "No Man Power",
-    type: "number" as const,
-    required: true,
-    section: "main" as const,
-    width: "half" as const,
-  },
-  {
-    name: "manHour",
-    label: "Man Hour",
-    type: "number" as const,
-    required: true,
-    section: "main" as const,
-    width: "half" as const,
-  },
-  {
-    name: "totalHourRequire",
-    label: "Total Hour Require",
-    type: "number" as const,
-    required: true,
-    section: "main" as const,
-  },
-  {
-    name: "active",
-    label: "Active",
-    type: "select" as const,
-    section: "main" as const,
-  },
-];
 
 const TaskLibraryPage: React.FC = () => {
   const navigate = useNavigate();
@@ -128,6 +46,94 @@ const TaskLibraryPage: React.FC = () => {
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
   const { toast } = useToast();
 
+
+const { data: disciplineOptions, isLoading: isLoadingDiscipline } = useDisciplineOptions();
+
+
+// Define form schema for validation
+const taskFormSchema = z.object({
+  taskCode: z.string().min(1, "Task code is required"),
+  taskName: z.string().min(1, "Task name is required"),
+  discipline: z.string().min(1, "Discipline is required"),
+  // counter: z.number().min(0, "Counter must be positive"),
+  // noManPower: z.number().min(0, "Man power must be positive"),
+  // manHour: z.number().min(0, "Man hour must be positive"),
+  // totalHourRequire: z.number().min(0, "Total hours must be positive"),
+  is_active: z.string(),
+});
+
+// Define form fields configuration
+const taskFormFields = [
+  {
+    name: "taskCode",
+    label: "Task Code",
+    type: "text" as const,
+    required: true,
+    section: "main" as const,
+  },
+  // {
+  //   name: "counter",
+  //   label: "Counter",
+  //   type: "number" as const,
+  //   required: true,
+  //   section: "main" as const,
+  //   width: "half" as const,
+  // },
+  {
+    name: "taskName",
+    label: "Task Name",
+    type: "text" as const,
+    required: true,
+    section: "main" as const,
+  },
+  {
+    name: "discipline",
+    label: "Discipline",
+    type: "select" as const,
+    required: true,
+    options: disciplineOptions?.map((option) => {
+      return {
+        value: option.value.toString(),
+        label: option.label,
+      };
+    }) || [],
+    section: "main" as const,
+  },
+  // {
+  //   name: "noManPower",
+  //   label: "No Man Power",
+  //   type: "number" as const,
+  //   required: true,
+  //   section: "main" as const,
+  //   width: "half" as const,
+  // },
+  // {
+  //   name: "manHour",
+  //   label: "Man Hour",
+  //   type: "number" as const,
+  //   required: true,
+  //   section: "main" as const,
+  //   width: "half" as const,
+  // },
+  // {
+  //   name: "totalHourRequire",
+  //   label: "Total Hour Require",
+  //   type: "number" as const,
+  //   required: true,
+  //   section: "main" as const,
+  // },
+  {
+    name: "is_active",
+    label: "Active",
+    type: "select" as const,
+    section: "main" as const,
+    options: [
+      { value: "true", label: "Active" },
+      { value: "false", label: "Inactive" },
+    ],
+  },
+];
+
   const handleAddNew = () => {
     setIsEditMode(false);
     setCurrentTask(null);
@@ -140,17 +146,31 @@ const TaskLibraryPage: React.FC = () => {
     setIsDialogOpen(true);
   };
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: z.infer<typeof taskFormSchema>) => {
     try {
       if (isEditMode && currentTask) {
-        await updateTaskMutation.mutateAsync({ ...currentTask, ...values });
+        await updateTaskMutation.mutateAsync({ 
+            id: currentTask.id,
+            task_code: values.taskCode,
+            task_name: values.taskName,
+            discipline_id: Number(values.discipline),
+            is_active: Boolean(values.is_active),
+            updated_at: new Date(),
+         });
         toast({
           title: "Success",
           description: "Task updated successfully",
           variant: "default",
         });
       } else {
-        await createTaskMutation.mutateAsync(values);
+        await createTaskMutation.mutateAsync({
+          task_code: values.taskCode,
+          task_name: values.taskName,
+          discipline_id: Number(values.discipline),
+          is_active: Boolean(values.is_active),
+          created_at: new Date(),
+          updated_at: new Date(),
+        } as createTaskDTO);
         toast({
           title: "Success",
           description: "Task created successfully",
@@ -174,9 +194,11 @@ const TaskLibraryPage: React.FC = () => {
   const handleDuplicate = async (task: Task) => {
     try {
       const newTask = {
-        ...task,
-        taskCode: `${task.task_code}-COPY`,
-        id: undefined, // Clear ID to create new record
+        id: undefined,
+        task_code: `COPY-${task.task_code}`,
+        task_name: task.task_name,
+        discipline_id: task.discipline_id,
+        is_active: task.is_active,
       };
       await createTaskMutation.mutateAsync(newTask);
       toast({
@@ -372,20 +394,23 @@ const TaskLibraryPage: React.FC = () => {
         onOpenChange={setIsDialogOpen}
         title={isEditMode ? "Edit Task" : "Create New Task"}
         formSchema={taskFormSchema}
-        defaultValues={currentTask || {
+        defaultValues={isEditMode && currentTask
+          ? {
+            taskCode: currentTask.task_code,
+            taskName: currentTask.task_name,
+            discipline: String(currentTask.discipline_id),
+            is_active: String(currentTask.is_active,)
+          }
+          :
+          {
           taskCode: "",
           taskName: "",
-          discipline: "SOP",
-          counter: 0,
-          noManPower: 0,
-          manHour: 0,
-          totalHourRequire: 0,
-          active: true,
+          discipline: "1",
+          is_active: undefined,
         }}
         formFields={taskFormFields}
         onSubmit={handleSubmit}
         isEdit={isEditMode}
-        isProcessing={createTaskMutation.isPending || updateTaskMutation.isPending}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
