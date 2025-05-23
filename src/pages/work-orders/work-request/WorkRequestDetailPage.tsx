@@ -5,36 +5,23 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, ClipboardList } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
-import { Skeleton } from '@/components/ui/skeleton';
-
-interface WorkRequest {
-  id: number;
-  cm_status_id: number | null;
-  description: string | null;
-  work_request_date: string | null;
-  target_due_date: string | null;
-  facility_id: number | null;
-  system_id: number | null;
-  package_id: number | null;
-  asset_id: number | null;
-  cm_sce_code: number | null;
-  work_center_id: number | null;
-  date_finding: string | null;
-  maintenance_type: number | null;
-  requested_by: string | null;
-  criticality_id: number | null;
-  finding_detail: string | null;
-  anomaly_report: boolean | null;
-  quick_incident_report: boolean | null;
-  work_request_no: string;
-}
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import TaskDetailTab from '@/components/work-orders/work-request/task-detail/TaskDetailTab';
+import ReportsTab from '@/components/work-orders/work-request/reports/ReportsTab';
+import FailureTab from '@/components/work-orders/work-request/failure/FailureTab';
+import AttachmentTab from '@/components/work-orders/work-request/attachment/AttachmentTab';
 
 const WorkRequestDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [workRequest, setWorkRequest] = useState<WorkRequest | null>(null);
+  const [workRequest, setWorkRequest] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -42,7 +29,18 @@ const WorkRequestDetailPage: React.FC = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('e_new_work_request')
-        .select('*')
+        .select(
+          `id, cm_status_id (id, name), 
+          description, work_request_date, target_due_date, 
+          facility_id (id, location_code, location_name), system_id (id, system_name), 
+          package_id (id, package_no, package_tag, package_name), 
+          asset_id (id, asset_name), cm_sce_code (id, cm_group_name, cm_sce_code ), 
+          work_center_id (id, code, name), date_finding, 
+          maintenance_type (id, code, name), requested_by, 
+          criticality_id (id, name), 
+          finding_detail, anomaly_report, quick_incident_report,
+          work_request_no, work_request_prefix`
+        )
         .eq('id', Number(id))
         .single();
 
@@ -78,104 +76,133 @@ const WorkRequestDetailPage: React.FC = () => {
         <Skeleton className="h-[200px] w-full" />
       ) : workRequest ? (
         <Card>
-          <CardContent className="pt-6">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[200px]">Field</TableHead>
-                  <TableHead>Value</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow>
-                  <TableCell className="font-medium">Work Request No</TableCell>
-                  <TableCell>{workRequest.work_request_no}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">CM Status ID</TableCell>
-                  <TableCell>{workRequest.cm_status_id ?? "N/A"}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Description</TableCell>
-                  <TableCell>{workRequest.description ?? "N/A"}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Work Request Date</TableCell>
-                  <TableCell>
-                    {workRequest.work_request_date
+          <CardContent className="pt-6 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label className="block text-sm font-medium text-gray-700">Work Request No</Label>
+                <Input className="cursor-default" value={workRequest.work_request_no ?? "N/A"} readOnly />
+              </div>
+              <div>
+                <Label className="block text-sm font-medium text-gray-700">CM Status</Label>
+                <Input className="cursor-default" value={workRequest.cm_status_id?.name ?? "N/A"} readOnly />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label className="block text-sm font-medium text-gray-700">Description</Label>
+                <Textarea className="cursor-default" value={workRequest.description ?? "N/A"} readOnly />
+              </div>
+              <div>
+                <Label className="block text-sm font-medium text-gray-700">Work Request Date</Label>
+                <Input className="cursor-default"
+                  value={
+                    workRequest.work_request_date
                       ? new Date(workRequest.work_request_date).toLocaleDateString("en-GB").replace(/\//g, "-")
-                      : "N/A"}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Target Due Date</TableCell>
-                  <TableCell>
-                    {workRequest.target_due_date
+                      : "N/A"
+                  }
+                  readOnly
+                />
+              </div>
+              <div>
+                <Label className="block text-sm font-medium text-gray-700">Target Due Date</Label>
+                <Input className="cursor-default"
+                  value={
+                    workRequest.target_due_date
                       ? new Date(workRequest.target_due_date).toLocaleDateString("en-GB").replace(/\//g, "-")
-                      : "N/A"}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Facility ID</TableCell>
-                  <TableCell>{workRequest.facility_id ?? "N/A"}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">System ID</TableCell>
-                  <TableCell>{workRequest.system_id ?? "N/A"}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Package ID</TableCell>
-                  <TableCell>{workRequest.package_id ?? "N/A"}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Asset ID</TableCell>
-                  <TableCell>{workRequest.asset_id ?? "N/A"}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">CM SCE Code</TableCell>
-                  <TableCell>{workRequest.cm_sce_code ?? "N/A"}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Work Center ID</TableCell>
-                  <TableCell>{workRequest.work_center_id ?? "N/A"}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Date Finding</TableCell>
-                  <TableCell>
-                    {workRequest.date_finding
-                      ? new Date(workRequest.date_finding).toLocaleDateString("en-GB").replace(/\//g, "-")
-                      : "N/A"}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Maintenance Type</TableCell>
-                  <TableCell>{workRequest.maintenance_type ?? "N/A"}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Requested By</TableCell>
-                  <TableCell>{workRequest.requested_by ?? "N/A"}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Criticality ID</TableCell>
-                  <TableCell>{workRequest.criticality_id ?? "N/A"}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Finding Detail</TableCell>
-                  <TableCell>{workRequest.finding_detail ?? "N/A"}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Anomaly Report</TableCell>
-                  <TableCell>{workRequest.anomaly_report ? "Yes" : "No"}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Quick Incident Report</TableCell>
-                  <TableCell>{workRequest.quick_incident_report ? "Yes" : "No"}</TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
+                      : "N/A"
+                  }
+                  readOnly
+                />
+              </div>
+              <div>
+                <Label className="block text-sm font-medium text-gray-700">Facility</Label>
+                <Input className="cursor-default" value={workRequest.facility_id?.location_name ?? "N/A"} readOnly />
+              </div>
+              <div>
+                <Label className="block text-sm font-medium text-gray-700">System</Label>
+                <Input className="cursor-default" value={workRequest.system_id?.system_name ?? "N/A"} readOnly />
+              </div>
+              <div>
+                <Label className="block text-sm font-medium text-gray-700">Package</Label>
+                <Input className="cursor-default" value={workRequest.package_id?.package_name ?? "N/A"} readOnly />
+              </div>
+              <div>
+                <Label className="block text-sm font-medium text-gray-700">Asset</Label>
+                <Input className="cursor-default" value={workRequest.asset_id?.asset_name ?? "N/A"} readOnly />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label className="block text-sm font-medium text-gray-700">CM SEC Code</Label>
+                <Input className="cursor-default"
+                  value={
+                    workRequest.cm_sce_code
+                      ? `${workRequest.cm_sce_code.cm_sce_code} - ${workRequest.cm_sce_code.cm_group_name}`
+                      : "N/A"
+                  }
+                  readOnly
+                />
+              </div>
+              <div>
+                <Label className="block text-sm font-medium text-gray-700">Work Center</Label>
+                <Input className="cursor-default" value={workRequest.work_center_id?.name ?? "N/A"} readOnly />
+              </div>
+              <div>
+                <Label className="block text-sm font-medium text-gray-700">Maintenance Type</Label>
+                <Input className="cursor-default" value={workRequest.maintenance_type?.name ?? "N/A"} readOnly />
+              </div>
+              <div>
+                <Label className="block text-sm font-medium text-gray-700">Requested By</Label>
+                <Input className="cursor-default" value={workRequest.requested_by ?? "N/A"} readOnly />
+              </div>
+              <div>
+                <Label className="block text-sm font-medium text-gray-700">Criticality</Label>
+                <Input className="cursor-default" value={workRequest.criticality_id?.name ?? "N/A"} readOnly />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label className="block text-sm font-medium text-gray-700">Finding Incident Details</Label>
+                <Textarea className="cursor-default" value={workRequest.finding_detail ?? "N/A"} readOnly />
+              </div>
+
+              <div className="flex flex-row items-center justify-start space-x-3 space-y-0">
+                <Switch className="cursor-default"
+                  checked={workRequest.anomaly_report ?? false}
+                />
+                <Label className="block text-sm font-medium text-gray-700">Anomaly Report</Label>
+              </div>
+              <div className="flex flex-row items-center justify-start space-x-3 space-y-0">
+                <Switch className="cursor-default"
+                  checked={workRequest.quick_incident_report ?? false}
+                />
+                <Label className="block text-sm font-medium text-gray-700">Quick Incident Report</Label>
+              </div>
+            </div>
           </CardContent>
         </Card>
       ) : null}
+
+      {/* Tabs Section */}
+      <Card>
+        <CardContent className="pt-6">
+          <Tabs defaultValue="taskDetail">
+            <TabsList className="w-full border-b justify-start">
+              <TabsTrigger value="taskDetail">Task Detail</TabsTrigger>
+              <TabsTrigger value="reports">Reports</TabsTrigger>
+              <TabsTrigger value="failure">Failure</TabsTrigger>
+              <TabsTrigger value="attachment">Attachment</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="taskDetail">
+              {id && <TaskDetailTab newWorkRequestId={Number(id)} />}
+            </TabsContent>
+            <TabsContent value="reports">
+              {id && <ReportsTab workRequestId={Number(id)} />}
+            </TabsContent>
+            <TabsContent value="failure">
+              {id && <FailureTab workRequestId={Number(id)} />}
+            </TabsContent>
+            <TabsContent value="attachment">
+              {id && <AttachmentTab workRequestId={Number(id)} />}
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };

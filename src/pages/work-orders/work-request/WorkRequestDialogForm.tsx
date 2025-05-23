@@ -248,7 +248,7 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
               <Select
                 value={formData.system_id?.toString() || ""}
                 onValueChange={(value) => handleSelectChange("system_id", parseInt(value))}
-                disabled={formData.cm_status_id !== 1}
+                disabled={!formData.facility_id || formData.cm_status_id !== 1} // Disable if no facility is selected
               >
                 <SelectTrigger id="system_id" className="w-full">
                   <SelectValue placeholder="Select System" />
@@ -274,7 +274,7 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
               <Select
                 value={formData.package_id?.toString() || ""}
                 onValueChange={(value) => handleSelectChange("package_id", parseInt(value))}
-                disabled={formData.cm_status_id !== 1}
+                disabled={!formData.system_id || formData.cm_status_id !== 1} // Disable if no system is selected
               >
                 <SelectTrigger id="package_id" className="w-full">
                   <SelectValue placeholder="Select Package" />
@@ -329,7 +329,7 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
                 searchBy={(asset) => [asset.asset_name, asset.asset_no]} // Search by asset name and number
                 getLabel={(asset) => asset.asset_name} // Display asset name
                 getValue={(asset) => asset.id} // Use asset ID as the value
-                disabled={formData.cm_status_id !== 1}
+                disabled={!formData.package_id || formData.cm_status_id !== 1} // Disable if no package is selected
               />
             </div>
             <div className="space-y-2">
