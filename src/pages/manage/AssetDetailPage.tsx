@@ -36,7 +36,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useAssetWithRelations } from "@/hooks/queries/useAssets";
+import { useAssetWithRelations, useItemByBomId } from "@/hooks/queries/useAssets";
 
 // Dummy data for Installation Tab
 const installationData = [
@@ -220,10 +220,16 @@ const AssetDetailPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("installation");
 
   const { data: asset, isLoading, error } = useAssetWithRelations(Number(id));
-  console.log(asset);
-  
 
   const assetDetails = asset?.asset_detail;
+
+  const bomID = assetDetails?.bom_id;
+  
+  const { data: bomData = [] } = useItemByBomId(bomID || 0);
+  console.log("bomData:", bomData);
+  
+  
+
   const childAssets = assetDetails?.child_assets;
   const assetInstallation = asset?.asset_installation;
   const formatDate = (dateString: string) => {
@@ -693,15 +699,15 @@ const AssetDetailPage: React.FC = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody className="divide-y">
-                      {bomData.map((item) => (
+                      {bomData?.map((item) => (
                         <TableRow key={item.id} className="hover:bg-muted/30">
-                          <TableCell className="p-3">{item.partNo}</TableCell>
-                          <TableCell className="p-3">{item.partName}</TableCell>
+                          <TableCell className="p-3">{item.item_master.item_no}</TableCell>
+                          <TableCell className="p-3">{item.item_master.item_name}</TableCell>
                           <TableCell className="p-3">{item.quantity}</TableCell>
                           <TableCell className="p-3">
-                            {item.unitOfMeasure}
+                            {item.item_master.unit.name}
                           </TableCell>
-                          <TableCell className="p-3">{item.remarks}</TableCell>
+                          <TableCell className="p-3">{item.description}</TableCell>
                           <TableCell className="p-3">
                             <Button variant="ghost" size="sm">
                               <Settings className="h-4 w-4" />

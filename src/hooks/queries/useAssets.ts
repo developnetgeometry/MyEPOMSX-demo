@@ -70,3 +70,11 @@ export const useAssetWithRelations = (id: number) => {
     enabled: !!id,
   });
 };
+
+export const useItemByBomId = (bomId: number) => {
+  return useQuery({
+    queryKey: assetKeys.detail(bomId),
+    queryFn: () => assetService.getItemsByBomId(bomId),
+    enabled: !!bomId,
+  });
+};

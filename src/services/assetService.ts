@@ -170,4 +170,21 @@ export const assetService = {
 
     return data;
   },
+
+  async getItemsByBomId(bomId: number): Promise<any> {
+    const { data, error } = await supabase
+      .from("e_spare_parts")
+      .select(`
+        *,
+        item_master: item_master_id(*, unit: unit_id(*))
+      `)
+      .eq("bom_id", bomId)
+      .order('created_at', { ascending: true }); // Optional: add sorting
+  
+    if (error) {
+      throw new Error(`Error fetching BOM items: ${error.message}`);
+    }
+  
+    return data || [];
+  }
 };
