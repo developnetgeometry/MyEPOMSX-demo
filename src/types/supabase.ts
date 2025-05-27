@@ -2893,18 +2893,28 @@ export type Database = {
           pm_wo_id: number | null
           sequence: number | null
           task_list: string | null
+          is_template_copy: boolean
+          is_custom: boolean
+          is_deleted: boolean
+          original_task_detail_id: number | null
         }
         Insert: {
           id?: number
           pm_wo_id?: number | null
           sequence?: number | null
           task_list?: string | null
+          is_template_copy?: boolean
+          is_custom?: boolean
+          is_deleted?: boolean
         }
         Update: {
           id?: number
           pm_wo_id?: number | null
           sequence?: number | null
           task_list?: string | null
+          is_template_copy?: boolean
+          is_custom?: boolean
+          is_deleted?: boolean
         }
         Relationships: [
           {
@@ -2914,6 +2924,20 @@ export type Database = {
             referencedRelation: "e_pm_work_order"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "e_pm_task_detail_original_fk"
+            columns: ["original_task_detail_id"]
+            isOneToOne: false
+            referencedRelation: "e_task_detail"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "e_pm_task_detail_schedule_fk"
+            columns: ["pm_schedule_id"]
+            isOneToOne: false
+            referencedRelation: "e_pm_schedule"
+            referencedColumns: ["id"]
+          }
         ]
       }
       e_pm_work_order: {

@@ -3,9 +3,10 @@ import { PMSchedule } from "@/types/maintain";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const scheduleKeys = {
-    all: ["schedule"] as const,
-    list: () => [...scheduleKeys.all, "list"] as const,
-    detail: (id: number) => [...scheduleKeys.all, "detail", id] as const
+  all: ["schedule"] as const,
+  list: () => [...scheduleKeys.all, "list"] as const,
+  detail: (id: number) => [...scheduleKeys.all, "detail", id] as const,
+  customTasks: (id: number) => [...scheduleKeys.detail(id), "custom-tasks"] as const
 }
 
 export const usePMSchedules = () => {
@@ -100,3 +101,53 @@ export const useDisciplineOptions = () => {
     queryFn: () => PMScheduleService.getDisciplineOptions(),
   });
 }
+
+export const usePMScheduleCustomTasks = (pmScheduleId: number | undefined) => {
+  return useQuery({
+    queryKey: scheduleKeys.customTasks(pmScheduleId),
+    queryFn: () => {
+      if (!pmScheduleId) throw new Error('PM Schedule ID is required');
+      return PMScheduleService.getPMScheduleCustomTasks(pmScheduleId);
+    },
+    enabled: !!pmScheduleId
+  });
+};
+
+export const useCreatePMScheduleCustomTask = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: PMScheduleService.createPMScheduleCustomTask,
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ 
+        queryKey: scheduleKeys.customTasks(variables.pm_schedule_id) 
+      });
+    },
+  });
+};
+
+export const useUpdatePMScheduleCustomTask = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: PMScheduleService.updatePMScheduleCustomTask,
+    onSuccess: (data, variables) => {
+      // Optimistically update the cache
+      queryClient.setQueryData(
+        scheduleKeys.customTasks(data.pm_schedule_id),
+        (old: any[]) => old?.map(task => 
+          task.id === variables.id ? { ...task, ...variables } : task
+        )
+      );
+    },
+  });
+};
+
+export const useDeletePMScheduleCustomTask = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: PMScheduleService.deletePMScheduleCustomTask,
+    onSuccess: (_, variables) => {
+      // We don't have the schedule ID here, so we need to invalidate all
+      queryClient.invalidateQueries({ queryKey: scheduleKeys.all });
+    },
+  });
+};

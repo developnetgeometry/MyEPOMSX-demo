@@ -17,8 +17,10 @@ export interface TaskWithDetails extends Task {
 }
 
 export interface TaskDetail {
-  seq: number;
+  id: number;
+  seq?: number;
   task_list: string;
+  isEditing?: boolean;
 }
 
 export interface UpdateTaskDetail {
@@ -67,7 +69,7 @@ export interface Frequency {
 
 export interface PMSchedule {
   asset_id: number | null;
-//   asset: Asset | null;
+  //   asset: Asset | null;
   discipline_id: number | null;
   due_date: string | null;
   facility_id: number | null;
@@ -87,15 +89,36 @@ export interface PMSchedule {
   work_center_id: number | null;
 }
 
-export type createPMScheduleDTO = Database["public"]["Tables"]["e_pm_schedule"]["Insert"];
-export type updatePMScheduleDTO = Database["public"]["Tables"]["e_pm_schedule"]["Update"];
+export interface PMScheduleDetail extends PMSchedule {
+  package: {
+    package_no: string;
+  };
+  asset: {
+    asset_name: string;
+  };
+  frequency: {
+    name: string;
+  }
+  task: {
+    task_name: string;
+  }
+  work_center: {
+    name: string;
+  }
+  service_notes?: string | null;
+}
+
+export type createPMScheduleDTO =
+  Database["public"]["Tables"]["e_pm_schedule"]["Insert"];
+export type updatePMScheduleDTO =
+  Database["public"]["Tables"]["e_pm_schedule"]["Update"];
 
 export interface GeneratePMSchedule {
-    id: string;
-    pm_no: string;
-    pm_description: string;
-    asset_id?: number;
-    frequency: string | null;
-    nextDueDate: string | null;
-    status: string | null;
+  id: string;
+  pm_no: string;
+  pm_description: string;
+  asset_id?: number;
+  frequency: string | null;
+  nextDueDate: string | null;
+  status: string | null;
 }

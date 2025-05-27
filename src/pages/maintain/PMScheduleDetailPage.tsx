@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useLoadingState } from '@/hooks/use-loading-state';
-import { formatCurrency } from '@/utils/formatters';
+import { formatCurrency, formatDate } from '@/utils/formatters';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -25,11 +25,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useCreatePMScheduleCustomTask, useDeletePMScheduleCustomTask, usePMSchedule, usePMScheduleCustomTasks, useUpdatePMScheduleCustomTask } from '@/hooks/queries/usePMSchedule';
+import { useTaskWithDetails } from '@/hooks/queries/useTasks';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabaseClient';
+import { useToast } from '@/hooks/use-toast';
 
 interface TaskDetail {
   id: number;
   description: string;
+  seq: number;
   isEditing?: boolean;
+  isCustom?: boolean;
+  originalTaskDetailId?: number | null;
 }
 
 interface MinAcceptanceCriteria {
@@ -84,27 +92,43 @@ const PMScheduleDetailPage: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState('task-detail');
+  const { toast } = useToast();
+  const { data: pmScheduleDetail } = usePMSchedule(Number(id));
   
-  const [pmDetail, setPmDetail] = useState({
-    pmNo: 'PM-2024-001',
-    pmDescription: 'Monthly Check on Compressor',
-    packageNo: 'PKG-COMP-002',
-    assets: 'EXCHANGER, POUR POINT DEPRESSANT HEAT',
-    tasks: 'TASK-COMP-01 | Lubrication Check',
-    frequency: 'Monthly',
-    workCenter: 'Mechanical Work Center',
-    status: 'Active',
-    manHour: 4,
-    manPower: 2,
-    dueDate: '10/06/2025',
-    duration: 4
+  const { data: tasks } = useTaskWithDetails(pmScheduleDetail?.task_id, {
+    enabled: !!pmScheduleDetail?.task_id
   });
 
-  const [taskDetails, setTaskDetails] = useState<TaskDetail[]>([
-    { id: 1, description: 'Replace light bulb' },
-    { id: 2, description: 'Change light bulb' },
-    { id: 3, description: 'Test Replace Pipe' }
-  ]);
+  const { data: PMTasks } = usePMScheduleCustomTasks(Number(id));
+  const { mutate: createCustomTask } = useCreatePMScheduleCustomTask();
+  const { mutate: updateCustomTask } = useUpdatePMScheduleCustomTask();
+  const { mutate: deleteCustomTask } = useDeletePMScheduleCustomTask();
+
+  const [taskDetails, setTaskDetails] = useState<TaskDetail[]>([]);
+
+  useEffect(() => {
+    // @ts-ignore
+    if(!tasks?.details && !PMTasks) return;
+    
+    // @ts-ignore
+    const templateTasks = tasks?.details?.map(task => ({
+      id: task.id,
+      seq: task.seq,
+      description: task.task_list,
+      isCustom: false,
+      originalTaskDetailId: null
+    })) || [];
+
+    const scheduleCustomTasks = PMTasks?.map(task => ({
+      id: task.id,
+      description: task.task_list,
+      is_custom: true,
+      originalTaskDetailId: task.original_task_detail_id,
+      seq: task.seq
+    })) || [];
+  
+    setTaskDetails([...templateTasks, ...scheduleCustomTasks]);
+  }, [tasks, PMTasks]);
 
   const [serviceNotes, setServiceNotes] = useState<string>(
     "Perform regular maintenance checks on the compressor unit. Ensure all connections are properly tightened and lubricated."
@@ -177,9 +201,21 @@ const PMScheduleDetailPage: React.FC = () => {
   };
 
   const updateTaskDescription = (id: number, description: string) => {
-    setTaskDetails(taskDetails.map(task => 
-      task.id === id ? { ...task, description } : task
-    ));
+    setTaskDetails(taskDetails.map(task => {
+      if (task.id === id) {
+        // If this is a template task, create a custom copy
+        if (!task.isCustom) {
+          return {
+            ...task,
+            isCustom: true,
+            description,
+            isEditing: true
+          };
+        }
+        return { ...task, description };
+      }
+      return task;
+    }));
     setIsFormModified(true);
   };
 
@@ -188,7 +224,11 @@ const PMScheduleDetailPage: React.FC = () => {
       if (task.id === id) {
         // Validate the description before saving
         if (!task.description || task.description.trim() === '') {
-          toast.error("Task description cannot be empty");
+          toast({
+            title: "Error",
+            description: "Task description cannot be empty",
+            variant: "destructive",
+          });
           return task; // Keep in editing mode
         }
         return { ...task, isEditing: false };
@@ -199,18 +239,20 @@ const PMScheduleDetailPage: React.FC = () => {
     setTaskDetails(updatedTasks);
   };
 
-  // Handle adding new task
   const addTask = () => {
-    const newId = taskDetails.length > 0 
-      ? Math.max(...taskDetails.map(t => t.id)) + 1 
+    const newId = Date.now(); // Use timestamp for temporary ID
+    const newSeq = taskDetails.length > 0 
+      ? Math.max(...taskDetails.map(t => t.seq)) + 1 
       : 1;
     
     setTaskDetails([
       ...taskDetails, 
       { 
         id: newId, 
-        description: '', 
-        isEditing: true 
+        description: '',
+        seq: newSeq,
+        isEditing: true,
+        isCustom: true // Mark as custom task
       }
     ]);
     setIsFormModified(true);
@@ -225,15 +267,32 @@ const PMScheduleDetailPage: React.FC = () => {
   const confirmDeleteTask = () => {
     if (taskToDelete !== null) {
       withDeletingLoading(async () => {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        setTaskDetails(taskDetails.filter(task => task.id !== taskToDelete));
+        const taskToRemove = taskDetails.find(task => task.id === taskToDelete);
+        if (!taskToRemove) return;
+  
+        // Delete from database if it's a custom task
+        if (taskToRemove.isCustom) {
+          await deleteCustomTask(taskToRemove.id);
+        }
+  
+        // Remove the task and re-sequence remaining tasks
+        const updatedTasks = taskDetails
+          .filter(task => task.id !== taskToDelete)
+          .map((task, index) => ({
+            ...task,
+            seq: index + 1 // Re-sequence starting from 1
+          }));
+  
+        setTaskDetails(updatedTasks);
         setDeleteDialogOpen(false);
         setTaskToDelete(null);
         setIsFormModified(true);
         
-        toast.success("Task deleted successfully");
+        toast({
+          title: "Success",
+          description: "Task deleted successfully",
+          variant: "default",
+        });
       });
     }
   };
@@ -244,25 +303,66 @@ const PMScheduleDetailPage: React.FC = () => {
     const hasEmptyTasks = taskDetails.some(task => !task.description || task.description.trim() === '');
     
     if (hasEmptyTasks) {
-      toast.error("All tasks must have a description");
+      toast({
+        title: "Error",
+        description: "All tasks must have descriptions",
+        variant: "destructive",
+      });
       return;
     }
     
     withSavingLoading(async () => {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Update all records to not be in editing mode
-      setTaskDetails(taskDetails.map(task => ({ ...task, isEditing: false })));
-      
-      // Update the original data with the new version
-      setOriginalTaskDetails(JSON.parse(JSON.stringify(taskDetails)));
-      
-      // Reset form modified flag
-      setIsFormModified(false);
-      
-      // Show success message
-      toast.success("PM Schedule saved successfully");
+      try {
+        // First, delete all existing custom tasks for this schedule
+        // @ts-ignore
+        await supabase
+          .from('e_pm_task_detail')
+          .delete()
+          .eq('pm_schedule_id', Number(id));
+  
+        // Then create/update all current tasks
+        const savePromises = taskDetails.map(task => {
+          // Skip saving template tasks (they're read-only)
+          if (!task.isCustom) return Promise.resolve();
+  
+          return supabase
+            .from('e_pm_task_detail')
+            .upsert({
+              id: task.id,
+              pm_schedule_id: Number(id),
+              task_list: task.description,
+              sequence: task.seq,
+              original_task_detail_id: task.originalTaskDetailId || null
+            })
+            .select()
+            .single();
+        });
+  
+        await Promise.all(savePromises);
+  
+        // Update all records to not be in editing mode
+        setTaskDetails(taskDetails.map(task => ({ ...task, isEditing: false })));
+        
+        // Update the original data with the new version
+        setOriginalTaskDetails(JSON.parse(JSON.stringify(taskDetails)));
+        
+        // Reset form modified flag
+        setIsFormModified(false);
+        
+        // Show success message
+        toast({
+          title: "Success",
+          description: "Tasks saved successfully",
+          variant: "default",
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to save tasks",
+          variant: "destructive",
+        });
+        console.error("Save error:", error);
+      }
     });
   };
   
@@ -277,7 +377,11 @@ const PMScheduleDetailPage: React.FC = () => {
       // Restore the original data
       setTaskDetails(JSON.parse(JSON.stringify(originalTaskDetails)));
       setIsFormModified(false);
-      toast.info("Changes discarded");
+      toast({
+        title: "Success",
+        description: "Changes canceled",
+        variant: "default",
+      });
     }
     
     // Navigate back to PM Schedule list
@@ -328,45 +432,45 @@ const PMScheduleDetailPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>
               <h4 className="text-sm font-medium text-gray-500">PM No</h4>
-              <p className="text-base font-medium">{pmDetail.pmNo}</p>
+              <p className="text-base font-medium">{pmScheduleDetail?.pm_no}</p>
             </div>
             
             <div>
               <h4 className="text-sm font-medium text-gray-500">PM Description</h4>
-              <p className="text-base">{pmDetail.pmDescription}</p>
+              <p className="text-base">{pmScheduleDetail?.pm_description}</p>
             </div>
             
             <div>
               <h4 className="text-sm font-medium text-gray-500">Package No</h4>
-              <p className="text-base">{pmDetail.packageNo}</p>
+              <p className="text-base">{pmScheduleDetail?.package.package_no}</p>
             </div>
             
             <div>
-              <h4 className="text-sm font-medium text-gray-500">Assets</h4>
-              <p className="text-base">{pmDetail.assets}</p>
+              <h4 className="text-sm font-medium text-gray-500">Asset</h4>
+              <p className="text-base">{pmScheduleDetail?.asset.asset_name}</p>
             </div>
             
             <div>
               <h4 className="text-sm font-medium text-gray-500">Tasks</h4>
-              <p className="text-base">{pmDetail.tasks}</p>
+              <p className="text-base">{pmScheduleDetail?.task.task_name}</p>
             </div>
             
             <div>
               <h4 className="text-sm font-medium text-gray-500">Frequency</h4>
-              <p className="text-base">{pmDetail.frequency}</p>
+              <p className="text-base">{pmScheduleDetail?.frequency.name}</p>
             </div>
             
             <div>
               <h4 className="text-sm font-medium text-gray-500">Work Center</h4>
-              <p className="text-base">{pmDetail.workCenter}</p>
+              <p className="text-base">{pmScheduleDetail?.work_center.name}</p>
             </div>
             
             <div>
               <h4 className="text-sm font-medium text-gray-500">Status</h4>
-              <StatusBadge status={pmDetail.status} />
+              <StatusBadge status={pmScheduleDetail?.is_active ? "Active" : "Inactive"} />
             </div>
             
-            <div>
+            {/* <div>
               <h4 className="text-sm font-medium text-gray-500">Man Hour</h4>
               <p className="text-base">{pmDetail.manHour}</p>
             </div>
@@ -374,17 +478,17 @@ const PMScheduleDetailPage: React.FC = () => {
             <div>
               <h4 className="text-sm font-medium text-gray-500">Man Power</h4>
               <p className="text-base">{pmDetail.manPower}</p>
-            </div>
+            </div> */}
             
             <div>
               <h4 className="text-sm font-medium text-gray-500">Due Date</h4>
-              <p className="text-base">{pmDetail.dueDate}</p>
+              <p className="text-base">{formatDate(pmScheduleDetail?.due_date)}</p>
             </div>
             
-            <div>
+            {/* <div>
               <h4 className="text-sm font-medium text-gray-500">Duration</h4>
               <p className="text-base">{pmDetail.duration} Days</p>
-            </div>
+            </div> */}
           </div>
         </CardContent>
       </Card>
@@ -474,7 +578,7 @@ const PMScheduleDetailPage: React.FC = () => {
                   <TableBody>
                     {taskDetails.map((task) => (
                       <TableRow key={task.id}>
-                        <TableCell>{task.id}</TableCell>
+                        <TableCell>{task.seq}</TableCell>
                         <TableCell>
                           {task.isEditing ? (
                             <Input 
@@ -550,7 +654,6 @@ const PMScheduleDetailPage: React.FC = () => {
                       onChange={handleServiceNotesChange}
                       className="min-h-[200px]"
                       placeholder="Enter service notes here..."
-                      richText
                     />
                   </div>
                 </div>
@@ -637,7 +740,6 @@ const PMScheduleDetailPage: React.FC = () => {
                       id="checksheet-notes"
                       className="min-h-[150px]"
                       placeholder="Enter checksheet notes here..."
-                      richText
                     />
                   </div>
                   <div>
@@ -705,7 +807,6 @@ const PMScheduleDetailPage: React.FC = () => {
                       onChange={handleAdditionalInfoChange}
                       className="min-h-[200px]"
                       placeholder="Enter additional information here..."
-                      richText
                     />
                   </div>
                 </div>

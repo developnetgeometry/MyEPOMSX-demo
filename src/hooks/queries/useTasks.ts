@@ -52,10 +52,14 @@ export const useDisciplineOptions = () => {
   });
 };
 
-export const useTaskWithDetails = (id: number) => {
+export const useTaskWithDetails = (id: number | undefined, options?: any) => {
   return useQuery({
     queryKey: taskKeys.detail(id),
-    queryFn: () => taskService.getTaskWithDetails(id),
+    queryFn: () => {
+      if (!id) throw new Error('ID is required');
+      return taskService.getTaskWithDetails(id);
+    },
+    ...options, // Spread any additional options
   });
 };
 
