@@ -12,7 +12,7 @@ interface TaskDetailDialogFormProps {
 
 const TaskDetailDialogForm: React.FC<TaskDetailDialogFormProps> = ({ onSubmit, onCancel, initialData }) => {
   const [formData, setFormData] = useState({
-    task_sequence: initialData?.task_sequence || "",
+    task_sequence: initialData?.task_sequence ?? 0,
     task_list: initialData?.task_list || "",
   });
 
