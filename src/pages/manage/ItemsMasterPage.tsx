@@ -6,7 +6,7 @@ import DataTable, { Column } from "@/components/shared/DataTable";
 import { Database } from "lucide-react";
 import { useAddItemMaster, useItemMaster } from "@/hooks/queries/useItemsMaster";
 import StatusBadge from "@/components/shared/StatusBadge";
-import { ItemMasterWithRelations } from "@/types/manage";
+import { ItemMasterWithRelations } from "@/types/material";
 import ManageDialog from "@/components/manage/ManageDialog";
 import { z } from "zod";
 import { createUniqueOptions } from "@/utils/dropdown";

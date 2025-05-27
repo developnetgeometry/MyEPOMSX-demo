@@ -542,6 +542,42 @@ export type Database = {
           },
         ]
       }
+      e_spare_parts: {
+        Row: {
+          id: number
+          bom_id: number
+          item_master_id: number
+          description: string | null
+        }
+        Insert: {
+          id?: number
+          bom_id: number
+          item_master_id: number
+          description?: string | null
+        }
+        Update: {
+          id?: number
+          bom_id?: number
+          item_master_id?: number
+          description?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "e_spare_parts_bom_id_fkey"
+            columns: ["bom_id"]
+            isOneToOne: false
+            referencedRelation: "e_bom_assembly"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "e_spare_parts_item_master_id_fkey"
+            columns: ["item_master_id"]
+            isOneToOne: false
+            referencedRelation: "e_item_master"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       e_asset_sce: {
         Row: {
           asset_detail_id: number | null
@@ -690,8 +726,10 @@ export type Database = {
           description: string | null
           id: number
           item_master_id: number | null
-          updated_at: string | null
+          created_by: string | null
+          created_at: Date | null
           updated_by: string | null
+          updated_at: Date | null
         }
         Insert: {
           bom_code: string
@@ -701,8 +739,8 @@ export type Database = {
           description?: string | null
           id?: number
           item_master_id?: number | null
-          updated_at?: string | null
-          updated_by?: string | null
+          created_by?: string | null
+          created_at: Date | null
         }
         Update: {
           bom_code?: string
@@ -712,8 +750,8 @@ export type Database = {
           description?: string | null
           id?: number
           item_master_id?: number | null
-          updated_at?: string | null
           updated_by?: string | null
+          updated_at: Date | null
         }
         Relationships: [
           {

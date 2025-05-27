@@ -1,5 +1,5 @@
 import { itemMasterService } from "@/services/itemMasterService";
-import { CreateItemMasterDTO } from "@/types/manage";
+import { CreateItemMasterDTO } from "@/types/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 
