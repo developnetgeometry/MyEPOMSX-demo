@@ -15,6 +15,8 @@ import Loading from "@/components/shared/Loading";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/utils/formatters";
 import StatusBadge from "@/components/shared/StatusBadge";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 const WorkCenterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -145,15 +147,23 @@ const WorkCenterPage: React.FC = () => {
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingWorkCenter ? "Edit Work Center" : "Add New Work Center"}</DialogTitle>
-            <DialogDescription>
-              {editingWorkCenter
-                ? "Update the details of the work center."
-                : "Fill in the details to add a new work center."}
-            </DialogDescription>
+            <div className="flex items-start justify-between w-full">
+              <div>
+                <DialogTitle>{editingWorkCenter ? "Edit Work Center" : "Add New Work Center"}</DialogTitle>
+                <DialogDescription>
+                  {editingWorkCenter
+                    ? "Update the details of the work center."
+                    : "Fill in the details to add a new work center."}
+                </DialogDescription>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setIsDialogOpen(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </DialogHeader>
+
           <WorkCenterDialogForm
             onSubmit={handleFormSubmit}
             onCancel={() => setIsDialogOpen(false)}

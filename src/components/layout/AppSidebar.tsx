@@ -68,15 +68,15 @@ const sidebarItems: SidebarItemType[] = [{
   icon: ListOrdered,
   children: [{
     name: 'Work Request',
-    path: '/maintain/work-request',
+    path: '/work-orders/work-request',
     icon: ClipboardList
   }, {
     name: 'Work Order List',
-    path: '/maintain/work-order-list',
+    path: '/work-orders/work-order-list',
     icon: ClipboardList
   }, {
     name: 'WO History',
-    path: '/maintain/wo-history',
+    path: '/work-orders/wo-history',
     icon: ClipboardList
   }]
 }, {
@@ -141,7 +141,7 @@ const sidebarItems: SidebarItemType[] = [{
       icon: RMSDashboardIcon
     }]
   }]
-}, 
+},
 // Combined Admin module with Setup and Settings as submodules
 {
   name: 'Admin',
@@ -162,7 +162,7 @@ const sidebarItems: SidebarItemType[] = [{
               <path d="M22 10c0 4-3.5 7-8 8"></path>
             </svg>
           )
-        }, 
+        },
         {
           name: 'Project',
           path: '/admin/setup/project',
@@ -173,7 +173,7 @@ const sidebarItems: SidebarItemType[] = [{
               <path d="M22 15h-5a2 2 0 1 0 0 4h5"></path>
             </svg>
           )
-        }, 
+        },
         {
           name: 'Sensor',
           path: '/admin/setup/sensor',
@@ -184,7 +184,7 @@ const sidebarItems: SidebarItemType[] = [{
               <path d="M16 8v8"></path>
             </svg>
           )
-        }, 
+        },
         {
           name: 'Work Center',
           path: '/admin/setup/work-center',
@@ -208,37 +208,37 @@ const sidebarItems: SidebarItemType[] = [{
           name: 'Data Category',
           path: '/admin/settings/data-category',
           icon: Settings
-        }, 
+        },
         {
           name: 'Asset Tag',
           path: '/admin/settings/asset-tag',
           icon: Settings
-        }, 
+        },
         {
           name: 'Asset Class',
           path: '/admin/settings/asset-class',
           icon: Settings
-        }, 
+        },
         {
           name: 'Discipline',
           path: '/admin/settings/discipline',
           icon: Settings
-        }, 
+        },
         {
           name: 'Maintenance Type',
           path: '/admin/settings/maintenance-type',
           icon: Settings
-        }, 
+        },
         {
           name: 'Frequency Setup',
           path: '/admin/settings/frequency-setup',
           icon: Settings
-        }, 
+        },
         {
           name: 'Average UARS',
           path: '/admin/settings/average-uars',
           icon: Settings
-        }, 
+        },
         {
           name: 'Corrosion Group',
           path: '/admin/settings/corrosion-group',
@@ -267,12 +267,12 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   isSetupChild = false
 }) => {
   const location = useLocation();
-  const isActive = activeItem === item.name || location.pathname === item.path || item.children?.some(child => 
-    location.pathname === child.path || 
+  const isActive = activeItem === item.name || location.pathname === item.path || item.children?.some(child =>
+    location.pathname === child.path ||
     child.children?.some(grandchild => location.pathname === grandchild.path)
   );
   const [isSubmenuOpen, setIsSubmenuOpen] = useState(isActive);
-  
+
   React.useEffect(() => {
     // Only auto-expand menus when sidebar is not collapsed
     if (isActive && !isCollapsed) {
@@ -281,7 +281,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
       setIsSubmenuOpen(false);
     }
   }, [isActive, isCollapsed]);
-  
+
   const handleClick = () => {
     if (item.children) {
       if (!isCollapsed) {
@@ -296,83 +296,83 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   // Special styling for IMS and RMS sections
   const isSpecialSection = item.name === 'IMS' || item.name === 'RMS' || item.name === 'Setup' || item.name === 'Settings';
   const specialSectionClass = isSpecialSection ? 'bg-[#1A1F2C] hover:bg-[#2a314a]' : '';
-  
+
   // Special styling for Setup child items based on the image provided
   const setupChildClass = isSetupChild ? 'pl-12 py-2.5 text-sm text-white' : '';
 
   // Admin module with nested structure
   const isAdminSubmodule = depth === 1 && (item.name === 'Setup' || item.name === 'Settings');
-  
-  return <li className="w-full">
-      {item.path ? 
-        <Link 
-          to={item.path} 
-          className={cn('flex items-center py-3 px-4 text-white hover:bg-[#2a314a] w-full transition-colors duration-200', {
-            'bg-[#2a314a]': isActive,
-            'justify-center': isCollapsed,
-            'pl-8': depth === 1 && !isSetupChild && !isAdminSubmodule,
-            'pl-12': depth === 2 && !isSetupChild,
-            'pl-16': depth === 3 && !isSetupChild,
-          }, specialSectionClass, setupChildClass)}
-          onClick={handleClick} 
-          title={isCollapsed ? item.name : undefined}
-        >
-          <item.icon size={isSetupChild ? 16 : 20} className={cn("flex-shrink-0 mr-3", {
-            "mr-0": isCollapsed
-          })} />
-          {!isCollapsed && <>
-            <span className="flex-1">{item.name}</span>
-            {item.children && <div className="ml-auto">
-              <ChevronRight size={16} />
-            </div>}
-          </>}
-        </Link> 
-        : 
-        <button 
-          className={cn('flex w-full items-center py-3 px-4 text-white hover:bg-[#2a314a] transition-colors duration-200', {
-            'bg-[#2a314a]': isActive,
-            'justify-center': isCollapsed,
-            'pl-8': depth === 1 && !isSetupChild && !isAdminSubmodule,
-            'pl-12': depth === 2 && !isSetupChild,
-            'pl-16': depth === 3 && !isSetupChild,
-          }, specialSectionClass, setupChildClass)}
-          onClick={handleClick} 
-          title={isCollapsed ? item.name : undefined}
-        >
-          <item.icon size={isSetupChild ? 16 : 20} className={cn("flex-shrink-0 mr-3", {
-            "mr-0": isCollapsed
-          })} />
-          {!isCollapsed && <>
-            <span >{item.name}</span>
-            {item.children && <div className="ml-auto">
-              <ChevronRight size={16} className={cn('transition-transform duration-200', {
-                'rotate-90': isSubmenuOpen
-              })} />
-            </div>}
-          </>}
-        </button>
-      }
 
-      {isSubmenuOpen && item.children && !isCollapsed && (
-        <ul className={cn("bg-[#242b3d] bg-opacity-50 py-1", {
-          "bg-[#1A1F2C]": isSpecialSection,
-          "bg-[#2a314a]": depth === 1 && !isSpecialSection
-        })}>
-          {item.children.map((child) => {
-            // Fix for the type error: We need to check if child.children exists before using it
-            return <SidebarItem 
-              key={child.name} 
-              item={child} 
-              isCollapsed={isCollapsed} 
-              activeItem={activeItem} 
-              onActiveItemChange={onActiveItemChange} 
-              depth={depth + 1} 
-              isSetupChild={false}
-            />;
-          })}
-        </ul>
-      )}
-    </li>;
+  return <li className="w-full">
+    {item.path ?
+      <Link
+        to={item.path}
+        className={cn('flex items-center py-3 px-4 text-white hover:bg-[#2a314a] w-full transition-colors duration-200', {
+          'bg-[#2a314a]': isActive,
+          'justify-center': isCollapsed,
+          'pl-8': depth === 1 && !isSetupChild && !isAdminSubmodule,
+          'pl-12': depth === 2 && !isSetupChild,
+          'pl-16': depth === 3 && !isSetupChild,
+        }, specialSectionClass, setupChildClass)}
+        onClick={handleClick}
+        title={isCollapsed ? item.name : undefined}
+      >
+        <item.icon size={isSetupChild ? 16 : 20} className={cn("flex-shrink-0 mr-3", {
+          "mr-0": isCollapsed
+        })} />
+        {!isCollapsed && <>
+          <span className="flex-1">{item.name}</span>
+          {item.children && <div className="ml-auto">
+            <ChevronRight size={16} />
+          </div>}
+        </>}
+      </Link>
+      :
+      <button
+        className={cn('flex w-full items-center py-3 px-4 text-white hover:bg-[#2a314a] transition-colors duration-200', {
+          'bg-[#2a314a]': isActive,
+          'justify-center': isCollapsed,
+          'pl-8': depth === 1 && !isSetupChild && !isAdminSubmodule,
+          'pl-12': depth === 2 && !isSetupChild,
+          'pl-16': depth === 3 && !isSetupChild,
+        }, specialSectionClass, setupChildClass)}
+        onClick={handleClick}
+        title={isCollapsed ? item.name : undefined}
+      >
+        <item.icon size={isSetupChild ? 16 : 20} className={cn("flex-shrink-0 mr-3", {
+          "mr-0": isCollapsed
+        })} />
+        {!isCollapsed && <>
+          <span >{item.name}</span>
+          {item.children && <div className="ml-auto">
+            <ChevronRight size={16} className={cn('transition-transform duration-200', {
+              'rotate-90': isSubmenuOpen
+            })} />
+          </div>}
+        </>}
+      </button>
+    }
+
+    {isSubmenuOpen && item.children && !isCollapsed && (
+      <ul className={cn("bg-[#242b3d] bg-opacity-50 py-1", {
+        "bg-[#1A1F2C]": isSpecialSection,
+        "bg-[#2a314a]": depth === 1 && !isSpecialSection
+      })}>
+        {item.children.map((child) => {
+          // Fix for the type error: We need to check if child.children exists before using it
+          return <SidebarItem
+            key={child.name}
+            item={child}
+            isCollapsed={isCollapsed}
+            activeItem={activeItem}
+            onActiveItemChange={onActiveItemChange}
+            depth={depth + 1}
+            isSetupChild={false}
+          />;
+        })}
+      </ul>
+    )}
+  </li>;
 };
 
 type AppSidebarProps = {
@@ -387,62 +387,64 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
   isMobile
 }) => {
   const [activeItem, setActiveItem] = useState('Dashboard');
-  
+
   const handleActiveItemChange = (item: string) => {
     setActiveItem(item);
     if (isMobile) {
       onToggle();
     }
   };
-  
+
   return <>
-      {isMobile && <button onClick={onToggle} className="fixed top-4 left-4 z-50 p-2 bg-[#1A1F2C] rounded-md text-white hover:bg-[#2a314a] transition-colors duration-200">
-          {!isCollapsed ? <X size={20} /> : <Menu size={20} />}
-        </button>}
-      
-      <div className={cn('fixed inset-y-0 left-0 z-40 bg-[#1A1F2C] transition-all duration-300 ease-in-out transform', {
+    {isMobile && <button onClick={onToggle} className="fixed top-4 left-4 z-50 p-2 bg-[#1A1F2C] rounded-md text-white hover:bg-[#2a314a] transition-colors duration-200">
+      {!isCollapsed ? <X size={20} /> : <Menu size={20} />}
+    </button>}
+
+    <div className={cn('fixed inset-y-0 left-0 z-40 bg-[#1A1F2C] transition-all duration-300 ease-in-out transform', {
       'w-60': !isCollapsed,
       'w-16': isCollapsed && !isMobile,
       'translate-x-0': !isCollapsed || !isMobile,
       '-translate-x-full': isCollapsed && isMobile
     })}>
-        <div className="h-full flex flex-col">
-          <div className={cn("flex items-center h-16 px-4 border-b border-white/10", {
+      <div className="h-full flex flex-col">
+        <div className={cn("flex items-center h-16 px-4 border-b border-white/10", {
           "justify-center": isCollapsed
         })}>
-            <div className={cn("flex items-center", {
+          <div className={cn("flex items-center", {
             "justify-center": isCollapsed
           })}>
-              <span className={cn("text-xl font-bold text-white", {
-              "sr-only": isCollapsed
-            })}>MyEPOMSX</span>
-              {isCollapsed && <span></span>}
-            </div>
-            
-            {!isMobile && <button onClick={onToggle} className={cn("ml-auto p-1 rounded-md text-white hover:bg-[#2a314a] focus:outline-none transition-colors duration-200", {
+            <img
+              src="/epoms-navbar-logo.png"
+              alt="MyEPOMSX Logo"
+              className={cn("h-14", { "sr-only": isCollapsed })}
+            />
+            {isCollapsed && <span></span>}
+          </div>
+
+          {!isMobile && <button onClick={onToggle} className={cn("ml-auto p-1 rounded-md text-white hover:bg-[#2a314a] focus:outline-none transition-colors duration-200", {
             "mr-auto ml-0": isCollapsed
           })}>
-                {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-              </button>}
-          </div>
-          
-          <div className="flex-1 overflow-y-auto">
-            <ul className="space-y-0.5">
-              {sidebarItems.map((item) => (
-                <SidebarItem 
-                  key={item.name} 
-                  item={item} 
-                  isCollapsed={isCollapsed} 
-                  activeItem={activeItem} 
-                  onActiveItemChange={handleActiveItemChange} 
-                  isSetupChild={false}
-                />
-              ))}
-            </ul>
-          </div>
+            {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+          </button>}
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          <ul className="space-y-0.5">
+            {sidebarItems.map((item) => (
+              <SidebarItem
+                key={item.name}
+                item={item}
+                isCollapsed={isCollapsed}
+                activeItem={activeItem}
+                onActiveItemChange={handleActiveItemChange}
+                isSetupChild={false}
+              />
+            ))}
+          </ul>
         </div>
       </div>
-    </>;
+    </div>
+  </>;
 };
 
 export default AppSidebar;

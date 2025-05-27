@@ -14,6 +14,8 @@ import {
 import Loading from "@/components/shared/Loading";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/utils/formatters";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 const ProjectPage: React.FC = () => {
   const navigate = useNavigate();
@@ -139,15 +141,23 @@ const ProjectPage: React.FC = () => {
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingProject ? "Edit Project" : "Add New Project"}</DialogTitle>
-            <DialogDescription>
-              {editingProject
-                ? "Update the details of the project."
-                : "Fill in the details to add a new project."}
-            </DialogDescription>
+            <div className="flex items-start justify-between w-full">
+              <div>
+                <DialogTitle>{editingProject ? "Edit Project" : "Add New Project"}</DialogTitle>
+                <DialogDescription>
+                  {editingProject
+                    ? "Update the details of the project."
+                    : "Fill in the details to add a new project."}
+                </DialogDescription>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setIsDialogOpen(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </DialogHeader>
+
           <ProjectDialogForm
             onSubmit={handleFormSubmit}
             onCancel={() => setIsDialogOpen(false)}

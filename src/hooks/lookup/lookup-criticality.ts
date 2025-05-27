@@ -1,17 +1,17 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 
-export const useSensorTypeData = () => {
+export const useCriticalityData = () => {
     return useQuery({
-        queryKey: ["e-sensor-type-data"],
+        queryKey: ["e-cm-criticality-data"],
         queryFn: async () => {
             const { data, error } = await supabase
-                .from("e_sensor_type")
+                .from("e_criticality")
                 .select("id, name")
                 .order("id");
 
             if (error) {
-                console.error("Error fetching e_sensor_type data:", error);
+                console.error("Error fetching e_criticality data:", error);
                 throw error;
             }
 

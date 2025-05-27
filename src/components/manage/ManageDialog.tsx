@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { X } from "lucide-react";
 import ManageForm from "./ManageForm";
 import * as z from "zod";
@@ -10,6 +10,7 @@ interface ManageDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
+  description?: string;
   formSchema: z.ZodSchema<any>;
   defaultValues: any;
   formFields: {
@@ -37,6 +38,7 @@ const ManageDialog = ({
   open,
   onOpenChange,
   title,
+  description,
   formSchema,
   defaultValues,
   formFields,
@@ -58,12 +60,12 @@ const ManageDialog = ({
     if (field.type === "select" && field.options) {
       // Filter out any options with empty string values
       const validOptions = field.options.filter(option => option.value !== "");
-      
+
       // If no valid options remain, add a placeholder option
       if (validOptions.length === 0) {
         validOptions.push({ value: "no_options", label: "No options available" });
       }
-      
+
       return { ...field, options: validOptions };
     }
     return field;
@@ -73,20 +75,25 @@ const ManageDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader className={`flex flex-row items-center justify-between ${headerColor ? headerColor : ''}`}>
-          <DialogTitle className={headerColor ? "text-white" : ""}>{title}</DialogTitle>
-          <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className={headerColor ? "text-white hover:bg-white/20" : ""}>
-            <X className="h-4 w-4" />
-          </Button>
+          <div>
+            <DialogTitle className={headerColor ? "text-white" : ""}>{title}</DialogTitle>
+            <DialogDescription className={headerColor ? "text-white" : ""}>{description}</DialogDescription>
+          </div>
+          <div>
+            <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className={headerColor ? "text-white hover:bg-white/20" : ""}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </DialogHeader>
-        <ManageForm 
-          schema={formSchema} 
-          defaultValues={defaultValues} 
-          fields={validatedFormFields} 
+        <ManageForm
+          schema={formSchema}
+          defaultValues={defaultValues}
+          fields={validatedFormFields}
           onSubmit={values => {
             onSubmit(values);
-          }} 
-          onCancel={() => onOpenChange(false)} 
-          isEdit={isEdit} 
+          }}
+          onCancel={() => onOpenChange(false)}
+          isEdit={isEdit}
           isSubmitting={isProcessing}
           showFileUploads={showFileUploads}
         />

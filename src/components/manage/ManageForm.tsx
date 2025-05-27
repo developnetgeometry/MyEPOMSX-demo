@@ -148,7 +148,6 @@ const ManageForm = ({
                         {...formField}
                         disabled={isSubmitting}
                         placeholder={field.placeholder}
-                        richText={field.richText}
                         className="min-h-[150px]"
                       />
                     ) : (
@@ -303,7 +302,6 @@ const ManageForm = ({
                             {...formField}
                             disabled={isSubmitting}
                             placeholder={field.placeholder}
-                            richText={field.richText}
                             className="min-h-[150px]"
                           />
                         ) : (

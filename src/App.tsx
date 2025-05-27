@@ -72,16 +72,16 @@ import CriticalAssetsPage from '@/pages/monitor/CriticalAssetsPage';
 import RMSDashboardPage from '@/pages/monitor/RMSDashboardPage';
 
 // Maintain imports
-import WOHistoryPage from '@/pages/maintain/WOHistoryPage';
-import WOHistoryDetailPage from '@/pages/maintain/WOHistoryDetailPage';
+import WOHistoryPage from '@/pages/work-orders/work-order-history/WOHistoryPage';
+import WOHistoryDetailPage from '@/pages/work-orders/work-order-history/WOHistoryDetailPage';
 import TaskLibraryPage from '@/pages/maintain/TaskLibraryPage';
 import TaskLibraryDetailPage from '@/pages/maintain/TaskLibraryDetailPage';
 import PMSchedulePage from '@/pages/maintain/PMSchedulePage';
 import PMScheduleDetailPage from '@/pages/maintain/PMScheduleDetailPage';
-import WorkRequestPage from '@/pages/maintain/WorkRequestPage';
-import WorkRequestDetailPage from '@/pages/maintain/WorkRequestDetailPage';
-import WorkOrderListPage from '@/pages/maintain/WorkOrderListPage';
-import WorkOrderDetailPage from '@/pages/maintain/WorkOrderDetailPage';
+import WorkRequestPage from '@/pages/work-orders/work-request/WorkRequestPage';
+import WorkRequestDetailPage from '@/pages/work-orders/work-request/WorkRequestDetailPage';
+import WorkOrderListPage from '@/pages/work-orders/work-order-list/WorkOrderListPage';
+import WorkOrderDetailPage from '@/pages/work-orders/work-order-list/WorkOrderDetailPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -101,7 +101,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Layout><Outlet /></Layout>}>
               <Route index element={<Index />} />
-              
+
               {/* Manage Routes */}
               <Route path="/manage/facilities" element={<FacilitiesPage />} />
               <Route path="/manage/facilities/:id" element={<FacilityDetailPage />} />
@@ -168,16 +168,19 @@ function App() {
               <Route path="/monitor/rms-dashboard" element={<RMSDashboardPage />} />
 
               {/* Maintain Routes */}
-              <Route path="/maintain/wo-history" element={<WOHistoryPage />} />
-              <Route path="/maintain/wo-history/:id" element={<WOHistoryDetailPage />} />
               <Route path="/maintain/task-library" element={<TaskLibraryPage />} />
               <Route path="/maintain/task-library/:id" element={<TaskLibraryDetailPage />} />
               <Route path="/maintain/pm-schedule" element={<PMSchedulePage />} />
               <Route path="/maintain/pm-schedule/:id" element={<PMScheduleDetailPage />} />
-              <Route path="/maintain/work-request" element={<WorkRequestPage />} />
-              <Route path="/maintain/work-request/:id" element={<WorkRequestDetailPage />} />
-              <Route path="/maintain/work-order-list" element={<WorkOrderListPage />} />
-              <Route path="/maintain/work-order-list/:id" element={<WorkOrderDetailPage />} />
+
+
+              {/* Work Order Routes */}
+              <Route path="/work-orders/work-request" element={<WorkRequestPage />} />
+              <Route path="/work-orders/work-request/:id" element={<WorkRequestDetailPage />} />
+              <Route path="/work-orders/work-order-list" element={<WorkOrderListPage />} />
+              <Route path="/work-orders/work-order-list/:id" element={<WorkOrderDetailPage />} />
+              <Route path="/work-orders/wo-history" element={<WOHistoryPage />} />
+              <Route path="/work-orders/wo-history/:id" element={<WOHistoryDetailPage />} />
 
               <Route path="*" element={<NotFound />} />
             </Route>
