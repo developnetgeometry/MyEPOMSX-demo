@@ -6,22 +6,35 @@ export const scheduleKeys = {
   all: ["schedule"] as const,
   list: () => [...scheduleKeys.all, "list"] as const,
   detail: (id: number) => [...scheduleKeys.all, "detail", id] as const,
-  customTasks: (id: number) => [...scheduleKeys.detail(id), "custom-tasks"] as const
-}
+  customTasks: (id: number) =>
+    [...scheduleKeys.detail(id), "custom-tasks"] as const,
+  minCriteria: (id: number) =>
+    [...scheduleKeys.detail(id), "min-criteria"] as const,
+  checksheets: (id: number) =>
+    [...scheduleKeys.detail(id), "checksheets"] as const,
+  workOrders: (id: number) =>
+    [...scheduleKeys.detail(id), "work-orders"] as const,
+  maintainableGroups: (id: number) => 
+    [...scheduleKeys.detail(id), "maintainable-groups"] as const,
+  planLabour: (id: number) => 
+    [...scheduleKeys.detail(id), "plan-labour"] as const,
+  planMaterial: (id: number) => 
+    [...scheduleKeys.detail(id), "plan-material"] as const,
+};
 
 export const usePMSchedules = () => {
-    return useQuery({
-        queryKey: scheduleKeys.list(),
-        queryFn: () => PMScheduleService.getPMSchedules(),
-    });
-}
+  return useQuery({
+    queryKey: scheduleKeys.list(),
+    queryFn: () => PMScheduleService.getPMSchedules(),
+  });
+};
 
 export const usePMSchedule = (id: number) => {
-    return useQuery({
-        queryKey: scheduleKeys.detail(id),
-        queryFn: () => PMScheduleService.getPMScheduleById(id),
-    });
-}
+  return useQuery({
+    queryKey: scheduleKeys.detail(id),
+    queryFn: () => PMScheduleService.getPMScheduleById(id),
+  });
+};
 
 export const useCreatePMSchedule = () => {
   const queryClient = useQueryClient();
@@ -30,8 +43,8 @@ export const useCreatePMSchedule = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: scheduleKeys.list() });
     },
-  })
-}
+  });
+};
 
 export const useUpdatePMSchedule = () => {
   const queryClient = useQueryClient();
@@ -40,8 +53,8 @@ export const useUpdatePMSchedule = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: scheduleKeys.list() });
     },
-  })
-}
+  });
+};
 
 export const useDeletePMSchedule = () => {
   const queryClient = useQueryClient();
@@ -50,8 +63,22 @@ export const useDeletePMSchedule = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: scheduleKeys.list() });
     },
-  })
-}
+  });
+};
+
+export const useGenerateSamplePMSchedules = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: {
+      start_date: string;
+      end_date: string;
+      asset_id?: number;
+    }) => PMScheduleService.generateSamplePMSchedules(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: scheduleKeys.list() });
+    },
+  });
+};
 
 export const useMaintenanceOptions = () => {
   return useQuery({
@@ -79,37 +106,37 @@ export const useFrequencyOptions = () => {
     queryKey: ["frequencyOptions"],
     queryFn: () => PMScheduleService.getFrequencyOptions(),
   });
-}
+};
 
 export const usePackageOptions = () => {
   return useQuery({
     queryKey: ["packageOptions"],
     queryFn: () => PMScheduleService.getPackageOptions(),
   });
-}
+};
 
 export const useTaskOptions = () => {
   return useQuery({
     queryKey: ["taskOptions"],
     queryFn: () => PMScheduleService.getTaskOptions(),
   });
-}
+};
 
 export const useDisciplineOptions = () => {
   return useQuery({
     queryKey: ["disciplineOptions"],
     queryFn: () => PMScheduleService.getDisciplineOptions(),
   });
-}
+};
 
 export const usePMScheduleCustomTasks = (pmScheduleId: number | undefined) => {
   return useQuery({
     queryKey: scheduleKeys.customTasks(pmScheduleId),
     queryFn: () => {
-      if (!pmScheduleId) throw new Error('PM Schedule ID is required');
+      if (!pmScheduleId) throw new Error("PM Schedule ID is required");
       return PMScheduleService.getPMScheduleCustomTasks(pmScheduleId);
     },
-    enabled: !!pmScheduleId
+    enabled: !!pmScheduleId,
   });
 };
 
@@ -118,8 +145,8 @@ export const useCreatePMScheduleCustomTask = () => {
   return useMutation({
     mutationFn: PMScheduleService.createPMScheduleCustomTask,
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ 
-        queryKey: scheduleKeys.customTasks(variables.pm_schedule_id) 
+      queryClient.invalidateQueries({
+        queryKey: scheduleKeys.customTasks(variables.pm_schedule_id),
       });
     },
   });
@@ -133,9 +160,10 @@ export const useUpdatePMScheduleCustomTask = () => {
       // Optimistically update the cache
       queryClient.setQueryData(
         scheduleKeys.customTasks(data.pm_schedule_id),
-        (old: any[]) => old?.map(task => 
-          task.id === variables.id ? { ...task, ...variables } : task
-        )
+        (old: any[]) =>
+          old?.map((task) =>
+            task.id === variables.id ? { ...task, ...variables } : task
+          )
       );
     },
   });
@@ -151,3 +179,126 @@ export const useDeletePMScheduleCustomTask = () => {
     },
   });
 };
+
+export const usePMScheduleMinCriteria = (pmScheduleId: number | undefined) => {
+  return useQuery({
+    queryKey: scheduleKeys.minCriteria(pmScheduleId),
+    queryFn: () => {
+      if (!pmScheduleId) throw new Error("PM Schedule ID is required");
+      return PMScheduleService.getMinCriteriaFromPMScheduleId(pmScheduleId);
+    },
+    enabled: !!pmScheduleId,
+  });
+};
+
+export const useWorkOrderId = (pmScheduleId: number) => {
+  return useQuery({
+    queryKey: scheduleKeys.workOrders(pmScheduleId),
+    queryFn: () => {
+      if (!pmScheduleId) throw new Error("PM Schedule ID is required");
+      return PMScheduleService.getWorkOrderFromPMScheduleId(pmScheduleId);
+    },
+    enabled: !!pmScheduleId,
+  });
+};
+
+export const usePMScheduleChecksheets = (pmScheduleId: number | undefined) => {
+  return useQuery({
+    queryKey: scheduleKeys.checksheets(pmScheduleId),
+    queryFn: () => {
+      if (!pmScheduleId) throw new Error("PM Schedule ID is required");
+      return PMScheduleService.getChecksheetFromPMScheduleId(pmScheduleId);
+    },
+    enabled: !!pmScheduleId,
+  });
+};
+
+export const useCreatePMScheduleChecksheet = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: {
+      pm_wo_id: number;
+      description: string;
+      file?: File;
+    }) => {
+      let filePath = undefined;
+      if (payload.file) {
+        filePath = await PMScheduleService.uploadChecksheetFile(payload.file);
+      }
+      return PMScheduleService.createChecksheet({
+        pm_wo_id: payload.pm_wo_id,
+        description: payload.description,
+        file_path: filePath,
+      });
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: scheduleKeys.checksheets(data.pm_wo_id),
+      });
+    },
+  });
+};
+
+export const useUpdatePMScheduleChecksheet = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: { id: number; description: string }) =>
+      PMScheduleService.updateChecksheet(payload),
+    onSuccess: (data, variables) => {
+      // Optimistically update the cache
+      queryClient.setQueryData(
+        scheduleKeys.checksheets(data.pm_schedule_id),
+        (old: any[]) =>
+          old?.map((checksheet) =>
+            checksheet.id === variables.id
+              ? { ...checksheet, ...variables }
+              : checksheet
+          )
+      );
+    },
+  });
+};
+
+export const useDeletePMScheduleChecksheet = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => PMScheduleService.deleteChecksheet(id),
+    onSuccess: (_, variables) => {
+      // We don't have the schedule ID here, so we need to invalidate all
+      queryClient.invalidateQueries({ queryKey: scheduleKeys.all });
+    },
+  });
+};
+
+export const usePMScheduleMaintainableGroups = (pmScheduleId: number | undefined) => {
+  return useQuery({
+    queryKey: scheduleKeys.maintainableGroups(pmScheduleId),
+    queryFn: () => {
+      if (!pmScheduleId) throw new Error("PM Schedule ID is required");
+      return PMScheduleService.getMaintainableGroupByScheduleId(pmScheduleId);
+    },
+    enabled: !!pmScheduleId,
+  });
+};
+
+export const usePlanLabour = (pmScheduleId: number | undefined) => {
+  return useQuery({
+    queryKey: scheduleKeys.planLabour(pmScheduleId),
+    queryFn: () => {
+      if (!pmScheduleId) throw new Error("PM Schedule ID is required");
+      return PMScheduleService.getPlanLabourByScheduleId(pmScheduleId);
+    },
+    enabled: !!pmScheduleId,
+  });
+};
+
+export const usePlanMaterial = (pmScheduleId: number | undefined) => {
+  return useQuery({
+    queryKey: scheduleKeys.planMaterial(pmScheduleId),
+    queryFn: () => {
+      if (!pmScheduleId) throw new Error("PM Schedule ID is required");
+      return PMScheduleService.getPlanMaterialByScheduleId(pmScheduleId);
+    },
+    enabled: !!pmScheduleId,
+  });
+}

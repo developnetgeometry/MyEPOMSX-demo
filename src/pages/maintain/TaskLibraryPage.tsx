@@ -47,7 +47,7 @@ const TaskLibraryPage: React.FC = () => {
   const { toast } = useToast();
 
 
-const { data: disciplineOptions, isLoading: isLoadingDiscipline } = useDisciplineOptions();
+const { data: disciplineOptions = [], isLoading: isLoadingDiscipline } = useDisciplineOptions();
 
 
 // Define form schema for validation
@@ -91,12 +91,12 @@ const taskFormFields = [
     label: "Discipline",
     type: "select" as const,
     required: true,
-    options: disciplineOptions?.map((option) => {
-      return {
-        value: option.value.toString(),
+    options: isLoadingDiscipline 
+    ? [] 
+    : disciplineOptions?.map((option) => ({
+        value: String(option.value),
         label: option.label,
-      };
-    }) || [],
+      })) || [],
     section: "main" as const,
   },
   // {

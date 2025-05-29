@@ -12,8 +12,22 @@ export interface Task {
   discipline?: Discipline;
 }
 
+export interface DisciplineOption{
+  value: number | string;
+  label: string;
+}
+
 export interface TaskWithDetails extends Task {
   details: TaskDetail[];
+}
+
+export interface MinAcceptanceCriteria {
+  id: number;
+  field_name: string;
+  criteria: string;
+  work_order_id: number;
+  work_order_no: string;
+  created_at: string;
 }
 
 export interface TaskDetail {
@@ -106,6 +120,9 @@ export interface PMScheduleDetail extends PMSchedule {
     name: string;
   }
   service_notes?: string | null;
+  checksheet_notes?: string | null;
+  checksheet_attachment?: string | null;
+  additional_info?: string | null;
 }
 
 export type createPMScheduleDTO =

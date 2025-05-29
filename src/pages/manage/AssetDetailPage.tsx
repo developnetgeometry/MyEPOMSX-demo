@@ -28,7 +28,6 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "sonner";
 import {
   Table,
   TableBody,
@@ -39,6 +38,7 @@ import {
 } from "@/components/ui/table";
 import { useAssetAttachments, useAssetWithRelations, useItemByBomId, useWorkOrdersByAssetId } from "@/hooks/queries/useAssets";
 import { formatDate, getFileNameFromPath } from "@/utils/formatters";
+import { useToast } from "@/hooks/use-toast";
 
 
 // Dummy data for Attachment Tab
@@ -110,7 +110,7 @@ const AssetDetailPage: React.FC = () => {
     id: string;
   }>();
   const navigate = useNavigate();
-
+  const { toast } = useToast();
   // Find the asset in sample data
   const [activeTab, setActiveTab] = useState("installation");
 
@@ -134,12 +134,68 @@ const AssetDetailPage: React.FC = () => {
   const commissionDate = asset?.commission_date ? formatDate(asset.commission_date) : "";
 
   const handleWorkRequest = () => {
-    toast.info("Opening work request for this asset");
+    toast({
+      title: "Success",
+      description: "Adding work request",
+      variant: "default",
+    });
     navigate(`/maintain/work-request?assetId=${id}`);
   };
   const handleApplyChanges = () => {
-    toast.success("Asset details updated successfully");
+    toast({
+      title: "Success",
+      description: "Applying changes",
+      variant: "default",
+    });
   };
+
+  const handleAddInstallation = () => {
+    toast({
+      title: "Success",
+      description: "Installation added successfully",
+      variant: "default",
+    })
+  }
+
+  const handleAddChildAsset = () => {
+    toast({
+      title: "Success",
+      description: "Asset added successfully",
+      variant: "default",
+    })
+  }
+
+  const handleAddAttachment = () => {
+    toast({
+      title: "Success",
+      description: "Attachment added successfully",
+      variant: "default",
+    })
+  }
+
+  const handleAddBom = () => {
+    toast({
+      title: "Success",
+      description: "BOM added successfully",
+      variant: "default",
+    })
+  }
+
+  const handleAddIOT = () => {
+    toast({
+      title: "Success",
+      description: "IOT added successfully",
+      variant: "default",
+    })
+  }
+  
+  const handleAddWorkOrder = () => {
+    toast({
+      title: "Success",
+      description: "Work Order added successfully",
+      variant: "default",
+    })
+  }
 
   if (isLoading || bomLoading || workOrderLoading) {
     return <Loader2 />;
@@ -439,7 +495,7 @@ const AssetDetailPage: React.FC = () => {
                         <SelectItem value="delete">Delete Selected</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button size="icon" className="ml-2">
+                    <Button size="icon" className="ml-2" onClick={handleAddInstallation}>
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
@@ -508,7 +564,7 @@ const AssetDetailPage: React.FC = () => {
                         <SelectItem value="delete">Delete Selected</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button size="icon" className="ml-2">
+                    <Button size="icon" className="ml-2" onClick={handleAddChildAsset}>
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
@@ -559,7 +615,7 @@ const AssetDetailPage: React.FC = () => {
                         <SelectItem value="delete">Delete Selected</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button size="icon" className="ml-2">
+                    <Button size="icon" className="ml-2" onClick={handleAddBom}>
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
@@ -628,7 +684,7 @@ const AssetDetailPage: React.FC = () => {
                         <SelectItem value="delete">Delete Selected</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button size="icon" className="ml-2">
+                    <Button size="icon" className="ml-2" onClick={handleAddWorkOrder}>
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
@@ -695,7 +751,7 @@ const AssetDetailPage: React.FC = () => {
                         <SelectItem value="delete">Delete Selected</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button size="icon" className="ml-2">
+                    <Button size="icon" className="ml-2" onClick={handleAddAttachment}>
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
@@ -763,7 +819,7 @@ const AssetDetailPage: React.FC = () => {
                         <SelectItem value="delete">Delete Selected</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button size="icon" className="ml-2">
+                    <Button size="icon" className="ml-2" onClick={handleAddIOT}>
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>

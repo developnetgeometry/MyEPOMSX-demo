@@ -1,4 +1,5 @@
 import { taskService } from "@/services/taskService";
+import { DisciplineOption } from "@/types/maintain";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const taskKeys = {
@@ -46,7 +47,7 @@ export const useDeleteTask = () => {
 };
 
 export const useDisciplineOptions = () => {
-  return useQuery({
+  return useQuery<DisciplineOption[]>({
     queryKey: ["disciplineOptions"],
     queryFn: () => taskService.getDisciplineOptions(),
   });

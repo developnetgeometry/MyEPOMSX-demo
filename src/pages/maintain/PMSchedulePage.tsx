@@ -39,6 +39,7 @@ import {
   useDeletePMSchedule,
   useDisciplineOptions,
   useFrequencyOptions,
+  useGenerateSamplePMSchedules,
   useMaintenanceOptions,
   usePackageOptions,
   usePMSchedules,
@@ -193,48 +194,34 @@ const PMSchedulePage: React.FC = () => {
   }));
 
   // Generate sample PM schedules
-  const generateSampleSchedules = () => {
-    const frequencies = [
-      "Weekly",
-      "Monthly",
-      "Quarterly",
-      "Semi-Annually",
-      "Annually",
-    ];
-    const statuses = ["Scheduled", "In Progress", "Completed", "Overdue"];
+  const generateSamplePMSchedulesMutation = useGenerateSamplePMSchedules();
+  const generateSampleSchedules = async () => {
+    await withGenerateLoading(async () => {
+      try {
+        const payload = {
+          start_date: startDate,
+          end_date: endDate,
+          asset_id: selectedAsset !== "all" ? Number(selectedAsset) : undefined,
+        };
 
-    // Generate random PM schedules
-    const schedules: PMSchedule[] = Array.from({ length: 10 }, (_, i) => {
-      const asset = assets[Math.floor(Math.random() * assets.length)];
-      const frequency =
-        frequencies[Math.floor(Math.random() * frequencies.length)];
+        const generatedSchedules =
+          await generateSamplePMSchedulesMutation.mutateAsync(payload);
 
-      // Generate a random date between start and end date
-      const startTimestamp = new Date(startDate).getTime();
-      const endTimestamp = new Date(endDate).getTime();
-      const randomTimestamp =
-        startTimestamp + Math.random() * (endTimestamp - startTimestamp);
-      const randomDate = new Date(randomTimestamp).toISOString().split("T")[0];
+        setFilteredPMSchedules(generatedSchedules);
 
-      return {
-        id: `PM-${1000 + i}`,
-        pmNo: `PM-${1000 + i}`,
-        description: `Preventive Maintenance for ${asset.asset_name}`,
-        asset: asset.asset_name,
-        frequency,
-        nextDueDate: randomDate,
-        status: statuses[Math.floor(Math.random() * statuses.length)],
-      };
+        toast({
+          title: "Sample PM Schedules Generated",
+          description: `Successfully generated ${generatedSchedules.length} sample PM schedules.`,
+          variant: "default",
+        });
+      } catch (error: any) {
+        toast({
+          title: "Generation Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     });
-
-    // If asset filter is applied
-    if (selectedAsset && selectedAsset !== "all") {
-      const assetName =
-        assetOptions.find((opt) => opt.label === selectedAsset)?.label || "";
-      return schedules.filter((schedule) => schedule.asset === assetName);
-    }
-
-    return schedules;
   };
 
   const pmFormSchema = z.object({
@@ -629,7 +616,8 @@ const PMSchedulePage: React.FC = () => {
                   disabled={isGenerating}
                   className="flex items-center gap-2"
                 >
-                  {isGenerating ? (
+                  {isGenerating ||
+                  generateSamplePMSchedulesMutation.isPending ? (
                     <>
                       <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
                       Generating...
