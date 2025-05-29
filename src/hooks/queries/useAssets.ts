@@ -12,6 +12,11 @@ export const assetKeys = {
   detail: (id: number) => [...assetKeys.details(), id] as const,
   withRelations: () => [...assetKeys.all, "withRelations"] as const,
   hierarchy: () => [...assetKeys.all, 'hierarchy'] as const,
+  workOrdersByAsset: (assetId: number) => [...assetKeys.detail(assetId), "workOrders"] as const,
+  bomItems: () => [...assetKeys.all, "bomItems"] as const,
+  bomItemsByBomId: (bomId: number) => [...assetKeys.bomItems(), bomId] as const,
+  attachments: () => [...assetKeys.all, "attachments"] as const,
+  attachmentsByAssetId: (assetId: number) => [...assetKeys.attachments(), assetId] as const,
 };
 
 export const useAssets = () => {
@@ -68,5 +73,30 @@ export const useAssetWithRelations = (id: number) => {
       }
     },
     enabled: !!id,
+  });
+};
+
+
+export const useItemByBomId = (bomId: number) => {
+  return useQuery({
+    queryKey: assetKeys.bomItemsByBomId(bomId),
+    queryFn: () => assetService.getItemsByBomId(bomId),
+    enabled: !!bomId,
+  });
+};
+
+export const useWorkOrdersByAssetId = (assetId: number) => {
+  return useQuery({
+    queryKey: assetKeys.workOrdersByAsset(assetId),
+    queryFn: () => assetService.getWorkOrdersByAssetId(assetId),
+    enabled: !!assetId,
+  });
+};
+
+export const useAssetAttachments = (assetId: number) => {
+  return useQuery({
+    queryKey: assetKeys.attachmentsByAssetId(assetId),
+    queryFn: () => assetService.getAssetAttachments(assetId),
+    enabled: !!assetId,
   });
 };

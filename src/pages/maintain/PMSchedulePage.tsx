@@ -1,13 +1,18 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import PageHeader from '@/components/shared/PageHeader';
-import DataTable, { Column } from '@/components/shared/DataTable';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Calendar, Filter, Download, Plus, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { useLoadingState } from '@/hooks/use-loading-state';
-import { assets } from '@/data/sampleData';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import PageHeader from "@/components/shared/PageHeader";
+import DataTable, { Column } from "@/components/shared/DataTable";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Calendar,
+  Filter,
+  Download,
+  Plus,
+  Trash2,
+  Loader2,
+} from "lucide-react";
+import { useLoadingState } from "@/hooks/use-loading-state";
 import {
   Select,
   SelectContent,
@@ -26,9 +31,26 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import ManageDialog from '@/components/manage/ManageDialog';
-import * as z from 'zod';
-import { formatCurrency } from '@/utils/formatters';
+import ManageDialog from "@/components/manage/ManageDialog";
+import * as z from "zod";
+import { formatCurrency, formatDate } from "@/utils/formatters";
+import {
+  useCreatePMSchedule,
+  useDeletePMSchedule,
+  useDisciplineOptions,
+  useFrequencyOptions,
+  useGenerateSamplePMSchedules,
+  useMaintenanceOptions,
+  usePackageOptions,
+  usePMSchedules,
+  usePriorityOptions,
+  useTaskOptions,
+  useUpdatePMSchedule,
+  useWorkCenterOptions,
+} from "@/hooks/queries/usePMSchedule";
+import StatusBadge from "@/components/shared/StatusBadge";
+import { useAssets } from "@/hooks/queries/useAssets";
+import { useToast } from "@/hooks/use-toast";
 
 interface PMSchedule {
   id: string;
@@ -48,410 +70,430 @@ interface PMSchedule {
 
 const PMSchedulePage: React.FC = () => {
   const navigate = useNavigate();
-  // State management
-  const [pmSchedules, setPmSchedules] = useState<PMSchedule[]>([
-    {
-      id: "PM-1001",
-      pmNo: "SDSDSDS",
-      description: "EPDFDF",
-      packageNo: "CPP-PPD-PKG",
-      asset: "EXCHANGER, POUR POINT DEPRESSANT HEAT",
-      tasks: "TES1-TESCST ERE DF",
-      frequency: "2 MONTHLY",
-      workCenter: "Electrical Work Center",
-      status: "Active",
-      manHour: 2,
-      manPower: 2,
-      nextDueDate: "02/03/2028",
-      duration: 4
-    },
-    {
-      id: "PM-1002",
-      pmNo: "CPP-PPD-PMN",
-      description: "C11 - check date 25 Nov 2024",
-      packageNo: "CPP-PPD-PKG",
-      asset: "EXCHANGER POUR POINT DEPRESSANT HEAT",
-      tasks: "TES1D-TESCST RE DF",
-      frequency: "2 MONTHLY",
-      workCenter: "Offshore - Production",
-      status: "Active",
-      manHour: 2,
-      manPower: 2,
-      nextDueDate: "13/01/2027",
-      duration: 4
-    },
-    {
-      id: "PM-1003",
-      pmNo: "11101",
-      description: "Testing PM",
-      packageNo: "CPP-PCG0A-ASV",
-      asset: "PUMP, MAIN OIL LINE",
-      tasks: "Test123-TestingTask",
-      frequency: "Monthly",
-      workCenter: "Electrical Work Center",
-      status: "Active",
-      manHour: 2,
-      manPower: 2,
-      nextDueDate: "18/04/2027",
-      duration: 4
-    }
-  ]);
-  const [startDate, setStartDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const { toast } = useToast();
+  const [startDate, setStartDate] = useState<string>(
+    new Date().toISOString().split("T")[0]
+  );
   const [endDate, setEndDate] = useState<string>(() => {
     const date = new Date();
     date.setMonth(date.getMonth() + 1);
-    return date.toISOString().split('T')[0];
+    return date.toISOString().split("T")[0];
   });
   const [selectedAsset, setSelectedAsset] = useState<string>("all");
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
   const [isCreatePMDialogOpen, setIsCreatePMDialogOpen] = useState(false);
-  
+  const { data: pmSchedules, isLoading, error } = usePMSchedules();
+  const createPMScheduleMutation = useCreatePMSchedule();
+  const deletePMScheduleMutation = useDeletePMSchedule();
+  const [filteredPMSchedules, setFilteredPMSchedules] = useState(
+    pmSchedules || []
+  );
+
+  useEffect(() => {
+    setFilteredPMSchedules(pmSchedules || []);
+  }, [pmSchedules]);
+
   // Loading states
-  const { isLoading: isSearching, withLoading: withSearchLoading } = useLoadingState();
-  const { isLoading: isGenerating, withLoading: withGenerateLoading } = useLoadingState();
-  const { isLoading: isDeleting, withLoading: withDeleteLoading } = useLoadingState();
-  const { isLoading: isCreatingPM, withLoading: withCreatePMLoading } = useLoadingState();
-  
+  const { isLoading: isSearching, withLoading: withSearchLoading } =
+    useLoadingState();
+  const { isLoading: isGenerating, withLoading: withGenerateLoading } =
+    useLoadingState();
+  const { isLoading: isDeleting, withLoading: withDeleteLoading } =
+    useLoadingState();
+  const { isLoading: isCreatingPM, withLoading: withCreatePMLoading } =
+    useLoadingState();
+
   // Define columns
   const columns: Column[] = [
-    { id: 'pmNo', header: 'PM No', accessorKey: 'pmNo' },
-    { id: 'description', header: 'Description', accessorKey: 'description' },
-    { id: 'packageNo', header: 'Package No', accessorKey: 'packageNo' },
-    { id: 'asset', header: 'Asset', accessorKey: 'asset' },
-    { id: 'tasks', header: 'Tasks', accessorKey: 'tasks' },
-    { id: 'frequency', header: 'Frequency', accessorKey: 'frequency' },
-    { id: 'workCenter', header: 'Work Center', accessorKey: 'workCenter' },
-    { id: 'nextDueDate', header: 'Due Date', accessorKey: 'nextDueDate' },
-    { id: 'status', header: 'Status', accessorKey: 'status' },
-    { id: 'manHour', header: 'Man Hour', accessorKey: 'manHour' },
-    { id: 'manPower', header: 'Man Power', accessorKey: 'manPower' },
-    { id: 'duration', header: 'Duration', accessorKey: 'duration' },
+    { id: "pm_no", header: "PM No", accessorKey: "pm_no" },
+    {
+      id: "pm_description",
+      header: "Description",
+      accessorKey: "pm_description",
+    },
+    {
+      id: "package_id",
+      header: "Package No",
+      accessorKey: "package.package_no",
+    },
+    { id: "asset_id", header: "Asset", accessorKey: "asset.asset_name" },
+    { id: "task_id", header: "Tasks", accessorKey: "task.task_name" },
+    { id: "frequency_id", header: "Frequency", accessorKey: "frequency.name" },
+    {
+      id: "work_center_id",
+      header: "Work Center",
+      accessorKey: "work_center.name",
+    },
+    {
+      id: "due_date",
+      header: "Due Date",
+      accessorKey: "due_date",
+      cell: (value) => formatDate(value),
+    },
+    {
+      id: "is_active",
+      header: "Status",
+      accessorKey: "is_active",
+      cell: (value) =>
+        value ? (
+          <StatusBadge status="Active" />
+        ) : (
+          <StatusBadge status="Inactive" />
+        ),
+    },
   ];
-  
+
+  const { data: assets = [] } = useAssets();
+  const { data: maintenance = [] } = useMaintenanceOptions();
+  const { data: priority = [] } = usePriorityOptions();
+  const { data: discipline = [] } = useDisciplineOptions();
+  const { data: packages = [] } = usePackageOptions();
+  const { data: workCenter = [] } = useWorkCenterOptions();
+  const { data: frequency = [] } = useFrequencyOptions();
+  const { data: task = [] } = useTaskOptions();
+
   // Asset options for the select dropdown
-  const assetOptions = assets.map(asset => ({
-    value: asset.id,
-    label: asset.name
+  const assetOptions = assets?.map((asset) => ({
+    value: String(asset.id),
+    label: asset.asset_name,
   }));
-  
+
+  const maintenanceOptions = maintenance?.map((item) => ({
+    value: String(item.id),
+    label: item.name,
+  }));
+
+  const priorityOptions = priority?.map((priority) => ({
+    value: String(priority.id),
+    label: priority.name,
+  }));
+
+  const disciplineOptions = discipline?.map((discipline) => ({
+    value: String(discipline.id),
+    label: discipline.name,
+  }));
+
+  const packageOptions = packages?.map((packages) => ({
+    value: String(packages.id),
+    label: packages.package_no,
+  }));
+
+  const workCenterOptions = workCenter?.map((workCenter) => ({
+    value: String(workCenter.id),
+    label: workCenter.name,
+  }));
+
+  const frequencyOptions = frequency?.map((frequency) => ({
+    value: String(frequency.id),
+    label: frequency.name,
+  }));
+
+  const taskOptions = task?.map((task) => ({
+    value: String(task.id),
+    label: task.task_name,
+  }));
+
   // Generate sample PM schedules
-  const generateSampleSchedules = () => {
-    const frequencies = ['Weekly', 'Monthly', 'Quarterly', 'Semi-Annually', 'Annually'];
-    const statuses = ['Scheduled', 'In Progress', 'Completed', 'Overdue'];
-    
-    // Generate random PM schedules
-    const schedules: PMSchedule[] = Array.from({ length: 10 }, (_, i) => {
-      const asset = assets[Math.floor(Math.random() * assets.length)];
-      const frequency = frequencies[Math.floor(Math.random() * frequencies.length)];
-      
-      // Generate a random date between start and end date
-      const startTimestamp = new Date(startDate).getTime();
-      const endTimestamp = new Date(endDate).getTime();
-      const randomTimestamp = startTimestamp + Math.random() * (endTimestamp - startTimestamp);
-      const randomDate = new Date(randomTimestamp).toISOString().split('T')[0];
-      
-      return {
-        id: `PM-${1000 + i}`,
-        pmNo: `PM-${1000 + i}`,
-        description: `Preventive Maintenance for ${asset.name}`,
-        asset: asset.name,
-        frequency,
-        nextDueDate: randomDate,
-        status: statuses[Math.floor(Math.random() * statuses.length)]
-      };
+  const generateSamplePMSchedulesMutation = useGenerateSamplePMSchedules();
+  const generateSampleSchedules = async () => {
+    await withGenerateLoading(async () => {
+      try {
+        const payload = {
+          start_date: startDate,
+          end_date: endDate,
+          asset_id: selectedAsset !== "all" ? Number(selectedAsset) : undefined,
+        };
+
+        const generatedSchedules =
+          await generateSamplePMSchedulesMutation.mutateAsync(payload);
+
+        setFilteredPMSchedules(generatedSchedules);
+
+        toast({
+          title: "Sample PM Schedules Generated",
+          description: `Successfully generated ${generatedSchedules.length} sample PM schedules.`,
+          variant: "default",
+        });
+      } catch (error: any) {
+        toast({
+          title: "Generation Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     });
-    
-    // If asset filter is applied
-    if (selectedAsset && selectedAsset !== "all") {
-      const assetName = assetOptions.find(opt => opt.value === selectedAsset)?.label || "";
-      return schedules.filter(schedule => schedule.asset === assetName);
-    }
-    
-    return schedules;
   };
 
-  // PM Form Schema
   const pmFormSchema = z.object({
-    pmNo: z.string().min(1, "PM No is required"),
-    dueDate: z.string().min(1, "Due Date is required"),
-    maintenance: z.string().min(1, "Maintenance is required"),
-    status: z.string().min(1, "Status is required"),
-    priority: z.string().min(1, "Priority is required"),
-    workCenter: z.string().min(1, "Work Center is required"),
-    discipline: z.string().min(1, "Discipline is required"),
-    task: z.string().min(1, "Task is required"),
-    manPower: z.string().optional(),
-    manHour: z.string().optional(),
-    frequency: z.string().min(1, "Frequency is required"),
-    facility: z.string().optional(),
-    system: z.string().optional(),
-    package: z.string().optional(),
-    assets: z.string().optional(),
-    pmGroup: z.string().optional(),
-    pmSCECode: z.string().optional(),
-    pmDescription: z.string().optional(),
+    pm_no: z.string().min(1, "PM No is required"),
+    due_date: z.string().min(1, "Due Date is required"),
+    maintenance_id: z.string().min(1, "Maintenance is required"),
+    is_active: z.boolean().default(true),
+    priority_id: z.string().min(1, "Priority is required"),
+    work_center_id: z.string().min(1, "Work Center is required"),
+    discipline_id: z.string().min(1, "Discipline is required"),
+    task_id: z.string().min(1, "Task is required"),
+    frequency_id: z.string().min(1, "Frequency is required"),
+    asset_id: z.string().min(1, "At least one asset is required"),
+    pm_description: z.string().min(1, "Description is required"),
   });
 
   // Form fields for PM creation
   const pmFormFields = [
-    { name: 'pmNo', label: 'PM No', type: 'text' as const, required: true },
-    { name: 'dueDate', label: 'Due Date', type: 'date' as const, required: true },
-    { 
-      name: 'maintenance', 
-      label: 'Maintenance', 
-      type: 'select' as const, 
+    { name: "pm_no", label: "PM No", type: "text" as const, required: true },
+    {
+      name: "due_date",
+      label: "Due Date",
+      type: "date" as const,
       required: true,
-      options: [
-        { value: '001-PM', label: '001-PM' },
-        { value: '002-PM', label: '002-PM' },
-      ]
     },
-    { 
-      name: 'status', 
-      label: 'Status', 
-      type: 'select' as const, 
+    {
+      name: "maintenance_id",
+      label: "Maintenance",
+      type: "select" as const,
       required: true,
-      options: [
-        { value: 'Active', label: 'Active' },
-        { value: 'Inactive', label: 'Inactive' },
-      ]
+      options: maintenanceOptions,
     },
-    { 
-      name: 'priority', 
-      label: 'Priority', 
-      type: 'select' as const, 
+    {
+      name: "priority_id",
+      label: "Priority",
+      type: "select" as const,
       required: true,
-      options: [
-        { value: 'High', label: 'High' },
-        { value: 'Medium', label: 'Medium' },
-        { value: 'Low', label: 'Low' },
-      ]
+      options: priorityOptions,
     },
-    { 
-      name: 'workCenter', 
-      label: 'Work Center', 
-      type: 'select' as const, 
+    {
+      name: "work_center_id",
+      label: "Work Center",
+      type: "select" as const,
       required: true,
-      options: [
-        { value: 'Electrical Work Center', label: 'Electrical Work Center' },
-        { value: 'Mechanical Work Center', label: 'Mechanical Work Center' },
-      ]
+      options: workCenterOptions,
     },
-    { 
-      name: 'discipline', 
-      label: 'Discipline', 
-      type: 'select' as const, 
+    {
+      name: "package_id",
+      label: "Package",
+      type: "select" as const,
       required: true,
-      options: [
-        { value: 'Electrical', label: 'Electrical' },
-        { value: 'Mechanical', label: 'Mechanical' },
-        { value: 'Instrumentation', label: 'Instrumentation' },
-      ]
+      options: packageOptions,
     },
-    { 
-      name: 'task', 
-      label: 'Task', 
-      type: 'select' as const, 
+    {
+      name: "discipline_id",
+      label: "Discipline",
+      type: "select" as const,
       required: true,
-      options: [
-        { value: 'Inspection', label: 'Inspection' },
-        { value: 'Maintenance', label: 'Maintenance' },
-        { value: 'Calibration', label: 'Calibration' },
-      ]
+      options: disciplineOptions,
     },
-    { name: 'manPower', label: 'Man Power', type: 'text' as const },
-    { name: 'manHour', label: 'Man Hour', type: 'text' as const },
-    { 
-      name: 'frequency', 
-      label: 'Frequency', 
-      type: 'select' as const, 
+    {
+      name: "task_id",
+      label: "Task",
+      type: "select" as const,
       required: true,
-      options: [
-        { value: 'P0001-Monthly', label: 'P0001-Monthly' },
-        { value: 'P0002-Quarterly', label: 'P0002-Quarterly' },
-        { value: 'P0003-Annually', label: 'P0003-Annually' },
-      ]
+      options: taskOptions,
     },
-    { 
-      name: 'facility', 
-      label: 'Facility', 
-      type: 'select' as const,
-      options: [
-        { value: 'Facility 1', label: 'Facility 1' },
-        { value: 'Facility 2', label: 'Facility 2' },
-      ]
+    {
+      name: "frequency_id",
+      label: "Frequency",
+      type: "select" as const,
+      required: true,
+      options: frequencyOptions,
     },
-    { 
-      name: 'system', 
-      label: 'System', 
-      type: 'select' as const,
-      options: [
-        { value: 'System 1', label: 'System 1' },
-        { value: 'System 2', label: 'System 2' },
-      ]
+    {
+      name: "asset_id",
+      label: "Asset",
+      type: "select" as const,
+      options: assetOptions,
+      required: true,
     },
-    { 
-      name: 'package', 
-      label: 'Package', 
-      type: 'select' as const,
-      options: [
-        { value: 'Package 1', label: 'Package 1' },
-        { value: 'Package 2', label: 'Package 2' },
-      ]
-    },
-    { 
-      name: 'assets', 
-      label: 'Assets', 
-      type: 'select' as const,
-      options: assetOptions
-    },
-    { 
-      name: 'pmGroup', 
-      label: 'PM Group', 
-      type: 'select' as const,
-      options: [
-        { value: 'Group 1', label: 'Group 1' },
-        { value: 'Group 2', label: 'Group 2' },
-      ]
-    },
-    { 
-      name: 'pmSCECode', 
-      label: 'PM SCE Code', 
-      type: 'select' as const,
-      options: [
-        { value: 'SCE-001', label: 'SCE-001' },
-        { value: 'SCE-002', label: 'SCE-002' },
-      ]
-    },
-    { 
-      name: 'pmDescription', 
-      label: 'PM Description', 
-      type: 'textarea' as const,
-      placeholder: 'Enter detailed description of the PM task'
+    {
+      name: "pm_description",
+      label: "Description",
+      type: "text" as const,
+      required: true,
     },
   ];
 
-  // Default values for PM creation form
   const pmDefaultValues = {
-    pmNo: '',
-    dueDate: new Date().toISOString().split('T')[0],
-    maintenance: '001-PM',
-    status: 'Active',
-    priority: 'High',
-    workCenter: 'Electrical Work Center',
-    discipline: '',
-    task: '',
-    manPower: '',
-    manHour: '',
-    frequency: 'P0001-Monthly',
-    facility: '',
-    system: '',
-    package: '',
-    assets: '',
-    pmGroup: '',
-    pmSCECode: '',
-    pmDescription: '',
+    pm_no: "",
+    due_date: new Date().toISOString().split("T")[0],
+    maintenance_id: "",
+    is_active: true,
+    priority_id: "",
+    work_center_id: "",
+    discipline_id: "",
+    package_id: "",
+    task_id: "",
+    frequency_id: "",
+    asset_id: "",
+    pm_description: "",
+  };
+
+  const isDateInRange = (date: string, start: string, end: string) => {
+    const dateObj = new Date(date);
+    const startObj = new Date(start);
+    const endObj = new Date(end);
+    return dateObj >= startObj && dateObj <= endObj;
   };
 
   // Handlers
-  const handleSearch = () => {
-    withSearchLoading(async () => {
-      // Validate dates
-      if (new Date(startDate) > new Date(endDate)) {
-        toast.error("Start date cannot be after end date");
-        return;
-      }
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      const newSchedules = generateSampleSchedules();
-      setPmSchedules(newSchedules);
-      
-      if (newSchedules.length === 0) {
-        toast.info("No PM schedules found for the selected criteria");
-      } else {
-        toast.success(`Found ${newSchedules.length} PM schedules`);
+  // Updated handleSearch function with proper date filtering and defaults
+  const handleSearch = async () => {
+    // Determine effective start and end dates
+    const effectiveStartDate =
+      startDate || new Date().toISOString().split("T")[0]; // Default to today if not set
+    const effectiveEndDate = endDate || null; // Keep null if not set
+
+    // Only validate dates if both are provided
+    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+      toast({
+        title: "Error",
+        description: "Start date must be before end date",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    await withSearchLoading(async () => {
+      try {
+        let filtered = pmSchedules || [];
+
+        if (!startDate && !endDate) {
+        } else {
+          filtered = filtered.filter((schedule) => {
+            if (!schedule.due_date) {
+              return false;
+            }
+
+            const scheduleDate = new Date(schedule.due_date);
+            const startDateObj = new Date(effectiveStartDate);
+
+            if (!effectiveEndDate) {
+              return scheduleDate >= startDateObj;
+            }
+
+            // Both dates are set, filter by range
+            const endDateObj = new Date(effectiveEndDate);
+            return scheduleDate >= startDateObj && scheduleDate <= endDateObj;
+          });
+        }
+
+        if (selectedAsset && selectedAsset !== "all") {
+          filtered = filtered.filter(
+            (schedule) => String(schedule.asset_id) === selectedAsset
+          );
+        }
+
+        setFilteredPMSchedules(filtered);
+
+        toast({
+          title: "Search completed",
+          description: `Found ${filtered.length} PM schedule(s) matching your criteria.`,
+          variant: "default",
+        });
+      } catch (error) {
+        toast({
+          title: "Search failed",
+          description: "An error occurred while searching. Please try again.",
+          variant: "destructive",
+        });
       }
     });
   };
 
-  const handleGenerateSchedule = () => {
-    withGenerateLoading(async () => {
-      // Validate dates
-      if (new Date(startDate) > new Date(endDate)) {
-        toast.error("Start date cannot be after end date");
-        return;
-      }
-      
-      // Simulate API call with longer delay for "generation"
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const newSchedules = generateSampleSchedules();
-      setPmSchedules(newSchedules);
-      setIsGenerateDialogOpen(false);
-      
-      toast.success(`Generated ${newSchedules.length} PM schedules successfully`);
+  const handleGenerateSchedule = async () => {
+    await withGenerateLoading(async () => {
+      await generateSampleSchedules();
     });
   };
-  
-  const handleDelete = (item: PMSchedule) => {
+
+  const handleDelete = async (item: PMSchedule) => {
     withDeleteLoading(async () => {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setPmSchedules(pmSchedules.filter(schedule => schedule.id !== item.id));
-      
-      toast.success(`PM Schedule ${item.pmNo} deleted successfully`);
+      try {
+        await deletePMScheduleMutation.mutateAsync(Number(item.id));
+        toast({
+          title: "PM Schedule deleted successfully",
+          variant: "default",
+        });
+      } catch (error: any) {
+        toast({
+          title: "Error deleting PM Schedule",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     });
-  };
-  
-  const handleExport = () => {
-    // Simulate export
-    toast.success("PM schedules exported successfully");
-    // In a real app, this would generate and download a CSV file
   };
 
   const handleRowClick = (row: PMSchedule) => {
     navigate(`/maintain/pm-schedule/${row.id}`);
   };
 
-  const handleCreatePM = (values: any) => {
-    withCreatePMLoading(async () => {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Create new PM with generated ID
-      const newPM: PMSchedule = {
-        id: `PM-${1000 + pmSchedules.length + 1}`,
-        pmNo: values.pmNo,
-        description: values.pmDescription || `PM for ${values.assets}`,
-        asset: values.assets ? assetOptions.find(a => a.value === values.assets)?.label || '' : '',
-        frequency: values.frequency,
-        nextDueDate: values.dueDate,
-        status: values.status
-      };
-      
-      setPmSchedules([...pmSchedules, newPM]);
-      setIsCreatePMDialogOpen(false);
-      
-      toast.success(`PM Schedule ${values.pmNo} created successfully`);
-    });
+  // Fixed the handleCreatePM function
+  const handleCreatePM = async (values: z.infer<typeof pmFormSchema>) => {
+    try {
+      await createPMScheduleMutation.mutateAsync({
+        asset_id: Number(values.asset_id),
+        discipline_id: Number(values.discipline_id),
+        due_date: values.due_date,
+        frequency_id: Number(values.frequency_id),
+        is_active: Boolean(values.is_active),
+        maintenance_id: Number(values.maintenance_id),
+        pm_description: values.pm_description,
+        pm_no: values.pm_no,
+        priority_id: Number(values.priority_id),
+        task_id: Number(values.task_id),
+        work_center_id: Number(values.work_center_id),
+      });
+
+      toast({
+        title: "PM Schedule created successfully",
+        variant: "default",
+      });
+
+      setIsCreatePMDialogOpen(false); // Close dialog on success
+    } catch (error: any) {
+      toast({
+        title: "Error creating PM Schedule",
+        description: error?.message || "An error occurred",
+        variant: "destructive",
+      });
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-red-500">{error.message}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <PageHeader 
-        title="PM Schedule" 
-        onSearch={(query) => console.log('Search:', query)}
+      <PageHeader
+        title="PM Schedule"
+        onSearch={(query) => console.log("Search:", query)}
       />
-      
+
       <div className="bg-white p-4 rounded-md border shadow-sm space-y-4">
-        <h2 className="text-lg font-semibold text-gray-800">Schedule Parameters</h2>
-        
+        <h2 className="text-lg font-semibold text-gray-800">
+          Schedule Parameters
+        </h2>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="space-y-2">
-            <label htmlFor="startDate" className="text-sm font-medium text-gray-700">Start Date</label>
+            <label
+              htmlFor="startDate"
+              className="text-sm font-medium text-gray-700"
+            >
+              Start Date
+            </label>
             <div className="relative">
               <Input
                 id="startDate"
@@ -461,12 +503,20 @@ const PMSchedulePage: React.FC = () => {
                 disabled={isSearching || isGenerating}
                 className="pl-3 pr-8"
               />
-              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <Calendar
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={16}
+              />
             </div>
           </div>
-          
+
           <div className="space-y-2">
-            <label htmlFor="endDate" className="text-sm font-medium text-gray-700">End Date</label>
+            <label
+              htmlFor="endDate"
+              className="text-sm font-medium text-gray-700"
+            >
+              End Date
+            </label>
             <div className="relative">
               <Input
                 id="endDate"
@@ -476,13 +526,18 @@ const PMSchedulePage: React.FC = () => {
                 disabled={isSearching || isGenerating}
                 className="pl-3 pr-8"
               />
-              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             </div>
           </div>
-          
+
           <div className="space-y-2">
-            <label htmlFor="asset" className="text-sm font-medium text-gray-700">Asset (Optional)</label>
-            <Select 
+            <label
+              htmlFor="asset"
+              className="text-sm font-medium text-gray-700"
+            >
+              Asset (Optional)
+            </label>
+            <Select
               value={selectedAsset}
               onValueChange={setSelectedAsset}
               disabled={isSearching || isGenerating}
@@ -492,8 +547,8 @@ const PMSchedulePage: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Assets</SelectItem>
-                {assetOptions.map(option => (
-                  <SelectItem key={option.value} value={option.value}>
+                {assetOptions.map((option) => (
+                  <SelectItem key={option.value} value={String(option.value)}>
                     {option.label}
                   </SelectItem>
                 ))}
@@ -501,9 +556,9 @@ const PMSchedulePage: React.FC = () => {
             </Select>
           </div>
         </div>
-        
+
         <div className="flex gap-2">
-          <Button 
+          <Button
             onClick={handleSearch}
             disabled={isSearching || isGenerating}
             className="flex items-center gap-2"
@@ -519,20 +574,25 @@ const PMSchedulePage: React.FC = () => {
               </>
             )}
           </Button>
-          
-          <Button 
-            variant="outline" 
-            disabled={isSearching || isGenerating || isCreatingPM}
+
+          <Button
+            variant="outline"
+            disabled={
+              isSearching || isGenerating || createPMScheduleMutation.isPending
+            }
             className="flex items-center gap-2"
             onClick={() => setIsCreatePMDialogOpen(true)}
           >
-            <Plus className="h-4 w-4" /> Generate Schedule
+            <Plus className="h-4 w-4" /> Create PM Schedule
           </Button>
 
-          <AlertDialog open={isGenerateDialogOpen} onOpenChange={setIsGenerateDialogOpen}>
+          <AlertDialog
+            open={isGenerateDialogOpen}
+            onOpenChange={setIsGenerateDialogOpen}
+          >
             <AlertDialogTrigger asChild>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 disabled={isSearching || isGenerating}
                 className="flex items-center gap-2"
               >
@@ -543,17 +603,21 @@ const PMSchedulePage: React.FC = () => {
               <AlertDialogHeader>
                 <AlertDialogTitle>Generate PM Schedule</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will create new preventive maintenance schedules for all applicable assets in the system. Do you want to continue?
+                  This will create new preventive maintenance schedules for all
+                  applicable assets in the system. Do you want to continue?
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel disabled={isGenerating}>Cancel</AlertDialogCancel>
-                <AlertDialogAction 
+                <AlertDialogCancel disabled={isGenerating}>
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
                   onClick={handleGenerateSchedule}
                   disabled={isGenerating}
                   className="flex items-center gap-2"
                 >
-                  {isGenerating ? (
+                  {isGenerating ||
+                  generateSamplePMSchedulesMutation.isPending ? (
                     <>
                       <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
                       Generating...
@@ -567,24 +631,23 @@ const PMSchedulePage: React.FC = () => {
           </AlertDialog>
         </div>
       </div>
-      
-      <DataTable 
+
+      <DataTable
         columns={columns}
-        data={pmSchedules}
+        data={filteredPMSchedules}
         onDelete={handleDelete}
-        onExport={pmSchedules.length > 0 ? handleExport : undefined}
         onRowClick={handleRowClick}
       />
-      
-      {pmSchedules.length === 0 && (
+
+      {filteredPMSchedules.length === 0 && (
         <div className="text-center py-8">
           <p className="text-muted-foreground">
-            No PM schedules found. Use the search filters above or generate a new schedule.
+            No PM schedules found. Use the search filters above or generate a
+            new schedule.
           </p>
         </div>
       )}
 
-      {/* PM Schedule Creation Dialog */}
       <ManageDialog
         open={isCreatePMDialogOpen}
         onOpenChange={setIsCreatePMDialogOpen}
@@ -593,8 +656,7 @@ const PMSchedulePage: React.FC = () => {
         defaultValues={pmDefaultValues}
         formFields={pmFormFields}
         onSubmit={handleCreatePM}
-        isProcessing={isCreatingPM}
-        headerColor="bg-blue-500"
+        isProcessing={createPMScheduleMutation.isPending}
       />
     </div>
   );
