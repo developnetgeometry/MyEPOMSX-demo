@@ -194,9 +194,9 @@ const WorkRequestDetailPage: React.FC = () => {
               </div>
 
               <div className="flex justify-end space-x-2">
-                {(workRequest.cm_status_id?.id === 1 &&
+                {((workRequest.cm_status_id?.id === 1 || workRequest.cm_status_id?.id === -1) &&
                   <>
-                    <Button variant="destructive">Reject</Button>
+                  <h1>Available to Technician, </h1>
                     <Button variant="outline">Submit</Button>
                   </>
                 )}

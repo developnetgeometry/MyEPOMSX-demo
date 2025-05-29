@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Settings, ClipboardList, Wrench, LineChart, Gauge, ChevronRight, Menu, X, Home, Database, Box, ListOrdered, Calendar, Users, ChevronLeft, Monitor, Shield } from 'lucide-react';
+import { Settings, ClipboardList, Wrench, LineChart, Gauge, ChevronRight, Menu, X, Home, Database, Box, ListOrdered, Calendar, Users, ChevronLeft, Monitor, Shield, ShoppingCart, FileText, Truck, Layers, Package } from 'lucide-react';
 import { IMSIcon, IntegrityIcon, RBIAssessmentIcon, CorrosionStudiesIcon, InspectionDataIcon, InventoryGroupsIcon, RMSIcon, RMSAssetListIcon, CriticalAssetsIcon, RMSDashboardIcon } from '@/components/ui/custom-icons';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
@@ -33,15 +33,15 @@ const sidebarItems: SidebarItemType[] = [{
   children: [{
     name: 'Facilities',
     path: '/manage/facilities',
-    icon: Database
+    icon: Package
   }, {
     name: 'System',
     path: '/manage/system',
-    icon: Database
+    icon: Layers
   }, {
     name: 'Package',
     path: '/manage/package',
-    icon: Database
+    icon: Box
   }, {
     name: 'Assets',
     path: '/manage/assets',
@@ -53,15 +53,15 @@ const sidebarItems: SidebarItemType[] = [{
   children: [{
     name: 'Items Master',
     path: '/manage/items-master',
-    icon: Box
+    icon: ListOrdered
   }, {
     name: 'Inventory',
     path: '/manage/inventory',
-    icon: Box
+    icon: Package
   }, {
     name: 'BOM Assembly',
     path: '/manage/bom-assembly',
-    icon: Box
+    icon: Layers
   }]
 }, {
   name: 'Work Orders',
@@ -73,11 +73,11 @@ const sidebarItems: SidebarItemType[] = [{
   }, {
     name: 'Work Order List',
     path: '/work-orders/work-order-list',
-    icon: ClipboardList
+    icon: ListOrdered
   }, {
     name: 'WO History',
     path: '/work-orders/wo-history',
-    icon: ClipboardList
+    icon: Calendar
   }]
 }, {
   name: 'Maintenance Planning',
@@ -142,6 +142,24 @@ const sidebarItems: SidebarItemType[] = [{
     }]
   }]
 },
+// New Purchasing module
+{
+  name: 'Purchasing',
+  icon: ShoppingCart,
+  children: [{
+    name: 'Purchase Request',
+    path: '/purchasing/request',
+    icon: ClipboardList
+  }, {
+    name: 'Purchase Order',
+    path: '/purchasing/orders',
+    icon: FileText
+  }, {
+    name: 'Goods Receive',
+    path: '/purchasing/goods-receive',
+    icon: Truck
+  }]
+},
 // Combined Admin module with Setup and Settings as submodules
 {
   name: 'Admin',
@@ -188,14 +206,7 @@ const sidebarItems: SidebarItemType[] = [{
         {
           name: 'Work Center',
           path: '/admin/setup/work-center',
-          icon: () => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="5" r="1"></circle>
-              <path d="M9 4c0-1 1-2 3-2 2 0 3 1 3 2 0 1.7-3 3-3 3s-3-1.3-3-3z"></path>
-              <path d="m7 14 3-3 2 2 3-3 2 2"></path>
-              <circle cx="12" cy="17" r="3"></circle>
-            </svg>
-          )
+          icon: Wrench
         },
       ]
     },
@@ -207,47 +218,54 @@ const sidebarItems: SidebarItemType[] = [{
         {
           name: 'Data Category',
           path: '/admin/settings/data-category',
-          icon: Settings
+          icon: Database
         },
         {
           name: 'Asset Tag',
           path: '/admin/settings/asset-tag',
-          icon: Settings
+          icon: Package
         },
         {
           name: 'Asset Class',
           path: '/admin/settings/asset-class',
-          icon: Settings
+          icon: Database
         },
         {
           name: 'Discipline',
           path: '/admin/settings/discipline',
-          icon: Settings
+          icon: Wrench
         },
         {
           name: 'Maintenance Type',
           path: '/admin/settings/maintenance-type',
-          icon: Settings
+          icon: Wrench
         },
         {
           name: 'Frequency Setup',
           path: '/admin/settings/frequency-setup',
-          icon: Settings
+          icon: Calendar
         },
         {
           name: 'Average UARS',
           path: '/admin/settings/average-uars',
-          icon: Settings
+          icon: LineChart
         },
         {
           name: 'Corrosion Group',
           path: '/admin/settings/corrosion-group',
-          icon: Settings
+          icon: CorrosionStudiesIcon
+        },
+        {
+          name: 'Users',
+          path: '/admin/settings/users',
+          icon: Users
         }
       ]
     }
   ]
-}];
+}
+
+];
 
 type SidebarItemProps = {
   item: SidebarItemType;
@@ -321,7 +339,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
           "mr-0": isCollapsed
         })} />
         {!isCollapsed && <>
-          <span className="flex-1">{item.name}</span>
+          <span className="flex-1 text-sm">{item.name}</span>
           {item.children && <div className="ml-auto">
             <ChevronRight size={16} />
           </div>}
@@ -343,7 +361,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
           "mr-0": isCollapsed
         })} />
         {!isCollapsed && <>
-          <span >{item.name}</span>
+          <span className="flex-1 text-sm" >{item.name}</span>
           {item.children && <div className="ml-auto">
             <ChevronRight size={16} className={cn('transition-transform duration-200', {
               'rotate-90': isSubmenuOpen

@@ -83,6 +83,17 @@ import WorkRequestDetailPage from '@/pages/work-orders/work-request/WorkRequestD
 import WorkOrderListPage from '@/pages/work-orders/work-order-list/WorkOrderListPage';
 import WorkOrderDetailPage from '@/pages/work-orders/work-order-list/WorkOrderDetailPage';
 
+// Purchasing Pages
+import PurchaseRequestPage from './pages/purchasing/PurchaseRequestPage'
+import PurchaseRequestDetailPage from './pages/purchasing/PurchaseRequestDetailPage'
+import PurchaseRequestFormPage from './pages/purchasing/PurchaseRequestFormPage'
+import PurchaseOrderPage from './pages/purchasing/PurchaseOrderPage'
+import PurchaseOrderDetailPage from './pages/purchasing/PurchaseOrderDetailPage'
+import PurchaseOrderFormPage from './pages/purchasing/PurchaseOrderFormPage'
+import GoodsReceivePage from './pages/purchasing/GoodsReceivePage'
+import GoodsReceiveDetailPage from './pages/purchasing/GoodsReceiveDetailPage'
+import GoodsReceiveFormPage from './pages/purchasing/GoodsReceiveFormPage'
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -182,6 +193,20 @@ function App() {
               <Route path="/work-orders/wo-history" element={<WOHistoryPage />} />
               <Route path="/work-orders/wo-history/:id" element={<WOHistoryDetailPage />} />
 
+              {/* Purchasing Routes */}
+              <Route path="/purchasing/request" element={<PurchaseRequestPage />} />
+              <Route path="/purchasing/request/:id" element={<PurchaseRequestDetailPage />} />
+              <Route path="/purchasing/request/new" element={<PurchaseRequestFormPage />} />
+              <Route path="/purchasing/request/:id/edit" element={<PurchaseRequestFormPage />} />
+              <Route path="/purchasing/orders" element={<PurchaseOrderPage />} />
+              <Route path="/purchasing/orders/:id" element={<PurchaseOrderDetailPage />} />
+              <Route path="/purchasing/orders/new" element={<PurchaseOrderFormPage />} />
+              <Route path="/purchasing/orders/:id/edit" element={<PurchaseOrderFormPage />} />
+              <Route path="/purchasing/goods-receive" element={<GoodsReceivePage />} />
+              <Route path="/purchasing/goods-receive/:id" element={<GoodsReceiveDetailPage />} />
+              <Route path="/purchasing/goods-receive/new" element={<GoodsReceiveFormPage />} />
+              <Route path="/purchasing/goods-receive/:id/receive" element={<GoodsReceiveFormPage />} />
+              {/* 404 */}
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
