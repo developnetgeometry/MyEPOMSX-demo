@@ -170,4 +170,56 @@ export const assetService = {
 
     return data;
   },
+
+  async getItemsByBomId(bomId: number): Promise<any> {
+    const { data, error } = await supabase
+      .from("e_spare_parts")
+      .select(`
+        *,
+        item_master: item_master_id(*, unit: unit_id(*))
+      `)
+      .eq("bom_id", bomId)
+      .order('created_at', { ascending: true }); // Optional: add sorting
+  
+    if (error) {
+      throw new Error(`Error fetching BOM items: ${error.message}`);
+    }
+  
+    return data || [];
+  },
+
+  async getWorkOrdersByAssetId(assetId: number): Promise<any> {
+    // @ts-ignore
+    const { data, error } = await supabase
+      .from("e_work_order")
+      .select(`
+        id,
+        work_order_no,
+        due_date,
+        task:e_task!task_id(task_name),
+        status:e_work_order_status!work_order_status_id(name)
+      `)
+      .eq("asset_id", assetId)
+      .order("created_at", { ascending: false });
+  
+    if (error) {
+      throw new Error(`Error fetching work orders: ${error.message}`);
+    }
+  
+    return data || [];
+  },
+
+  async getAssetAttachments(assetId: number): Promise<any> {
+    // @ts-ignore
+    const { data, error } = await supabase
+      .from("e_asset_attachment")
+      .select("*")
+      .eq("asset_id", assetId);
+  
+    if (error) {
+      throw new Error(`Error fetching attachments: ${error.message}`);
+    }
+  
+    return data || [];
+  }
 };

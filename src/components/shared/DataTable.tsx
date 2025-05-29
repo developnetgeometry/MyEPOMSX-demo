@@ -281,6 +281,7 @@ const DataTable: React.FC<DataTableProps> = ({
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button
+                                    type="button"
                                     variant="ghost"
                                     size="sm"
                                     className="h-8 w-8 p-0 text-gray-500 hover:text-blue-600 hover:bg-blue-50"
@@ -303,6 +304,7 @@ const DataTable: React.FC<DataTableProps> = ({
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button
+                                    type="button"
                                     variant="ghost"
                                     size="sm"
                                     className="h-8 w-8 p-0 text-gray-500 hover:text-red-600 hover:bg-red-50"

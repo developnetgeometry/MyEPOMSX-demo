@@ -101,3 +101,22 @@ export const formatPercentage = (value: number | null | undefined): string => {
   if (value === null || value === undefined) return '-';
   return `${value.toFixed(1)}%`;
 };
+
+/**
+ * Extracts the filename from a file path
+ * @param filePath The full file path (e.g., 'public/images/you.jpg')
+ * @returns Just the filename with extension (e.g., 'you.jpg')
+ */
+export const getFileNameFromPath = (filePath: string): string => {
+  // Handle cases where path uses forward slashes or backslashes
+  const normalizedPath = filePath.replace(/\\/g, '/');
+  
+  // Extract everything after the last slash
+  const lastSlashIndex = normalizedPath.lastIndexOf('/');
+  
+  // If no slash found, return the original string
+  if (lastSlashIndex === -1) return filePath;
+  
+  // Return the substring after the last slash
+  return normalizedPath.substring(lastSlashIndex + 1);
+};

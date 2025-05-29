@@ -193,6 +193,7 @@ export interface AssetDetailWithRelations extends AssetDetail {
   type?: AssetType | null;
   manufacturer?: Manufacturer | null;
   area?: AssetArea | null;
+  bom_id?: number | null;
   asset_class?: AssetClass | null;
   iot_sensor?: IotSensor | null;
   child_assets?: ChildAssets[] | null;
@@ -218,6 +219,15 @@ export interface ChildAssets {
   status_id: number | null;
   asset_group_id: number | null;
   commission_date: string | null;
+}
+
+export interface BOMTab {
+  id: number;
+  part_no: string;
+  part_name: string;
+  quantity: number;
+  unit: string;
+  remarks: string;
 }
 
 export interface AssetHierarchyNode {

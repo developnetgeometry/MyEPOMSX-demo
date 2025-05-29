@@ -13,6 +13,7 @@ import {
   Settings,
   FileUp,
   File,
+  Loader2,
 } from "lucide-react";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +28,6 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "sonner";
 import {
   Table,
   TableBody,
@@ -36,115 +36,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useAssetWithRelations } from "@/hooks/queries/useAssets";
+import { useAssetAttachments, useAssetWithRelations, useItemByBomId, useWorkOrdersByAssetId } from "@/hooks/queries/useAssets";
+import { formatDate, getFileNameFromPath } from "@/utils/formatters";
+import { useToast } from "@/hooks/use-toast";
 
-// Dummy data for Installation Tab
-const installationData = [
-  {
-    id: "1",
-    installationType: "Skid Mounted",
-    installedLocation: "North Field Zone A",
-    installationDate: "2024-05-10",
-    remarks: "Initial installation",
-  },
-  {
-    id: "2",
-    installationType: "Fixed Platform",
-    installedLocation: "Offshore Rig 2",
-    installationDate: "2023-11-22",
-    remarks: "Relocated due to expansion",
-  },
-  {
-    id: "3",
-    installationType: "Mobile",
-    installedLocation: "Central Processing Area",
-    installationDate: "2024-02-15",
-    remarks: "Temporary setup for maintenance work",
-  },
-];
-
-// Dummy data for BOM Tab
-const bomData = [
-  {
-    id: "1",
-    partNo: "P-1001",
-    partName: "Valve Assembly",
-    quantity: 2,
-    unitOfMeasure: "pcs",
-    remarks: "Spare for scheduled overhaul",
-  },
-  {
-    id: "2",
-    partNo: "P-2045",
-    partName: "Pressure Gauge",
-    quantity: 10,
-    unitOfMeasure: "set",
-    remarks: "Critical component",
-  },
-  {
-    id: "3",
-    partNo: "P-3012",
-    partName: "Gasket Kit",
-    quantity: 5,
-    unitOfMeasure: "set",
-    remarks: "Regular replacement items",
-  },
-  {
-    id: "4",
-    partNo: "P-4023",
-    partName: "Bearing Assembly",
-    quantity: 4,
-    unitOfMeasure: "pcs",
-    remarks: "For maintenance overhaul",
-  },
-  {
-    id: "5",
-    partNo: "P-5078",
-    partName: "Control Panel",
-    quantity: 1,
-    unitOfMeasure: "unit",
-    remarks: "Main control system component",
-  },
-];
-
-// Dummy data for Work Order Tab
-const workOrderData = [
-  {
-    id: "1",
-    workOrderNo: "WO-CPP-24/000789",
-    task: "Pressure Relief Valve Replacement",
-    status: "Execute",
-    dueDate: "2025-03-15",
-  },
-  {
-    id: "2",
-    workOrderNo: "WO-CPP-24/000823",
-    task: "Calibration of Pressure Transmitters",
-    status: "Completed",
-    dueDate: "2025-01-10",
-  },
-  {
-    id: "3",
-    workOrderNo: "WO-CPP-24/000901",
-    task: "Preventive Maintenance - Quarterly",
-    status: "Planned",
-    dueDate: "2025-06-22",
-  },
-  {
-    id: "4",
-    workOrderNo: "WO-CPP-24/000945",
-    task: "Leakage Repair",
-    status: "Defer",
-    dueDate: "2025-04-05",
-  },
-  {
-    id: "5",
-    workOrderNo: "WO-CPP-24/001012",
-    task: "Visual Inspection and Report",
-    status: "Completed",
-    dueDate: "2025-02-28",
-  },
-];
 
 // Dummy data for Attachment Tab
 const attachmentData = [
@@ -215,37 +110,95 @@ const AssetDetailPage: React.FC = () => {
     id: string;
   }>();
   const navigate = useNavigate();
-
+  const { toast } = useToast();
   // Find the asset in sample data
   const [activeTab, setActiveTab] = useState("installation");
 
   const { data: asset, isLoading, error } = useAssetWithRelations(Number(id));
-  console.log(asset);
-  
 
   const assetDetails = asset?.asset_detail;
+
+  const bomID = assetDetails?.bom_id;
+  
+  const { data: bomData = [], isLoading: bomLoading } = useItemByBomId(bomID || 0);
+  const { data: workOrder = [], isLoading: workOrderLoading } = useWorkOrdersByAssetId(Number(id));
+  const { data: attachments = [] } = useAssetAttachments(Number(id));
+
+  console.log("Attachments:", attachments);
+  
+
   const childAssets = assetDetails?.child_assets;
   const assetInstallation = asset?.asset_installation;
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  }
+  
 
   const commissionDate = asset?.commission_date ? formatDate(asset.commission_date) : "";
 
   const handleWorkRequest = () => {
-    toast.info("Opening work request for this asset");
+    toast({
+      title: "Success",
+      description: "Adding work request",
+      variant: "default",
+    });
     navigate(`/maintain/work-request?assetId=${id}`);
   };
   const handleApplyChanges = () => {
-    toast.success("Asset details updated successfully");
+    toast({
+      title: "Success",
+      description: "Applying changes",
+      variant: "default",
+    });
   };
 
-  if (isLoading) {
-    return <div>Loading asset data...</div>;
+  const handleAddInstallation = () => {
+    toast({
+      title: "Success",
+      description: "Installation added successfully",
+      variant: "default",
+    })
+  }
+
+  const handleAddChildAsset = () => {
+    toast({
+      title: "Success",
+      description: "Asset added successfully",
+      variant: "default",
+    })
+  }
+
+  const handleAddAttachment = () => {
+    toast({
+      title: "Success",
+      description: "Attachment added successfully",
+      variant: "default",
+    })
+  }
+
+  const handleAddBom = () => {
+    toast({
+      title: "Success",
+      description: "BOM added successfully",
+      variant: "default",
+    })
+  }
+
+  const handleAddIOT = () => {
+    toast({
+      title: "Success",
+      description: "IOT added successfully",
+      variant: "default",
+    })
+  }
+  
+  const handleAddWorkOrder = () => {
+    toast({
+      title: "Success",
+      description: "Work Order added successfully",
+      variant: "default",
+    })
+  }
+
+  if (isLoading || bomLoading || workOrderLoading) {
+    return <Loader2 />;
   }
 
   if (error) {
@@ -283,32 +236,32 @@ const AssetDetailPage: React.FC = () => {
             <div className="grid grid-cols-1 gap-4">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Facility Location</label>
-                <Input value={asset.facility.location_name} readOnly />
+                <Input value={asset?.facility.location_name} readOnly />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">System</label>
-                <Input value={asset.system.system_name} readOnly />
+                <Input value={asset?.system.system_name} readOnly />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Package</label>
-                <Input value={asset.package.package_name} readOnly />
+                <Input value={asset?.package.package_name} readOnly />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Asset No</label>
-                <Input value={asset.asset_no} />
+                <Input value={asset?.asset_no} />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Asset Name</label>
-                <Input value={asset.asset_name} />
+                <Input value={asset?.asset_name} />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Asset Tag</label>
-                <Select defaultValue={asset.asset_tag.name}>
+                <Select defaultValue={asset?.asset_tag.name}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select asset tag" />
                   </SelectTrigger>
@@ -322,7 +275,7 @@ const AssetDetailPage: React.FC = () => {
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Asset Status</label>
-                <Select defaultValue={asset.asset_status.name}>
+                <Select defaultValue={asset?.asset_status.name}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
@@ -542,7 +495,7 @@ const AssetDetailPage: React.FC = () => {
                         <SelectItem value="delete">Delete Selected</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button size="icon" className="ml-2">
+                    <Button size="icon" className="ml-2" onClick={handleAddInstallation}>
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
@@ -611,7 +564,7 @@ const AssetDetailPage: React.FC = () => {
                         <SelectItem value="delete">Delete Selected</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button size="icon" className="ml-2">
+                    <Button size="icon" className="ml-2" onClick={handleAddChildAsset}>
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
@@ -662,7 +615,7 @@ const AssetDetailPage: React.FC = () => {
                         <SelectItem value="delete">Delete Selected</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button size="icon" className="ml-2">
+                    <Button size="icon" className="ml-2" onClick={handleAddBom}>
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
@@ -693,15 +646,15 @@ const AssetDetailPage: React.FC = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody className="divide-y">
-                      {bomData.map((item) => (
+                      {bomData?.map((item) => (
                         <TableRow key={item.id} className="hover:bg-muted/30">
-                          <TableCell className="p-3">{item.partNo}</TableCell>
-                          <TableCell className="p-3">{item.partName}</TableCell>
+                          <TableCell className="p-3">{item.item_master.item_no}</TableCell>
+                          <TableCell className="p-3">{item.item_master.item_name}</TableCell>
                           <TableCell className="p-3">{item.quantity}</TableCell>
                           <TableCell className="p-3">
-                            {item.unitOfMeasure}
+                            {item.item_master.unit.name}
                           </TableCell>
-                          <TableCell className="p-3">{item.remarks}</TableCell>
+                          <TableCell className="p-3">{item.description}</TableCell>
                           <TableCell className="p-3">
                             <Button variant="ghost" size="sm">
                               <Settings className="h-4 w-4" />
@@ -731,7 +684,7 @@ const AssetDetailPage: React.FC = () => {
                         <SelectItem value="delete">Delete Selected</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button size="icon" className="ml-2">
+                    <Button size="icon" className="ml-2" onClick={handleAddWorkOrder}>
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
@@ -759,16 +712,16 @@ const AssetDetailPage: React.FC = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody className="divide-y">
-                      {workOrderData.map((item) => (
+                      {workOrder?.map((item) => (
                         <TableRow key={item.id} className="hover:bg-muted/30">
                           <TableCell className="p-3">
-                            {item.workOrderNo}
+                            {item.work_order_no}
                           </TableCell>
-                          <TableCell className="p-3">{item.task}</TableCell>
+                          <TableCell className="p-3">{item.task.task_name}</TableCell>
                           <TableCell className="p-3">
-                            <StatusBadge status={item.status} />
+                            <StatusBadge status={item.status.name} />
                           </TableCell>
-                          <TableCell className="p-3">{item.dueDate}</TableCell>
+                          <TableCell className="p-3">{formatDate(item.due_date)}</TableCell>
                           <TableCell className="p-3">
                             <Button variant="ghost" size="sm">
                               <Settings className="h-4 w-4" />
@@ -798,7 +751,7 @@ const AssetDetailPage: React.FC = () => {
                         <SelectItem value="delete">Delete Selected</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button size="icon" className="ml-2">
+                    <Button size="icon" className="ml-2" onClick={handleAddAttachment}>
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
@@ -826,15 +779,15 @@ const AssetDetailPage: React.FC = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody className="divide-y">
-                      {attachmentData.map((item) => (
+                      {attachments.map((item) => (
                         <TableRow key={item.id} className="hover:bg-muted/30">
                           <TableCell className="p-3">{item.type}</TableCell>
-                          <TableCell className="p-3">{item.date}</TableCell>
+                          <TableCell className="p-3">{formatDate(item.created_at)}</TableCell>
                           <TableCell className="p-3">{item.notes}</TableCell>
                           <TableCell className="p-3">
                             <div className="flex items-center gap-2">
                               <File className="h-4 w-4" />
-                              <span>{item.filename}</span>
+                              <span>{getFileNameFromPath(item.file_path)}</span>
                             </div>
                           </TableCell>
                           <TableCell className="p-3">
@@ -866,7 +819,7 @@ const AssetDetailPage: React.FC = () => {
                         <SelectItem value="delete">Delete Selected</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button size="icon" className="ml-2">
+                    <Button size="icon" className="ml-2" onClick={handleAddIOT}>
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>

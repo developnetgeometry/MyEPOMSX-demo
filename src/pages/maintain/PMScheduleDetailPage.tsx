@@ -1,20 +1,42 @@
-
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import PageHeader from '@/components/shared/PageHeader';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Plus, Save, X, Trash2, ListOrdered, Wrench, FileText, Users, Calendar, Table } from 'lucide-react';
-import StatusBadge from '@/components/shared/StatusBadge';
-import { Table as UITable, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from 'sonner';
-import { useLoadingState } from '@/hooks/use-loading-state';
-import { formatCurrency } from '@/utils/formatters';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import PageHeader from "@/components/shared/PageHeader";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  ArrowLeft,
+  Plus,
+  Save,
+  X,
+  Trash2,
+  ListOrdered,
+  Wrench,
+  FileText,
+  Users,
+  Calendar,
+  Table,
+} from "lucide-react";
+import StatusBadge from "@/components/shared/StatusBadge";
+import {
+  Table as UITable,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
+import { useLoadingState } from "@/hooks/use-loading-state";
+import {
+  formatCurrency,
+  formatDate,
+  getFileNameFromPath,
+} from "@/utils/formatters";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,265 +47,547 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  useDeletePMScheduleCustomTask,
+  usePlanLabour,
+  usePlanMaterial,
+  usePMSchedule,
+  usePMScheduleMaintainableGroups,
+  usePMScheduleMinCriteria,
+  useWorkOrderId,
+} from "@/hooks/queries/usePMSchedule";
+import { supabase } from "@/lib/supabaseClient";
+import { useToast } from "@/hooks/use-toast";
+import { MinAcceptanceCriteria } from "@/types/maintain";
+import { FileUpload } from "@/components/ui/file-upload";
 
 interface TaskDetail {
   id: number;
   description: string;
+  seq: number;
   isEditing?: boolean;
+  isCustom?: boolean;
+  originalTaskDetailId?: number | null;
 }
 
-interface MinAcceptanceCriteria {
-  id: number;
-  fieldName: string;
-  criteria: string;
-  isEditing?: boolean;
-}
-
-interface ChecksheetItem {
-  id: number;
-  fieldName: string;
-  attachment: string;
-  isEditing?: boolean;
+interface ChecksheetFile {
+  url: string;
+  name: string;
 }
 
 interface WorkOrder {
   id: string;
-  workOrderNo: string;
-  asset: string;
-  status: string;
-  planDueDate: string;
+  work_order_no: string;
+  asset: {
+    asset_name: string;
+  };
+  is_active: string;
+  due_date: string;
 }
 
 interface MaintainableGroupItem {
   id: number;
-  asset: string;
-  group: string;
+  asset: {
+    asset_name: string;
+  };
+  group: {
+    name: string;
+  };
 }
 
 interface PlanLabor {
   id: number;
-  employee: string;
+  employee: {
+    name: string;
+  };
   duration: number;
   manPower: number;
 }
 
 interface PlanMaterial {
   id: number;
-  material: string;
+  material: {
+    item_name: string;
+  };
   quantity: number;
 }
 
 const PMScheduleDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isLoading: isSaving, withLoading: withSavingLoading } = useLoadingState();
-  const { isLoading: isDeleting, withLoading: withDeletingLoading } = useLoadingState();
-  
+  const { isLoading: isSaving, withLoading: withSavingLoading } =
+    useLoadingState();
+  const { isLoading: isDeleting, withLoading: withDeletingLoading } =
+    useLoadingState();
+
   // Form modification tracking
   const [isFormModified, setIsFormModified] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState('task-detail');
-  
-  const [pmDetail, setPmDetail] = useState({
-    pmNo: 'PM-2024-001',
-    pmDescription: 'Monthly Check on Compressor',
-    packageNo: 'PKG-COMP-002',
-    assets: 'EXCHANGER, POUR POINT DEPRESSANT HEAT',
-    tasks: 'TASK-COMP-01 | Lubrication Check',
-    frequency: 'Monthly',
-    workCenter: 'Mechanical Work Center',
-    status: 'Active',
-    manHour: 4,
-    manPower: 2,
-    dueDate: '10/06/2025',
-    duration: 4
-  });
+  const [activeTab, setActiveTab] = useState("task-detail");
+  const { toast } = useToast();
+  const { data: pmScheduleDetail } = usePMSchedule(Number(id));
 
-  const [taskDetails, setTaskDetails] = useState<TaskDetail[]>([
-    { id: 1, description: 'Replace light bulb' },
-    { id: 2, description: 'Change light bulb' },
-    { id: 3, description: 'Test Replace Pipe' }
-  ]);
+  const { mutate: deleteCustomTask } = useDeletePMScheduleCustomTask();
 
-  const [serviceNotes, setServiceNotes] = useState<string>(
-    "Perform regular maintenance checks on the compressor unit. Ensure all connections are properly tightened and lubricated."
-  );
+  const [taskDetails, setTaskDetails] = useState<TaskDetail[]>([]);
 
-  const [minAcceptanceCriteria, setMinAcceptanceCriteria] = useState<MinAcceptanceCriteria[]>([
-    { id: 1, fieldName: "Pressure Reading", criteria: "Must be between 2.5-3.0 bar" },
-    { id: 2, fieldName: "Temperature", criteria: "Not exceeding 65°C" },
-    { id: 3, fieldName: "Vibration Level", criteria: "Below 2.5 mm/s" }
-  ]);
+  useEffect(() => {
+    const loadTasks = async () => {
+      if (!pmScheduleDetail?.task_id) return;
 
-  const [checksheetItems, setChecksheetItems] = useState<ChecksheetItem[]>([
-    { id: 1, fieldName: "Pressure Test Report", attachment: "pressure-test-20240501.pdf" },
-    { id: 2, fieldName: "Vibration Analysis", attachment: "vibration-analysis-20240501.xlsx" },
-  ]);
+      try {
+        const { data: existingCustomTasks, error: customTasksError } =
+          // @ts-ignore
+          await supabase
+            .from("e_pm_task_detail")
+            .select("*")
+            .eq("pm_schedule_id", Number(id));
 
-  const [workOrders, setWorkOrders] = useState<WorkOrder[]>([
-    { 
-      id: "WO-1", 
-      workOrderNo: "WO-CPP-24/00001", 
-      asset: "Exchanger Unit", 
-      status: "Execute",
-      planDueDate: "15/06/2024"
+        if (customTasksError) throw customTasksError;
+
+        if (existingCustomTasks && existingCustomTasks.length > 0) {
+          const customTasks = existingCustomTasks.map((task) => ({
+            id: task.id,
+            description: task.task_list,
+            seq: task.sequence,
+            isCustom: true,
+            originalTaskDetailId: task.original_task_detail_id,
+          }));
+          setTaskDetails(customTasks);
+          return;
+        }
+
+        const { data: templateTasksData, error: templateError } = await supabase
+          .from("e_task_detail")
+          .select("*")
+          .eq("task_id", pmScheduleDetail.task_id);
+
+        if (templateError) throw templateError;
+
+        if (templateTasksData && templateTasksData.length > 0) {
+          const { data: newCustomTasks, error: insertError } = await supabase
+            .from("e_pm_task_detail")
+            .insert(
+              templateTasksData.map((task) => ({
+                pm_schedule_id: Number(id),
+                task_list: task.task_list,
+                sequence: task.seq,
+                original_task_detail_id: task.id,
+              }))
+            )
+            .select();
+
+          if (insertError) throw insertError;
+
+          const customTasks = newCustomTasks.map((task) => ({
+            id: task.id,
+            description: task.task_list,
+            seq: task.sequence,
+            isCustom: true,
+            originalTaskDetailId: task.original_task_detail_id,
+          }));
+
+          setTaskDetails(customTasks);
+        }
+      } catch (error) {
+        console.error("Error loading tasks:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load tasks",
+          variant: "destructive",
+        });
+      }
+    };
+
+    loadTasks();
+  }, [id, pmScheduleDetail?.task_id]);
+
+  const [serviceNotes, setServiceNotes] = useState<string>("");
+
+  useEffect(() => {
+    if (pmScheduleDetail?.service_notes) {
+      setServiceNotes(pmScheduleDetail.service_notes);
     }
-  ]);
+  }, [pmScheduleDetail?.service_notes]);
 
-  const [additionalInfo, setAdditionalInfo] = useState<string>(
-    "This PM schedule is part of the quarterly maintenance program for critical heat exchangers. Follow standard safety protocols when accessing equipment."
+  const { data: minAcceptanceCriterias = [] } = usePMScheduleMinCriteria(
+    Number(id)
   );
 
-  const [maintainableGroups, setMaintainableGroups] = useState<MaintainableGroupItem[]>([
-    { id: 1, asset: "Spare Part Module", group: "PC001-G1" },
-    { id: 2, asset: "Control Unit", group: "CU002-G2" },
-    { id: 3, asset: "Sensor Array", group: "SA003-G1" }
-  ]);
+  const [minAcceptanceCriteria, setMinAcceptanceCriteria] = useState<
+    MinAcceptanceCriteria[]
+  >([]);
 
-  const [planLabor, setPlanLabor] = useState<PlanLabor[]>([
-    { id: 1, employee: "Muhammad Izzat Imran bin Abdul Aziz", duration: 2, manPower: 1 },
-    { id: 2, employee: "Zairy Juzairy Bin Zaki", duration: 2, manPower: 1 }
-  ]);
+  useEffect(() => {
+    if (minAcceptanceCriterias) {
+      setMinAcceptanceCriteria(minAcceptanceCriterias);
+    }
+  }, [minAcceptanceCriterias]);
 
-  const [planMaterials, setPlanMaterials] = useState<PlanMaterial[]>([
-    { id: 1, material: "CLAS2-Vending Machine", quantity: 1 },
-    { id: 2, material: "LUB-001 High Temp Grease", quantity: 2 },
-    { id: 3, material: "SEAL-120 O-Ring Kit", quantity: 5 }
-  ]);
+  const [checkSheet, setCheckSheet] = useState<string>("");
+  const [checksheetFile, setChecksheetFile] = useState<ChecksheetFile | null>(
+    null
+  );
+  const [newChecksheetFile, setNewChecksheetFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    if (pmScheduleDetail?.checksheet_attachment) {
+      setChecksheetFile({
+        url: pmScheduleDetail.checksheet_attachment,
+        name: getFileNameFromPath(pmScheduleDetail.checksheet_attachment),
+      });
+    }
+    if (pmScheduleDetail?.checksheet_notes) {
+      setCheckSheet(pmScheduleDetail.checksheet_notes);
+    }
+  }, [pmScheduleDetail]);
+
+  const { data: workOrdersData } = useWorkOrderId(Number(id));
+
+  const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
+
+  useEffect(() => {
+    if (workOrdersData) {
+      setWorkOrders(workOrdersData);
+    }
+  }, [workOrdersData]);
+
+  const [additionalInfo, setAdditionalInfo] = useState<string>("")
+
+  useEffect(() => {
+    if (pmScheduleDetail?.additional_info) {
+      setAdditionalInfo(pmScheduleDetail.additional_info)
+    }
+  }, [pmScheduleDetail?.additional_info])
+
+  const { data: maintainableGroupsData } = usePMScheduleMaintainableGroups(Number(id));
+
+  const [maintainableGroups, setMaintainableGroups] = useState<MaintainableGroupItem[]>([]);
+
+  useEffect(() => {
+    if (maintainableGroupsData) {
+      setMaintainableGroups(maintainableGroupsData);
+    }
+  })
+
+  const maintainableGroup = maintainableGroups.map((group) => group)
+
   
+  const { data: planLaborData } = usePlanLabour(Number(id));
+  const [planLabor, setPlanLabor] = useState<PlanLabor[]>([]);
+
+  useEffect(() => {
+    if (planLaborData) {
+      setPlanLabor(planLaborData);
+    }
+  }, [planLaborData]);
+
+
+  const { data: planMaterialsData } = usePlanMaterial(Number(id));
+  const [planMaterials, setPlanMaterials] = useState<PlanMaterial[]>([]);
+
+  useEffect(() => {
+    if (planMaterialsData) {
+      setPlanMaterials(planMaterialsData);
+    }
+  })
+
+  console.log(planMaterials);
+  
+
   // Make a copy of the original data for cancellation purposes
-  const [originalTaskDetails, setOriginalTaskDetails] = useState<TaskDetail[]>([]);
-  
+  const [originalTaskDetails, setOriginalTaskDetails] = useState<TaskDetail[]>(
+    []
+  );
+
   useEffect(() => {
     // Store a deep copy of the original data when the component mounts
     setOriginalTaskDetails(JSON.parse(JSON.stringify(taskDetails)));
-    
+
     // Simulate loading data from API when ID changes
     const loadData = async () => {
       // In a real implementation, this would fetch data from the API
       console.log(`Loading PM Schedule with ID: ${id}`);
     };
-    
+
     loadData();
   }, [id]);
 
   // Handle editing task detail row
   const startEditing = (id: number) => {
-    setTaskDetails(taskDetails.map(task => 
-      task.id === id ? { ...task, isEditing: true } : task
-    ));
+    setTaskDetails(
+      taskDetails.map((task) =>
+        task.id === id ? { ...task, isEditing: true } : task
+      )
+    );
     setIsFormModified(true);
   };
 
   const updateTaskDescription = (id: number, description: string) => {
-    setTaskDetails(taskDetails.map(task => 
-      task.id === id ? { ...task, description } : task
-    ));
-    setIsFormModified(true);
+    setTaskDetails(
+      taskDetails.map((task) => {
+        if (task.id === id) {
+          if (!task.isCustom) {
+            return {
+              ...task,
+              isCustom: true,
+              description,
+              isEditing: true,
+            };
+          }
+          return { ...task, description };
+        }
+        return task;
+      })
+    );
+    if (activeTab === "task-detail") {
+      setIsFormModified(true);
+    }
   };
 
   const stopEditing = (id: number) => {
-    const updatedTasks = taskDetails.map(task => {
+    const updatedTasks = taskDetails.map((task) => {
       if (task.id === id) {
         // Validate the description before saving
-        if (!task.description || task.description.trim() === '') {
-          toast.error("Task description cannot be empty");
+        if (!task.description || task.description.trim() === "") {
+          toast({
+            title: "Error",
+            description: "Task description cannot be empty",
+            variant: "destructive",
+          });
           return task; // Keep in editing mode
         }
         return { ...task, isEditing: false };
       }
       return task;
     });
-    
+
     setTaskDetails(updatedTasks);
   };
 
-  // Handle adding new task
   const addTask = () => {
-    const newId = taskDetails.length > 0 
-      ? Math.max(...taskDetails.map(t => t.id)) + 1 
-      : 1;
-    
+    const newId = Date.now(); // Use timestamp for temporary ID
+    const newSeq =
+      taskDetails.length > 0
+        ? Math.max(...taskDetails.map((t) => t.seq)) + 1
+        : 1;
+
     setTaskDetails([
-      ...taskDetails, 
-      { 
-        id: newId, 
-        description: '', 
-        isEditing: true 
-      }
+      ...taskDetails,
+      {
+        id: newId,
+        description: "",
+        seq: newSeq,
+        isEditing: true,
+        isCustom: true, // Mark as custom task
+      },
     ]);
     setIsFormModified(true);
   };
-  
+
   // Handle deleting a task
   const promptDeleteTask = (id: number) => {
     setTaskToDelete(id);
     setDeleteDialogOpen(true);
   };
-  
+
   const confirmDeleteTask = () => {
     if (taskToDelete !== null) {
       withDeletingLoading(async () => {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        setTaskDetails(taskDetails.filter(task => task.id !== taskToDelete));
+        const taskToRemove = taskDetails.find(
+          (task) => task.id === taskToDelete
+        );
+        if (!taskToRemove) return;
+
+        // Delete from database if it's a custom task
+        if (taskToRemove.isCustom) {
+          await deleteCustomTask(taskToRemove.id);
+        }
+
+        // Remove the task and re-sequence remaining tasks
+        const updatedTasks = taskDetails
+          .filter((task) => task.id !== taskToDelete)
+          .map((task, index) => ({
+            ...task,
+            seq: index + 1, // Re-sequence starting from 1
+          }));
+
+        setTaskDetails(updatedTasks);
         setDeleteDialogOpen(false);
         setTaskToDelete(null);
         setIsFormModified(true);
-        
-        toast.success("Task deleted successfully");
+
+        toast({
+          title: "Success",
+          description: "Task deleted successfully",
+          variant: "default",
+        });
       });
     }
   };
 
   // Handle saving changes
   const handleSave = () => {
-    // Validate all tasks have descriptions before saving
-    const hasEmptyTasks = taskDetails.some(task => !task.description || task.description.trim() === '');
-    
-    if (hasEmptyTasks) {
-      toast.error("All tasks must have a description");
-      return;
-    }
-    
     withSavingLoading(async () => {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Update all records to not be in editing mode
-      setTaskDetails(taskDetails.map(task => ({ ...task, isEditing: false })));
-      
-      // Update the original data with the new version
-      setOriginalTaskDetails(JSON.parse(JSON.stringify(taskDetails)));
-      
-      // Reset form modified flag
-      setIsFormModified(false);
-      
-      // Show success message
-      toast.success("PM Schedule saved successfully");
+      try {
+        if (activeTab === "task-detail") {
+          // Save only tasks
+          const customTasksToSave = taskDetails.filter((task) => task.isCustom);
+          // @ts-ignore
+          await supabase
+            .from("e_pm_task_detail")
+            .delete()
+            .eq("pm_schedule_id", Number(id));
+
+          await supabase.from("e_pm_task_detail").insert(
+            customTasksToSave.map((task) => ({
+              pm_schedule_id: Number(id),
+              task_list: task.description,
+              sequence: task.seq,
+              original_task_detail_id: task.originalTaskDetailId,
+            }))
+          );
+
+          // Update local task state
+          setTaskDetails(
+            taskDetails.map((task) => ({ ...task, isEditing: false }))
+          );
+          setOriginalTaskDetails(JSON.parse(JSON.stringify(taskDetails)));
+
+          toast({
+            title: "Success",
+            description: "Tasks saved successfully",
+            variant: "default",
+          });
+        } else if (activeTab === "service") {
+          // Save only service notes
+          const { error } = await supabase
+            .from("e_pm_schedule")
+            // @ts-ignore
+            .update({ service_notes: serviceNotes })
+            .eq("id", Number(id));
+
+          if (error) throw error;
+
+          toast({
+            title: "Success",
+            description: "Service notes saved successfully",
+            variant: "default",
+          });
+        } else if (activeTab === "checksheet") {
+          let attachmentUrl = checksheetFile?.url || null;
+
+          // Handle file upload if a new file was selected
+          if (newChecksheetFile) {
+            const filePath = `pm-schedules/${id}/checksheets/${newChecksheetFile.name}`;
+
+            // Upload the new file
+            const { error: uploadError } = await supabase.storage
+              .from("your-bucket-name")
+              .upload(filePath, newChecksheetFile);
+
+            if (uploadError) throw uploadError;
+
+            // Get public URL
+            const { data: urlData } = supabase.storage
+              .from("your-bucket-name")
+              .getPublicUrl(filePath);
+
+            attachmentUrl = urlData.publicUrl;
+
+            // Delete old file if it exists
+            if (checksheetFile?.url) {
+              const oldFilePath = checksheetFile.url.split("/").pop();
+              if (oldFilePath) {
+                await supabase.storage
+                  .from("your-bucket-name")
+                  .remove([oldFilePath]);
+              }
+            }
+          } else if (!checksheetFile) {
+            // If no file and no existing attachment, set to null
+            attachmentUrl = null;
+          }
+
+          const { error } = await supabase
+            .from("e_pm_schedule")
+            .update({
+              // @ts-ignore
+              checksheet_notes: checkSheet,
+              checksheet_attachment: attachmentUrl,
+            })
+            .eq("id", Number(id));
+
+          if (error) throw error;
+
+          // Update local state
+          if (newChecksheetFile) {
+            setChecksheetFile({
+              url: attachmentUrl || "",
+              name: newChecksheetFile.name,
+            });
+            setNewChecksheetFile(null);
+          }
+
+          toast({
+            title: "Success",
+            description: "Checksheet saved successfully",
+            variant: "default",
+          });
+        } else if (activeTab === "additional-info") {
+          const { error } = await supabase
+            .from("e_pm_schedule")
+            .update({
+              // @ts-ignore
+              additional_info: additionalInfo,
+            })
+            .eq("id", Number(id));
+
+          if (error) throw error;
+
+          toast({
+            title: "Success",
+            description: "Additional info saved successfully",
+            variant: "default",
+          });
+          
+        } 
+
+        setIsFormModified(false);
+      } catch (error) {
+        console.error("Save error:", error);
+        toast({
+          title: "Error",
+          description: "Failed to save checksheet",
+          variant: "destructive",
+        });
+      }
     });
   };
-  
+
   // Handle applying changes (save without navigating away)
   const handleApplyChanges = () => {
     handleSave();
   };
-  
+
   // Handle canceling changes
   const handleCancel = () => {
     if (isFormModified) {
       // Restore the original data
       setTaskDetails(JSON.parse(JSON.stringify(originalTaskDetails)));
       setIsFormModified(false);
-      toast.info("Changes discarded");
+      toast({
+        title: "Success",
+        description: "Changes canceled",
+        variant: "default",
+      });
     }
-    
+
     // Navigate back to PM Schedule list
-    navigate('/maintain/pm-schedule');
+    navigate("/maintain/pm-schedule");
   };
-  
+
   // Handle tab changes
   const handleTabChange = (value: string) => {
     // Check for unsaved changes in current tab if needed
@@ -291,82 +595,103 @@ const PMScheduleDetailPage: React.FC = () => {
   };
 
   // Handle service notes update
-  const handleServiceNotesChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleServiceNotesChange = (
+    event: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
     setServiceNotes(event.target.value);
-    setIsFormModified(true);
+    if (activeTab === "service") {
+      setIsFormModified(true);
+    }
+  };
+
+  const handleChecksheetChange = (
+    event: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
+    setCheckSheet(event.target.value);
+    if (activeTab === "checksheet") {
+      setIsFormModified(true);
+    }
   };
 
   // Handle additional info update
-  const handleAdditionalInfoChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleAdditionalInfoChange = (
+    event: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
     setAdditionalInfo(event.target.value);
     setIsFormModified(true);
   };
 
   // Check if any row is currently being edited
-  const hasEditingRows = taskDetails.some(task => task.isEditing);
+  const hasEditingRows = taskDetails.some((task) => task.isEditing);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <PageHeader 
-          title="PM Schedule Detail" 
-        />
-        <Button 
-          variant="outline" 
-          onClick={() => navigate('/maintain/pm-schedule')} 
+        <PageHeader title="PM Schedule Detail" />
+        <Button
+          variant="outline"
+          onClick={() => navigate("/maintain/pm-schedule")}
           className="flex items-center gap-2"
           disabled={isSaving}
         >
           <ArrowLeft className="h-4 w-4" /> Back to PM Schedule
         </Button>
       </div>
-      
+
       <Card>
         <CardContent className="pt-6 space-y-6">
-          <h3 className="text-lg font-semibold text-blue-600 border-b pb-2">General Information</h3>
-          
+          <h3 className="text-lg font-semibold text-blue-600 border-b pb-2">
+            General Information
+          </h3>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>
               <h4 className="text-sm font-medium text-gray-500">PM No</h4>
-              <p className="text-base font-medium">{pmDetail.pmNo}</p>
+              <p className="text-base font-medium">{pmScheduleDetail?.pm_no}</p>
             </div>
-            
+
             <div>
-              <h4 className="text-sm font-medium text-gray-500">PM Description</h4>
-              <p className="text-base">{pmDetail.pmDescription}</p>
+              <h4 className="text-sm font-medium text-gray-500">
+                PM Description
+              </h4>
+              <p className="text-base">{pmScheduleDetail?.pm_description}</p>
             </div>
-            
+
             <div>
               <h4 className="text-sm font-medium text-gray-500">Package No</h4>
-              <p className="text-base">{pmDetail.packageNo}</p>
+              <p className="text-base">
+                {pmScheduleDetail?.package.package_no}
+              </p>
             </div>
-            
+
             <div>
-              <h4 className="text-sm font-medium text-gray-500">Assets</h4>
-              <p className="text-base">{pmDetail.assets}</p>
+              <h4 className="text-sm font-medium text-gray-500">Asset</h4>
+              <p className="text-base">{pmScheduleDetail?.asset.asset_name}</p>
             </div>
-            
+
             <div>
               <h4 className="text-sm font-medium text-gray-500">Tasks</h4>
-              <p className="text-base">{pmDetail.tasks}</p>
+              <p className="text-base">{pmScheduleDetail?.task.task_name}</p>
             </div>
-            
+
             <div>
               <h4 className="text-sm font-medium text-gray-500">Frequency</h4>
-              <p className="text-base">{pmDetail.frequency}</p>
+              <p className="text-base">{pmScheduleDetail?.frequency.name}</p>
             </div>
-            
+
             <div>
               <h4 className="text-sm font-medium text-gray-500">Work Center</h4>
-              <p className="text-base">{pmDetail.workCenter}</p>
+              <p className="text-base">{pmScheduleDetail?.work_center.name}</p>
             </div>
-            
+
             <div>
               <h4 className="text-sm font-medium text-gray-500">Status</h4>
-              <StatusBadge status={pmDetail.status} />
+              <StatusBadge
+                status={pmScheduleDetail?.is_active ? "Active" : "Inactive"}
+              />
             </div>
-            
-            <div>
+
+            {/* <div>
               <h4 className="text-sm font-medium text-gray-500">Man Hour</h4>
               <p className="text-base">{pmDetail.manHour}</p>
             </div>
@@ -374,143 +699,155 @@ const PMScheduleDetailPage: React.FC = () => {
             <div>
               <h4 className="text-sm font-medium text-gray-500">Man Power</h4>
               <p className="text-base">{pmDetail.manPower}</p>
-            </div>
-            
+            </div> */}
+
             <div>
               <h4 className="text-sm font-medium text-gray-500">Due Date</h4>
-              <p className="text-base">{pmDetail.dueDate}</p>
+              <p className="text-base">
+                {formatDate(pmScheduleDetail?.due_date)}
+              </p>
             </div>
-            
-            <div>
+
+            {/* <div>
               <h4 className="text-sm font-medium text-gray-500">Duration</h4>
               <p className="text-base">{pmDetail.duration} Days</p>
-            </div>
+            </div> */}
           </div>
         </CardContent>
       </Card>
-      
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+
+      <Tabs
+        value={activeTab}
+        onValueChange={handleTabChange}
+        className="w-full"
+      >
         <TabsList className="border-b w-full justify-start rounded-none h-auto p-0 bg-transparent">
-          <TabsTrigger 
+          <TabsTrigger
             value="task-detail"
             className="py-2.5 px-4 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:font-medium data-[state=active]:text-blue-600 flex items-center gap-2"
           >
             <ListOrdered className="h-4 w-4" />
             Task Detail
           </TabsTrigger>
-          <TabsTrigger 
-            value="service" 
+          <TabsTrigger
+            value="service"
             className="py-2.5 px-4 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:font-medium data-[state=active]:text-blue-600 flex items-center gap-2"
           >
             <Wrench className="h-4 w-4" />
             Service
           </TabsTrigger>
-          <TabsTrigger 
-            value="min-acceptance" 
+          <TabsTrigger
+            value="min-acceptance"
             className="py-2.5 px-4 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:font-medium data-[state=active]:text-blue-600"
           >
             Min Acceptance Criteria
           </TabsTrigger>
-          <TabsTrigger 
-            value="checksheet" 
+          <TabsTrigger
+            value="checksheet"
             className="py-2.5 px-4 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:font-medium data-[state=active]:text-blue-600 flex items-center gap-2"
           >
             <FileText className="h-4 w-4" />
             Checksheet
           </TabsTrigger>
-          <TabsTrigger 
-            value="work-order" 
+          <TabsTrigger
+            value="work-order"
             className="py-2.5 px-4 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:font-medium data-[state=active]:text-blue-600 flex items-center gap-2"
           >
             <Table className="h-4 w-4" />
             Work Order
           </TabsTrigger>
-          <TabsTrigger 
-            value="additional-info" 
+          <TabsTrigger
+            value="additional-info"
             className="py-2.5 px-4 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:font-medium data-[state=active]:text-blue-600 flex items-center gap-2"
           >
             <FileText className="h-4 w-4" />
             Additional Info
           </TabsTrigger>
-          <TabsTrigger 
-            value="maintainable-group" 
+          <TabsTrigger
+            value="maintainable-group"
             className="py-2.5 px-4 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:font-medium data-[state=active]:text-blue-600 flex items-center gap-2"
           >
             <Users className="h-4 w-4" />
             Maintainable Group
           </TabsTrigger>
-          <TabsTrigger 
-            value="plan" 
+          <TabsTrigger
+            value="plan"
             className="py-2.5 px-4 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:font-medium data-[state=active]:text-blue-600 flex items-center gap-2"
           >
             <Calendar className="h-4 w-4" />
             Plan
           </TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="task-detail" className="pt-6">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-blue-600">Task Detail</h3>
-                <Button 
-                  onClick={addTask} 
+                <h3 className="text-lg font-semibold text-blue-600">
+                  Task Detail
+                </h3>
+                <Button
+                  onClick={addTask}
                   className="flex items-center gap-2"
                   disabled={isSaving || hasEditingRows}
                 >
                   <Plus className="h-4 w-4" /> Add Row
                 </Button>
               </div>
-              
+
               <div className="border rounded-md overflow-hidden">
                 <UITable>
                   <TableHeader>
                     <TableRow className="bg-gray-50">
                       <TableHead className="w-[80px]">Seq</TableHead>
                       <TableHead>Action Description</TableHead>
-                      <TableHead className="w-[100px] text-right">Actions</TableHead>
+                      <TableHead className="w-[100px] text-right">
+                        Actions
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {taskDetails.map((task) => (
                       <TableRow key={task.id}>
-                        <TableCell>{task.id}</TableCell>
+                        <TableCell>{task.seq}</TableCell>
                         <TableCell>
                           {task.isEditing ? (
-                            <Input 
-                              value={task.description} 
-                              onChange={(e) => updateTaskDescription(task.id, e.target.value)} 
+                            <Input
+                              value={task.description}
+                              onChange={(e) =>
+                                updateTaskDescription(task.id, e.target.value)
+                              }
                               className="w-full"
                               autoFocus
                               placeholder="Enter task description"
                             />
                           ) : (
-                            task.description || <span className="text-gray-400">No description</span>
+                            task.description
                           )}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1">
                             {task.isEditing ? (
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
+                              <Button
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => stopEditing(task.id)}
                               >
                                 <Save className="h-4 w-4 text-green-600" />
                               </Button>
                             ) : (
                               <>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
                                   onClick={() => startEditing(task.id)}
                                   disabled={isSaving || hasEditingRows}
                                 >
                                   <Plus className="h-4 w-4 text-blue-600" />
                                 </Button>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
                                   onClick={() => promptDeleteTask(task.id)}
                                   disabled={isSaving || hasEditingRows}
                                 >
@@ -525,7 +862,7 @@ const PMScheduleDetailPage: React.FC = () => {
                     {taskDetails.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={3} className="h-24 text-center">
-                          No task details found. Add a new task to get started.
+                          No tasks found
                         </TableCell>
                       </TableRow>
                     )}
@@ -535,22 +872,23 @@ const PMScheduleDetailPage: React.FC = () => {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="service" className="pt-6">
           <Card>
             <CardContent className="pt-6">
               <div className="mb-4">
-                <h3 className="text-lg font-semibold text-blue-600 mb-4">Service Notes</h3>
+                <h3 className="text-lg font-semibold text-blue-600 mb-4">
+                  Service Notes
+                </h3>
                 <div className="space-y-4">
                   <div className="grid w-full gap-1.5">
                     <Label htmlFor="service-notes">Notes</Label>
-                    <Textarea 
-                      id="service-notes" 
-                      value={serviceNotes} 
+                    <Textarea
+                      id="service-notes"
+                      value={serviceNotes}
                       onChange={handleServiceNotesChange}
                       className="min-h-[200px]"
                       placeholder="Enter service notes here..."
-                      richText
                     />
                   </div>
                 </div>
@@ -558,25 +896,27 @@ const PMScheduleDetailPage: React.FC = () => {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="min-acceptance" className="pt-6">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-blue-600">Minimum Acceptance Criteria</h3>
+                <h3 className="text-lg font-semibold text-blue-600">
+                  Minimum Acceptance Criteria
+                </h3>
               </div>
               <div className="border rounded-md overflow-hidden">
                 <UITable>
                   <TableHeader>
                     <TableRow className="bg-gray-50">
-                      <TableHead>Field Name</TableHead>
+                      <TableHead>Aspect</TableHead>
                       <TableHead>Min Acceptance Criteria</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {minAcceptanceCriteria.map((item) => (
                       <TableRow key={item.id}>
-                        <TableCell>{item.fieldName}</TableCell>
+                        <TableCell>{item.field_name}</TableCell>
                         <TableCell>{item.criteria}</TableCell>
                       </TableRow>
                     ))}
@@ -593,33 +933,35 @@ const PMScheduleDetailPage: React.FC = () => {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="checksheet" className="pt-6">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-blue-600">Checksheet</h3>
+                <h3 className="text-lg font-semibold text-blue-600">
+                  Checksheet
+                </h3>
               </div>
-              <div className="border rounded-md overflow-hidden">
+              {/* <div className="border rounded-md overflow-hidden">
                 <UITable>
                   <TableHeader>
                     <TableRow className="bg-gray-50">
-                      <TableHead>Field Name</TableHead>
+                      <TableHead>Checksheet Notes</TableHead>
                       <TableHead>Attachment</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {checksheetItems.map((item) => (
+                    {checksheets.map((item) => (
                       <TableRow key={item.id}>
-                        <TableCell>{item.fieldName}</TableCell>
+                        <TableCell>{item.description}</TableCell>
                         <TableCell>
                           <Button variant="link" className="p-0 h-auto text-blue-600">
-                            {item.attachment}
+                            {getFileNameFromPath(item.file_path)}
                           </Button>
                         </TableCell>
                       </TableRow>
                     ))}
-                    {checksheetItems.length === 0 && (
+                    {checksheets.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={2} className="h-24 text-center">
                           No checksheet items found.
@@ -628,33 +970,57 @@ const PMScheduleDetailPage: React.FC = () => {
                     )}
                   </TableBody>
                 </UITable>
-              </div>
+              </div> */}
               <div className="mt-6">
                 <div className="space-y-4">
                   <div className="grid w-full gap-1.5">
                     <Label htmlFor="checksheet-notes">Checksheet Notes</Label>
-                    <Textarea 
+                    <Textarea
                       id="checksheet-notes"
                       className="min-h-[150px]"
                       placeholder="Enter checksheet notes here..."
-                      richText
+                      onChange={handleChecksheetChange}
+                      value={checkSheet}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="file-upload" className="block mb-2">Upload Attachment</Label>
-                    <Input id="file-upload" type="file" />
+                    <Label htmlFor="file-upload" className="block mb-2">
+                      Attachment
+                    </Label>
+                    <FileUpload
+                      id="checksheet-upload"
+                      acceptedFileTypes=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                      maxSizeInMB={10}
+                      buttonText="Upload Checksheet"
+                      existingFile={checksheetFile}
+                      onFilesSelected={(files) => {
+                        if (files.length > 0) {
+                          setNewChecksheetFile(files[0]);
+                          setIsFormModified(true);
+                        }
+                      }}
+                      onExistingFilesChange={(files) => {
+                        // Handle removal of existing file
+                        if (files.length === 0) {
+                          setChecksheetFile(null);
+                          setIsFormModified(true);
+                        }
+                      }}
+                    />
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="work-order" className="pt-6">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-blue-600">Work Orders</h3>
+                <h3 className="text-lg font-semibold text-blue-600">
+                  Work Orders
+                </h3>
               </div>
               <div className="border rounded-md overflow-hidden">
                 <UITable>
@@ -669,12 +1035,14 @@ const PMScheduleDetailPage: React.FC = () => {
                   <TableBody>
                     {workOrders.map((item) => (
                       <TableRow key={item.id}>
-                        <TableCell>{item.workOrderNo}</TableCell>
-                        <TableCell>{item.asset}</TableCell>
+                        <TableCell>{item.work_order_no}</TableCell>
+                        <TableCell>{item.asset.asset_name}</TableCell>
                         <TableCell>
-                          <StatusBadge status={item.status} />
+                          <StatusBadge
+                            status={item.is_active ? "Active" : "Inactive"}
+                          />
                         </TableCell>
-                        <TableCell>{item.planDueDate}</TableCell>
+                        <TableCell>{formatDate(item.due_date)}</TableCell>
                       </TableRow>
                     ))}
                     {workOrders.length === 0 && (
@@ -690,22 +1058,23 @@ const PMScheduleDetailPage: React.FC = () => {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="additional-info" className="pt-6">
           <Card>
             <CardContent className="pt-6">
               <div className="mb-4">
-                <h3 className="text-lg font-semibold text-blue-600 mb-4">Additional Information</h3>
+                <h3 className="text-lg font-semibold text-blue-600 mb-4">
+                  Additional Information
+                </h3>
                 <div className="space-y-4">
                   <div className="grid w-full gap-1.5">
                     <Label htmlFor="additional-info">Comments</Label>
-                    <Textarea 
-                      id="additional-info" 
-                      value={additionalInfo} 
+                    <Textarea
+                      id="additional-info"
+                      value={additionalInfo}
                       onChange={handleAdditionalInfoChange}
                       className="min-h-[200px]"
                       placeholder="Enter additional information here..."
-                      richText
                     />
                   </div>
                 </div>
@@ -713,12 +1082,14 @@ const PMScheduleDetailPage: React.FC = () => {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="maintainable-group" className="pt-6">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-blue-600">Maintainable Group</h3>
+                <h3 className="text-lg font-semibold text-blue-600">
+                  Maintainable Group
+                </h3>
               </div>
               <div className="border rounded-md overflow-hidden">
                 <UITable>
@@ -729,13 +1100,13 @@ const PMScheduleDetailPage: React.FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {maintainableGroups.map((item) => (
+                    {maintainableGroup.map((item) => (
                       <TableRow key={item.id}>
-                        <TableCell>{item.asset}</TableCell>
-                        <TableCell>{item.group}</TableCell>
+                        <TableCell>{item.asset.asset_name}</TableCell>
+                        <TableCell>{item.group.name}</TableCell>
                       </TableRow>
                     ))}
-                    {maintainableGroups.length === 0 && (
+                    {maintainableGroup.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={2} className="h-24 text-center">
                           No maintainable groups found.
@@ -748,14 +1119,16 @@ const PMScheduleDetailPage: React.FC = () => {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="plan" className="pt-6">
           <Card>
             <CardContent className="pt-6">
               <div className="space-y-6">
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-blue-600">Plan Labor</h3>
+                    <h3 className="text-lg font-semibold text-blue-600">
+                      Plan Labor
+                    </h3>
                   </div>
                   <div className="border rounded-md overflow-hidden mb-8">
                     <UITable>
@@ -769,9 +1142,9 @@ const PMScheduleDetailPage: React.FC = () => {
                       <TableBody>
                         {planLabor.map((item) => (
                           <TableRow key={item.id}>
-                            <TableCell>{item.employee}</TableCell>
+                            <TableCell>{item.employee.name}</TableCell>
                             <TableCell>{item.duration}</TableCell>
-                            <TableCell>{item.manPower}</TableCell>
+                            <TableCell>1</TableCell>
                           </TableRow>
                         ))}
                         {planLabor.length === 0 && (
@@ -788,7 +1161,9 @@ const PMScheduleDetailPage: React.FC = () => {
 
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-blue-600">Plan Material</h3>
+                    <h3 className="text-lg font-semibold text-blue-600">
+                      Plan Material
+                    </h3>
                   </div>
                   <div className="border rounded-md overflow-hidden">
                     <UITable>
@@ -801,7 +1176,7 @@ const PMScheduleDetailPage: React.FC = () => {
                       <TableBody>
                         {planMaterials.map((item) => (
                           <TableRow key={item.id}>
-                            <TableCell>{item.material}</TableCell>
+                            <TableCell>{item.material.item_name}</TableCell>
                             <TableCell>{item.quantity}</TableCell>
                           </TableRow>
                         ))}
@@ -821,17 +1196,13 @@ const PMScheduleDetailPage: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
-      
+
       <div className="flex items-center justify-end space-x-2 border-t pt-4">
-        <Button 
-          variant="outline" 
-          onClick={handleCancel}
-          disabled={isSaving}
-        >
+        <Button variant="outline" onClick={handleCancel} disabled={isSaving}>
           <X className="h-4 w-4 mr-1" /> Cancel
         </Button>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={handleApplyChanges}
           disabled={isSaving || !isFormModified}
         >
@@ -840,9 +1211,11 @@ const PMScheduleDetailPage: React.FC = () => {
               <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full mr-2" />
               Applying...
             </>
-          ) : "Apply Changes"}
+          ) : (
+            "Apply Changes"
+          )}
         </Button>
-        <Button 
+        <Button
           onClick={handleSave}
           disabled={isSaving || !isFormModified}
           className="flex items-center gap-2"
@@ -859,20 +1232,21 @@ const PMScheduleDetailPage: React.FC = () => {
           )}
         </Button>
       </div>
-      
+
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Task</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this task? This action cannot be undone.
+              Are you sure you want to delete this task? This action cannot be
+              undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmDeleteTask} 
+            <AlertDialogAction
+              onClick={confirmDeleteTask}
               className="bg-destructive text-destructive-foreground"
               disabled={isDeleting}
             >
@@ -881,7 +1255,9 @@ const PMScheduleDetailPage: React.FC = () => {
                   <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
                   Deleting...
                 </>
-              ) : "Delete"}
+              ) : (
+                "Delete"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
