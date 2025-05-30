@@ -15,7 +15,7 @@ export const useWorkRequestData = () => {
                     asset_id (id, asset_name), cm_sce_code (id, cm_group_name, cm_sce_code ), 
                     work_center_id (id, code, name), date_finding, 
                     maintenance_type (id, code, name), requested_by, 
-                    criticality_id (id, name), 
+                    priority_id (id, name), 
                     finding_detail, anomaly_report, quick_incident_report,
                     work_request_no, work_request_prefix`
                 )
@@ -51,7 +51,7 @@ export const useWorkRequestDataById = (id: number) => {
           asset_id (id, asset_name), cm_sce_code (id, cm_group_name, cm_sce_code ), 
           work_center_id (id, code, name), date_finding, 
           maintenance_type (id, code, name), requested_by, 
-          criticality_id (id, name), 
+          priority_id (id, name), 
           finding_detail, anomaly_report, quick_incident_report,
           work_request_no, work_request_prefix`
                 )
@@ -84,7 +84,7 @@ export const insertWorkRequestData = async (workRequestData: {
     date_finding?: string; // Use ISO string format for timestamps
     maintenance_type?: number;
     requested_by?: string; // UUID
-    criticality_id?: number;
+    priority_id?: number;
     finding_detail?: string;
     anomaly_report?: boolean;
     quick_incident_report?: boolean;
@@ -123,7 +123,7 @@ export const updateWorkRequestData = async (
         date_finding?: string; // Use ISO string format for timestamps
         maintenance_type?: number;
         requested_by?: string; // UUID
-        criticality_id?: number;
+        priority_id?: number;
         finding_detail?: string;
         anomaly_report?: boolean;
         quick_incident_report?: boolean;
@@ -165,4 +165,42 @@ export const deleteWorkRequestData = async (id: number) => {
         console.error("Unexpected error deleting e_new_work_request data:", err);
         throw err;
     }
+};
+
+export const insertCmGeneral = async (cmGeneralData: {
+  priority_id?: number;
+  work_center_id?: number;
+  facility_id?: number;
+  system_id?: number;
+  package_id?: number;
+  asset_id?: number;
+  completed_by?: string;
+  closed_by?: string;
+  date_finding?: string;
+  target_start_date?: string;
+  target_end_date?: string;
+  asset_available_time?: string;
+  requested_by?: string;
+  approved_by?: string;
+  cm_sce_code?: number;
+  due_date?: string;
+  downtime?: number;
+  work_request_id: number;
+  work_order_no?: string;
+}) => {
+  try {
+    const { data, error } = await supabase
+      .from("e_cm_general")
+      .insert([cmGeneralData]);
+
+    if (error) {
+      console.error("Error inserting e_cm_general data:", error);
+      throw error;
+    }
+
+    return data;
+  } catch (err) {
+    console.error("Unexpected error inserting e_cm_general data:", err);
+    throw err;
+  }
 };

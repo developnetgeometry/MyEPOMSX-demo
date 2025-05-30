@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useCmSceData } from "@/hooks/lookup/lookup-cm-sce";
 import { useMaintenanceTypeCmData } from "@/hooks/lookup/lookup-maintenance-types";
-import { useCriticalityData } from "@/hooks/lookup/lookup-criticality";
+import { usePriorityData } from "@/hooks/lookup/lookup-priority";
 import { toast } from "@/hooks/use-toast";
 
 interface WorkRequestDialogFormProps {
@@ -27,7 +27,7 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
   const { data: cmSce } = useCmSceData();
   const { data: workCenter } = useWorkCenterData();
   const { data: cmMaintenanceType } = useMaintenanceTypeCmData();
-  const { data: criticality } = useCriticalityData();
+  const { data: priority } = usePriorityData();
 
 
   const [formData, setFormData] = useState({
@@ -50,7 +50,7 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
       : null,
     maintenance_type: initialData?.maintenance_type?.id || null,
     requested_by: initialData?.requested_by || null,
-    criticality_id: initialData?.criticality_id?.id || null,
+    priority_id: initialData?.priority_id?.id || null,
     finding_detail: initialData?.finding_detail || null,
     anomaly_report: initialData?.anomaly_report || null,
     quick_incident_report: initialData?.quick_incident_report || null,
@@ -123,7 +123,7 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
     if (!formData.date_finding) return showValidationError("Date Finding is required");
     if (!formData.maintenance_type) return showValidationError("Maintenance Type is required");
     // if (!formData.requested_by) return showValidationError("Requested By is required");
-    if (!formData.criticality_id) return showValidationError("Criticality is required");
+    if (!formData.priority_id) return showValidationError("Priority is required");
 
 
     setIsLoading(true); // Set loading to true
@@ -141,7 +141,7 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-{/* <pre>{JSON.stringify(initialData, null, 2)}</pre> */}
+            {/* <pre>{JSON.stringify(initialData, null, 2)}</pre> */}
             <div className={`space-y-2 ${initialData?.work_request_no ? 'hidden' : ''}`}>
               <Label htmlFor="work_request_prefix">Work Request No</Label>
               <Input
@@ -193,7 +193,6 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
                 name="description"
                 value={formData.description || ""}
                 onChange={handleInputChange}
-                disabled={formData.cm_status_id !== 1}
               />
             </div>
             <div className="space-y-2">
@@ -204,7 +203,6 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
                 type="date"
                 value={formData.work_request_date || ""}
                 onChange={handleInputChange}
-                disabled={formData.cm_status_id !== 1}
               />
             </div>
             <div className="space-y-2">
@@ -215,7 +213,6 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
                 type="date"
                 value={formData.target_due_date || ""}
                 onChange={handleInputChange}
-                disabled={formData.cm_status_id !== 1}
               />
             </div>
             {/* Facility Select */}
@@ -225,7 +222,6 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
                 value={formData.facility_id?.toString() || ""}
                 onValueChange={(value) => handleSelectChange("facility_id", parseInt(value))}
                 required
-                disabled={formData.cm_status_id !== 1}
               >
                 <SelectTrigger id="facility_id" className="w-full">
                   <SelectValue placeholder="Select Facility" />
@@ -248,7 +244,7 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
               <Select
                 value={formData.system_id?.toString() || ""}
                 onValueChange={(value) => handleSelectChange("system_id", parseInt(value))}
-                disabled={!formData.facility_id || formData.cm_status_id !== 1} // Disable if no facility is selected
+                disabled={!formData.facility_id} // Disable if no facility is selected
               >
                 <SelectTrigger id="system_id" className="w-full">
                   <SelectValue placeholder="Select System" />
@@ -274,7 +270,7 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
               <Select
                 value={formData.package_id?.toString() || ""}
                 onValueChange={(value) => handleSelectChange("package_id", parseInt(value))}
-                disabled={!formData.system_id || formData.cm_status_id !== 1} // Disable if no system is selected
+                disabled={!formData.system_id} // Disable if no system is selected
               >
                 <SelectTrigger id="package_id" className="w-full">
                   <SelectValue placeholder="Select Package" />
@@ -329,7 +325,7 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
                 searchBy={(asset) => [asset.asset_name, asset.asset_no]} // Search by asset name and number
                 getLabel={(asset) => asset.asset_name} // Display asset name
                 getValue={(asset) => asset.id} // Use asset ID as the value
-                disabled={!formData.package_id || formData.cm_status_id !== 1} // Disable if no package is selected
+                disabled={!formData.package_id} // Disable if no package is selected
               />
             </div>
             <div className="space-y-2">
@@ -355,7 +351,6 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
                 searchBy={(item) => [item.id.toString(), item.code, item.name]} // Search by id, code, and name
                 getLabel={(item) => `${item.code} - ${item.name}`} // Display code and name
                 getValue={(item) => item.id}
-                disabled={formData.cm_status_id !== 1}
               />
             </div>
             <div className="space-y-2">
@@ -366,7 +361,6 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
                 type="date"
                 value={formData.date_finding || ""}
                 onChange={handleInputChange}
-                disabled={formData.cm_status_id !== 1}
               />
             </div>
             <div className="space-y-2">
@@ -374,7 +368,6 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
               <Select
                 value={formData.maintenance_type?.toString() || ""}
                 onValueChange={(value) => handleSelectChange("maintenance_type", parseInt(value))}
-                disabled={formData.cm_status_id !== 1}
               >
                 <SelectTrigger id="maintenance_type" className="w-full">
                   <SelectValue placeholder="Select Maintenance Type" />
@@ -395,21 +388,19 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
                 name="requested_by"
                 value={formData.requested_by || ""}
                 onChange={handleInputChange}
-                disabled={formData.cm_status_id !== 1}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="criticality_id">Criticality<span className="text-red-500 ml-1">*</span></Label>
+              <Label htmlFor="priority_id">Priority<span className="text-red-500 ml-1">*</span></Label>
               <Select
-                value={formData.criticality_id?.toString() || ""}
-                onValueChange={(value) => handleSelectChange("criticality_id", parseInt(value))}
-                disabled={formData.cm_status_id !== 1}
+                value={formData.priority_id?.toString() || ""}
+                onValueChange={(value) => handleSelectChange("priority_id", parseInt(value))}
               >
-                <SelectTrigger id="criticality_id" className="w-full">
-                  <SelectValue placeholder="Select Criticality" />
+                <SelectTrigger id="priority_id" className="w-full">
+                  <SelectValue placeholder="Select Priority" />
                 </SelectTrigger>
                 <SelectContent>
-                  {criticality?.map((item) => (
+                  {priority?.map((item) => (
                     <SelectItem key={item.id} value={item.id.toString()}>
                       {item.name}
                     </SelectItem>
@@ -439,7 +430,6 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
                       anomaly_report: checked === true, // Ensure the value is a boolean
                     }))
                   }
-                  disabled={formData.cm_status_id !== 1}
                 />
               </div>
               <div className="flex items-center space-x-2">
@@ -453,7 +443,6 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
                       quick_incident_report: checked === true, // Ensure the value is a boolean
                     }))
                   }
-                  disabled={formData.cm_status_id !== 1}
                 />
               </div>
             </div>

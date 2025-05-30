@@ -190,7 +190,7 @@ const WorkOrderListPage: React.FC = () => {
   };
 
   const handleRowClick = (row: any) => {
-    navigate(`/maintain/work-order-list/${row.id}`);
+    navigate(`/work-orders/work-order-list/${row.id}`);
   };
 
   const columns: Column[] = [

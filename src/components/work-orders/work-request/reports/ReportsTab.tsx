@@ -136,22 +136,22 @@ const ReportsTab: React.FC<ReportsTabProps> = ({ workRequestId }) => {
 
                   {/* Environment Detail */}
                   <div className="w-full md:w-1/2">
-                    <h5 className="text-md font-semibold mb-2 text-xl ">Environment Detail</h5>
+                    <h5 className="text-md font-semibold mb-2 text-xl">Environment Detail</h5>
                     <div className="grid grid-cols-2 gap-4 mt-4">
                       <div className="font-medium text-gray-600">Weather Condition</div>
-                      <div className="text-gray-800">{report?.weather_condition ?? "-"}</div>
+                      <div className="text-gray-800">{report?.weather_condition?.trim() ? report.weather_condition : "-"}</div>
 
                       <div className="font-medium text-gray-600">Visibility</div>
-                      <div className="text-gray-800">{report?.visibility ?? "-"}</div>
+                      <div className="text-gray-800">{report?.visibility?.trim() ? report.visibility : "-"}</div>
 
                       <div className="font-medium text-gray-600">Wind Speed & Direction</div>
-                      <div className="text-gray-800">{report?.wind_speed_direction ?? "-"}</div>
+                      <div className="text-gray-800">{report?.wind_speed_direction?.trim() ? report.wind_speed_direction : "-"}</div>
 
                       <div className="font-medium text-gray-600">Sea Well</div>
-                      <div className="text-gray-800">{report?.sea_well ?? "-"}</div>
+                      <div className="text-gray-800">{report?.sea_well?.trim() ? report.sea_well : "-"}</div>
 
                       <div className="font-medium text-gray-600">Alarm Trigger</div>
-                      <div className="text-gray-800">{report?.alarm_trigger ?? "-"}</div>
+                      <div className="text-gray-800">{report?.alarm_trigger?.trim() ? report.alarm_trigger : "-"}</div>
                     </div>
                   </div>
 
@@ -160,15 +160,16 @@ const ReportsTab: React.FC<ReportsTabProps> = ({ workRequestId }) => {
                     <h5 className="text-md font-semibold mb-2 text-xl">Operation Detail</h5>
                     <div className="grid grid-cols-2 gap-4 mt-4">
                       <div className="font-medium text-gray-600">Service Asset</div>
-                      <div className="text-gray-800">{report?.service_asset ?? "-"}</div>
+                      <div className="text-gray-800">{report?.service_asset?.trim() ? report.service_asset : "-"}</div>
 
                       <div className="font-medium text-gray-600">Pressure</div>
-                      <div className="text-gray-800">{report?.pressure ?? "-"}</div>
+                      <div className="text-gray-800">{report?.pressure?.trim() ? report.pressure : "-"}</div>
 
                       <div className="font-medium text-gray-600">Temperature</div>
-                      <div className="text-gray-800">{report?.temp ?? "-"}</div>
+                      <div className="text-gray-800">{report?.temp?.trim() ? report.temp : "-"}</div>
                     </div>
                   </div>
+
                 </div>
 
                 <div className="flex justify-end space-x-2 mt-4">
