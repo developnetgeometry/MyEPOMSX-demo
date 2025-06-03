@@ -169,7 +169,7 @@ const WorkRequestDetailPage: React.FC = () => {
         try {
           if (workRequest) {
             // Step 1: Update the cm_status_id to 3 in e_new_work_request
-            await updateWorkRequestData(workRequest.id, { cm_status_id: 3});
+            await updateWorkRequestData(workRequest.id, { cm_status_id: 3 });
 
             // Step 2: Insert data into e_cm_general
             const cmGeneralData = {
@@ -194,6 +194,7 @@ const WorkRequestDetailPage: React.FC = () => {
             });
 
             refetch();
+            queryClient.invalidateQueries({ queryKey: ["e-new-work-request-data",id] });
           }
           setIsConfirmationDialogOpen(false);
         } catch (error) {
@@ -209,7 +210,7 @@ const WorkRequestDetailPage: React.FC = () => {
     setIsConfirmationDialogOpen(true);
   };
 
-    const handleSubmitToWo = () => {
+  const handleSubmitToWo = () => {
     setConfirmationDialogData({
       title: "Create Work Order",
       description: "Are you sure you want to create new Work Order?",
@@ -218,7 +219,7 @@ const WorkRequestDetailPage: React.FC = () => {
         try {
           if (workRequest) {
             // Step 1: Update the cm_status_id to 3 in e_new_work_request
-            await updateWorkRequestData(workRequest.id, {is_work_order_created: true });
+            await updateWorkRequestData(workRequest.id, { is_work_order_created: true });
 
             // Step 2: Insert data into e_cm_general
             const woData = {

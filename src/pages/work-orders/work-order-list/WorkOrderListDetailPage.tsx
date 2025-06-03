@@ -26,6 +26,9 @@ import CmGeneralTab from '@/components/work-orders/work-order-list/general/CmGen
 import CmActualTab from '@/components/work-orders/work-order-list/actual/CmActualTab';
 import CmFindingTab from '@/components/work-orders/work-order-list/finding/CmFindingTab';
 import RelatedWoTab from '@/components/work-orders/work-order-list/relatedWo/RelatedWoTab';
+import CmReportsTab from '@/components/work-orders/work-order-list/reports/CmReportsTab';
+import CmDeferTab from '@/components/work-orders/work-order-list/defer/CmDeferTab';
+import CmFailureTab from '@/components/work-orders/work-order-list/failure/CmFailureTab';
 
 
 const WorkOrderListDetailPage: React.FC = () => {
@@ -140,15 +143,23 @@ const WorkOrderListDetailPage: React.FC = () => {
                     <TabsTrigger value="generalCm">General</TabsTrigger>
                     <TabsTrigger value="actualCm">Actual</TabsTrigger>
                     <TabsTrigger value="findingCm">Findings</TabsTrigger>
+                    <TabsTrigger value="relatedWoCm">Related WO</TabsTrigger>
+                    <TabsTrigger value="reportsCm">Reports</TabsTrigger>
+                    <TabsTrigger value="deferCm">Defer</TabsTrigger>
+                    <TabsTrigger value="attachmentCm">Attachment</TabsTrigger>
+                    <TabsTrigger value="taskDetailCm">Task Detail</TabsTrigger>
+                    <TabsTrigger value="failureCm">Failure</TabsTrigger>
                   </>
                 )}
-                <TabsTrigger value="relatedWo">Related WO</TabsTrigger>
-                <TabsTrigger value="reports">Reports</TabsTrigger>
-                <TabsTrigger value="defer">Defer</TabsTrigger>
-                <TabsTrigger value="attachment">Attachment</TabsTrigger>
-                <TabsTrigger value="taskDetail">Task Detail</TabsTrigger>
-                <TabsTrigger value="failure">Failure</TabsTrigger>
+                {(workOrder?.work_order_type === 2 &&
+                  <>
+                    <TabsTrigger value="relatedWoPm">Related WO</TabsTrigger>
+                  </>
+                )}
+
               </TabsList>
+
+
               {(workOrder?.work_order_type === 1 &&
                 <>
                   <TabsContent value="generalCm">
@@ -160,26 +171,34 @@ const WorkOrderListDetailPage: React.FC = () => {
                   <TabsContent value="findingCm">
                     {id && <CmFindingTab cmGeneralId={Number(workOrder.cm_work_order_id.id)} />}
                   </TabsContent>
+                  <TabsContent value="relatedWoCm">
+                    {id && <RelatedWoTab assetId={Number(workOrder.asset_id)} />}
+                  </TabsContent>
+                  <TabsContent value="reportsCm">
+                    {id && <CmReportsTab workRequestId={workOrder.cm_work_order_id.work_request_id} />}
+                  </TabsContent>
+                  <TabsContent value="deferCm">
+                    {id && <CmDeferTab cmGeneralId={Number(workOrder.cm_work_order_id.id)} />}
+                  </TabsContent>
+                  <TabsContent value="attachmentCm">
+                    {id && <AttachmentTab workRequestId={workOrder.cm_work_order_id.work_request_id} />}
+                  </TabsContent>
+                  <TabsContent value="taskDetailCm">
+                    {id && <TaskDetailTab newWorkRequestId={workOrder.cm_work_order_id.work_request_id} />}
+                  </TabsContent>
+                  <TabsContent value="failureCm">
+                    {id && <CmFailureTab workRequestId={workOrder.cm_work_order_id.work_request_id} />}
+                  </TabsContent>
                 </>
               )}
-              <TabsContent value="relatedWo">
-                {id && <RelatedWoTab assetId={Number(workOrder.asset_id)} />}
-              </TabsContent>
-              <TabsContent value="reports">
-                {id && <ReportsTab workRequestId={Number(id)} />}
-              </TabsContent>
-              <TabsContent value="defer">
-                <h1>defer</h1>
-              </TabsContent>
-              <TabsContent value="attachment">
-                {id && <AttachmentTab workRequestId={Number(id)} />}
-              </TabsContent>
-              <TabsContent value="taskDetail">
-                {id && <TaskDetailTab newWorkRequestId={Number(id)} />}
-              </TabsContent>
-              <TabsContent value="failure">
-                {id && <FailureTab workRequestId={Number(id)} />}
-              </TabsContent>
+              {(workOrder?.work_order_type === 2 &&
+                <>
+                  <TabsContent value="relatedWoPm">
+                    {id && <RelatedWoTab assetId={Number(workOrder.asset_id)} />}
+                  </TabsContent>
+                </>
+              )}
+
             </Tabs>
           )}
         </CardContent>

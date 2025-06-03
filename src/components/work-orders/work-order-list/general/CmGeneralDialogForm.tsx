@@ -17,12 +17,17 @@ const CmGeneralDialogForm: React.FC<CmGeneralDialogFormProps> = ({ onSubmit, onC
 
   const [formData, setFormData] = useState({
     priority_id: initialData?.priority_id?.id || null,
-    due_date: initialData?.due_date || "",
+    due_date: initialData?.due_date
+      ? new Date(initialData.due_date).toISOString().split("T")[0]
+      : null,
     work_order_no: initialData?.work_order_no || "",
     downtime: initialData?.downtime || "",
     asset_available_time: initialData?.asset_available_time || "",
     target_start_date: initialData?.target_start_date || "",
     target_end_date: initialData?.target_end_date || "",
+    date_finding: initialData?.date_finding
+      ? new Date(initialData.date_finding).toISOString().split("T")[0]
+      : null,
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -68,7 +73,6 @@ const CmGeneralDialogForm: React.FC<CmGeneralDialogFormProps> = ({ onSubmit, onC
             <Select
               value={formData.priority_id?.toString() || ""}
               onValueChange={(value) => handleSelectChange("priority_id", parseInt(value))}
-              required
             >
               <SelectTrigger id="priority_id" className="w-full">
                 <SelectValue placeholder="Select Priority" />
@@ -90,7 +94,6 @@ const CmGeneralDialogForm: React.FC<CmGeneralDialogFormProps> = ({ onSubmit, onC
               type="number"
               value={formData.downtime}
               onChange={handleInputChange}
-              required
             />
           </div>
           <div className="space-y-2">
@@ -101,7 +104,6 @@ const CmGeneralDialogForm: React.FC<CmGeneralDialogFormProps> = ({ onSubmit, onC
               type="datetime-local"
               value={formData.asset_available_time}
               onChange={handleInputChange}
-              required
             />
           </div>
           <div className="space-y-2">
@@ -112,7 +114,6 @@ const CmGeneralDialogForm: React.FC<CmGeneralDialogFormProps> = ({ onSubmit, onC
               type="datetime-local"
               value={formData.target_start_date}
               onChange={handleInputChange}
-              required
             />
           </div>
           <div className="space-y-2">
@@ -131,8 +132,19 @@ const CmGeneralDialogForm: React.FC<CmGeneralDialogFormProps> = ({ onSubmit, onC
             <Input
               id="due_date"
               name="due_date"
-              type="datetime-local"
+              type="date"
               value={formData.due_date}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="due_date">Finding Date</Label>
+            <Input
+              id="date_finding"
+              name="date_finding"
+              type="date"
+              value={formData.date_finding}
               onChange={handleInputChange}
               required
             />
