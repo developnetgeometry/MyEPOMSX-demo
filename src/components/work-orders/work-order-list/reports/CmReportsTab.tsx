@@ -2,12 +2,12 @@ import React, { useState } from "react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable, { Column } from "@/components/shared/DataTable";
 import {
-  useWorkRequestReportData,
-  insertWorkRequestReportData,
-  updateWorkRequestReportData,
-  deleteWorkRequestReportData,
-} from "../hooks/use-work-request-report-data";
-import ReportsDialogForm from "./ReportsDialogForm";
+  useCmReportData,
+  insertCmReportData,
+  updateCmReportData,
+  deleteCmReportData,
+} from "../hooks/use-cm-report-data";
+import ReportsDialogForm from "@/components/work-orders/work-request/reports/ReportsDialogForm";
 import {
   Dialog,
   DialogContent,
@@ -30,12 +30,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-interface ReportsTabProps {
+interface CmReportsTabProps {
   workRequestId: number; // Passed as a prop to this page
 }
 
-const ReportsTab: React.FC<ReportsTabProps> = ({ workRequestId }) => {
-  const { data: reports, isLoading, refetch } = useWorkRequestReportData(workRequestId);
+const CmReportsTab: React.FC<CmReportsTabProps> = ({ workRequestId }) => {
+  const { data: reports, isLoading, refetch } = useCmReportData(workRequestId);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingReport, setEditingReport] = useState<any | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -62,7 +62,7 @@ const ReportsTab: React.FC<ReportsTabProps> = ({ workRequestId }) => {
     if (reportToDelete) {
       setIsDeleteLoading(true);
       try {
-        await deleteWorkRequestReportData(reportToDelete.id);
+        await deleteCmReportData(reportToDelete.id);
         toast({
           title: "Success",
           description: "Report deleted successfully!",
@@ -87,14 +87,14 @@ const ReportsTab: React.FC<ReportsTabProps> = ({ workRequestId }) => {
   const handleFormSubmit = async (formData: any) => {
     try {
       if (editingReport) {
-        await updateWorkRequestReportData(editingReport.id, formData);
+        await updateCmReportData(editingReport.id, formData);
         toast({
           title: "Success",
           description: "Report updated successfully!",
           variant: "default",
         });
       } else {
-        await insertWorkRequestReportData({ ...formData, work_request_id: workRequestId });
+        await insertCmReportData({ ...formData, work_request_id: workRequestId });
         toast({
           title: "Success",
           description: "Report added successfully!",
@@ -115,8 +115,6 @@ const ReportsTab: React.FC<ReportsTabProps> = ({ workRequestId }) => {
 
   return (
     <div className="space-y-6 mt-6">
-      {/* <pre>{JSON.stringify(reports, null, 2)}</pre> */}
-
       <PageHeader
         title="Reports"
         onAddNew={reports?.length >= 1 ? null : handleAddNew}
@@ -134,8 +132,6 @@ const ReportsTab: React.FC<ReportsTabProps> = ({ workRequestId }) => {
                 key={report?.id}
                 className="border rounded-lg p-4 shadow-sm bg-white"
               >
-                <div className="flex gap-6 flex-wrap md:flex-nowrap">
-
                   <div className="flex gap-6 flex-wrap md:flex-nowrap">
                     {/* Environment Detail */}
                     <div className="w-full md:w-1/2">
@@ -204,9 +200,6 @@ const ReportsTab: React.FC<ReportsTabProps> = ({ workRequestId }) => {
                     </div>
                   </div>
 
-
-                </div>
-
                 <div className="flex justify-end space-x-2 mt-4">
                   <Button
                     variant="outline"
@@ -259,9 +252,6 @@ const ReportsTab: React.FC<ReportsTabProps> = ({ workRequestId }) => {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete this report.
-            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleteLoading}>Cancel</AlertDialogCancel>
@@ -286,4 +276,4 @@ const ReportsTab: React.FC<ReportsTabProps> = ({ workRequestId }) => {
   );
 };
 
-export default ReportsTab;
+export default CmReportsTab;

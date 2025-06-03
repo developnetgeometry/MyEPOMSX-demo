@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import PageHeader from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, ClipboardList, Edit } from 'lucide-react';
+import { ArrowLeft, ClipboardList, Edit, X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -12,36 +12,76 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from 'sonner';
-import { useWorkRequestDataById, updateWorkRequestData } from "../hooks/use-work-request-data";
-import { supabase } from '@/lib/supabaseClient';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { useWorkRequestDataById, updateWorkRequestData, insertCmGeneral, deleteWorkRequestData } from "../hooks/use-work-request-data";
 import TaskDetailTab from '@/components/work-orders/work-request/task-detail/TaskDetailTab';
 import ReportsTab from '@/components/work-orders/work-request/reports/ReportsTab';
 import FailureTab from '@/components/work-orders/work-request/failure/FailureTab';
 import AttachmentTab from '@/components/work-orders/work-request/attachment/AttachmentTab';
 import WorkRequestDialogForm from './WorkRequestDialogForm';
 import { useToast } from '@/hooks/use-toast';
+import { ConfirmationDialog, ConfirmVariant } from '@/components/ui/confirmation-dialog';
+import WorkRequestDetailsCard from '@/components/work-orders/work-request/WorkRequestDetailsCard';
+import { useQueryClient } from "@tanstack/react-query";
+import { insertWorkOrderData } from '../hooks/use-work-order-data';
+
 
 const WorkRequestDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const { data: workRequest, isLoading, refetch } = useWorkRequestDataById(Number(id)); // Use the new hook
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false);
+  const [confirmationDialogData, setConfirmationDialogData] = useState<{
+    title: string;
+    description: string;
+    confirmVariant: ConfirmVariant;
+    onConfirm: () => void;
+  }>({
+    title: "",
+    description: "",
+    confirmVariant: "default",
+    onConfirm: () => { },
+  });
 
   const handleEditClick = () => {
     setIsDialogOpen(true);
   };
 
+  const handleDeleteWorkRequest = async () => {
+    setConfirmationDialogData({
+      title: "Delete Work Request",
+      description: "Are you sure you want to delete Work Request Order?",
+      confirmVariant: "destructive", // Set the button variant dynamically
+      onConfirm: async () => {
+        try {
+          await deleteWorkRequestData(workRequest.id);
+          toast({
+            title: "Success",
+            description: "Work request has been deleted successfully!",
+            variant: "default",
+          });
+          refetch();
+          setIsConfirmationDialogOpen(false);
+          queryClient.invalidateQueries({ queryKey: ["e-new-work-request-data"] });
+          navigate('/work-orders/work-request');
+        } catch (error) {
+          toast({
+            title: "Error",
+            description: "Failed to delete work request.",
+            variant: "destructive",
+          });
+        }
+      },
+    });
+    setIsConfirmationDialogOpen(true);
+  };
+
   const handleFormSubmit = async (formData: any) => {
     try {
       if (workRequest) {
-        await updateWorkRequestData(workRequest.id, formData); // Use updateWorkRequestData for editing
+        await updateWorkRequestData(workRequest.id, formData);
         toast({
           title: "Success",
           description: "Work request updated successfully!",
@@ -58,6 +98,161 @@ const WorkRequestDetailPage: React.FC = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleSubmitToNRQ = () => {
+    setConfirmationDialogData({
+      title: "Submit Work Request",
+      description: "Are you sure you want to change the status to 'NRQ'?",
+      confirmVariant: "default", // Set the button variant dynamically
+      onConfirm: async () => {
+        try {
+          if (workRequest) {
+            await updateWorkRequestData(workRequest.id, { cm_status_id: 2 });
+            toast({
+              title: "Success",
+              description: "Work request status updated to 'NRQ' successfully!",
+              variant: "default",
+            });
+            refetch();
+          }
+          setIsConfirmationDialogOpen(false);
+        } catch (error) {
+          console.error("Failed to update work request status:", error);
+          toast({
+            title: "Error",
+            description: "Failed to update work request status.",
+            variant: "destructive",
+          });
+        }
+      },
+    });
+    setIsConfirmationDialogOpen(true);
+  };
+
+  const handleSubmitToReupdate = () => {
+    setConfirmationDialogData({
+      title: "Submit Work Request",
+      description: "Are you sure you want to change the status to 'Reupdate'?",
+      confirmVariant: "default", // Set the button variant dynamically
+      onConfirm: async () => {
+        try {
+          if (workRequest) {
+            await updateWorkRequestData(workRequest.id, { cm_status_id: -1 });
+            toast({
+              title: "Success",
+              description: "Work request status updated to 'Reupdate' successfully!",
+              variant: "default",
+            });
+            refetch();
+          }
+          setIsConfirmationDialogOpen(false);
+        } catch (error) {
+          console.error("Failed to update work request status:", error);
+          toast({
+            title: "Error",
+            description: "Failed to update work request status.",
+            variant: "destructive",
+          });
+        }
+      },
+    });
+    setIsConfirmationDialogOpen(true);
+  };
+
+  const handleSubmitWoRaised = () => {
+    setConfirmationDialogData({
+      title: "Submit Work Request",
+      description: "Are you sure you want to change the status to 'WO Raised'?",
+      confirmVariant: "default", // Set the button variant dynamically
+      onConfirm: async () => {
+        try {
+          if (workRequest) {
+            // Step 1: Update the cm_status_id to 3 in e_new_work_request
+            await updateWorkRequestData(workRequest.id, { cm_status_id: 3 });
+
+            // Step 2: Insert data into e_cm_general
+            const cmGeneralData = {
+              priority_id: workRequest.priority_id?.id,
+              work_center_id: workRequest.work_center_id?.id,
+              facility_id: workRequest.facility_id?.id,
+              system_id: workRequest.system_id?.id,
+              package_id: workRequest.package_id?.id,
+              asset_id: workRequest.asset_id?.id,
+              requested_by: workRequest.requested_by,
+              cm_sce_code: workRequest.cm_sce_code?.id,
+              due_date: workRequest.target_due_date,
+              work_request_id: workRequest.id,
+            };
+
+            await insertCmGeneral(cmGeneralData);
+
+            toast({
+              title: "Success",
+              description: "Work request status updated to 'WO Raised'",
+              variant: "default",
+            });
+
+            refetch();
+            queryClient.invalidateQueries({ queryKey: ["e-new-work-request-data",id] });
+          }
+          setIsConfirmationDialogOpen(false);
+        } catch (error) {
+          console.error("Failed to update work request status or insert data into e_cm_general:", error);
+          toast({
+            title: "Error",
+            description: "Failed to update work request status",
+            variant: "destructive",
+          });
+        }
+      },
+    });
+    setIsConfirmationDialogOpen(true);
+  };
+
+  const handleSubmitToWo = () => {
+    setConfirmationDialogData({
+      title: "Create Work Order",
+      description: "Are you sure you want to create new Work Order?",
+      confirmVariant: "default", // Set the button variant dynamically
+      onConfirm: async () => {
+        try {
+          if (workRequest) {
+            // Step 1: Update the cm_status_id to 3 in e_new_work_request
+            await updateWorkRequestData(workRequest.id, { is_work_order_created: true });
+
+            // Step 2: Insert data into e_cm_general
+            const woData = {
+              work_order_type: 1,
+              work_order_status_id: 1,
+              description: workRequest.description,
+              work_order_no: workRequest.work_request_no,
+              cm_work_order_id: workRequest.cm_work_order_id,
+              asset_id: workRequest.asset_id?.id,
+            };
+
+            await insertWorkOrderData(woData);
+
+            toast({
+              title: "Success",
+              description: "New Work Order has been created successfully!",
+              variant: "default",
+            });
+
+            refetch();
+          }
+          setIsConfirmationDialogOpen(false);
+        } catch (error) {
+          console.error("Failed to Create New Work Order", error);
+          toast({
+            title: "Error",
+            description: "Failed to create new Work Order.",
+            variant: "destructive",
+          });
+        }
+      },
+    });
+    setIsConfirmationDialogOpen(true);
   };
 
   return (
@@ -78,136 +273,16 @@ const WorkRequestDetailPage: React.FC = () => {
         </Button>
       </div>
 
-      {isLoading ? (
-        <Skeleton className="h-[200px] w-full" />
-      ) : workRequest ? (
-        <Card>
-          <CardContent className="pt-6 space-y-4">
-            <div className="flex justify-end">
-              <Button
-                variant="outline"
-                className="flex items-center gap-2"
-                onClick={handleEditClick}
-              >
-                <Edit className="h-4 w-4" /> Edit
-              </Button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label className="block text-sm font-medium text-gray-700">Work Request No</Label>
-                <Input className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0" value={workRequest.work_request_no ?? "N/A"} readOnly />
-              </div>
-              <div>
-                <Label className="block text-sm font-medium text-gray-700">CM Status</Label>
-                <Input className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0" value={workRequest.cm_status_id?.name ?? "N/A"} readOnly />
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label className="block text-sm font-medium text-gray-700">Description</Label>
-                <Textarea className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0" value={workRequest.description ?? "N/A"} readOnly />
-              </div>
-              <div>
-                <Label className="block text-sm font-medium text-gray-700">Work Request Date</Label>
-                <Input className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                  value={
-                    workRequest.work_request_date
-                      ? new Date(workRequest.work_request_date).toLocaleDateString("en-GB").replace(/\//g, "-")
-                      : "N/A"
-                  }
-                  readOnly
-                />
-              </div>
-              <div>
-                <Label className="block text-sm font-medium text-gray-700">Target Due Date</Label>
-                <Input className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                  value={
-                    workRequest.target_due_date
-                      ? new Date(workRequest.target_due_date).toLocaleDateString("en-GB").replace(/\//g, "-")
-                      : "N/A"
-                  }
-                  readOnly
-                />
-              </div>
-              <div>
-                <Label className="block text-sm font-medium text-gray-700">Facility</Label>
-                <Input className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0" value={workRequest.facility_id?.location_name ?? "N/A"} readOnly />
-              </div>
-              <div>
-                <Label className="block text-sm font-medium text-gray-700">System</Label>
-                <Input className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0" value={workRequest.system_id?.system_name ?? "N/A"} readOnly />
-              </div>
-              <div>
-                <Label className="block text-sm font-medium text-gray-700">Package</Label>
-                <Input className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0" value={workRequest.package_id?.package_name ?? "N/A"} readOnly />
-              </div>
-              <div>
-                <Label className="block text-sm font-medium text-gray-700">Asset</Label>
-                <Input className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0" value={workRequest.asset_id?.asset_name ?? "N/A"} readOnly />
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label className="block text-sm font-medium text-gray-700">CM SEC Code</Label>
-                <Input className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                  value={
-                    workRequest.cm_sce_code
-                      ? `${workRequest.cm_sce_code.cm_sce_code} - ${workRequest.cm_sce_code.cm_group_name}`
-                      : "N/A"
-                  }
-                  readOnly
-                />
-              </div>
-              <div>
-                <Label className="block text-sm font-medium text-gray-700">Work Center</Label>
-                <Input className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0" value={workRequest.work_center_id?.name ?? "N/A"} readOnly />
-              </div>
-              <div>
-                <Label className="block text-sm font-medium text-gray-700">Maintenance Type</Label>
-                <Input className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0" value={workRequest.maintenance_type?.name ?? "N/A"} readOnly />
-              </div>
-              <div>
-                <Label className="block text-sm font-medium text-gray-700">Requested By</Label>
-                <Input className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0" value={workRequest.requested_by ?? "N/A"} readOnly />
-              </div>
-              <div>
-                <Label className="block text-sm font-medium text-gray-700">Criticality</Label>
-                <Input className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0" value={workRequest.criticality_id?.name ?? "N/A"} readOnly />
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label className="block text-sm font-medium text-gray-700">Finding Incident Details</Label>
-                <Textarea className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0" value={workRequest.finding_detail ?? "N/A"} readOnly />
-              </div>
-
-              <div className="flex flex-col space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    className="cursor-default"
-                    checked={workRequest.anomaly_report ?? false}
-                  />
-                  <Label className="text-sm font-medium text-gray-700">Anomaly Report</Label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    className="cursor-default"
-                    checked={workRequest.quick_incident_report ?? false}
-                  />
-                  <Label className="text-sm font-medium text-gray-700">Quick Incident Report</Label>
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-2">
-                {((workRequest.cm_status_id?.id === 1 || workRequest.cm_status_id?.id === -1) &&
-                  <>
-                  <h1>Available to Technician, </h1>
-                    <Button variant="outline">Submit</Button>
-                  </>
-                )}
-                {(workRequest.cm_status_id?.id === 2 &&
-                  <Button variant="outline">Approve</Button>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ) : null}
+      <WorkRequestDetailsCard
+        workRequest={workRequest}
+        isLoading={isLoading}
+        onEditClick={handleEditClick}
+        onDeleteClick={handleDeleteWorkRequest}
+        onSubmitToNRQ={handleSubmitToNRQ}
+        onSubmitToReupdate={handleSubmitToReupdate}
+        onSubmitWoRaised={handleSubmitWoRaised}
+        onSubmitToWO={handleSubmitToWo}
+      />
 
       {/* Tabs Section */}
       <Card>
@@ -240,8 +315,15 @@ const WorkRequestDetailPage: React.FC = () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Work Request</DialogTitle>
-            <DialogDescription>Update the details of the work request.</DialogDescription>
+            <div className="flex items-start justify-between w-full">
+              <div>
+                <DialogTitle>Edit Work Request</DialogTitle>
+                <DialogDescription>Update the details of the work request.</DialogDescription>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setIsDialogOpen(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </DialogHeader>
           <WorkRequestDialogForm
             onSubmit={handleFormSubmit}
@@ -250,7 +332,19 @@ const WorkRequestDetailPage: React.FC = () => {
           />
         </DialogContent>
       </Dialog>
-    </div>
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        open={isConfirmationDialogOpen}
+        onOpenChange={setIsConfirmationDialogOpen}
+        title={confirmationDialogData.title}
+        description={confirmationDialogData.description}
+        confirmText="Confirm"
+        cancelText="Cancel"
+        confirmVariant={confirmationDialogData.confirmVariant}
+        onConfirm={confirmationDialogData.onConfirm}
+      />
+    </div >
   );
 };
 
