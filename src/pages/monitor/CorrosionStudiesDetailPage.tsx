@@ -1,85 +1,86 @@
-
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
   Accordion,
   AccordionContent,
   AccordionItem,
-  AccordionTrigger 
-} from '@/components/ui/accordion';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { 
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue 
-} from '@/components/ui/select';
-import { ChevronLeft, Database } from 'lucide-react';
-import PageHeader from '@/components/shared/PageHeader';
+  SelectValue,
+} from "@/components/ui/select";
+import { ChevronLeft, Database } from "lucide-react";
+import PageHeader from "@/components/shared/PageHeader";
 
 const CorrosionStudiesDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    asset: '',
-    corrosionGroupName: '',
-    materialConstruction: '',
-    environment: '',
-    ph: '',
+    asset: "",
+    corrosionGroupName: "",
+    materialConstruction: "",
+    environment: "",
+    ph: "",
     corrosionMonitoring: [] as string[],
-    internalDamageMechanism: '',
-    externalDamageMechanism: '',
-    expectedInternalCorrosionRate: '',
-    expectedExternalCorrosionRate: '',
+    internalDamageMechanism: "",
+    externalDamageMechanism: "",
+    expectedInternalCorrosionRate: "",
+    expectedExternalCorrosionRate: "",
     h2s: false,
     co2: false,
-    description: '',
+    description: "",
     // Corrosion Factor
-    temperature: '',
-    pressure: '',
-    h2sConcentration: '',
-    co2Concentration: '',
-    baseMaterial: '',
-    fluidVelocity: ''
+    temperature: "",
+    pressure: "",
+    h2sConcentration: "",
+    co2Concentration: "",
+    baseMaterial: "",
+    fluidVelocity: "",
   });
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleSwitchChange = (name: string, checked: boolean) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: checked
+      [name]: checked,
     }));
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleGoBack = () => {
-    navigate('/monitor/corrosion-studies');
+    navigate("/monitor/corrosion-studies");
   };
 
   const handleSave = () => {
-    console.log('Saving corrosion study:', formData);
+    console.log("Saving corrosion study:", formData);
     // Here you would typically make an API call to save the data
-    navigate('/monitor/corrosion-studies');
+    navigate("/monitor/corrosion-studies");
   };
 
   return (
@@ -95,7 +96,7 @@ const CorrosionStudiesDetailPage: React.FC = () => {
           </Button>
         }
       />
-      
+
       <div className="space-y-6">
         <Accordion
           type="single"
@@ -112,9 +113,11 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                 <div className="space-y-2">
                   <Label htmlFor="asset">Asset</Label>
                   <Select
-                    name="asset" 
+                    name="asset"
                     value={formData.asset}
-                    onValueChange={(value) => handleSelectChange('asset', value)}
+                    onValueChange={(value) =>
+                      handleSelectChange("asset", value)
+                    }
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select Asset" />
@@ -129,11 +132,15 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="corrosionGroupName">Corrosion Group Name</Label>
-                  <Select 
+                  <Label htmlFor="corrosionGroupName">
+                    Corrosion Group Name
+                  </Label>
+                  <Select
                     name="corrosionGroupName"
                     value={formData.corrosionGroupName}
-                    onValueChange={(value) => handleSelectChange('corrosionGroupName', value)}
+                    onValueChange={(value) =>
+                      handleSelectChange("corrosionGroupName", value)
+                    }
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select Corrosion Group" />
@@ -149,20 +156,28 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="materialConstruction">Material Construction</Label>
+                  <Label htmlFor="materialConstruction">
+                    Material Construction
+                  </Label>
                   <Select
                     name="materialConstruction"
                     value={formData.materialConstruction}
-                    onValueChange={(value) => handleSelectChange('materialConstruction', value)}
+                    onValueChange={(value) =>
+                      handleSelectChange("materialConstruction", value)
+                    }
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select Material" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Carbon Steel">Carbon Steel</SelectItem>
-                      <SelectItem value="Stainless Steel">Stainless Steel</SelectItem>
+                      <SelectItem value="Stainless Steel">
+                        Stainless Steel
+                      </SelectItem>
                       <SelectItem value="Chrome Alloy">Chrome Alloy</SelectItem>
-                      <SelectItem value="High Nickel Alloy">High Nickel Alloy</SelectItem>
+                      <SelectItem value="High Nickel Alloy">
+                        High Nickel Alloy
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -176,7 +191,7 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                     onChange={handleInputChange}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="ph">pH</Label>
                   <Input
@@ -192,17 +207,19 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="corrosionMonitoring">Corrosion Monitoring</Label>
+                  <Label htmlFor="corrosionMonitoring">
+                    Corrosion Monitoring
+                  </Label>
                   <Select
                     name="corrosionMonitoring"
-                    value={formData.corrosionMonitoring[0] || ''}
+                    value={formData.corrosionMonitoring[0] || ""}
                     onValueChange={(value) => {
-                      // This is just a simplified example, for multi-select you would 
+                      // This is just a simplified example, for multi-select you would
                       // typically use a custom component or more complex state management
-                      handleSelectChange('corrosionMonitoring', value);
-                      setFormData(prev => ({
+                      handleSelectChange("corrosionMonitoring", value);
+                      setFormData((prev) => ({
                         ...prev,
-                        corrosionMonitoring: [value]
+                        corrosionMonitoring: [value],
                       }));
                     }}
                   >
@@ -210,16 +227,24 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                       <SelectValue placeholder="Select Monitoring Method" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Ultrasonic Testing">Ultrasonic Testing</SelectItem>
+                      <SelectItem value="Ultrasonic Testing">
+                        Ultrasonic Testing
+                      </SelectItem>
                       <SelectItem value="Radiography">Radiography</SelectItem>
-                      <SelectItem value="Visual Inspection">Visual Inspection</SelectItem>
-                      <SelectItem value="Coupon Testing">Coupon Testing</SelectItem>
+                      <SelectItem value="Visual Inspection">
+                        Visual Inspection
+                      </SelectItem>
+                      <SelectItem value="Coupon Testing">
+                        Coupon Testing
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="internalDamageMechanism">Internal Damage Mechanism</Label>
+                  <Label htmlFor="internalDamageMechanism">
+                    Internal Damage Mechanism
+                  </Label>
                   <Input
                     id="internalDamageMechanism"
                     name="internalDamageMechanism"
@@ -229,7 +254,9 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="externalDamageMechanism">External Damage Mechanism</Label>
+                  <Label htmlFor="externalDamageMechanism">
+                    External Damage Mechanism
+                  </Label>
                   <Input
                     id="externalDamageMechanism"
                     name="externalDamageMechanism"
@@ -239,7 +266,9 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="expectedInternalCorrosionRate">Expected Internal Corrosion Rate</Label>
+                  <Label htmlFor="expectedInternalCorrosionRate">
+                    Expected Internal Corrosion Rate
+                  </Label>
                   <Input
                     id="expectedInternalCorrosionRate"
                     name="expectedInternalCorrosionRate"
@@ -252,7 +281,9 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="expectedExternalCorrosionRate">Expected External Corrosion Rate</Label>
+                  <Label htmlFor="expectedExternalCorrosionRate">
+                    Expected External Corrosion Rate
+                  </Label>
                   <Input
                     id="expectedExternalCorrosionRate"
                     name="expectedExternalCorrosionRate"
@@ -270,7 +301,9 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                     <Switch
                       id="h2s"
                       checked={formData.h2s}
-                      onCheckedChange={(checked) => handleSwitchChange('h2s', checked)}
+                      onCheckedChange={(checked) =>
+                        handleSwitchChange("h2s", checked)
+                      }
                     />
                   </div>
                   <div className="flex items-center space-x-2">
@@ -278,7 +311,9 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                     <Switch
                       id="co2"
                       checked={formData.co2}
-                      onCheckedChange={(checked) => handleSwitchChange('co2', checked)}
+                      onCheckedChange={(checked) =>
+                        handleSwitchChange("co2", checked)
+                      }
                     />
                   </div>
                 </div>
@@ -297,7 +332,10 @@ const CorrosionStudiesDetailPage: React.FC = () => {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="corrosionFactor" className="border rounded-md mt-4">
+          <AccordionItem
+            value="corrosionFactor"
+            className="border rounded-md mt-4"
+          >
             <AccordionTrigger className="px-4 py-3 bg-primary/10 hover:bg-primary/20 rounded-t-md font-medium">
               Corrosion Factor
             </AccordionTrigger>
@@ -350,15 +388,21 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                   <Select
                     name="baseMaterial"
                     value={formData.baseMaterial}
-                    onValueChange={(value) => handleSelectChange('baseMaterial', value)}
+                    onValueChange={(value) =>
+                      handleSelectChange("baseMaterial", value)
+                    }
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select Base Material" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Carbon Steel">Carbon Steel</SelectItem>
-                      <SelectItem value="Stainless Steel 304">Stainless Steel 304</SelectItem>
-                      <SelectItem value="Stainless Steel 316">Stainless Steel 316</SelectItem>
+                      <SelectItem value="Stainless Steel 304">
+                        Stainless Steel 304
+                      </SelectItem>
+                      <SelectItem value="Stainless Steel 316">
+                        Stainless Steel 316
+                      </SelectItem>
                       <SelectItem value="Duplex Steel">Duplex Steel</SelectItem>
                       <SelectItem value="Super Duplex">Super Duplex</SelectItem>
                     </SelectContent>
@@ -385,9 +429,7 @@ const CorrosionStudiesDetailPage: React.FC = () => {
         <Button variant="outline" onClick={handleGoBack}>
           Cancel
         </Button>
-        <Button onClick={handleSave}>
-          Save Changes
-        </Button>
+        <Button onClick={handleSave}>Save Changes</Button>
       </div>
     </div>
   );

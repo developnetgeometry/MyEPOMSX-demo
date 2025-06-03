@@ -1,35 +1,34 @@
-
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import PageHeader from '@/components/shared/PageHeader';
-import DataTable, { Column } from '@/components/shared/DataTable';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import StatusBadge from '@/components/shared/StatusBadge';
-import { ShieldAlertIcon } from 'lucide-react';
-import { RBIAssessment } from '@/types/monitoring';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import PageHeader from "@/components/shared/PageHeader";
+import DataTable, { Column } from "@/components/shared/DataTable";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import StatusBadge from "@/components/shared/StatusBadge";
+import { ShieldAlertIcon } from "lucide-react";
+import { RBIAssessment } from "@/types/monitoring";
 
 // Sample data for RBI assessments
 export const initialRbiData: RBIAssessment[] = [
-  { 
-    id: '1',
-    rbiId: 'RBI-001',
-    asset: 'PV-1001',
-    likelihood: 'Medium',
-    consequence: 'High',
-    riskRank: 'High',
-    nextAssessmentDate: '2025-09-15',
-    status: 'Active',
+  {
+    id: "1",
+    rbiId: "RBI-001",
+    asset: "PV-1001",
+    likelihood: "Medium",
+    consequence: "High",
+    riskRank: "High",
+    nextAssessmentDate: "2025-09-15",
+    status: "Active",
     // Default values for additional fields
-    coatingQuality: 'Good',
-    dataConfidence: 'High',
+    coatingQuality: "Good",
+    dataConfidence: "High",
     hasCladding: false,
     nominalThickness: 0,
     tMin: 0,
     currentThickness: 0,
-    description: '',
-    lastInspectionDate: new Date().toISOString().split('T')[0],
-    lastCoatingDate: new Date().toISOString().split('T')[0],
+    description: "",
+    lastInspectionDate: new Date().toISOString().split("T")[0],
+    lastCoatingDate: new Date().toISOString().split("T")[0],
     nthinA: 0,
     nthinB: 0,
     fsThin: 0,
@@ -55,14 +54,14 @@ export const initialRbiData: RBIAssessment[] = [
     envcost: 0,
     fatality: 0,
     evacuation: 0,
-    isoSys: 'Manual',
-    detSys: 'Manual',
-    mitigationSystem: 'Basic',
-    idealGasSpecificHeatEQ: 'Standard',
+    isoSys: "Manual",
+    detSys: "Manual",
+    mitigationSystem: "Basic",
+    idealGasSpecificHeatEQ: "Standard",
     pkkpa: 0,
     prtankKpa: 0,
     wtkg: 0,
-    releaseType: 'Gas',
+    releaseType: "Gas",
     ratton: 0,
     inventorykg: 0,
     caCmdfail: 0,
@@ -85,28 +84,28 @@ export const initialRbiData: RBIAssessment[] = [
     dfthin: 0,
     pof: 0,
     pofValue: 0,
-    riskLevel: 'Low',
-    riskRanking: 'Low'
+    riskLevel: "Low",
+    riskRanking: "Low",
   },
-  { 
-    id: '2',
-    rbiId: 'RBI-002',
-    asset: 'PP-2003',
-    likelihood: 'Low',
-    consequence: 'Medium',
-    riskRank: 'Medium',
-    nextAssessmentDate: '2025-10-22',
-    status: 'Active',
+  {
+    id: "2",
+    rbiId: "RBI-002",
+    asset: "PP-2003",
+    likelihood: "Low",
+    consequence: "Medium",
+    riskRank: "Medium",
+    nextAssessmentDate: "2025-10-22",
+    status: "Active",
     // Default values for additional fields
-    coatingQuality: 'Good',
-    dataConfidence: 'High',
+    coatingQuality: "Good",
+    dataConfidence: "High",
     hasCladding: false,
     nominalThickness: 0,
     tMin: 0,
     currentThickness: 0,
-    description: '',
-    lastInspectionDate: new Date().toISOString().split('T')[0],
-    lastCoatingDate: new Date().toISOString().split('T')[0],
+    description: "",
+    lastInspectionDate: new Date().toISOString().split("T")[0],
+    lastCoatingDate: new Date().toISOString().split("T")[0],
     nthinA: 0,
     nthinB: 0,
     fsThin: 0,
@@ -132,14 +131,14 @@ export const initialRbiData: RBIAssessment[] = [
     envcost: 0,
     fatality: 0,
     evacuation: 0,
-    isoSys: 'Manual',
-    detSys: 'Manual',
-    mitigationSystem: 'Basic',
-    idealGasSpecificHeatEQ: 'Standard',
+    isoSys: "Manual",
+    detSys: "Manual",
+    mitigationSystem: "Basic",
+    idealGasSpecificHeatEQ: "Standard",
     pkkpa: 0,
     prtankKpa: 0,
     wtkg: 0,
-    releaseType: 'Gas',
+    releaseType: "Gas",
     ratton: 0,
     inventorykg: 0,
     caCmdfail: 0,
@@ -162,28 +161,28 @@ export const initialRbiData: RBIAssessment[] = [
     dfthin: 0,
     pof: 0,
     pofValue: 0,
-    riskLevel: 'Low',
-    riskRanking: 'Low'
+    riskLevel: "Low",
+    riskRanking: "Low",
   },
-  { 
-    id: '3',
-    rbiId: 'RBI-003',
-    asset: 'PV-1002',
-    likelihood: 'High',
-    consequence: 'High',
-    riskRank: 'Critical',
-    nextAssessmentDate: '2025-07-30',
-    status: 'Active',
+  {
+    id: "3",
+    rbiId: "RBI-003",
+    asset: "PV-1002",
+    likelihood: "High",
+    consequence: "High",
+    riskRank: "Critical",
+    nextAssessmentDate: "2025-07-30",
+    status: "Active",
     // Default values for additional fields
-    coatingQuality: 'Good',
-    dataConfidence: 'High',
+    coatingQuality: "Good",
+    dataConfidence: "High",
     hasCladding: false,
     nominalThickness: 0,
     tMin: 0,
     currentThickness: 0,
-    description: '',
-    lastInspectionDate: new Date().toISOString().split('T')[0],
-    lastCoatingDate: new Date().toISOString().split('T')[0],
+    description: "",
+    lastInspectionDate: new Date().toISOString().split("T")[0],
+    lastCoatingDate: new Date().toISOString().split("T")[0],
     nthinA: 0,
     nthinB: 0,
     fsThin: 0,
@@ -209,14 +208,14 @@ export const initialRbiData: RBIAssessment[] = [
     envcost: 0,
     fatality: 0,
     evacuation: 0,
-    isoSys: 'Manual',
-    detSys: 'Manual',
-    mitigationSystem: 'Basic',
-    idealGasSpecificHeatEQ: 'Standard',
+    isoSys: "Manual",
+    detSys: "Manual",
+    mitigationSystem: "Basic",
+    idealGasSpecificHeatEQ: "Standard",
     pkkpa: 0,
     prtankKpa: 0,
     wtkg: 0,
-    releaseType: 'Gas',
+    releaseType: "Gas",
     ratton: 0,
     inventorykg: 0,
     caCmdfail: 0,
@@ -239,28 +238,28 @@ export const initialRbiData: RBIAssessment[] = [
     dfthin: 0,
     pof: 0,
     pofValue: 0,
-    riskLevel: 'Low',
-    riskRanking: 'Low'
+    riskLevel: "Low",
+    riskRanking: "Low",
   },
-  { 
-    id: '4',
-    rbiId: 'RBI-004',
-    asset: 'PP-2001',
-    likelihood: 'Low',
-    consequence: 'Low',
-    riskRank: 'Low',
-    nextAssessmentDate: '2025-12-05',
-    status: 'Active',
+  {
+    id: "4",
+    rbiId: "RBI-004",
+    asset: "PP-2001",
+    likelihood: "Low",
+    consequence: "Low",
+    riskRank: "Low",
+    nextAssessmentDate: "2025-12-05",
+    status: "Active",
     // Default values for additional fields
-    coatingQuality: 'Good',
-    dataConfidence: 'High',
+    coatingQuality: "Good",
+    dataConfidence: "High",
     hasCladding: false,
     nominalThickness: 0,
     tMin: 0,
     currentThickness: 0,
-    description: '',
-    lastInspectionDate: new Date().toISOString().split('T')[0],
-    lastCoatingDate: new Date().toISOString().split('T')[0],
+    description: "",
+    lastInspectionDate: new Date().toISOString().split("T")[0],
+    lastCoatingDate: new Date().toISOString().split("T")[0],
     nthinA: 0,
     nthinB: 0,
     fsThin: 0,
@@ -286,14 +285,14 @@ export const initialRbiData: RBIAssessment[] = [
     envcost: 0,
     fatality: 0,
     evacuation: 0,
-    isoSys: 'Manual',
-    detSys: 'Manual',
-    mitigationSystem: 'Basic',
-    idealGasSpecificHeatEQ: 'Standard',
+    isoSys: "Manual",
+    detSys: "Manual",
+    mitigationSystem: "Basic",
+    idealGasSpecificHeatEQ: "Standard",
     pkkpa: 0,
     prtankKpa: 0,
     wtkg: 0,
-    releaseType: 'Gas',
+    releaseType: "Gas",
     ratton: 0,
     inventorykg: 0,
     caCmdfail: 0,
@@ -316,28 +315,28 @@ export const initialRbiData: RBIAssessment[] = [
     dfthin: 0,
     pof: 0,
     pofValue: 0,
-    riskLevel: 'Low',
-    riskRanking: 'Low'
+    riskLevel: "Low",
+    riskRanking: "Low",
   },
-  { 
-    id: '5',
-    rbiId: 'RBI-005',
-    asset: 'PV-1003',
-    likelihood: 'Medium',
-    consequence: 'Medium',
-    riskRank: 'Medium',
-    nextAssessmentDate: '2025-11-18',
-    status: 'Complete',
+  {
+    id: "5",
+    rbiId: "RBI-005",
+    asset: "PV-1003",
+    likelihood: "Medium",
+    consequence: "Medium",
+    riskRank: "Medium",
+    nextAssessmentDate: "2025-11-18",
+    status: "Complete",
     // Default values for additional fields
-    coatingQuality: 'Good',
-    dataConfidence: 'High',
+    coatingQuality: "Good",
+    dataConfidence: "High",
     hasCladding: false,
     nominalThickness: 0,
     tMin: 0,
     currentThickness: 0,
-    description: '',
-    lastInspectionDate: new Date().toISOString().split('T')[0],
-    lastCoatingDate: new Date().toISOString().split('T')[0],
+    description: "",
+    lastInspectionDate: new Date().toISOString().split("T")[0],
+    lastCoatingDate: new Date().toISOString().split("T")[0],
     nthinA: 0,
     nthinB: 0,
     fsThin: 0,
@@ -363,14 +362,14 @@ export const initialRbiData: RBIAssessment[] = [
     envcost: 0,
     fatality: 0,
     evacuation: 0,
-    isoSys: 'Manual',
-    detSys: 'Manual',
-    mitigationSystem: 'Basic',
-    idealGasSpecificHeatEQ: 'Standard',
+    isoSys: "Manual",
+    detSys: "Manual",
+    mitigationSystem: "Basic",
+    idealGasSpecificHeatEQ: "Standard",
     pkkpa: 0,
     prtankKpa: 0,
     wtkg: 0,
-    releaseType: 'Gas',
+    releaseType: "Gas",
     ratton: 0,
     inventorykg: 0,
     caCmdfail: 0,
@@ -393,8 +392,8 @@ export const initialRbiData: RBIAssessment[] = [
     dfthin: 0,
     pof: 0,
     pofValue: 0,
-    riskLevel: 'Low',
-    riskRanking: 'Low'
+    riskLevel: "Low",
+    riskRanking: "Low",
   },
 ];
 
@@ -404,24 +403,24 @@ const RBIAssessmentPage: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState<RBIAssessment>({
-    id: '',
-    rbiId: '',
-    asset: '',
-    likelihood: 'Low',
-    consequence: 'Low',
-    riskRank: 'Low',
-    nextAssessmentDate: '',
-    status: 'Active',
+    id: "",
+    rbiId: "",
+    asset: "",
+    likelihood: "Low",
+    consequence: "Low",
+    riskRank: "Low",
+    nextAssessmentDate: "",
+    status: "Active",
     // Add all required properties based on the RBIAssessment interface
-    coatingQuality: 'Good',
-    dataConfidence: 'High',
+    coatingQuality: "Good",
+    dataConfidence: "High",
     hasCladding: false,
     nominalThickness: 0,
     tMin: 0,
     currentThickness: 0,
-    description: '',
-    lastInspectionDate: new Date().toISOString().split('T')[0],
-    lastCoatingDate: new Date().toISOString().split('T')[0],
+    description: "",
+    lastInspectionDate: new Date().toISOString().split("T")[0],
+    lastCoatingDate: new Date().toISOString().split("T")[0],
     nthinA: 0,
     nthinB: 0,
     fsThin: 0,
@@ -447,14 +446,14 @@ const RBIAssessmentPage: React.FC = () => {
     envcost: 0,
     fatality: 0,
     evacuation: 0,
-    isoSys: 'Manual',
-    detSys: 'Manual',
-    mitigationSystem: 'Basic',
-    idealGasSpecificHeatEQ: 'Standard',
+    isoSys: "Manual",
+    detSys: "Manual",
+    mitigationSystem: "Basic",
+    idealGasSpecificHeatEQ: "Standard",
     pkkpa: 0,
     prtankKpa: 0,
     wtkg: 0,
-    releaseType: 'Gas',
+    releaseType: "Gas",
     ratton: 0,
     inventorykg: 0,
     caCmdfail: 0,
@@ -477,13 +476,13 @@ const RBIAssessmentPage: React.FC = () => {
     dfthin: 0,
     pof: 0,
     pofValue: 0,
-    riskLevel: 'Low',
-    riskRanking: 'Low'
+    riskLevel: "Low",
+    riskRanking: "Low",
   });
 
   const handleAddNew = () => {
     // Navigate to the new assessment page instead of opening a dialog
-    navigate('/monitor/rbi-assessment/new');
+    navigate("/monitor/rbi-assessment/new");
   };
 
   const handleEdit = (row: any) => {
@@ -492,45 +491,53 @@ const RBIAssessmentPage: React.FC = () => {
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
-    
+
     // Calculate risk rank based on likelihood and consequence
-    if (name === 'likelihood' || name === 'consequence') {
-      const likelihood = name === 'likelihood' ? value : formData.likelihood;
-      const consequence = name === 'consequence' ? value : formData.consequence;
-      const riskRank = calculateRiskRank(likelihood as 'Low' | 'Medium' | 'High', consequence as 'Low' | 'Medium' | 'High');
-      
-      setFormData(prev => ({ 
-        ...prev, 
+    if (name === "likelihood" || name === "consequence") {
+      const likelihood = name === "likelihood" ? value : formData.likelihood;
+      const consequence = name === "consequence" ? value : formData.consequence;
+      const riskRank = calculateRiskRank(
+        likelihood as "Low" | "Medium" | "High",
+        consequence as "Low" | "Medium" | "High"
+      );
+
+      setFormData((prev) => ({
+        ...prev,
         [name]: value,
-        riskRank 
+        riskRank,
       }));
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
   // Utility function to calculate risk rank
-  const calculateRiskRank = (likelihood: 'Low' | 'Medium' | 'High', consequence: 'Low' | 'Medium' | 'High') => {
-    if (likelihood === 'High' && consequence === 'High') {
-      return 'Critical' as const;
-    } else if (likelihood === 'High' || consequence === 'High') {
-      return 'High' as const;
-    } else if (likelihood === 'Medium' || consequence === 'Medium') {
-      return 'Medium' as const;
+  const calculateRiskRank = (
+    likelihood: "Low" | "Medium" | "High",
+    consequence: "Low" | "Medium" | "High"
+  ) => {
+    if (likelihood === "High" && consequence === "High") {
+      return "Critical" as const;
+    } else if (likelihood === "High" || consequence === "High") {
+      return "High" as const;
+    } else if (likelihood === "Medium" || consequence === "Medium") {
+      return "Medium" as const;
     } else {
-      return 'Low' as const;
+      return "Low" as const;
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (isEditMode) {
-      setRbiData(prev => 
-        prev.map(item => item.id === formData.id ? { ...formData } : item)
+      setRbiData((prev) =>
+        prev.map((item) => (item.id === formData.id ? { ...formData } : item))
       );
     } else {
       // Ensure we create a complete RBIAssessment object
@@ -538,20 +545,25 @@ const RBIAssessmentPage: React.FC = () => {
         ...formData,
         id: String(rbiData.length + 1),
       };
-      setRbiData(prev => [...prev, newAssessment]);
+      setRbiData((prev) => [...prev, newAssessment]);
     }
-    
+
     setIsDialogOpen(false);
   };
 
   // Function to get appropriate color class based on risk rank
   const getRiskRankColor = (rank: string) => {
-    switch(rank) {
-      case 'Critical': return 'bg-red-100 text-red-800';
-      case 'High': return 'bg-orange-100 text-orange-800';
-      case 'Medium': return 'bg-yellow-100 text-yellow-800';
-      case 'Low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+    switch (rank) {
+      case "Critical":
+        return "bg-red-100 text-red-800";
+      case "High":
+        return "bg-orange-100 text-orange-800";
+      case "Medium":
+        return "bg-yellow-100 text-yellow-800";
+      case "Low":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -560,52 +572,68 @@ const RBIAssessmentPage: React.FC = () => {
   };
 
   const columns: Column[] = [
-    { id: 'rbiId', header: 'RBI ID', accessorKey: 'rbiId' },
-    { id: 'asset', header: 'Asset', accessorKey: 'asset' },
-    { 
-      id: 'likelihood', 
-      header: 'Likelihood', 
-      accessorKey: 'likelihood',
-      cell: (value) => (
-        <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-          value === 'High' ? 'bg-red-100 text-red-800' :
-          value === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-          'bg-green-100 text-green-800'
-        }`}>
-          {value}
-        </span>
-      )
-    },
-    { 
-      id: 'consequence', 
-      header: 'Consequence', 
-      accessorKey: 'consequence',
-      cell: (value) => (
-        <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-          value === 'High' ? 'bg-red-100 text-red-800' :
-          value === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-          'bg-green-100 text-green-800'
-        }`}>
-          {value}
-        </span>
-      )
-    },
-    { 
-      id: 'riskRank', 
-      header: 'Risk Rank', 
-      accessorKey: 'riskRank',
-      cell: (value) => (
-        <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${getRiskRankColor(value)}`}>
-          {value}
-        </span>
-      )
-    },
-    { id: 'nextAssessmentDate', header: 'Next Assessment Date', accessorKey: 'nextAssessmentDate' },
+    { id: "rbiId", header: "RBI ID", accessorKey: "rbiId" },
+    { id: "asset", header: "Asset", accessorKey: "asset" },
     {
-      id: 'status',
-      header: 'Status',
-      accessorKey: 'status',
-      cell: (value) => <StatusBadge status={value} />
+      id: "likelihood",
+      header: "Likelihood",
+      accessorKey: "likelihood",
+      cell: (value) => (
+        <span
+          className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+            value === "High"
+              ? "bg-red-100 text-red-800"
+              : value === "Medium"
+              ? "bg-yellow-100 text-yellow-800"
+              : "bg-green-100 text-green-800"
+          }`}
+        >
+          {value}
+        </span>
+      ),
+    },
+    {
+      id: "consequence",
+      header: "Consequence",
+      accessorKey: "consequence",
+      cell: (value) => (
+        <span
+          className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+            value === "High"
+              ? "bg-red-100 text-red-800"
+              : value === "Medium"
+              ? "bg-yellow-100 text-yellow-800"
+              : "bg-green-100 text-green-800"
+          }`}
+        >
+          {value}
+        </span>
+      ),
+    },
+    {
+      id: "riskRank",
+      header: "Risk Rank",
+      accessorKey: "riskRank",
+      cell: (value) => (
+        <span
+          className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${getRiskRankColor(
+            value
+          )}`}
+        >
+          {value}
+        </span>
+      ),
+    },
+    {
+      id: "nextAssessmentDate",
+      header: "Next Assessment Date",
+      accessorKey: "nextAssessmentDate",
+    },
+    {
+      id: "status",
+      header: "Status",
+      accessorKey: "status",
+      cell: (value) => <StatusBadge status={value} />,
     },
   ];
 
@@ -617,7 +645,7 @@ const RBIAssessmentPage: React.FC = () => {
         icon={<ShieldAlertIcon className="h-6 w-6" />}
         onAddNew={handleAddNew}
         addNewLabel="+ New Assessment"
-        onSearch={(query) => console.log('Search:', query)}
+        onSearch={(query) => console.log("Search:", query)}
       />
 
       <Card>

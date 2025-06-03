@@ -3,9 +3,10 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Loading from "@/components/shared/Loading";
-import { usePriorityData } from "@/hooks/lookup/lookup-priority";
 import { useNewWorkFailureTypeData } from "@/hooks/lookup/lookup-new-work-failure-type";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useFailurePriorityData } from "@/hooks/lookup/lookup-failure-priority";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface FailureDialogFormProps {
   onSubmit: (formData: any) => Promise<void>;
@@ -14,7 +15,7 @@ interface FailureDialogFormProps {
 }
 
 const FailureDialogForm: React.FC<FailureDialogFormProps> = ({ onSubmit, onCancel, initialData }) => {
-  const { data: priorities } = usePriorityData();
+  const { data: failurePriorities } = useFailurePriorityData();
   const { data: failureTypes } = useNewWorkFailureTypeData();
 
   const [formData, setFormData] = useState({
@@ -26,7 +27,7 @@ const FailureDialogForm: React.FC<FailureDialogFormProps> = ({ onSubmit, onCance
     environment_consequences: initialData?.environment_consequences || "",
     has_consequence: initialData?.has_consequence || "",
     corrective_action: initialData?.corrective_action || "",
-    priority_id: initialData?.priority_id?.id || null,
+    failure_priority_id: initialData?.failure_priority_id?.id || null,
     lost_time_incident: initialData?.lost_time_incident || false,
     failure_shutdown: initialData?.failure_shutdown || false,
     failure_type_id: initialData?.failure_type_id?.id || null,
@@ -66,7 +67,7 @@ const FailureDialogForm: React.FC<FailureDialogFormProps> = ({ onSubmit, onCance
                 <Input
                   id="safety"
                   name="safety"
-                  value={formData.safety}
+                  value={formData.safety || ""}
                   onChange={handleInputChange}
                 />
               </div>
@@ -75,7 +76,7 @@ const FailureDialogForm: React.FC<FailureDialogFormProps> = ({ onSubmit, onCance
                 <Input
                   id="like_hood"
                   name="like_hood"
-                  value={formData.like_hood}
+                  value={formData.like_hood || ""}
                   onChange={handleInputChange}
                 />
               </div>
@@ -84,7 +85,7 @@ const FailureDialogForm: React.FC<FailureDialogFormProps> = ({ onSubmit, onCance
                 <Input
                   id="action_taken"
                   name="action_taken"
-                  value={formData.action_taken}
+                  value={formData.action_taken || ""}
                   onChange={handleInputChange}
                 />
               </div>
@@ -94,7 +95,7 @@ const FailureDialogForm: React.FC<FailureDialogFormProps> = ({ onSubmit, onCance
                   id="critical_rank"
                   name="critical_rank"
                   type="number"
-                  value={formData.critical_rank}
+                  value={formData.critical_rank || ""}
                   onChange={handleInputChange}
                 />
               </div>
@@ -104,7 +105,7 @@ const FailureDialogForm: React.FC<FailureDialogFormProps> = ({ onSubmit, onCance
                   id="provability_occurrance"
                   name="provability_occurrance"
                   type="number"
-                  value={formData.provability_occurrance}
+                  value={formData.provability_occurrance || ""}
                   onChange={handleInputChange}
                 />
               </div>
@@ -113,7 +114,7 @@ const FailureDialogForm: React.FC<FailureDialogFormProps> = ({ onSubmit, onCance
                 <Input
                   id="environment_consequences"
                   name="environment_consequences"
-                  value={formData.environment_consequences}
+                  value={formData.environment_consequences || ""}
                   onChange={handleInputChange}
                 />
               </div>
@@ -122,7 +123,7 @@ const FailureDialogForm: React.FC<FailureDialogFormProps> = ({ onSubmit, onCance
                 <Input
                   id="has_consequence"
                   name="has_consequence"
-                  value={formData.has_consequence}
+                  value={formData.has_consequence || ""}
                   onChange={handleInputChange}
                 />
               </div>
@@ -131,28 +132,28 @@ const FailureDialogForm: React.FC<FailureDialogFormProps> = ({ onSubmit, onCance
                 <Input
                   id="corrective_action"
                   name="corrective_action"
-                  value={formData.corrective_action}
+                  value={formData.corrective_action || ""}
                   onChange={handleInputChange}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="priority_id">Priority</Label>
                 <Select
-                  value={formData.priority_id?.toString()} // Ensure the value is a string
+                  value={formData.failure_priority_id?.toString() || ""} // Ensure the value is a string
                   onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, priority_id: parseInt(value) })) // Store the ID as a number
+                    setFormData((prev) => ({ ...prev, failure_priority_id: parseInt(value) })) // Store the ID as a number
                   }
                 >
                   <SelectTrigger id="priority_id" className="w-full">
                     <SelectValue
-                      placeholder="Select Priority"
+                      placeholder="Select priority"
                       defaultValue={
-                        priorities?.find((priority) => priority.id === formData.priority_id)?.name || ""
+                        failurePriorities?.find((priority) => priority.id === formData.failure_priority_id)?.name || ""
                       }
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    {priorities?.map((priority) => (
+                    {failurePriorities?.map((priority) => (
                       <SelectItem key={priority.id} value={priority.id.toString()}>
                         {priority.name}
                       </SelectItem>
@@ -161,29 +162,9 @@ const FailureDialogForm: React.FC<FailureDialogFormProps> = ({ onSubmit, onCance
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lost_time_incident">Lost Time Incident</Label>
-                <Input
-                  id="lost_time_incident"
-                  name="lost_time_incident"
-                  type="checkbox"
-                  checked={formData.lost_time_incident}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="failure_shutdown">Failure Shutdown</Label>
-                <Input
-                  id="failure_shutdown"
-                  name="failure_shutdown"
-                  type="checkbox"
-                  checked={formData.failure_shutdown}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="space-y-2">
                 <Label htmlFor="failure_type_id">Failure Type</Label>
                 <Select
-                  value={formData.failure_type_id?.toString()} // Ensure the value is a string
+                  value={formData.failure_type_id?.toString() || ""} // Ensure the value is a string
                   onValueChange={(value) =>
                     setFormData((prev) => ({ ...prev, failure_type_id: parseInt(value) })) // Store the ID as a number
                   }
@@ -204,6 +185,34 @@ const FailureDialogForm: React.FC<FailureDialogFormProps> = ({ onSubmit, onCance
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="col-span-2 grid grid-cols-2 gap-4 pt-2">
+                <div className="flex items-center space-x-2">
+                  <Label htmlFor="lost_time_incident">Lost Time Incident</Label>
+                  <Checkbox
+                    id="lost_time_incident"
+                    checked={formData.lost_time_incident || false}
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        lost_time_incident: checked === true, // Ensure the value is a boolean
+                      }))
+                    }
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Label htmlFor="failure_shutdown">Failure Shutdown</Label>
+                  <Checkbox
+                    id="failure_shutdown"
+                    checked={formData.failure_shutdown || false}
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        failure_shutdown: checked === true, // Ensure the value is a boolean
+                      }))
+                    }
+                  />
+                </div>
               </div>
             </div>
           </div>

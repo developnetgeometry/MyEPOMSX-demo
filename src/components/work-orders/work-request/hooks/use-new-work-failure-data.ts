@@ -10,7 +10,7 @@ export const useNewWorkFailureData = (workRequestId: number) => {
         .select(
           `id, safety, like_hood, action_taken, critical_rank, 
           provability_occurrance, environment_consequences, has_consequence, corrective_action,
-          priority_id (id, name), 
+          failure_priority_id (id, name), 
           lost_time_incident, failure_shutdown, 
           failure_type_id (id, name)`
         )
@@ -38,7 +38,7 @@ export const insertNewWorkFailureData = async (failureData: {
   environment_consequences?: string;
   has_consequence?: string;
   corrective_action?: string;
-  priority_id?: number;
+  failure_priority_id?: number;
   lost_time_incident?: boolean;
   failure_shutdown?: boolean;
   failure_type_id?: number;
@@ -71,7 +71,7 @@ export const updateNewWorkFailureData = async (
     environment_consequences?: string;
     has_consequence?: string;
     corrective_action?: string;
-    priority_id?: number;
+    failure_priority_id?: number;
     lost_time_incident?: boolean;
     failure_shutdown?: boolean;
     failure_type_id?: number;
