@@ -80,6 +80,13 @@ export const useGenerateSamplePMSchedules = () => {
   });
 };
 
+export const useFacilityOptions = () => {
+  return useQuery({
+    queryKey: ["facilityOptions"],
+    queryFn: () => PMScheduleService.getFacilityOptions(),
+  });
+};
+
 export const useMaintenanceOptions = () => {
   return useQuery({
     queryKey: ["maintenanceOptions"],
@@ -105,6 +112,27 @@ export const useFrequencyOptions = () => {
   return useQuery({
     queryKey: ["frequencyOptions"],
     queryFn: () => PMScheduleService.getFrequencyOptions(),
+  });
+};
+
+export const useSystemOptions = () => {
+  return useQuery({
+    queryKey: ["systemOptions"],
+    queryFn: () => PMScheduleService.getSystemOptions(),
+  });
+};
+
+export const useAssetOptions = () => {
+  return useQuery({
+    queryKey: ["assetOptions"],
+    queryFn: () => PMScheduleService.getAssetOptions(),
+  });
+};
+
+export const useEmployeeOptions = () => {
+  return useQuery({
+    queryKey: ["employeeOptions"],
+    queryFn: () => PMScheduleService.getEmployeeOptions(),
   });
 };
 
@@ -302,3 +330,38 @@ export const usePlanMaterial = (pmScheduleId: number | undefined) => {
     enabled: !!pmScheduleId,
   });
 }
+
+export const useCreateWorkOrder = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (payload: {
+      pm_schedule_id: number;
+      pm_description: string;
+      due_date: string;
+      maintenance_id: number;
+      asset_id: number;
+      facility_id: number;
+      system_id: number;
+      package_id: number;
+      work_center_id: number;
+      work_order_no?: string;
+      work_order_prefix?: string;
+      work_order_date?: string;
+      priority_id?: number;
+      discipline_id?: number;
+      task_id?: number;
+      frequency_id?: number;
+      pm_group_id?: number;
+      asset_sce_code_id?: number;
+    }) => PMScheduleService.createWorkOrder(payload),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ 
+        queryKey: scheduleKeys.workOrders(variables.pm_schedule_id) 
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: scheduleKeys.detail(variables.pm_schedule_id) 
+      });
+    },
+  });
+};

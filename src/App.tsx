@@ -76,8 +76,8 @@ import WOHistoryPage from '@/pages/work-orders/work-order-history/WOHistoryPage'
 import WOHistoryDetailPage from '@/pages/work-orders/work-order-history/WOHistoryDetailPage';
 import TaskLibraryPage from '@/pages/maintain/TaskLibraryPage';
 import TaskLibraryDetailPage from '@/pages/maintain/TaskLibraryDetailPage';
-import PMSchedulePage from '@/pages/maintain/PMSchedulePage';
-import PMScheduleDetailPage from '@/pages/maintain/PMScheduleDetailPage';
+import PMSchedulePage from '@/pages/maintain/pm-schedule/PMSchedulePage';
+import PMScheduleDetailPage from '@/pages/maintain/pm-schedule/PMScheduleDetailPage';
 import WorkRequestPage from '@/pages/work-orders/work-request/WorkRequestPage';
 import WorkRequestDetailPage from '@/pages/work-orders/work-request/WorkRequestDetailPage';
 import WorkOrderListPage from '@/pages/work-orders/work-order-list/WorkOrderListPage';
