@@ -440,55 +440,83 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   const isAdminSubmodule =
     depth === 1 && (item.name === "Setup" || item.name === "Settings");
 
-  return <li className="w-full">
-    {item.path ?
-      <Link
-        to={item.path}
-        className={cn('flex items-center py-3 px-4 text-white hover:bg-[#2a314a] w-full transition-colors duration-200', {
-          'bg-[#2a314a]': isActive,
-          'justify-center': isCollapsed,
-          'pl-8': depth === 1 && !isSetupChild && !isAdminSubmodule,
-          'pl-12': depth === 2 && !isSetupChild,
-          'pl-16': depth === 3 && !isSetupChild,
-        }, specialSectionClass, setupChildClass)}
-        onClick={handleClick}
-        title={isCollapsed ? item.name : undefined}
-      >
-        <item.icon size={isSetupChild ? 16 : 20} className={cn("flex-shrink-0 mr-3", {
-          "mr-0": isCollapsed
-        })} />
-        {!isCollapsed && <>
-          <span className="flex-1 text-sm">{item.name}</span>
-          {item.children && <div className="ml-auto">
-            <ChevronRight size={16} />
-          </div>}
-        </>}
-      </Link>
-      :
-      <button
-        className={cn('flex w-full items-center py-3 px-4 text-white hover:bg-[#2a314a] transition-colors duration-200', {
-          'bg-[#2a314a]': isActive,
-          'justify-center': isCollapsed,
-          'pl-8': depth === 1 && !isSetupChild && !isAdminSubmodule,
-          'pl-12': depth === 2 && !isSetupChild,
-          'pl-16': depth === 3 && !isSetupChild,
-        }, specialSectionClass, setupChildClass)}
-        onClick={handleClick}
-        title={isCollapsed ? item.name : undefined}
-      >
-        <item.icon size={isSetupChild ? 16 : 20} className={cn("flex-shrink-0 mr-3", {
-          "mr-0": isCollapsed
-        })} />
-        {!isCollapsed && <>
-          <span className="text-sm" >{item.name}</span>
-          {item.children && <div className="ml-auto">
-            <ChevronRight size={16} className={cn('transition-transform duration-200', {
-              'rotate-90': isSubmenuOpen
-            })} />
-          </div>}
-        </>}
-      </button>
-    }
+  return (
+    <li className="w-full">
+      {item.path ? (
+        <Link
+          to={item.path}
+          className={cn(
+            "flex items-center py-3 px-4 text-white hover:bg-[#2a314a] w-full transition-colors duration-200",
+            {
+              "bg-[#2a314a]": isActive,
+              "justify-center": isCollapsed,
+              "pl-8": depth === 1 && !isSetupChild && !isAdminSubmodule,
+              "pl-12": depth === 2 && !isSetupChild,
+              "pl-16": depth === 3 && !isSetupChild,
+            },
+            specialSectionClass,
+            setupChildClass
+          )}
+          onClick={handleClick}
+          title={isCollapsed ? item.name : undefined}
+        >
+          <item.icon
+            size={isSetupChild ? 16 : 20}
+            className={cn("flex-shrink-0 mr-3", {
+              "mr-0": isCollapsed,
+            })}
+          />
+          {!isCollapsed && (
+            <>
+              <span className="flex-1 text-sm">{item.name}</span>
+              {item.children && (
+                <div className="ml-auto">
+                  <ChevronRight size={16} />
+                </div>
+              )}
+            </>
+          )}
+        </Link>
+      ) : (
+        <button
+          className={cn(
+            "flex w-full items-center py-3 px-4 text-white hover:bg-[#2a314a] transition-colors duration-200",
+            {
+              "bg-[#2a314a]": isActive,
+              "justify-center": isCollapsed,
+              "pl-8": depth === 1 && !isSetupChild && !isAdminSubmodule,
+              "pl-12": depth === 2 && !isSetupChild,
+              "pl-16": depth === 3 && !isSetupChild,
+            },
+            specialSectionClass,
+            setupChildClass
+          )}
+          onClick={handleClick}
+          title={isCollapsed ? item.name : undefined}
+        >
+          <item.icon
+            size={isSetupChild ? 16 : 20}
+            className={cn("flex-shrink-0 mr-3", {
+              "mr-0": isCollapsed,
+            })}
+          />
+          {!isCollapsed && (
+            <>
+              <span className="text-sm">{item.name}</span>
+              {item.children && (
+                <div className="ml-auto">
+                  <ChevronRight
+                    size={16}
+                    className={cn("transition-transform duration-200", {
+                      "rotate-90": isSubmenuOpen,
+                    })}
+                  />
+                </div>
+              )}
+            </>
+          )}
+        </button>
+      )}
 
       {isSubmenuOpen && item.children && !isCollapsed && (
         <ul
