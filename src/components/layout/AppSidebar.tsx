@@ -361,7 +361,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
           "mr-0": isCollapsed
         })} />
         {!isCollapsed && <>
-          <span className="flex-1 text-sm" >{item.name}</span>
+          <span className="text-sm" >{item.name}</span>
           {item.children && <div className="ml-auto">
             <ChevronRight size={16} className={cn('transition-transform duration-200', {
               'rotate-90': isSubmenuOpen

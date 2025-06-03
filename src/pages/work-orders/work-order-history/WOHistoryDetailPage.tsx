@@ -19,7 +19,7 @@ const WOHistoryDetailPage: React.FC = () => {
         <PageHeader 
           title="WO History Detail" 
         />
-        <Button variant="outline" onClick={() => navigate('/maintain/wo-history')} className="flex items-center gap-2">
+        <Button variant="outline" onClick={() => navigate('/work-orders/wo-history')} className="flex items-center gap-2">
           <ArrowLeft className="h-4 w-4" /> Back to List
         </Button>
       </div>

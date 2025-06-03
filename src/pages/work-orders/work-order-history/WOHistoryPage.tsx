@@ -108,7 +108,7 @@ const WOHistoryPage: React.FC = () => {
   const totalProblems = history.reduce((sum, item) => sum + item.totalProblem, 0);
   
   const handleRowClick = (row: any) => {
-    navigate(`/maintain/wo-history/${row.id}`);
+    navigate(`/work-orders/wo-history/${row.id}`);
   };
 
   return (

@@ -1164,9 +1164,16 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "e_cm_general_e_asset_fk"
-            columns: ["id"]
-            isOneToOne: true
+            foreignKeyName: "e_cm_general_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "e_asset"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "e_cm_general_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
             referencedRelation: "e_asset"
             referencedColumns: ["id"]
           },

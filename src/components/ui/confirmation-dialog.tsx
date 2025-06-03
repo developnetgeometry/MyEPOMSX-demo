@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
+export type ConfirmVariant = "link" | "default" | "destructive" | "outline" | "secondary" | "ghost";
 export interface ConfirmationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;

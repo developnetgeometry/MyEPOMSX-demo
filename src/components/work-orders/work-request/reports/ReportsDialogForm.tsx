@@ -71,7 +71,7 @@ const ReportsDialogForm: React.FC<ReportsDialogFormProps> = ({ onSubmit, onCance
                 <Input
                   id="weather_condition"
                   name="weather_condition"
-                  value={formData.weather_condition}
+                  value={formData.weather_condition || ""}
                   onChange={handleInputChange}
                 />
               </div>
@@ -80,7 +80,7 @@ const ReportsDialogForm: React.FC<ReportsDialogFormProps> = ({ onSubmit, onCance
                 <Input
                   id="visibility"
                   name="visibility"
-                  value={formData.visibility}
+                  value={formData.visibility || ""}
                   onChange={handleInputChange}
                 />
               </div>
@@ -89,7 +89,7 @@ const ReportsDialogForm: React.FC<ReportsDialogFormProps> = ({ onSubmit, onCance
                 <Input
                   id="wind_speed_direction"
                   name="wind_speed_direction"
-                  value={formData.wind_speed_direction}
+                  value={formData.wind_speed_direction || ""}
                   onChange={handleInputChange}
                 />
               </div>
@@ -98,7 +98,7 @@ const ReportsDialogForm: React.FC<ReportsDialogFormProps> = ({ onSubmit, onCance
                 <Input
                   id="sea_well"
                   name="sea_well"
-                  value={formData.sea_well}
+                  value={formData.sea_well || ""}
                   onChange={handleInputChange}
                 />
               </div>
@@ -107,14 +107,14 @@ const ReportsDialogForm: React.FC<ReportsDialogFormProps> = ({ onSubmit, onCance
                 <Input
                   id="alarm_trigger"
                   name="alarm_trigger"
-                  value={formData.alarm_trigger}
+                  value={formData.alarm_trigger || ""}
                   onChange={handleInputChange}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="shutdown_type_id">Shutdown Type</Label>
                 <Select
-                  value={formData.shutdown_type_id?.toString()} // Ensure the value is a string
+                  value={formData.shutdown_type_id?.toString() || ""} // Ensure the value is a string
                   onValueChange={(value) =>
                     setFormData((prev) => ({ ...prev, shutdown_type_id: parseInt(value) })) // Store the ID as a number
                   }
@@ -142,7 +142,7 @@ const ReportsDialogForm: React.FC<ReportsDialogFormProps> = ({ onSubmit, onCance
                   id="time_failed"
                   name="time_failed"
                   type="datetime-local"
-                  value={formData.time_failed}
+                  value={formData.time_failed || ""}
                   onChange={handleInputChange}
                 />
               </div>
@@ -152,7 +152,7 @@ const ReportsDialogForm: React.FC<ReportsDialogFormProps> = ({ onSubmit, onCance
                   id="time_resume"
                   name="time_resume"
                   type="datetime-local"
-                  value={formData.time_resume}
+                  value={formData.time_resume || ""}
                   onChange={handleInputChange}
                 />
               </div>
@@ -161,7 +161,7 @@ const ReportsDialogForm: React.FC<ReportsDialogFormProps> = ({ onSubmit, onCance
                 <Input
                   id="shift"
                   name="shift"
-                  value={formData.shift}
+                  value={formData.shift || ""}
                   onChange={handleInputChange}
                 />
               </div>
@@ -170,7 +170,7 @@ const ReportsDialogForm: React.FC<ReportsDialogFormProps> = ({ onSubmit, onCance
                 <Input
                   id="redundant"
                   name="redundant"
-                  value={formData.redundant}
+                  value={formData.redundant || ""}
                   onChange={handleInputChange}
                 />
               </div>
@@ -179,7 +179,7 @@ const ReportsDialogForm: React.FC<ReportsDialogFormProps> = ({ onSubmit, onCance
                 <Input
                   id="other_detail"
                   name="other_detail"
-                  value={formData.other_detail}
+                  value={formData.other_detail || ""}
                   onChange={handleInputChange}
                 />
               </div>
@@ -195,7 +195,7 @@ const ReportsDialogForm: React.FC<ReportsDialogFormProps> = ({ onSubmit, onCance
                 <Input
                   id="service_asset"
                   name="service_asset"
-                  value={formData.service_asset}
+                  value={formData.service_asset || ""}
                   onChange={handleInputChange}
                 />
               </div>
@@ -205,7 +205,7 @@ const ReportsDialogForm: React.FC<ReportsDialogFormProps> = ({ onSubmit, onCance
                   id="pressure"
                   name="pressure"
                   type="number"
-                  value={formData.pressure}
+                  value={formData.pressure || ""}
                   onChange={handleInputChange}
                 />
               </div>
@@ -215,7 +215,7 @@ const ReportsDialogForm: React.FC<ReportsDialogFormProps> = ({ onSubmit, onCance
                   id="temp"
                   name="temp"
                   type="number"
-                  value={formData.temp}
+                  value={formData.temp || ""}
                   onChange={handleInputChange}
                 />
               </div>
@@ -225,7 +225,7 @@ const ReportsDialogForm: React.FC<ReportsDialogFormProps> = ({ onSubmit, onCance
                   id="operating_history"
                   name="operating_history"
                   type="number"
-                  value={formData.operating_history}
+                  value={formData.operating_history || ""}
                   onChange={handleInputChange}
                 />
               </div>
@@ -235,14 +235,14 @@ const ReportsDialogForm: React.FC<ReportsDialogFormProps> = ({ onSubmit, onCance
                   id="time_in_servicehr"
                   name="time_in_servicehr"
                   type="number"
-                  value={formData.time_in_servicehr}
+                  value={formData.time_in_servicehr || ""}
                   onChange={handleInputChange}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="material_class_id">Material Class</Label>
                 <Select
-                  value={formData.material_class_id?.toString()} // Ensure the value is a string
+                  value={formData.material_class_id?.toString() || ""} // Ensure the value is a string
                   onValueChange={(value) =>
                     setFormData((prev) => ({ ...prev, material_class_id: parseInt(value) })) // Store the ID as a number
                   }
@@ -269,7 +269,7 @@ const ReportsDialogForm: React.FC<ReportsDialogFormProps> = ({ onSubmit, onCance
                 <Input
                   id="design_code"
                   name="design_code"
-                  value={formData.design_code}
+                  value={formData.design_code || ""}
                   onChange={handleInputChange}
                 />
               </div>
