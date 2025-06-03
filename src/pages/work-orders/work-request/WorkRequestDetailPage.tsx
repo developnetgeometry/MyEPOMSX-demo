@@ -11,16 +11,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from 'sonner';
-import { useWorkRequestDataById, updateWorkRequestData, insertCmGeneral } from "../hooks/use-work-request-data";
-import { supabase } from '@/lib/supabaseClient';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { useWorkRequestDataById, updateWorkRequestData, insertCmGeneral, deleteWorkRequestData } from "../hooks/use-work-request-data";
 import TaskDetailTab from '@/components/work-orders/work-request/task-detail/TaskDetailTab';
 import ReportsTab from '@/components/work-orders/work-request/reports/ReportsTab';
 import FailureTab from '@/components/work-orders/work-request/failure/FailureTab';
@@ -29,10 +21,14 @@ import WorkRequestDialogForm from './WorkRequestDialogForm';
 import { useToast } from '@/hooks/use-toast';
 import { ConfirmationDialog, ConfirmVariant } from '@/components/ui/confirmation-dialog';
 import WorkRequestDetailsCard from '@/components/work-orders/work-request/WorkRequestDetailsCard';
+import { useQueryClient } from "@tanstack/react-query";
+import { insertWorkOrderData } from '../hooks/use-work-order-data';
+
 
 const WorkRequestDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const { data: workRequest, isLoading, refetch } = useWorkRequestDataById(Number(id)); // Use the new hook
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -51,6 +47,35 @@ const WorkRequestDetailPage: React.FC = () => {
 
   const handleEditClick = () => {
     setIsDialogOpen(true);
+  };
+
+  const handleDeleteWorkRequest = async () => {
+    setConfirmationDialogData({
+      title: "Delete Work Request",
+      description: "Are you sure you want to delete Work Request Order?",
+      confirmVariant: "destructive", // Set the button variant dynamically
+      onConfirm: async () => {
+        try {
+          await deleteWorkRequestData(workRequest.id);
+          toast({
+            title: "Success",
+            description: "Work request has been deleted successfully!",
+            variant: "default",
+          });
+          refetch();
+          setIsConfirmationDialogOpen(false);
+          queryClient.invalidateQueries({ queryKey: ["e-new-work-request-data"] });
+          navigate('/work-orders/work-request');
+        } catch (error) {
+          toast({
+            title: "Error",
+            description: "Failed to delete work request.",
+            variant: "destructive",
+          });
+        }
+      },
+    });
+    setIsConfirmationDialogOpen(true);
   };
 
   const handleFormSubmit = async (formData: any) => {
@@ -105,6 +130,36 @@ const WorkRequestDetailPage: React.FC = () => {
     setIsConfirmationDialogOpen(true);
   };
 
+  const handleSubmitToReupdate = () => {
+    setConfirmationDialogData({
+      title: "Submit Work Request",
+      description: "Are you sure you want to change the status to 'Reupdate'?",
+      confirmVariant: "default", // Set the button variant dynamically
+      onConfirm: async () => {
+        try {
+          if (workRequest) {
+            await updateWorkRequestData(workRequest.id, { cm_status_id: -1 });
+            toast({
+              title: "Success",
+              description: "Work request status updated to 'Reupdate' successfully!",
+              variant: "default",
+            });
+            refetch();
+          }
+          setIsConfirmationDialogOpen(false);
+        } catch (error) {
+          console.error("Failed to update work request status:", error);
+          toast({
+            title: "Error",
+            description: "Failed to update work request status.",
+            variant: "destructive",
+          });
+        }
+      },
+    });
+    setIsConfirmationDialogOpen(true);
+  };
+
   const handleSubmitWoRaised = () => {
     setConfirmationDialogData({
       title: "Submit Work Request",
@@ -114,7 +169,7 @@ const WorkRequestDetailPage: React.FC = () => {
         try {
           if (workRequest) {
             // Step 1: Update the cm_status_id to 3 in e_new_work_request
-            await updateWorkRequestData(workRequest.id, { cm_status_id: 3 });
+            await updateWorkRequestData(workRequest.id, { cm_status_id: 3});
 
             // Step 2: Insert data into e_cm_general
             const cmGeneralData = {
@@ -124,26 +179,17 @@ const WorkRequestDetailPage: React.FC = () => {
               system_id: workRequest.system_id?.id,
               package_id: workRequest.package_id?.id,
               asset_id: workRequest.asset_id?.id,
-              completed_by: null, // Adjust as needed
-              closed_by: null, // Adjust as needed
-              date_finding: workRequest.date_finding,
-              target_start_date: workRequest.target_due_date, // Assuming target_due_date is the start date
-              target_end_date: null, // Adjust as needed
-              asset_available_time: null, // Adjust as needed
               requested_by: workRequest.requested_by,
-              approved_by: null, // Adjust as needed
               cm_sce_code: workRequest.cm_sce_code?.id,
               due_date: workRequest.target_due_date,
-              downtime: null, // Adjust as needed
-              work_request_id: workRequest.id, // Link to the e_new_work_request ID
-              work_order_no: null, // Adjust as needed
+              work_request_id: workRequest.id,
             };
 
             await insertCmGeneral(cmGeneralData);
 
             toast({
               title: "Success",
-              description: "Work request status updated to 'WO Raised' and data inserted into e_cm_general successfully!",
+              description: "Work request status updated to 'WO Raised'",
               variant: "default",
             });
 
@@ -154,7 +200,7 @@ const WorkRequestDetailPage: React.FC = () => {
           console.error("Failed to update work request status or insert data into e_cm_general:", error);
           toast({
             title: "Error",
-            description: "Failed to update work request status or insert data into e_cm_general.",
+            description: "Failed to update work request status",
             variant: "destructive",
           });
         }
@@ -163,6 +209,50 @@ const WorkRequestDetailPage: React.FC = () => {
     setIsConfirmationDialogOpen(true);
   };
 
+    const handleSubmitToWo = () => {
+    setConfirmationDialogData({
+      title: "Create Work Order",
+      description: "Are you sure you want to create new Work Order?",
+      confirmVariant: "default", // Set the button variant dynamically
+      onConfirm: async () => {
+        try {
+          if (workRequest) {
+            // Step 1: Update the cm_status_id to 3 in e_new_work_request
+            await updateWorkRequestData(workRequest.id, {is_work_order_created: true });
+
+            // Step 2: Insert data into e_cm_general
+            const woData = {
+              work_order_type: 1,
+              work_order_status_id: 1,
+              description: workRequest.description,
+              work_order_no: workRequest.work_request_no,
+              cm_work_order_id: workRequest.cm_work_order_id,
+              asset_id: workRequest.asset_id?.id,
+            };
+
+            await insertWorkOrderData(woData);
+
+            toast({
+              title: "Success",
+              description: "New Work Order has been created successfully!",
+              variant: "default",
+            });
+
+            refetch();
+          }
+          setIsConfirmationDialogOpen(false);
+        } catch (error) {
+          console.error("Failed to Create New Work Order", error);
+          toast({
+            title: "Error",
+            description: "Failed to create new Work Order.",
+            variant: "destructive",
+          });
+        }
+      },
+    });
+    setIsConfirmationDialogOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -186,7 +276,11 @@ const WorkRequestDetailPage: React.FC = () => {
         workRequest={workRequest}
         isLoading={isLoading}
         onEditClick={handleEditClick}
+        onDeleteClick={handleDeleteWorkRequest}
         onSubmitToNRQ={handleSubmitToNRQ}
+        onSubmitToReupdate={handleSubmitToReupdate}
+        onSubmitWoRaised={handleSubmitWoRaised}
+        onSubmitToWO={handleSubmitToWo}
       />
 
       {/* Tabs Section */}

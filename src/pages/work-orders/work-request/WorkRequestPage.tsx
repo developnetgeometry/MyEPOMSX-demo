@@ -23,7 +23,6 @@ const WorkRequestPage: React.FC = () => {
   const { data: workRequests, isLoading, refetch } = useWorkRequestData();
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingWorkRequest, setEditingWorkRequest] = useState<any | null>(null);
   const { toast } = useToast();
 
   const handleRowClick = (row: any) => {
@@ -35,51 +34,17 @@ const WorkRequestPage: React.FC = () => {
   };
 
   const handleAddNew = () => {
-    setEditingWorkRequest(null);
     setIsDialogOpen(true);
-  };
-
-  const handleEditWorkRequest = (workRequest: any) => {
-    setEditingWorkRequest(workRequest);
-    setIsDialogOpen(true);
-  };
-
-  const handleDeleteWorkRequest = async (workRequest: any) => {
-    try {
-      await deleteWorkRequestData(workRequest.id);
-      toast({
-        title: "Success",
-        description: "Work request deleted successfully!",
-        variant: "default",
-      });
-      refetch();
-    } catch (error) {
-      console.error("Failed to delete work request data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete work request data.",
-        variant: "destructive",
-      });
-    }
   };
 
   const handleFormSubmit = async (formData: any) => {
     try {
-      if (editingWorkRequest) {
-        await updateWorkRequestData(editingWorkRequest.id, formData);
-        toast({
-          title: "Success",
-          description: "Work request updated successfully!",
-          variant: "default",
-        });
-      } else {
-        await insertWorkRequestData(formData);
-        toast({
-          title: "Success",
-          description: "Work request added successfully!",
-          variant: "default",
-        });
-      }
+      await insertWorkRequestData(formData);
+      toast({
+        title: "Success",
+        description: "Work request added successfully!",
+        variant: "default",
+      });
       setIsDialogOpen(false);
       refetch();
     } catch (error) {
@@ -148,8 +113,6 @@ const WorkRequestPage: React.FC = () => {
           columns={columns}
           data={filteredWorkRequests}
           onRowClick={handleRowClick}
-          onEdit={handleEditWorkRequest}
-          onDelete={handleDeleteWorkRequest}
         />
       )}
 
@@ -158,11 +121,9 @@ const WorkRequestPage: React.FC = () => {
           <DialogHeader>
             <div className="flex items-start justify-between w-full">
               <div>
-                <DialogTitle>{editingWorkRequest ? "Edit Work Request" : "Add New Work Request"}</DialogTitle>
+                <DialogTitle>Add New Work Request</DialogTitle>
                 <DialogDescription>
-                  {editingWorkRequest
-                    ? "Update the details of the work request."
-                    : "Fill in the details to add a new work request."}
+                  Fill in the details to add a new work request.
                 </DialogDescription>
               </div>
               <Button variant="ghost" size="icon" onClick={() => setIsDialogOpen(false)}>
@@ -174,7 +135,6 @@ const WorkRequestPage: React.FC = () => {
           <WorkRequestDialogForm
             onSubmit={handleFormSubmit}
             onCancel={() => setIsDialogOpen(false)}
-            initialData={editingWorkRequest}
           />
         </DialogContent>
       </Dialog>

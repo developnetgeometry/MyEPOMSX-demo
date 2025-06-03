@@ -2998,6 +2998,7 @@ export type Database = {
           facility_id: number | null
           finding_detail: string | null
           id: number
+          is_work_order_created: boolean | null
           maintenance_type: number | null
           package_id: number | null
           priority_id: number | null
@@ -3024,6 +3025,7 @@ export type Database = {
           facility_id?: number | null
           finding_detail?: string | null
           id?: number
+          is_work_order_created?: boolean | null
           maintenance_type?: number | null
           package_id?: number | null
           priority_id?: number | null
@@ -3050,6 +3052,7 @@ export type Database = {
           facility_id?: number | null
           finding_detail?: string | null
           id?: number
+          is_work_order_created?: boolean | null
           maintenance_type?: number | null
           package_id?: number | null
           priority_id?: number | null

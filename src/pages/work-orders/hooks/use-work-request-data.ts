@@ -17,7 +17,7 @@ export const useWorkRequestData = () => {
                     maintenance_type (id, code, name), requested_by, 
                     priority_id (id, name), 
                     finding_detail, anomaly_report, quick_incident_report,
-                    work_request_no, work_request_prefix`
+                    work_request_no, work_request_prefix, is_work_order_created`
                 )
                 .order("id", { ascending: false });
 
@@ -38,35 +38,52 @@ export const useWorkRequestData = () => {
 };
 
 export const useWorkRequestDataById = (id: number) => {
-    return useQuery({
-        queryKey: ["e-new-work-request-data", id],
-        queryFn: async () => {
-            const { data, error } = await supabase
-                .from("e_new_work_request")
-                .select(
-                    `id, cm_status_id (id, name), 
-          description, work_request_date, target_due_date, 
-          facility_id (id, location_code, location_name), system_id (id, system_name), 
-          package_id (id, package_no, package_tag, package_name), 
-          asset_id (id, asset_name), cm_sce_code (id, cm_group_name, cm_sce_code ), 
-          work_center_id (id, code, name), date_finding, 
-          maintenance_type (id, code, name), requested_by, 
-          priority_id (id, name), 
-          finding_detail, anomaly_report, quick_incident_report,
-          work_request_no, work_request_prefix`
-                )
-                .eq("id", id)
-                .single();
+  return useQuery({
+    queryKey: ["e-new-work-request-data", id],
+    queryFn: async () => {
+      try {
+        // Fetch data from e_new_work_request
+        const { data: workRequestData, error: workRequestError } = await supabase
+          .from("e_new_work_request")
+          .select(
+            `id, cm_status_id (id, name), 
+            description, work_request_date, target_due_date, 
+            facility_id (id, location_code, location_name), system_id (id, system_name), 
+            package_id (id, package_no, package_tag, package_name), 
+            asset_id (id, asset_name), cm_sce_code (id, cm_group_name, cm_sce_code ), 
+            work_center_id (id, code, name), date_finding, 
+            maintenance_type (id, code, name), requested_by, 
+            priority_id (id, name), 
+            finding_detail, anomaly_report, quick_incident_report,
+            work_request_no, work_request_prefix, is_work_order_created`
+          )
+          .eq("id", id)
+          .single();
 
-            if (error) {
-                console.error("Error fetching e_new_work_request data by ID:", error);
-                throw error;
-            }
+        if (workRequestError) {
+          console.error("Error fetching e_new_work_request data by ID:", workRequestError);
+          throw workRequestError;
+        }
 
-            return data;
-        },
-        enabled: !!id, // Only fetch if ID is provided
-    });
+        // Fetch data from e_cm_general
+        const { data: cmGeneralData, error: cmGeneralError } = await supabase
+          .from("e_cm_general")
+          .select(`id`)
+          .eq("work_request_id", id)
+          .single();
+
+        // Combine data
+        return {
+          ...workRequestData,
+          cm_work_order_id: cmGeneralData?.id ?? null, // Add cm_work_order_id if available
+        };
+      } catch (error) {
+        console.error("Error combining data:", error);
+        throw error;
+      }
+    },
+    enabled: !!id, // Only fetch if ID is provided
+  });
 };
 
 
@@ -128,6 +145,7 @@ export const updateWorkRequestData = async (
         anomaly_report?: boolean;
         quick_incident_report?: boolean;
         work_request_prefix?: string;
+        is_work_order_created?: boolean;
     }>
 ) => {
     try {
@@ -168,39 +186,39 @@ export const deleteWorkRequestData = async (id: number) => {
 };
 
 export const insertCmGeneral = async (cmGeneralData: {
-  priority_id?: number;
-  work_center_id?: number;
-  facility_id?: number;
-  system_id?: number;
-  package_id?: number;
-  asset_id?: number;
-  completed_by?: string;
-  closed_by?: string;
-  date_finding?: string;
-  target_start_date?: string;
-  target_end_date?: string;
-  asset_available_time?: string;
-  requested_by?: string;
-  approved_by?: string;
-  cm_sce_code?: number;
-  due_date?: string;
-  downtime?: number;
-  work_request_id: number;
-  work_order_no?: string;
+    priority_id?: number;
+    work_center_id?: number;
+    facility_id?: number;
+    system_id?: number;
+    package_id?: number;
+    asset_id?: number;
+    completed_by?: string;
+    closed_by?: string;
+    date_finding?: string;
+    target_start_date?: string;
+    target_end_date?: string;
+    asset_available_time?: string;
+    requested_by?: string;
+    approved_by?: string;
+    cm_sce_code?: number;
+    due_date?: string;
+    downtime?: number;
+    work_request_id: number;
+    work_order_no?: string;
 }) => {
-  try {
-    const { data, error } = await supabase
-      .from("e_cm_general")
-      .insert([cmGeneralData]);
+    try {
+        const { data, error } = await supabase
+            .from("e_cm_general")
+            .insert([cmGeneralData]);
 
-    if (error) {
-      console.error("Error inserting e_cm_general data:", error);
-      throw error;
+        if (error) {
+            console.error("Error inserting e_cm_general data:", error);
+            throw error;
+        }
+
+        return data;
+    } catch (err) {
+        console.error("Unexpected error inserting e_cm_general data:", err);
+        throw err;
     }
-
-    return data;
-  } catch (err) {
-    console.error("Unexpected error inserting e_cm_general data:", err);
-    throw err;
-  }
 };
