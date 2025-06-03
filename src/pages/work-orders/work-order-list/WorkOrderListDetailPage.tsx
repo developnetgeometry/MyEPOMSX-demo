@@ -23,6 +23,9 @@ import { deleteWorkOrderData, updateWorkOrderData, useWorkOrderDataById } from '
 import WorkOrderListDetailsCard from '@/components/work-orders/work-order-list/WorkOrderListDetailsCard';
 import WorkOrderListDialogForm from './WorkOrderListDialogForm';
 import CmGeneralTab from '@/components/work-orders/work-order-list/general/CmGeneralTab';
+import CmActualTab from '@/components/work-orders/work-order-list/actual/CmActualTab';
+import CmFindingTab from '@/components/work-orders/work-order-list/finding/CmFindingTab';
+import RelatedWoTab from '@/components/work-orders/work-order-list/relatedWo/RelatedWoTab';
 
 
 const WorkOrderListDetailPage: React.FC = () => {
@@ -129,50 +132,56 @@ const WorkOrderListDetailPage: React.FC = () => {
       {/* Tabs Section */}
       <Card>
         <CardContent className="pt-6">
-          <Tabs defaultValue={workOrder?.work_order_type === 1 ? "generalCm" : "actual"}>
-            <TabsList className="w-full border-b justify-start">
+          {!isLoading && workOrder && (
+            <Tabs defaultValue={workOrder?.work_order_type === 1 ? "generalCm" : "generalPm"}>
+              <TabsList className="w-full border-b justify-start">
+                {(workOrder?.work_order_type === 1 &&
+                  <>
+                    <TabsTrigger value="generalCm">General</TabsTrigger>
+                    <TabsTrigger value="actualCm">Actual</TabsTrigger>
+                    <TabsTrigger value="findingCm">Findings</TabsTrigger>
+                  </>
+                )}
+                <TabsTrigger value="relatedWo">Related WO</TabsTrigger>
+                <TabsTrigger value="reports">Reports</TabsTrigger>
+                <TabsTrigger value="defer">Defer</TabsTrigger>
+                <TabsTrigger value="attachment">Attachment</TabsTrigger>
+                <TabsTrigger value="taskDetail">Task Detail</TabsTrigger>
+                <TabsTrigger value="failure">Failure</TabsTrigger>
+              </TabsList>
               {(workOrder?.work_order_type === 1 &&
-                <TabsTrigger value="generalCm">General</TabsTrigger>
+                <>
+                  <TabsContent value="generalCm">
+                    {id && <CmGeneralTab cmGeneralId={Number(workOrder.cm_work_order_id.id)} />}
+                  </TabsContent>
+                  <TabsContent value="actualCm">
+                    {id && <CmActualTab cmGeneralId={Number(workOrder.cm_work_order_id.id)} workCenterId={workOrder.cm_work_order_id.work_center_id} />}
+                  </TabsContent>
+                  <TabsContent value="findingCm">
+                    {id && <CmFindingTab cmGeneralId={Number(workOrder.cm_work_order_id.id)} />}
+                  </TabsContent>
+                </>
               )}
-              <TabsTrigger value="actual">Actual</TabsTrigger>
-              <TabsTrigger value="finding">Findings/Failure</TabsTrigger>
-              <TabsTrigger value="relatedWo">Related WO</TabsTrigger>
-              <TabsTrigger value="reports">Reports</TabsTrigger>
-              <TabsTrigger value="defer">Defer</TabsTrigger>
-              <TabsTrigger value="attachment">Attachment</TabsTrigger>
-              <TabsTrigger value="taskDetail">Task Detail</TabsTrigger>
-              <TabsTrigger value="failure">Failure</TabsTrigger>
-            </TabsList>
-            {(workOrder?.work_order_type === 1 &&
-              <TabsContent value="generalCm">
-                {id && <CmGeneralTab cmGeneralId={Number(workOrder.cm_work_order_id.id)} />}
+              <TabsContent value="relatedWo">
+                {id && <RelatedWoTab assetId={Number(workOrder.asset_id)} />}
               </TabsContent>
-            )}
-            <TabsContent value="actual">
-              <h1>actual</h1>
-            </TabsContent>
-            <TabsContent value="finding">
-              <h1>finding</h1>
-            </TabsContent>
-            <TabsContent value="relatedWo">
-              <h1>relatedWo</h1>
-            </TabsContent>
-            <TabsContent value="reports">
-              {id && <ReportsTab workRequestId={Number(id)} />}
-            </TabsContent>
-            <TabsContent value="defer">
-              <h1>defer</h1>
-            </TabsContent>
-            <TabsContent value="attachment">
-              {id && <AttachmentTab workRequestId={Number(id)} />}
-            </TabsContent>
-            <TabsContent value="taskDetail">
-              {id && <TaskDetailTab newWorkRequestId={Number(id)} />}
-            </TabsContent>
-            <TabsContent value="failure">
-              {id && <FailureTab workRequestId={Number(id)} />}
-            </TabsContent>
-          </Tabs>
+              <TabsContent value="reports">
+                {id && <ReportsTab workRequestId={Number(id)} />}
+              </TabsContent>
+              <TabsContent value="defer">
+                <h1>defer</h1>
+              </TabsContent>
+              <TabsContent value="attachment">
+                {id && <AttachmentTab workRequestId={Number(id)} />}
+              </TabsContent>
+              <TabsContent value="taskDetail">
+                {id && <TaskDetailTab newWorkRequestId={Number(id)} />}
+              </TabsContent>
+              <TabsContent value="failure">
+                {id && <FailureTab workRequestId={Number(id)} />}
+              </TabsContent>
+            </Tabs>
+          )}
         </CardContent>
       </Card>
 

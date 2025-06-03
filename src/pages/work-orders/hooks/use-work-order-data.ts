@@ -35,7 +35,7 @@ export const useWorkOrderDataById = (id: number) => {
         .from("e_work_order")
         .select(
           `id, work_order_type, pm_work_order_id, work_order_status_id (id, name), description, 
-          work_order_no, cm_work_order_id (id, work_request_id), created_at, completed_at, created_by, 
+          work_order_no, cm_work_order_id (id, work_request_id, work_center_id), created_at, completed_at, created_by, 
           updated_by, updated_at, asset_id, task_id (id, task_code,task_name), due_date`
         )
         .eq("id", id)
@@ -142,4 +142,30 @@ export const deleteWorkOrderData = async (id: number) => {
     console.error("Unexpected error deleting e_work_order data:", err);
     throw err;
   }
+};
+
+export const userWorkOrderDataByAsset = (assetId: number) => {
+  return useQuery({
+    queryKey: ["e-work-order-data-by-asset", assetId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("e_work_order")
+        .select(
+          `id, work_order_type (id, name), pm_work_order_id, work_order_status_id (id, name),
+          description, work_order_no, cm_work_order_id, created_at, completed_at, created_by, 
+          updated_by, updated_at, asset_id (asset_no, asset_name),
+          task_id (id, task_code, task_name), due_date`
+        )
+        .eq("asset_id", assetId)
+        .order("id", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching e_work_order data by asset ID:", error);
+        throw error;
+      }
+
+      return data;
+    },
+    enabled: !!assetId, // Only fetch if assetId is provided
+  });
 };
