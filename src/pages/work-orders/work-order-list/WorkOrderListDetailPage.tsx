@@ -22,6 +22,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { deleteWorkOrderData, updateWorkOrderData, useWorkOrderDataById } from '../hooks/use-work-order-data';
 import WorkOrderListDetailsCard from '@/components/work-orders/work-order-list/WorkOrderListDetailsCard';
 import WorkOrderListDialogForm from './WorkOrderListDialogForm';
+import CmGeneralTab from '@/components/work-orders/work-order-list/general/CmGeneralTab';
 
 
 const WorkOrderListDetailPage: React.FC = () => {
@@ -128,10 +129,10 @@ const WorkOrderListDetailPage: React.FC = () => {
       {/* Tabs Section */}
       <Card>
         <CardContent className="pt-6">
-          <Tabs defaultValue="taskDetail">
+          <Tabs defaultValue={workOrder?.work_order_type === 1 ? "generalCm" : "actual"}>
             <TabsList className="w-full border-b justify-start">
               {(workOrder?.work_order_type === 1 &&
-              <TabsTrigger value="generalCm">General</TabsTrigger>
+                <TabsTrigger value="generalCm">General</TabsTrigger>
               )}
               <TabsTrigger value="actual">Actual</TabsTrigger>
               <TabsTrigger value="finding">Findings/Failure</TabsTrigger>
@@ -142,10 +143,11 @@ const WorkOrderListDetailPage: React.FC = () => {
               <TabsTrigger value="taskDetail">Task Detail</TabsTrigger>
               <TabsTrigger value="failure">Failure</TabsTrigger>
             </TabsList>
-
-            <TabsContent value="generalCm">
-              <h1>general</h1>
-            </TabsContent>
+            {(workOrder?.work_order_type === 1 &&
+              <TabsContent value="generalCm">
+                {id && <CmGeneralTab cmGeneralId={Number(workOrder.cm_work_order_id.id)} />}
+              </TabsContent>
+            )}
             <TabsContent value="actual">
               <h1>actual</h1>
             </TabsContent>
