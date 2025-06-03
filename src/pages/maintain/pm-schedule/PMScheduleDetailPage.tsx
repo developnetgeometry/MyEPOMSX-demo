@@ -48,6 +48,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
+  useCreateWorkOrder,
   useDeletePMScheduleCustomTask,
   usePlanLabour,
   usePlanMaterial,
@@ -60,7 +61,8 @@ import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/hooks/use-toast";
 import { MinAcceptanceCriteria } from "@/types/maintain";
 import { FileUpload } from "@/components/ui/file-upload";
-
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import WorkOrderDialogForm from "./WorkOrderDialogForm";
 interface TaskDetail {
   id: number;
   description: string;
@@ -122,6 +124,7 @@ const PMScheduleDetailPage: React.FC = () => {
 
   // Form modification tracking
   const [isFormModified, setIsFormModified] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState("task-detail");
@@ -253,27 +256,30 @@ const PMScheduleDetailPage: React.FC = () => {
     }
   }, [workOrdersData]);
 
-  const [additionalInfo, setAdditionalInfo] = useState<string>("")
+  const [additionalInfo, setAdditionalInfo] = useState<string>("");
 
   useEffect(() => {
     if (pmScheduleDetail?.additional_info) {
-      setAdditionalInfo(pmScheduleDetail.additional_info)
+      setAdditionalInfo(pmScheduleDetail.additional_info);
     }
-  }, [pmScheduleDetail?.additional_info])
+  }, [pmScheduleDetail?.additional_info]);
 
-  const { data: maintainableGroupsData } = usePMScheduleMaintainableGroups(Number(id));
+  const { data: maintainableGroupsData } = usePMScheduleMaintainableGroups(
+    Number(id)
+  );
 
-  const [maintainableGroups, setMaintainableGroups] = useState<MaintainableGroupItem[]>([]);
+  const [maintainableGroups, setMaintainableGroups] = useState<
+    MaintainableGroupItem[]
+  >([]);
 
   useEffect(() => {
     if (maintainableGroupsData) {
       setMaintainableGroups(maintainableGroupsData);
     }
-  })
+  });
 
-  const maintainableGroup = maintainableGroups.map((group) => group)
+  const maintainableGroup = maintainableGroups.map((group) => group);
 
-  
   const { data: planLaborData } = usePlanLabour(Number(id));
   const [planLabor, setPlanLabor] = useState<PlanLabor[]>([]);
 
@@ -283,7 +289,6 @@ const PMScheduleDetailPage: React.FC = () => {
     }
   }, [planLaborData]);
 
-
   const { data: planMaterialsData } = usePlanMaterial(Number(id));
   const [planMaterials, setPlanMaterials] = useState<PlanMaterial[]>([]);
 
@@ -291,28 +296,12 @@ const PMScheduleDetailPage: React.FC = () => {
     if (planMaterialsData) {
       setPlanMaterials(planMaterialsData);
     }
-  })
-
-  console.log(planMaterials);
-  
+  });
 
   // Make a copy of the original data for cancellation purposes
   const [originalTaskDetails, setOriginalTaskDetails] = useState<TaskDetail[]>(
     []
   );
-
-  useEffect(() => {
-    // Store a deep copy of the original data when the component mounts
-    setOriginalTaskDetails(JSON.parse(JSON.stringify(taskDetails)));
-
-    // Simulate loading data from API when ID changes
-    const loadData = async () => {
-      // In a real implementation, this would fetch data from the API
-      console.log(`Loading PM Schedule with ID: ${id}`);
-    };
-
-    loadData();
-  }, [id]);
 
   // Handle editing task detail row
   const startEditing = (id: number) => {
@@ -551,8 +540,7 @@ const PMScheduleDetailPage: React.FC = () => {
             description: "Additional info saved successfully",
             variant: "default",
           });
-          
-        } 
+        }
 
         setIsFormModified(false);
       } catch (error) {
@@ -621,6 +609,49 @@ const PMScheduleDetailPage: React.FC = () => {
     setIsFormModified(true);
   };
 
+  
+  const initialWorkOrderData = {
+    pm_schedule_id: pmScheduleDetail?.id || null,
+    pm_description: pmScheduleDetail?.pm_description || "",
+    maintenance_id: pmScheduleDetail?.maintenance_id || null,
+    asset_id: pmScheduleDetail?.asset_id || null,
+    facility_id: pmScheduleDetail?.facility_id || null,
+    system_id: pmScheduleDetail?.system_id || null,
+    package_id: pmScheduleDetail?.package_id || null,
+    work_center_id: pmScheduleDetail?.work_center_id || null,
+    work_order_date: new Date().toISOString().split('T')[0],
+    due_date: pmScheduleDetail?.due_date || null,
+    // Optional fields
+    priority_id: pmScheduleDetail?.priority_id || null,
+    discipline_id: pmScheduleDetail?.discipline_id || null,
+    task_id: pmScheduleDetail?.task_id || null,
+    frequency_id: pmScheduleDetail?.frequency_id || null,
+    pm_group_id: pmScheduleDetail?.pm_group_id || null,
+    asset_sce_code_id: pmScheduleDetail?.pm_sce_group_id || null
+  };
+  
+  const { mutate: createWorkOrder } = useCreateWorkOrder();
+
+  const handleCreateWorkOrderSubmit = async (formData: any) => {
+    
+    try {
+      await createWorkOrder(formData);
+      
+      toast({
+        title: "Success",
+        description: "Work order created successfully",
+        variant: "default",
+      });
+      
+      setIsDialogOpen(false);
+    } catch (error) {
+      throw error; // This will be caught in the WorkOrderDialogForm
+    }
+  };
+
+  const handleCreateWorkOrder = () => {
+    setIsDialogOpen(true);
+  };
   // Check if any row is currently being edited
   const hasEditingRows = taskDetails.some((task) => task.isEditing);
 
@@ -660,7 +691,7 @@ const PMScheduleDetailPage: React.FC = () => {
             <div>
               <h4 className="text-sm font-medium text-gray-500">Package No</h4>
               <p className="text-base">
-                {pmScheduleDetail?.package.package_no}
+                {pmScheduleDetail?.package?.package_no}
               </p>
             </div>
 
@@ -712,6 +743,10 @@ const PMScheduleDetailPage: React.FC = () => {
               <h4 className="text-sm font-medium text-gray-500">Duration</h4>
               <p className="text-base">{pmDetail.duration} Days</p>
             </div> */}
+
+            <Button className="w-1/2" onClick={handleCreateWorkOrder}>
+              Create Work Order
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -1232,6 +1267,36 @@ const PMScheduleDetailPage: React.FC = () => {
           )}
         </Button>
       </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-[600px] md:max-w-[1200px] max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-start justify-between w-full">
+              <div>
+                <DialogTitle>
+                  Add Work Order
+                </DialogTitle>
+                <DialogDescription>
+                  Fill in the details to add a new work order.
+                </DialogDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsDialogOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+
+          <WorkOrderDialogForm
+            onSubmit={handleCreateWorkOrderSubmit}
+            onCancel={() => setIsDialogOpen(false)}
+            initialData={initialWorkOrderData}
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
