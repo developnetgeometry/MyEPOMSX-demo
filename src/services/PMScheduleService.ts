@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabaseClient";
 import {
   createPMScheduleDTO,
+  createPMWorkOrder,
   MinAcceptanceCriteria,
   PMSchedule,
   PMScheduleDetail,
@@ -35,6 +36,7 @@ export const PMScheduleService = {
         `*,
                 package: package_id(package_no),
                 asset: asset_id(asset_name),
+                facility: facility_id(location_name),
                 task: task_id(task_name),
                 frequency: frequency_id(name),
                 work_center: work_center_id(name)
@@ -196,8 +198,21 @@ export const PMScheduleService = {
     return insertedSchedules || [];
   },
 
+  async getFacilityOptions(): Promise<any> {
+    const { data, error } = await supabase.from("e_facility").select("*");
+
+    if (error) {
+      throw new Error(`Error fetching PM schedules: ${error.message}`);
+    }
+
+    return data || [];
+  },
+
   async getMaintenanceOptions(): Promise<any> {
-    const { data, error } = await supabase.from("e_maintenance").select("*");
+    const { data, error } = await supabase
+      .from("e_maintenance")
+      .select("*")
+      .eq("maintenance_type_id", 1);
 
     if (error) {
       throw new Error(`Error fetching PM schedules: ${error.message}`);
@@ -228,6 +243,36 @@ export const PMScheduleService = {
 
   async getFrequencyOptions(): Promise<any> {
     const { data, error } = await supabase.from("e_frequency").select("*");
+
+    if (error) {
+      throw new Error(`Error fetching PM schedules: ${error.message}`);
+    }
+
+    return data || [];
+  },
+
+  async getAssetOptions(): Promise<any> {
+    const { data, error } = await supabase.from("e_asset").select("*");
+
+    if (error) {
+      throw new Error(`Error fetching PM schedules: ${error.message}`);
+    }
+
+    return data || [];
+  },
+
+  async getSystemOptions(): Promise<any> {
+    const { data, error } = await supabase.from("e_system").select("*");
+
+    if (error) {
+      throw new Error(`Error fetching PM schedules: ${error.message}`);
+    }
+
+    return data || [];
+  },
+
+  async getEmployeeOptions(): Promise<any> {
+    const { data, error } = await supabase.from("e_employee").select("*");
 
     if (error) {
       throw new Error(`Error fetching PM schedules: ${error.message}`);
@@ -578,4 +623,74 @@ export const PMScheduleService = {
 
     return data || [];
   },
+
+  async createWorkOrder(payload: {
+    pm_schedule_id: number;
+    pm_description: string;
+    due_date: string;
+    maintenance_id: number;
+    asset_id: number;
+    facility_id: number;
+    system_id: number;
+    package_id: number;
+    work_center_id: number;
+    work_order_no?: string;
+    work_order_prefix?: string;
+    work_order_date?: string;
+    priority_id?: number;
+    discipline_id?: number;
+    task_id?: number;
+    frequency_id?: number;
+    pm_group_id?: number;
+    asset_sce_code_id?: number;
+  }): Promise<createPMWorkOrder> {
+    // Generate work_order_no if not provided
+    const workOrderNo = payload.work_order_no || 
+      `${payload.work_order_prefix || 'WO-'}${new Date().getTime()}`;
+  
+    // Convert dates to proper format
+    const dueDate = payload.due_date ? new Date(payload.due_date).toISOString() : null;
+    const workOrderDate = payload.work_order_date ? new Date(payload.work_order_date).toISOString() : new Date().toISOString();
+  
+    const { data, error } = await supabase
+      .from('e_pm_work_order')
+      .insert({
+        pm_schedule_id: payload.pm_schedule_id,
+        pm_description: payload.pm_description,
+        due_date: dueDate,
+        created_at: workOrderDate,
+        updated_at: workOrderDate,
+        maintenance_id: payload.maintenance_id,
+        asset_id: payload.asset_id,
+        facility_id: payload.facility_id,
+        system_id: payload.system_id,
+        package_id: payload.package_id,
+        work_center_id: payload.work_center_id,
+        work_order_no: workOrderNo,
+        priority_id: payload.priority_id,
+        discipline_id: payload.discipline_id,
+        task_id: payload.task_id,
+        frequency_id: payload.frequency_id,
+        pm_group_id: payload.pm_group_id,
+        asset_sce_code_id: payload.asset_sce_code_id,
+        is_active: true,
+      })
+      .select(`
+        *,
+        asset: asset_id(asset_name),
+        facility: facility_id(location_name),
+        work_center: work_center_id(name),
+        maintenance: maintenance_id(name),
+        system: system_id(system_name),
+        package: package_id(package_name)
+      `)
+      .single();
+  
+    if (error) {
+      console.error('Error creating work order:', error);
+      throw new Error(`Failed to create work order: ${error.message}`);
+    }
+  
+    return data;
+  }
 };
