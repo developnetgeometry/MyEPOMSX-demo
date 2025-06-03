@@ -81,7 +81,7 @@ import PMScheduleDetailPage from '@/pages/maintain/PMScheduleDetailPage';
 import WorkRequestPage from '@/pages/work-orders/work-request/WorkRequestPage';
 import WorkRequestDetailPage from '@/pages/work-orders/work-request/WorkRequestDetailPage';
 import WorkOrderListPage from '@/pages/work-orders/work-order-list/WorkOrderListPage';
-import WorkOrderDetailPage from '@/pages/work-orders/work-order-list/WorkOrderDetailPage';
+import WorkOrderDetailPage from '@/pages/work-orders/work-order-list/WorkOrderListDetailPage';
 
 // Purchasing Pages
 import PurchaseRequestPage from './pages/purchasing/PurchaseRequestPage'
