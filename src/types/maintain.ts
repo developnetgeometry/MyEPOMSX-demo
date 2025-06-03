@@ -103,7 +103,13 @@ export interface PMSchedule {
   work_center_id: number | null;
 }
 
+export type createPMWorkOrder = Database["public"]["Tables"]["e_pm_work_order"]["Insert"];
+
+
 export interface PMScheduleDetail extends PMSchedule {
+  facility: {
+    location_name: string;
+  }
   package: {
     package_no: string;
   };
@@ -123,6 +129,7 @@ export interface PMScheduleDetail extends PMSchedule {
   checksheet_notes?: string | null;
   checksheet_attachment?: string | null;
   additional_info?: string | null;
+  created_at?: string | null;
 }
 
 export type createPMScheduleDTO =
