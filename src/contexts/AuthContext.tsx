@@ -69,7 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event, session);
+      // console.log("Auth state changed:", event, session);
       setSession(session);
       setUser(session?.user ?? null);
 
@@ -129,11 +129,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const signOut = async () => {
-    console.log("Sign out initiated");
+    // console.log("Sign out initiated");
 
     // Check if there's actually a session to sign out from
     if (!session) {
-      console.log("No active session found, clearing local state");
+      // console.log("No active session found, clearing local state");
       // Clear local state even if there's no session
       setUser(null);
       setSession(null);
@@ -150,7 +150,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           error.message?.includes("session") ||
           error.message?.includes("missing")
         ) {
-          console.log("Session already cleared, updating local state");
+          // console.log("Session already cleared, updating local state");
           setUser(null);
           setSession(null);
           setProfile(null);
@@ -160,7 +160,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         return { error };
       }
 
-      console.log("Sign out successful");
+      // console.log("Sign out successful");
       setUser(null);
       setSession(null);
       setProfile(null);

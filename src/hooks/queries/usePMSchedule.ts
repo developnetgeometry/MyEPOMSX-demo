@@ -157,6 +157,13 @@ export const useDisciplineOptions = () => {
   });
 };
 
+export const usePMGroupOptions = () => {
+  return useQuery({
+    queryKey: ["pMGroupOptions"],
+    queryFn: () => PMScheduleService.getPMGroupOptions(),
+  });
+};
+
 export const usePMScheduleCustomTasks = (pmScheduleId: number | undefined) => {
   return useQuery({
     queryKey: scheduleKeys.customTasks(pmScheduleId),

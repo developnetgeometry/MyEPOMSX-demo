@@ -20,6 +20,20 @@ import { DateInput } from "@/components/ui/date-input";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import {
+  useAssetOptions,
+  useCreatePMSchedule,
+  useDisciplineOptions,
+  useFacilityOptions,
+  useFrequencyOptions,
+  usePackageOptions,
+  usePMGroupOptions,
+  usePriorityOptions,
+  useSystemOptions,
+  useTaskOptions,
+  useWorkCenterOptions,
+} from "@/hooks/queries/usePMSchedule";
+import { useToast } from "@/hooks/use-toast";
 
 // Mock data for demonstration
 const mockData = {
@@ -103,9 +117,20 @@ const pmScheduleSchema = z.object({
 type PMScheduleFormValues = z.infer<typeof pmScheduleSchema>;
 
 const CreatePMSchedulePage = () => {
-  const navigate = useNavigate();
+  const { data: tasks = [""], isLoading: tasksLoading } = useTaskOptions();
+  const { data: priorities } = usePriorityOptions();
+  const { data: workCenters } = useWorkCenterOptions();
+  const { data: disciplines } = useDisciplineOptions();
+  const { data: frequencies } = useFrequencyOptions();
+  const { data: packages } = usePackageOptions();
+  const { data: assets } = useAssetOptions();
+  const { data: systems } = useSystemOptions();
+  const { data: pmGroups } = usePMGroupOptions();
+  const { data: facilities } = useFacilityOptions();
+  const { toast } = useToast();
+  const createPMScheduleMutation = useCreatePMSchedule();
 
-  // Initialize react-hook-form with Zod resolver
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -125,10 +150,49 @@ const CreatePMSchedulePage = () => {
   const selectedTasks = watch("selectedTasks");
 
   // Handle form submission
-  const onSubmit = (data: PMScheduleFormValues) => {
-    console.log("Form data submitted:", data);
-    // Here you would typically call an API to save the data
-    navigate("/maintain/pm-schedule"); // Redirect after submission
+  const onSubmit = async (data: PMScheduleFormValues) => {
+    // Transform data to snake_case and correct types
+    const transformedData = {
+      pm_no: data.pmNo,
+      due_date: data.dueDate ? new Date(data.dueDate).toISOString() : null,
+      is_active: data.isActive,
+      priority_id: Number(data.priorityId),
+      work_center_id: Number(data.workCenterId),
+      discipline_id: Number(data.disciplineId),
+      frequency_id: Number(data.frequencyId),
+      asset_id: Number(data.assetId),
+      system_id: data.systemId ? Number(data.systemId) : null,
+      package_id: Number(data.packageId),
+      pm_group_id: data.pmGroupId ? Number(data.pmGroupId) : null,
+      pm_description: data.pmDescription || null,
+      facility_id: Number(data.facilityId),
+      service_notes: data.serviceNotes || null,
+      checksheet_notes: data.checksheetNotes || null,
+      additional_info: data.additionalInfo || null,
+      // For tasks, you'll need to create a junction table relationship
+      // since your schema has a single task_id column
+      task_id:
+        data.selectedTasks.length > 0 ? Number(data.selectedTasks[0]) : null,
+    };
+
+    // Send to Supabase
+    try {
+      
+      console.log(transformedData);
+
+      toast({
+        title: "Success",
+        description: "PM Schedule created successfully",
+        variant: "default",
+      });
+
+    } catch (error) {
+      toast({
+        title: "Error creating PM Schedule",
+        description: error?.message || "An error occurred",
+        variant: "destructive",
+      });
+    }
   };
 
   // Helper function to render error messages
@@ -139,6 +203,10 @@ const CreatePMSchedulePage = () => {
       )
     );
   };
+
+  if (tasksLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -214,7 +282,7 @@ const CreatePMSchedulePage = () => {
                     <SelectValue placeholder="Select priority" />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockData.priorities.map((priority) => (
+                    {priorities?.map((priority) => (
                       <SelectItem key={priority.id} value={String(priority.id)}>
                         {priority.name}
                       </SelectItem>
@@ -237,7 +305,7 @@ const CreatePMSchedulePage = () => {
                     <SelectValue placeholder="Select work center" />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockData.workCenters.map((center) => (
+                    {workCenters?.map((center) => (
                       <SelectItem key={center.id} value={String(center.id)}>
                         {center.name}
                       </SelectItem>
@@ -260,7 +328,7 @@ const CreatePMSchedulePage = () => {
                     <SelectValue placeholder="Select discipline" />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockData.disciplines.map((discipline) => (
+                    {disciplines?.map((discipline) => (
                       <SelectItem
                         key={discipline.id}
                         value={String(discipline.id)}
@@ -287,7 +355,7 @@ const CreatePMSchedulePage = () => {
                     <SelectValue placeholder="Select frequency" />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockData.frequencies.map((frequency) => (
+                    {frequencies?.map((frequency) => (
                       <SelectItem
                         key={frequency.id}
                         value={String(frequency.id)}
@@ -305,10 +373,12 @@ const CreatePMSchedulePage = () => {
                   Tasks<span className="text-red-500 ml-1">*</span>
                 </Label>
                 <SimpleMultiSelect
-                  options={mockData.tasks.map((task) => ({
-                    value: String(task.id),
-                    label: task.name,
-                  }))}
+                  options={
+                    tasks?.map((task) => ({
+                      value: String(task.id),
+                      label: task.task_name,
+                    })) || []
+                  }
                   selected={selectedTasks}
                   onChange={(selected) => setValue("selectedTasks", selected)}
                   placeholder="Select tasks"
@@ -329,9 +399,9 @@ const CreatePMSchedulePage = () => {
                     <SelectValue placeholder="Select asset" />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockData.assets.map((asset) => (
+                    {assets?.map((asset) => (
                       <SelectItem key={asset.id} value={String(asset.id)}>
-                        {asset.name}
+                        {asset.asset_name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -346,9 +416,9 @@ const CreatePMSchedulePage = () => {
                     <SelectValue placeholder="Select system" />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockData.systems.map((system) => (
+                    {systems?.map((system) => (
                       <SelectItem key={system.id} value={String(system.id)}>
-                        {system.name}
+                        {system.system_name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -367,9 +437,9 @@ const CreatePMSchedulePage = () => {
                     <SelectValue placeholder="Select package" />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockData.packages.map((pkg) => (
+                    {packages?.map((pkg) => (
                       <SelectItem key={pkg.id} value={String(pkg.id)}>
-                        {pkg.name}
+                        {pkg.package_name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -384,7 +454,7 @@ const CreatePMSchedulePage = () => {
                     <SelectValue placeholder="Select PM group" />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockData.pmGroups.map((group) => (
+                    {pmGroups?.map((group) => (
                       <SelectItem key={group.id} value={String(group.id)}>
                         {group.name}
                       </SelectItem>
@@ -406,9 +476,9 @@ const CreatePMSchedulePage = () => {
                     <SelectValue placeholder="Select facility" />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockData.facilities.map((facility) => (
+                    {facilities?.map((facility) => (
                       <SelectItem key={facility.id} value={String(facility.id)}>
-                        {facility.name}
+                        {facility.location_name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -427,7 +497,7 @@ const CreatePMSchedulePage = () => {
                 />
               </div>
 
-              <div className="space-y-2 md:col-span-2 lg:col-span-3">
+              {/* <div className="space-y-2 md:col-span-2 lg:col-span-3">
                 <Label htmlFor="serviceNotes">Service Notes</Label>
                 <Textarea
                   id="serviceNotes"
@@ -435,9 +505,9 @@ const CreatePMSchedulePage = () => {
                   className="min-h-[100px]"
                   {...register("serviceNotes")}
                 />
-              </div>
+              </div> */}
 
-              <div className="space-y-2 md:col-span-2 lg:col-span-3">
+              {/* <div className="space-y-2 md:col-span-2 lg:col-span-3">
                 <Label htmlFor="checksheetNotes">Checksheet Notes</Label>
                 <Textarea
                   id="checksheetNotes"
@@ -445,9 +515,9 @@ const CreatePMSchedulePage = () => {
                   className="min-h-[100px]"
                   {...register("checksheetNotes")}
                 />
-              </div>
+              </div> */}
 
-              <div className="space-y-2 md:col-span-2 lg:col-span-3">
+              {/* <div className="space-y-2 md:col-span-2 lg:col-span-3">
                 <Label htmlFor="additionalInfo">Additional Information</Label>
                 <Textarea
                   id="additionalInfo"
@@ -455,7 +525,7 @@ const CreatePMSchedulePage = () => {
                   className="min-h-[100px]"
                   {...register("additionalInfo")}
                 />
-              </div>
+              </div> */}
             </div>
 
             <div className="flex justify-end gap-4 pt-6">

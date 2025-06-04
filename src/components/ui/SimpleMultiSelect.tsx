@@ -16,7 +16,7 @@ export type Option = {
 };
 
 interface MultiSelectProps {
-  options: Option[];
+  options?: Option[]; // Make optional
   selected: string[];
   onChange: (value: string[]) => void;
   placeholder?: string;
@@ -26,7 +26,7 @@ interface MultiSelectProps {
 }
 
 export function SimpleMultiSelect({
-  options,
+  options = [], // Default to empty array
   selected = [],
   onChange,
   placeholder = "Select options",
@@ -37,13 +37,17 @@ export function SimpleMultiSelect({
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
 
-  const filteredOptions = options.filter(option =>
-    option.label.toLowerCase().includes(search.toLowerCase())
-  );
+  // Safe filtering with fallback
+  const filteredOptions = React.useMemo(() => {
+    if (!options || !Array.isArray(options)) return [];
+    return options.filter((option) =>
+      option?.label?.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [options, search]);
 
   const handleSelect = (value: string) => {
     if (selected.includes(value)) {
-      onChange(selected.filter(item => item !== value));
+      onChange(selected.filter((item) => item !== value));
     } else {
       onChange([...selected, value]);
     }
@@ -51,7 +55,7 @@ export function SimpleMultiSelect({
 
   const handleRemove = (value: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    onChange(selected.filter(item => item !== value));
+    onChange(selected.filter((item) => item !== value));
   };
 
   const clearAll = (e: React.MouseEvent) => {
@@ -59,12 +63,37 @@ export function SimpleMultiSelect({
     onChange([]);
   };
 
+  // Show loading state if options are not loaded yet
+  if (!options || options.length === 0) {
+    return (
+      <div className={cn("flex flex-col space-y-1", className)}>
+        {label && (
+          <label className="text-xs font-medium text-muted-foreground">
+            {label}
+          </label>
+        )}
+        <div
+          className={cn(
+            "flex min-h-10 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm",
+            "text-muted-foreground"
+          )}
+        >
+          <span>Loading options...</span>
+          <ChevronsUpDown className="h-3.5 w-3.5 opacity-50" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={cn("flex flex-col space-y-1", className)}>
-      {label && <label className="text-xs font-medium text-muted-foreground">{label}</label>}
+      {label && (
+        <label className="text-xs font-medium text-muted-foreground">
+          {label}
+        </label>
+      )}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          {/* Changed from Button to div to avoid nesting buttons */}
           <div
             role="combobox"
             aria-expanded={open}
@@ -78,16 +107,20 @@ export function SimpleMultiSelect({
             )}
           >
             <div className="flex items-center truncate">
-              {icon && <span className="mr-2 shrink-0 text-muted-foreground">{icon}</span>}
+              {icon && (
+                <span className="mr-2 shrink-0 text-muted-foreground">
+                  {icon}
+                </span>
+              )}
               {selected.length > 0 ? (
                 <div className="flex gap-1 items-center max-w-[250px] overflow-hidden">
                   {selected.length <= 2 ? (
-                    selected.map(value => {
-                      const option = options.find(opt => opt.value === value);
+                    selected.map((value) => {
+                      const option = options.find((opt) => opt.value === value);
                       return (
-                        <Badge 
-                          key={value} 
-                          variant="secondary" 
+                        <Badge
+                          key={value}
+                          variant="secondary"
                           className="mr-1 truncate max-w-[200px]"
                           onClick={(e) => handleRemove(value, e)}
                         >
@@ -107,7 +140,6 @@ export function SimpleMultiSelect({
             </div>
             <div className="flex items-center">
               {selected.length > 0 && (
-                // Changed to div instead of Button
                 <div
                   onClick={clearAll}
                   className="h-auto p-0 px-1 mr-1 text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
@@ -133,11 +165,11 @@ export function SimpleMultiSelect({
             <div className="max-h-64 overflow-auto">
               {filteredOptions.length === 0 ? (
                 <div className="py-2 text-center text-sm text-muted-foreground">
-                  No options found
+                  {search ? "No options found" : "No options available"}
                 </div>
               ) : (
                 <div className="space-y-1">
-                  {filteredOptions.map(option => (
+                  {filteredOptions.map((option) => (
                     <div
                       key={option.value}
                       onClick={() => {

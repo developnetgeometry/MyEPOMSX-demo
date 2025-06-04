@@ -687,7 +687,7 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route
-        path="/maintain/pm-schedule/new"
+        path="/maintain/pm-schedule/create"
         element={
           <ProtectedRoute>
             <Layout>
