@@ -10,6 +10,7 @@ import { inventory } from '@/data/sampleData';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { toast } from 'sonner';
+import { formatCurrency } from '@/utils/formatters';
 
 const InventoryDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -129,11 +130,11 @@ const InventoryDetailPage: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Unit Price</h3>
-                  <p className="text-base">${inventoryItem.unitPrice.toFixed(2)}</p>
+                  <p className="text-base">{formatCurrency(inventoryItem.unitPrice)}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Total Price</h3>
-                  <p className="text-base">${inventoryItem.totalPrice.toFixed(2)}</p>
+                  <p className="text-base">{formatCurrency(inventoryItem.totalPrice)}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Rack No</h3>
@@ -167,7 +168,7 @@ const InventoryDetailPage: React.FC = () => {
                         <TableCell>{item.date}</TableCell>
                         <TableCell>{item.po}</TableCell>
                         <TableCell>{item.quantity}</TableCell>
-                        <TableCell>${item.totalPrice.toFixed(2)}</TableCell>
+                        <TableCell>{formatCurrency(item.totalPrice)}</TableCell>
                         <TableCell>{item.receiveBy}</TableCell>
                       </TableRow>
                     ))}
@@ -217,8 +218,8 @@ const InventoryDetailPage: React.FC = () => {
                         <TableCell>{item.date}</TableCell>
                         <TableCell>{item.workOrderNo}</TableCell>
                         <TableCell>{item.quantity}</TableCell>
-                        <TableCell>${item.unitPrice.toFixed(2)}</TableCell>
-                        <TableCell>${item.total.toFixed(2)}</TableCell>
+                        <TableCell>{formatCurrency(item.unitPrice)}</TableCell>
+                        <TableCell>{formatCurrency(item.total)}</TableCell>
                         <TableCell>{item.store}</TableCell>
                         <TableCell>{item.issuanceName}</TableCell>
                         <TableCell>{item.remarks}</TableCell>
@@ -269,8 +270,8 @@ const InventoryDetailPage: React.FC = () => {
                         <TableCell>{item.date}</TableCell>
                         <TableCell>{item.workOrder}</TableCell>
                         <TableCell>{item.quantity}</TableCell>
-                        <TableCell>${item.price.toFixed(2)}</TableCell>
-                        <TableCell>${item.total.toFixed(2)}</TableCell>
+                        <TableCell>{formatCurrency(item.price)}</TableCell>
+                        <TableCell>{formatCurrency(item.total)}</TableCell>
                         <TableCell>{item.returnName}</TableCell>
                         <TableCell>{item.remarks}</TableCell>
                       </TableRow>
@@ -320,8 +321,8 @@ const InventoryDetailPage: React.FC = () => {
                         <TableCell>{item.date}</TableCell>
                         <TableCell>{item.quantity}</TableCell>
                         <TableCell>{item.totalQuantity}</TableCell>
-                        <TableCell>${item.price.toFixed(2)}</TableCell>
-                        <TableCell>${item.total.toFixed(2)}</TableCell>
+                        <TableCell>{formatCurrency(item.price)}</TableCell>
+                        <TableCell>{formatCurrency(item.total)}</TableCell>
                         <TableCell>{item.authorizedEmployee}</TableCell>
                         <TableCell>{item.remarks}</TableCell>
                       </TableRow>
@@ -371,7 +372,7 @@ const InventoryDetailPage: React.FC = () => {
                         <TableCell>{item.fromStore}</TableCell>
                         <TableCell>{item.toStore}</TableCell>
                         <TableCell>{item.quantity}</TableCell>
-                        <TableCell>${item.price.toFixed(2)}</TableCell>
+                        <TableCell>{formatCurrency(item.price)}</TableCell>
                         <TableCell>{item.employee}</TableCell>
                         <TableCell>{item.remarks}</TableCell>
                         <TableCell>{item.transferDate}</TableCell>
@@ -425,8 +426,8 @@ const InventoryDetailPage: React.FC = () => {
                         <TableCell>{item.transactionDate}</TableCell>
                         <TableCell>{item.transactionNo}</TableCell>
                         <TableCell>{item.quantity}</TableCell>
-                        <TableCell>${item.price.toFixed(2)}</TableCell>
-                        <TableCell>${item.total.toFixed(2)}</TableCell>
+                        <TableCell>{formatCurrency(item.price)}</TableCell>
+                        <TableCell>{formatCurrency(item.total)}</TableCell>
                         <TableCell>{item.store}</TableCell>
                         <TableCell>{item.transactionUser}</TableCell>
                         <TableCell>{item.remarks}</TableCell>

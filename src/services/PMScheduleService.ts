@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabaseClient";
 import {
-  createPMScheduleDTO,
+  createPMSchedule,
   createPMWorkOrder,
   MinAcceptanceCriteria,
   PMSchedule,
@@ -53,8 +53,8 @@ export const PMScheduleService = {
   },
 
   async createPMSchedule(
-    payload: createPMScheduleDTO
-  ): Promise<createPMScheduleDTO> {
+    payload: createPMSchedule
+  ): Promise<createPMSchedule> {
     const { data, error } = await supabase
       .from("e_pm_schedule")
       .insert(payload)
@@ -135,7 +135,7 @@ export const PMScheduleService = {
 
     // Generate schedules for each asset
     const schedules = assets.flatMap((asset) => {
-      const schedulesForAsset: createPMScheduleDTO[] = [];
+      const schedulesForAsset: createPMSchedule[] = [];
       const startDate = new Date(payload.start_date);
       const endDate = new Date(payload.end_date);
 
@@ -310,6 +310,27 @@ export const PMScheduleService = {
 
     return data || [];
   },
+
+  async getPMGroupOptions(): Promise<any> {
+    const { data, error } = await supabase.from("e_pm_group").select("*");
+
+    if (error) {
+      throw new Error(`Error fetching PM schedules: ${error.message}`);
+    }
+
+    return data || [];
+  },
+
+  async getPMSCEGroupOptions(): Promise<any> {
+    const { data, error } = await supabase.from("e_asset_sce").select("*");
+
+    if (error) {
+      throw new Error(`Error fetching PM schedules: ${error.message}`);
+    }
+
+    return data || [];
+  },
+
   async getPMScheduleCustomTasks(pmScheduleId: number): Promise<any[]> {
     // @ts-ignore
     const { data, error } = await supabase

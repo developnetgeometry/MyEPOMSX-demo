@@ -426,7 +426,6 @@ const PMSchedulePage: React.FC = () => {
     navigate(`/maintain/pm-schedule/${row.id}`);
   };
 
-  // Fixed the handleCreatePM function
   const handleCreatePM = async (values: z.infer<typeof pmFormSchema>) => {
     try {
       await createPMScheduleMutation.mutateAsync({
@@ -581,7 +580,7 @@ const PMSchedulePage: React.FC = () => {
               isSearching || isGenerating || createPMScheduleMutation.isPending
             }
             className="flex items-center gap-2"
-            onClick={() => setIsCreatePMDialogOpen(true)}
+            onClick={() => navigate("/maintain/pm-schedule/create")}
           >
             <Plus className="h-4 w-4" /> Create PM Schedule
           </Button>
@@ -648,16 +647,6 @@ const PMSchedulePage: React.FC = () => {
         </div>
       )}
 
-      <ManageDialog
-        open={isCreatePMDialogOpen}
-        onOpenChange={setIsCreatePMDialogOpen}
-        title="Create PM Schedule"
-        formSchema={pmFormSchema}
-        defaultValues={pmDefaultValues}
-        formFields={pmFormFields}
-        onSubmit={handleCreatePM}
-        isProcessing={createPMScheduleMutation.isPending}
-      />
     </div>
   );
 };

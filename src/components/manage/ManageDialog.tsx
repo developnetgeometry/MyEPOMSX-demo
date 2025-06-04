@@ -26,6 +26,7 @@ interface ManageDialogProps {
     richText?: boolean;
     section?: "main" | "dates" | "maintenance" | "additional";
     width?: "full" | "half";
+    isCurrencyField?: boolean;
   }[];
   onSubmit: (values: any) => void;
   isEdit?: boolean;
