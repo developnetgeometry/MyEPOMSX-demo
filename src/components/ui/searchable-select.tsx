@@ -1,6 +1,17 @@
 import React from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -31,7 +42,9 @@ export function SearchableSelect<T>({
 
   // Filter options based on the search query
   const filteredOptions = options.filter((item) =>
-    searchBy(item).some((field) => field.toLowerCase().includes(search.toLowerCase()))
+    searchBy(item).some((field) =>
+      field?.toLowerCase().includes(search.toLowerCase())
+    )
   );
 
   // Get the label of the selected value
@@ -48,13 +61,19 @@ export function SearchableSelect<T>({
           className="w-full justify-between border-gray-300 text-black font-normal hover:bg-gray-50 hover:text-black"
           disabled={disabled}
         >
-          <span className="truncate overflow-hidden whitespace-nowrap">{selectedLabel}</span>
+          <span className="truncate overflow-hidden whitespace-nowrap">
+            {selectedLabel}
+          </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0">
         <Command>
-          <CommandInput placeholder={`Search ${placeholder}...`} value={search} onValueChange={setSearch} />
+          <CommandInput
+            placeholder={`Search ${placeholder}...`}
+            value={search}
+            onValueChange={setSearch}
+          />
           <CommandList>
             <CommandEmpty>No options found.</CommandEmpty>
             <CommandGroup>
@@ -73,9 +92,10 @@ export function SearchableSelect<T>({
                       value === getValue(item) ? "opacity-100" : "opacity-0"
                     )}
                   />
-                  <span className="truncate overflow-hidden whitespace-nowrap">{getLabel(item)}</span>
+                  <span className="truncate overflow-hidden whitespace-nowrap">
+                    {getLabel(item)}
+                  </span>
                 </CommandItem>
-
               ))}
             </CommandGroup>
           </CommandList>

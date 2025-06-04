@@ -26,8 +26,10 @@ import {
   useDisciplineOptions,
   useFacilityOptions,
   useFrequencyOptions,
+  useMaintenanceOptions,
   usePackageOptions,
   usePMGroupOptions,
+  usePMSCEGroupOptions,
   usePriorityOptions,
   useSystemOptions,
   useTaskOptions,
@@ -35,63 +37,10 @@ import {
 } from "@/hooks/queries/usePMSchedule";
 import { useToast } from "@/hooks/use-toast";
 
-// Mock data for demonstration
-const mockData = {
-  priorities: [
-    { id: 1, name: "High" },
-    { id: 2, name: "Medium" },
-    { id: 3, name: "Low" },
-  ],
-  workCenters: [
-    { id: 1, name: "Work Center 1" },
-    { id: 2, name: "Work Center 2" },
-    { id: 3, name: "Work Center 3" },
-  ],
-  disciplines: [
-    { id: 1, name: "Mechanical" },
-    { id: 2, name: "Electrical" },
-    { id: 3, name: "HVAC" },
-  ],
-  frequencies: [
-    { id: 1, name: "Daily" },
-    { id: 2, name: "Weekly" },
-    { id: 3, name: "Monthly" },
-    { id: 4, name: "Quarterly" },
-    { id: 5, name: "Yearly" },
-  ],
-  assets: [
-    { id: 1, name: "CNC Machine" },
-    { id: 2, name: "Hydraulic Press" },
-    { id: 3, name: "Conveyor System" },
-  ],
-  systems: [
-    { id: 1, name: "Production Line" },
-    { id: 2, name: "HVAC System" },
-    { id: 3, name: "Electrical System" },
-  ],
-  packages: [
-    { id: 1, name: "Basic Maintenance" },
-    { id: 2, name: "Comprehensive Check" },
-    { id: 3, name: "Full Overhaul" },
-  ],
-  pmGroups: [
-    { id: 1, name: "Group A" },
-    { id: 2, name: "Group B" },
-    { id: 3, name: "Group C" },
-  ],
-  tasks: [
-    { id: 1, name: "Inspect electrical connections" },
-    { id: 2, name: "Lubricate moving parts" },
-    { id: 3, name: "Check fluid levels" },
-    { id: 4, name: "Test safety features" },
-    { id: 5, name: "Clean and calibrate sensors" },
-  ],
-  facilities: [
-    { id: 1, name: "Main Facility" },
-    { id: 2, name: "North Building" },
-    { id: 3, name: "Warehouse" },
-  ],
-};
+interface PmSceGroup {
+  id: number;
+  sce_code: string;
+}
 
 // Zod validation schema
 const pmScheduleSchema = z.object({
@@ -103,9 +52,11 @@ const pmScheduleSchema = z.object({
   disciplineId: z.string().min(1, "Discipline is required"),
   frequencyId: z.string().min(1, "Frequency is required"),
   assetId: z.string().min(1, "Asset is required"),
+  maintenanceId: z.string().min(1, "Maintenance is required"),
   systemId: z.string().optional(),
   packageId: z.string().min(1, "Package is required"),
   pmGroupId: z.string().optional(),
+  pmSceGroupId: z.string().optional(),
   pmDescription: z.string().optional(),
   facilityId: z.string().min(1, "Facility is required"),
   serviceNotes: z.string().optional(),
@@ -126,6 +77,8 @@ const CreatePMSchedulePage = () => {
   const { data: assets } = useAssetOptions();
   const { data: systems } = useSystemOptions();
   const { data: pmGroups } = usePMGroupOptions();
+  const { data: pmSceGroups } = usePMSCEGroupOptions();
+  const { data: maintenances } = useMaintenanceOptions();
   const { data: facilities } = useFacilityOptions();
   const { toast } = useToast();
   const createPMScheduleMutation = useCreatePMSchedule();
@@ -145,7 +98,7 @@ const CreatePMSchedulePage = () => {
       selectedTasks: [],
     },
   });
-
+  const [selectedPmSceGroupId, setSelectedPmSceGroupId] = useState("");
   // Watch selectedTasks to handle multi-select
   const selectedTasks = watch("selectedTasks");
 
@@ -159,11 +112,13 @@ const CreatePMSchedulePage = () => {
       priority_id: Number(data.priorityId),
       work_center_id: Number(data.workCenterId),
       discipline_id: Number(data.disciplineId),
+      maintenance_id: Number(data.maintenanceId),
       frequency_id: Number(data.frequencyId),
       asset_id: Number(data.assetId),
       system_id: data.systemId ? Number(data.systemId) : null,
       package_id: Number(data.packageId),
       pm_group_id: data.pmGroupId ? Number(data.pmGroupId) : null,
+      pm_sce_group_id: data.pmSceGroupId ? Number(data.pmSceGroupId) : null,
       pm_description: data.pmDescription || null,
       facility_id: Number(data.facilityId),
       service_notes: data.serviceNotes || null,
@@ -177,16 +132,25 @@ const CreatePMSchedulePage = () => {
 
     // Send to Supabase
     try {
-      
-      console.log(transformedData);
-
-      toast({
-        title: "Success",
-        description: "PM Schedule created successfully",
-        variant: "default",
+      await createPMScheduleMutation.mutateAsync(transformedData, {
+        onSuccess: () => {
+          toast({
+            title: "Success",
+            description: "PM Schedule created successfully",
+            variant: "default",
+          });
+        },
+        onError: (error: any) => {
+          console.log("Error creating PM Schedule:", error);
+          toast({
+            title: "Error creating PM Schedule",
+            description: error?.message || "An error occurred",
+            variant: "destructive",
+          });
+        },
       });
-
     } catch (error) {
+      console.log("Error creating PM Schedule:", error);
       toast({
         title: "Error creating PM Schedule",
         description: error?.message || "An error occurred",
@@ -293,6 +257,32 @@ const CreatePMSchedulePage = () => {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="maintenanceId">
+                  Maintenance<span className="text-red-500 ml-1">*</span>
+                </Label>
+                <Select
+                  onValueChange={(value) => setValue("maintenanceId", value)}
+                >
+                  <SelectTrigger
+                    className={errors.maintenanceId ? "border-red-500" : ""}
+                  >
+                    <SelectValue placeholder="Select maintenance" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {maintenances?.map((maintenance) => (
+                      <SelectItem
+                        key={maintenance.id}
+                        value={String(maintenance.id)}
+                      >
+                        {maintenance.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {renderError(errors.maintenanceId)}
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="workCenterId">
                   Work Center<span className="text-red-500 ml-1">*</span>
                 </Label>
@@ -386,7 +376,28 @@ const CreatePMSchedulePage = () => {
                 />
                 {renderError(errors.selectedTasks)}
               </div>
-
+              <div className="space-y-2">
+                <Label htmlFor="facilityId">
+                  Facility<span className="text-red-500 ml-1">*</span>
+                </Label>
+                <Select
+                  onValueChange={(value) => setValue("facilityId", value)}
+                >
+                  <SelectTrigger
+                    className={errors.facilityId ? "border-red-500" : ""}
+                  >
+                    <SelectValue placeholder="Select facility" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {facilities?.map((facility) => (
+                      <SelectItem key={facility.id} value={String(facility.id)}>
+                        {facility.location_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {renderError(errors.facilityId)}
+              </div>
               {/* Asset and System */}
               <div className="space-y-2">
                 <Label htmlFor="assetId">
@@ -464,26 +475,24 @@ const CreatePMSchedulePage = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="facilityId">
-                  Facility<span className="text-red-500 ml-1">*</span>
+                <Label htmlFor="pmSceGroupId">
+                  PM SCE Code<span className="text-red-500 ml-1">*</span>
                 </Label>
-                <Select
-                  onValueChange={(value) => setValue("facilityId", value)}
-                >
-                  <SelectTrigger
-                    className={errors.facilityId ? "border-red-500" : ""}
-                  >
-                    <SelectValue placeholder="Select facility" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {facilities?.map((facility) => (
-                      <SelectItem key={facility.id} value={String(facility.id)}>
-                        {facility.location_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {renderError(errors.facilityId)}
+                <SearchableSelect
+                  options={pmSceGroups || []}
+                  value={selectedPmSceGroupId || null}
+                  onChange={(selected) => {
+                    const value = selected ? String(selected) : "";
+                    setSelectedPmSceGroupId(value);
+                    setValue("pmSceGroupId", value); // Still update the form for validation
+                  }}
+                  placeholder="Select PM SCE Code"
+                  searchBy={(item: PmSceGroup) => [item.sce_code || ""].filter(Boolean)}
+                  getLabel={(item: PmSceGroup) => item.sce_code || ""}
+                  getValue={(item: PmSceGroup) => String(item.id)}
+                  disabled={false}
+                />
+                {renderError(errors.pmSceGroupId)}
               </div>
 
               {/* Description and Notes */}

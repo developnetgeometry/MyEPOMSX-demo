@@ -321,6 +321,16 @@ export const PMScheduleService = {
     return data || [];
   },
 
+  async getPMSCEGroupOptions(): Promise<any> {
+    const { data, error } = await supabase.from("e_asset_sce").select("*");
+
+    if (error) {
+      throw new Error(`Error fetching PM schedules: ${error.message}`);
+    }
+
+    return data || [];
+  },
+
   async getPMScheduleCustomTasks(pmScheduleId: number): Promise<any[]> {
     // @ts-ignore
     const { data, error } = await supabase

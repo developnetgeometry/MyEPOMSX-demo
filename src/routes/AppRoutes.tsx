@@ -555,16 +555,6 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route
-        path="/manage/inventory/item/:id"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <InventoryItemDetailPage />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path="/manage/inventory/create-po"
         element={
           <ProtectedRoute>
