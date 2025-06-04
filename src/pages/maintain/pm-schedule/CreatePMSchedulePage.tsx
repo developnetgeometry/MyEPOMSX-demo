@@ -62,7 +62,7 @@ const pmScheduleSchema = z.object({
   serviceNotes: z.string().optional(),
   checksheetNotes: z.string().optional(),
   additionalInfo: z.string().optional(),
-  selectedTasks: z.array(z.string()).min(1, "At least one task is required"),
+  selectedTask: z.string().min(1, "At least one task is required"),
 });
 
 type PMScheduleFormValues = z.infer<typeof pmScheduleSchema>;
@@ -95,12 +95,12 @@ const CreatePMSchedulePage = () => {
     resolver: zodResolver(pmScheduleSchema),
     defaultValues: {
       isActive: true,
-      selectedTasks: [],
+      selectedTask: "",
     },
   });
   const [selectedPmSceGroupId, setSelectedPmSceGroupId] = useState("");
   // Watch selectedTasks to handle multi-select
-  const selectedTasks = watch("selectedTasks");
+  const selectedTasks = watch("selectedTask");
 
   // Handle form submission
   const onSubmit = async (data: PMScheduleFormValues) => {
@@ -124,10 +124,7 @@ const CreatePMSchedulePage = () => {
       service_notes: data.serviceNotes || null,
       checksheet_notes: data.checksheetNotes || null,
       additional_info: data.additionalInfo || null,
-      // For tasks, you'll need to create a junction table relationship
-      // since your schema has a single task_id column
-      task_id:
-        data.selectedTasks.length > 0 ? Number(data.selectedTasks[0]) : null,
+      task_id: Number(data.selectedTask) || null,
     };
 
     // Send to Supabase
@@ -362,19 +359,23 @@ const CreatePMSchedulePage = () => {
                 <Label htmlFor="selectedTasks">
                   Tasks<span className="text-red-500 ml-1">*</span>
                 </Label>
-                <SimpleMultiSelect
-                  options={
-                    tasks?.map((task) => ({
-                      value: String(task.id),
-                      label: task.task_name,
-                    })) || []
-                  }
-                  selected={selectedTasks}
-                  onChange={(selected) => setValue("selectedTasks", selected)}
-                  placeholder="Select tasks"
-                  className={errors.selectedTasks ? "border-red-500" : ""}
-                />
-                {renderError(errors.selectedTasks)}
+                <Select
+                  onValueChange={(value) => setValue("selectedTask", value)}
+                >
+                  <SelectTrigger
+                    className={errors.selectedTask ? "border-red-500" : ""}
+                  >
+                    <SelectValue placeholder="Select tasks" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tasks?.map((task) => (
+                      <SelectItem key={task.id} value={String(task.id)}>
+                        {task.task_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {renderError(errors.selectedTask)}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="facilityId">
