@@ -4,7 +4,6 @@ import { AuthProvider } from "./contexts/AuthContext";
 import AppRoutes from "./routes/AppRoutes";
 import { Toaster } from "@/components/ui/sonner";
 import "./App.css";
-import CreatePMSchedulePage from './pages/maintain/pm-schedule/CreatePMSchedulePage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
