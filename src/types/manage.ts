@@ -56,7 +56,9 @@ export interface System {
   system_name: string | null;
   is_active: boolean | null;
   // Add related data
-  facility?: Facility | null;
+  facility?: {
+    location_name: string;
+  };
 }
 
 // Package Types
