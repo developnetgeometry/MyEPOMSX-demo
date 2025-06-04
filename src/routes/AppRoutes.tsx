@@ -70,9 +70,11 @@ import PMSchedulePage from "@/pages/maintain/pm-schedule/PMSchedulePage";
 import PMScheduleDetailPage from "@/pages/maintain/pm-schedule/PMScheduleDetailPage";
 import TaskLibraryPage from "@/pages/maintain/TaskLibraryPage";
 import TaskLibraryDetailPage from "@/pages/maintain/TaskLibraryDetailPage";
+
+// Work Orders Pages
 import WOHistoryPage from "@/pages/work-orders/work-order-history/WOHistoryPage";
 import WOHistoryDetailPage from "@/pages/work-orders/work-order-history/WOHistoryDetailPage";
-import WorkOrderDetailPage from '@/pages/work-orders/work-order-list/WorkOrderListDetailPage';
+import WorkOrderDetailPage from "@/pages/work-orders/work-order-list/WorkOrderListDetailPage";
 import WorkOrderListPage from "@/pages/work-orders/work-order-list/WorkOrderListPage";
 import WorkRequestPage from "@/pages/work-orders/work-request/WorkRequestPage";
 import WorkRequestDetailPage from "@/pages/work-orders/work-request/WorkRequestDetailPage";
@@ -715,6 +717,7 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
+
       {/* Work Orders Routes */}
       <Route
         path="/work-orders/work-request"
@@ -726,7 +729,6 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/work-orders/work-request/:id"
         element={
@@ -737,7 +739,6 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/work-orders/work-order-list"
         element={
@@ -748,7 +749,6 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/work-orders/work-order-list/:id"
         element={
@@ -759,7 +759,6 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/work-orders/wo-history"
         element={
@@ -770,7 +769,6 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/work-orders/wo-history/:id"
         element={
@@ -781,7 +779,6 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-
 
       {/* Measure Routes */}
       <Route
