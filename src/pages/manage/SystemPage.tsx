@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable, { Column } from "@/components/shared/DataTable";
@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { System } from "@/types/manage";
 import {
   useCreateSystem,
@@ -25,8 +25,34 @@ import {
 import { useLoadingState } from "@/hooks/use-loading-state";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useFacilityOptions } from "@/hooks/queries/usePMSchedule";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const systemFormSchema = z.object({
+  facility_id: z.number().min(1, "Please select a facility"),
+  system_code: z.string().min(1, "System code is required"),
+  system_name: z.string().min(1, "System name is required"),
+  is_active: z.boolean().default(true),
+});
+
+type SystemFormValues = {
+  facility_id: number;
+  system_code: string;
+  system_name: string;
+  is_active: boolean;
+}
 
 const SystemPage: React.FC = () => {
+  const { data: facilities } = useFacilityOptions();
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -42,7 +68,6 @@ const SystemPage: React.FC = () => {
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentItem, setCurrentItem] = useState<System | null>(null);
-  
 
   // Search state
   const [searchTerm, setSearchTerm] = useState("");
@@ -55,6 +80,28 @@ const SystemPage: React.FC = () => {
   const addSystemMutation = useCreateSystem();
   const updateSystemMutation = useUpdateSystem();
   const deleteSystemMutation = useDeleteSystem();
+
+  const form = useForm<SystemFormValues>({
+    resolver: zodResolver(systemFormSchema),
+    defaultValues: {
+      facility_id: null as unknown as number, // TypeScript workaround
+      system_code: "",
+      system_name: "",
+      is_active: true,
+    },
+  });
+  const facilityId = form.watch("facility_id");
+  const systemCode = form.watch("system_code");
+
+  // Compute system number
+  const systemNumber = useMemo(() => {
+    if (!facilityId || !systemCode) return "";
+
+    const selectedFacility = facilities.find((f) => f.id === facilityId);
+    if (!selectedFacility) return "";
+
+    return `${selectedFacility.location_code}-${systemCode}`;
+  }, [facilityId, systemCode, facilities]);
 
   useEffect(() => {
     if (!systems) return;
@@ -82,6 +129,24 @@ const SystemPage: React.FC = () => {
     }
   }, [systems, searchTerm]);
 
+  useEffect(() => {
+    if (!isDialogOpen) {
+      form.reset();
+    }
+  }, [isDialogOpen]);
+
+  // Initialize form in edit mode
+  useEffect(() => {
+    if (isDialogOpen && isEditMode && currentItem) {
+      form.reset({
+        facility_id: currentItem.facility_id,
+        system_code: currentItem.system_code,
+        system_name: currentItem.system_name || "",
+        is_active: currentItem.is_active,
+      });
+    }
+  }, [isDialogOpen, isEditMode, currentItem]);
+
   const handleAddNew = () => {
     setIsEditMode(false);
     setCurrentItem(null);
@@ -92,13 +157,13 @@ const SystemPage: React.FC = () => {
     setCurrentItem(item);
     setNewSystem({
       system_code: item.system_code,
-      system_name: item.system_name || '',
+      system_name: item.system_name || "",
       is_active: item.is_active,
       facility_id: item.facility_id,
       system_no: item.system_no,
     });
     setIsDialogOpen(true);
-};
+  };
 
   const handleDelete = async (item: System) => {
     withLoading(async () => {
@@ -123,54 +188,26 @@ const SystemPage: React.FC = () => {
     setSearchTerm(query);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSubmit = async (values: SystemFormValues) => {
     withLoading(async () => {
       try {
-        // Validate required fields
-        if (!newSystem.system_code || !newSystem.system_name) {
-          toast({
-            title: "Validation Error",
-            description: "System ID and System Name are required",
-            variant: "destructive",
-          });
-          return;
-        }
+        const systemData = {
+          ...values,
+          system_no: systemNumber,
+        };
 
         if (isEditMode && currentItem) {
-          // Update existing system
-          const updatedSystem = {
+          await updateSystemMutation.mutateAsync({
             ...currentItem,
-            system_code: newSystem.system_code,
-            system_name: newSystem.system_name,
-            is_active: newSystem.is_active,
-            system_no: newSystem.system_no,
-          };
-
-          await updateSystemMutation.mutateAsync(updatedSystem);
-          toast({
-            title: "System updated successfully",
-            variant: "default",
+            ...systemData,
           });
+          toast({ title: "System updated successfully" });
         } else {
-          // Create new system
-          await addSystemMutation.mutateAsync(newSystem);
-          toast({
-            title: "System created successfully",
-            variant: "default",
-          });
+          await addSystemMutation.mutateAsync(systemData);
+          toast({ title: "System created successfully" });
         }
 
-        // Close dialog and reset form
         setIsDialogOpen(false);
-        setNewSystem({
-          system_code: "",
-          system_name: "",
-          is_active: true,
-          facility_id: null,
-          system_no: null,
-        });
       } catch (error: any) {
         toast({
           title: isEditMode ? "Error updating system" : "Error creating system",
@@ -198,10 +235,9 @@ const SystemPage: React.FC = () => {
       accessorKey: "system_no",
     },
     {
-      id: "is_active",
-      header: "Status",
-      accessorKey: "is_active",
-      cell: (original) => (original ? "Active" : "Inactive"),
+      id: "facility.location_name",
+      header: "Location",
+      accessorKey: "facility.location_name",
     },
   ];
 
@@ -230,9 +266,13 @@ const SystemPage: React.FC = () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Add New System</DialogTitle>
+            <DialogTitle>
+              {isEditMode ? "Edit System" : "Add New System"}
+            </DialogTitle>
             <DialogDescription>
-              Fill in the details to create a new system.
+              {isEditMode
+                ? "Update the system details."
+                : "Fill in the details to create a new system."}
             </DialogDescription>
           </DialogHeader>
           <Button
@@ -245,51 +285,92 @@ const SystemPage: React.FC = () => {
             <span className="sr-only">Close</span>
           </Button>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4"
+          >
+            {/* Facility Selection */}
             <div>
-              <Label htmlFor="system_code">System ID</Label>
+              <Label htmlFor="facility_id">Location <span className="text-red-500">*</span></Label>
+              <Controller
+                name="facility_id"
+                control={form.control}
+                render={({ field }) => (
+                  <Select
+                    onValueChange={(value) => field.onChange(parseInt(value))}
+                    value={field.value?.toString() || ""}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select location" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {facilities.map((facility) => (
+                        <SelectItem
+                          key={facility.id}
+                          value={facility.id.toString()}
+                        >
+                          {facility.location_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {form.formState.errors.facility_id && (
+                <p className="text-red-500 text-sm mt-1">
+                  {form.formState.errors.facility_id.message}
+                </p>
+              )}
+            </div>
+
+            {/* System Code */}
+            <div>
+              <Label htmlFor="system_code">System Code <span className="text-red-500">*</span></Label>
               <Input
                 id="system_code"
-                value={newSystem.system_code}
-                onChange={(e) =>
-                  setNewSystem({ ...newSystem, system_code: e.target.value })
-                }
-                required
-                placeholder="e.g. SYS006"
+                {...form.register("system_code")}
+                placeholder="Enter system code"
               />
+              {form.formState.errors.system_code && (
+                <p className="text-red-500 text-sm mt-1">
+                  {form.formState.errors.system_code.message}
+                </p>
+              )}
             </div>
 
+            {/* Computed System Number */}
             <div>
-              <Label htmlFor="system_name">System Name</Label>
-              <Input
-                id="system_name"
-                value={newSystem.system_name || ""}
-                onChange={(e) =>
-                  setNewSystem({ ...newSystem, system_name: e.target.value })
-                }
-                required
-                placeholder="System name"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="system_no">System Number</Label>
+              <Label htmlFor="system_no">System Number <span className="text-red-500">*</span></Label>
               <Input
                 id="system_no"
-                value={newSystem.system_no || ""}
-                onChange={(e) =>
-                  setNewSystem({ ...newSystem, system_no: e.target.value })
-                }
-                placeholder="System number"
+                value={systemNumber}
+                readOnly
+                placeholder="Will be generated automatically"
               />
             </div>
 
+            {/* System Name */}
+            <div>
+              <Label htmlFor="system_name">System Name <span className="text-red-500">*</span></Label>
+              <Input
+                id="system_name"
+                {...form.register("system_name")}
+                placeholder="Enter system name"
+              />
+              {form.formState.errors.system_name && (
+                <p className="text-red-500 text-sm mt-1">
+                  {form.formState.errors.system_name.message}
+                </p>
+              )}
+            </div>
+
+            {/* Active Status */}
             <div className="flex items-center space-x-3">
               <Checkbox
                 id="is_active"
-                checked={!!newSystem.is_active}
+                checked={form.watch("is_active")}
                 onCheckedChange={(checked) =>
-                  setNewSystem({ ...newSystem, is_active: checked === true })
+                  form.setValue("is_active", checked === true)
                 }
               />
               <Label htmlFor="is_active" className="cursor-pointer">
@@ -305,7 +386,12 @@ const SystemPage: React.FC = () => {
               >
                 Cancel
               </Button>
-              <Button type="submit">Create System</Button>
+              <Button type="submit" disabled={isProcessing}>
+                {isProcessing && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {isEditMode ? "Update System" : "Create System"}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>

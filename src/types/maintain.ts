@@ -132,10 +132,12 @@ export interface PMScheduleDetail extends PMSchedule {
   created_at?: string | null;
 }
 
-export type createPMScheduleDTO =
+export type createPMSchedule =
   Database["public"]["Tables"]["e_pm_schedule"]["Insert"];
-export type updatePMScheduleDTO =
+export type updatePMSchedule =
   Database["public"]["Tables"]["e_pm_schedule"]["Update"];
+
+
 
 export interface GeneratePMSchedule {
   id: string;

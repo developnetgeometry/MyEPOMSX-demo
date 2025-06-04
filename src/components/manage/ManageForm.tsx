@@ -38,6 +38,7 @@ interface ManageFormProps {
     richText?: boolean;
     section?: "main" | "dates" | "maintenance" | "additional";
     width?: "full" | "half";
+    isCurrencyField?: boolean;
   }[];
   onSubmit: (values: any) => void;
   isEdit?: boolean;
@@ -129,7 +130,7 @@ const ManageForm = ({
                         )}
                         <Input
                           type="number"
-                          step="0.01"
+                          step={field.isCurrencyField ? 0.01 : 1}
                           {...formField}
                           onChange={(e) => formField.onChange(Number(e.target.value))}
                           disabled={isSubmitting}
@@ -256,7 +257,7 @@ const ManageForm = ({
                             )}
                             <Input
                               type="number"
-                              step="0.01"
+                              step={field.isCurrencyField ? 0.01 : 1}
                               {...formField}
                               onChange={(e) => formField.onChange(Number(e.target.value))}
                               disabled={isSubmitting}

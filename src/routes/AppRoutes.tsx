@@ -68,6 +68,7 @@ import SystemDetailPage from "@/pages/manage/SystemDetailPage";
 // Maintain Pages
 import PMSchedulePage from "@/pages/maintain/pm-schedule/PMSchedulePage";
 import PMScheduleDetailPage from "@/pages/maintain/pm-schedule/PMScheduleDetailPage";
+import CreatePMSchedulePage from '@/pages/maintain/pm-schedule/CreatePMSchedulePage';
 import TaskLibraryPage from "@/pages/maintain/TaskLibraryPage";
 import TaskLibraryDetailPage from "@/pages/maintain/TaskLibraryDetailPage";
 import WOHistoryPage from "@/pages/work-orders/work-order-history/WOHistoryPage";
@@ -554,16 +555,6 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route
-        path="/manage/inventory/item/:id"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <InventoryItemDetailPage />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path="/manage/inventory/create-po"
         element={
           <ProtectedRoute>
@@ -681,6 +672,16 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <Layout>
               <PMSchedulePage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/maintain/pm-schedule/create"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <CreatePMSchedulePage />
             </Layout>
           </ProtectedRoute>
         }

@@ -5,7 +5,7 @@ export const systemService = {
   async getSystems(isActive?: boolean): Promise<System[]> {
     let query = supabase
       .from('e_system')
-      .select('*')
+      .select('*, facility:facility_id(location_name)')
       .order('system_code');
     
     // Filter by active status if specified
