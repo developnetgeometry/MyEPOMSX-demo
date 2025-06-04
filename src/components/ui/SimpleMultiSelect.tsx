@@ -1,4 +1,4 @@
-// components/ui/simple-multi-select.tsx
+// components/ui/SimpleMultiSelect.tsx
 import * as React from "react";
 import { Check, ChevronsUpDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -25,7 +25,7 @@ interface MultiSelectProps {
   label?: string;
 }
 
-export const SimpleMultiSelect = ({
+export function SimpleMultiSelect({
   options,
   selected = [],
   onChange,
@@ -33,17 +33,17 @@ export const SimpleMultiSelect = ({
   className,
   icon,
   label,
-}: MultiSelectProps) => {
+}: MultiSelectProps) {
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
 
-  const filteredOptions = options.filter((option) =>
+  const filteredOptions = options.filter(option =>
     option.label.toLowerCase().includes(search.toLowerCase())
   );
 
   const handleSelect = (value: string) => {
     if (selected.includes(value)) {
-      onChange(selected.filter((item) => item !== value));
+      onChange(selected.filter(item => item !== value));
     } else {
       onChange([...selected, value]);
     }
@@ -51,7 +51,7 @@ export const SimpleMultiSelect = ({
 
   const handleRemove = (value: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    onChange(selected.filter((item) => item !== value));
+    onChange(selected.filter(item => item !== value));
   };
 
   const clearAll = (e: React.MouseEvent) => {
@@ -61,39 +61,34 @@ export const SimpleMultiSelect = ({
 
   return (
     <div className={cn("flex flex-col space-y-1", className)}>
-      {label && (
-        <label className="text-xs font-medium text-muted-foreground">
-          {label}
-        </label>
-      )}
+      {label && <label className="text-xs font-medium text-muted-foreground">{label}</label>}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
-            variant="outline"
+          {/* Changed from Button to div to avoid nesting buttons */}
+          <div
             role="combobox"
             aria-expanded={open}
             className={cn(
-              "min-h-10 w-full justify-between pr-2",
+              "flex min-h-10 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background",
+              "hover:bg-accent hover:text-accent-foreground",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+              "cursor-pointer",
               selected.length > 0 && "border-primary/30 bg-primary/5",
               "transition-all duration-200"
             )}
           >
             <div className="flex items-center truncate">
-              {icon && (
-                <span className="mr-2 shrink-0 text-muted-foreground">
-                  {icon}
-                </span>
-              )}
+              {icon && <span className="mr-2 shrink-0 text-muted-foreground">{icon}</span>}
               {selected.length > 0 ? (
-                <div className="flex gap-1 items-center max-w-[300px] overflow-hidden">
+                <div className="flex gap-1 items-center max-w-[250px] overflow-hidden">
                   {selected.length <= 2 ? (
-                    selected.map((value) => {
-                      const option = options.find((opt) => opt.value === value);
+                    selected.map(value => {
+                      const option = options.find(opt => opt.value === value);
                       return (
-                        <Badge
-                          key={value}
-                          variant="secondary"
-                          className="mr-1 truncate max-w-[150px]"
+                        <Badge 
+                          key={value} 
+                          variant="secondary" 
+                          className="mr-1 truncate max-w-[200px]"
                           onClick={(e) => handleRemove(value, e)}
                         >
                           {option?.label || value}
@@ -112,18 +107,17 @@ export const SimpleMultiSelect = ({
             </div>
             <div className="flex items-center">
               {selected.length > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-auto p-0 px-1 mr-1 text-muted-foreground hover:text-foreground hover:bg-transparent"
+                // Changed to div instead of Button
+                <div
                   onClick={clearAll}
+                  className="h-auto p-0 px-1 mr-1 text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
                 >
                   <X className="h-3.5 w-3.5" />
-                </Button>
+                </div>
               )}
               <ChevronsUpDown className="h-3.5 w-3.5 opacity-50" />
             </div>
-          </Button>
+          </div>
         </PopoverTrigger>
         <PopoverContent className="w-[220px] p-0 shadow-lg shadow-primary/10 border-primary/20">
           <div className="p-1">
@@ -143,7 +137,7 @@ export const SimpleMultiSelect = ({
                 </div>
               ) : (
                 <div className="space-y-1">
-                  {filteredOptions.map((option) => (
+                  {filteredOptions.map(option => (
                     <div
                       key={option.value}
                       onClick={() => {
@@ -179,4 +173,4 @@ export const SimpleMultiSelect = ({
       </Popover>
     </div>
   );
-};
+}

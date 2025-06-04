@@ -17,6 +17,9 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { DateInput } from "@/components/ui/date-input";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 // Mock data for demonstration
 const mockData = {
@@ -76,53 +79,65 @@ const mockData = {
   ],
 };
 
+// Zod validation schema
+const pmScheduleSchema = z.object({
+  pmNo: z.string().min(1, "PM No is required"),
+  dueDate: z.string().optional(),
+  isActive: z.boolean().default(true),
+  priorityId: z.string().min(1, "Priority is required"),
+  workCenterId: z.string().min(1, "Work Center is required"),
+  disciplineId: z.string().min(1, "Discipline is required"),
+  frequencyId: z.string().min(1, "Frequency is required"),
+  assetId: z.string().min(1, "Asset is required"),
+  systemId: z.string().optional(),
+  packageId: z.string().min(1, "Package is required"),
+  pmGroupId: z.string().optional(),
+  pmDescription: z.string().optional(),
+  facilityId: z.string().min(1, "Facility is required"),
+  serviceNotes: z.string().optional(),
+  checksheetNotes: z.string().optional(),
+  additionalInfo: z.string().optional(),
+  selectedTasks: z.array(z.string()).min(1, "At least one task is required"),
+});
+
+type PMScheduleFormValues = z.infer<typeof pmScheduleSchema>;
+
 const CreatePMSchedulePage = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    pmNo: "",
-    dueDate: "",
-    isActive: true,
-    priorityId: "",
-    workCenterId: "",
-    disciplineId: "",
-    taskId: "",
-    frequencyId: "",
-    assetId: "",
-    systemId: "",
-    packageId: "",
-    pmGroupId: "",
-    pmDescription: "",
-    facilityId: "",
-    serviceNotes: "",
-    checksheetNotes: "",
-    additionalInfo: "",
-    selectedTasks: [] as number[],
+
+  // Initialize react-hook-form with Zod resolver
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<PMScheduleFormValues>({
+    resolver: zodResolver(pmScheduleSchema),
+    defaultValues: {
+      isActive: true,
+      selectedTasks: [],
+    },
   });
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  // Watch selectedTasks to handle multi-select
+  const selectedTasks = watch("selectedTasks");
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleTaskChange = (selected: number[]) => {
-    setFormData((prev) => ({ ...prev, selectedTasks: selected }));
-  };
-
-  const handleDateChange = (date: string) => {
-    setFormData((prev) => ({ ...prev, dueDate: date }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Form submitted:", formData);
+  // Handle form submission
+  const onSubmit = (data: PMScheduleFormValues) => {
+    console.log("Form data submitted:", data);
     // Here you would typically call an API to save the data
-    // navigate("/maintain/pm-schedule"); // Redirect after submission
+    navigate("/maintain/pm-schedule"); // Redirect after submission
+  };
+
+  // Helper function to render error messages
+  const renderError = (error: { message?: string }) => {
+    return (
+      error?.message && (
+        <p className="mt-1 text-xs text-red-500">{error.message}</p>
+      )
+    );
   };
 
   return (
@@ -143,7 +158,7 @@ const CreatePMSchedulePage = () => {
           <h3 className="text-lg font-semibold text-blue-600 border-b pb-2">
             Please fill in the details
           </h3>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit(onSubmit)}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Basic Information */}
               <div className="space-y-2">
@@ -152,33 +167,28 @@ const CreatePMSchedulePage = () => {
                 </Label>
                 <Input
                   id="pmNo"
-                  name="pmNo"
-                  value={formData.pmNo}
-                  onChange={handleChange}
                   placeholder="PM001"
-                  required
+                  {...register("pmNo")}
+                  className={errors.pmNo ? "border-red-500" : ""}
                 />
+                {renderError(errors.pmNo)}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="dueDate">Due Date</Label>
                 <DateInput
                   id="dueDate"
-                  value={formData.dueDate}
-                  onChange={(e) => handleDateChange(e.target.value)}
+                  onChange={(e) => setValue("dueDate", e.target.value)}
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="isActive">Active Status</Label>
                 <Select
-                  value={formData.isActive ? "true" : "false"}
                   onValueChange={(value) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      isActive: value === "true",
-                    }))
+                    setValue("isActive", value === "true")
                   }
+                  defaultValue="true"
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />
@@ -192,14 +202,15 @@ const CreatePMSchedulePage = () => {
 
               {/* Priority and Work Center */}
               <div className="space-y-2">
-                <Label htmlFor="priorityId">Priority</Label>
+                <Label htmlFor="priorityId">
+                  Priority<span className="text-red-500 ml-1">*</span>
+                </Label>
                 <Select
-                  value={formData.priorityId}
-                  onValueChange={(value) =>
-                    handleSelectChange("priorityId", value)
-                  }
+                  onValueChange={(value) => setValue("priorityId", value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger
+                    className={errors.priorityId ? "border-red-500" : ""}
+                  >
                     <SelectValue placeholder="Select priority" />
                   </SelectTrigger>
                   <SelectContent>
@@ -210,17 +221,19 @@ const CreatePMSchedulePage = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                {renderError(errors.priorityId)}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="workCenterId">Work Center</Label>
+                <Label htmlFor="workCenterId">
+                  Work Center<span className="text-red-500 ml-1">*</span>
+                </Label>
                 <Select
-                  value={formData.workCenterId}
-                  onValueChange={(value) =>
-                    handleSelectChange("workCenterId", value)
-                  }
+                  onValueChange={(value) => setValue("workCenterId", value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger
+                    className={errors.workCenterId ? "border-red-500" : ""}
+                  >
                     <SelectValue placeholder="Select work center" />
                   </SelectTrigger>
                   <SelectContent>
@@ -231,17 +244,19 @@ const CreatePMSchedulePage = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                {renderError(errors.workCenterId)}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="disciplineId">Discipline</Label>
+                <Label htmlFor="disciplineId">
+                  Discipline<span className="text-red-500 ml-1">*</span>
+                </Label>
                 <Select
-                  value={formData.disciplineId}
-                  onValueChange={(value) =>
-                    handleSelectChange("disciplineId", value)
-                  }
+                  onValueChange={(value) => setValue("disciplineId", value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger
+                    className={errors.disciplineId ? "border-red-500" : ""}
+                  >
                     <SelectValue placeholder="Select discipline" />
                   </SelectTrigger>
                   <SelectContent>
@@ -255,18 +270,20 @@ const CreatePMSchedulePage = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                {renderError(errors.disciplineId)}
               </div>
 
               {/* Frequency and Tasks */}
               <div className="space-y-2">
-                <Label htmlFor="frequencyId">Frequency</Label>
+                <Label htmlFor="frequencyId">
+                  Frequency<span className="text-red-500 ml-1">*</span>
+                </Label>
                 <Select
-                  value={formData.frequencyId}
-                  onValueChange={(value) =>
-                    handleSelectChange("frequencyId", value)
-                  }
+                  onValueChange={(value) => setValue("frequencyId", value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger
+                    className={errors.frequencyId ? "border-red-500" : ""}
+                  >
                     <SelectValue placeholder="Select frequency" />
                   </SelectTrigger>
                   <SelectContent>
@@ -280,33 +297,35 @@ const CreatePMSchedulePage = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                {renderError(errors.frequencyId)}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="selectedTasks">Tasks</Label>
+                <Label htmlFor="selectedTasks">
+                  Tasks<span className="text-red-500 ml-1">*</span>
+                </Label>
                 <SimpleMultiSelect
                   options={mockData.tasks.map((task) => ({
                     value: String(task.id),
                     label: task.name,
                   }))}
-                  selected={formData.selectedTasks.map(String)}
-                  onChange={(selected) =>
-                    handleTaskChange(selected.map(Number))
-                  }
+                  selected={selectedTasks}
+                  onChange={(selected) => setValue("selectedTasks", selected)}
                   placeholder="Select tasks"
+                  className={errors.selectedTasks ? "border-red-500" : ""}
                 />
+                {renderError(errors.selectedTasks)}
               </div>
 
               {/* Asset and System */}
               <div className="space-y-2">
-                <Label htmlFor="assetId">Asset</Label>
-                <Select
-                  value={formData.assetId}
-                  onValueChange={(value) =>
-                    handleSelectChange("assetId", value)
-                  }
-                >
-                  <SelectTrigger>
+                <Label htmlFor="assetId">
+                  Asset<span className="text-red-500 ml-1">*</span>
+                </Label>
+                <Select onValueChange={(value) => setValue("assetId", value)}>
+                  <SelectTrigger
+                    className={errors.assetId ? "border-red-500" : ""}
+                  >
                     <SelectValue placeholder="Select asset" />
                   </SelectTrigger>
                   <SelectContent>
@@ -317,16 +336,12 @@ const CreatePMSchedulePage = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                {renderError(errors.assetId)}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="systemId">System</Label>
-                <Select
-                  value={formData.systemId}
-                  onValueChange={(value) =>
-                    handleSelectChange("systemId", value)
-                  }
-                >
+                <Select onValueChange={(value) => setValue("systemId", value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select system" />
                   </SelectTrigger>
@@ -342,14 +357,13 @@ const CreatePMSchedulePage = () => {
 
               {/* Package and PM Group */}
               <div className="space-y-2">
-                <Label htmlFor="packageId">Package</Label>
-                <Select
-                  value={formData.packageId}
-                  onValueChange={(value) =>
-                    handleSelectChange("packageId", value)
-                  }
-                >
-                  <SelectTrigger>
+                <Label htmlFor="packageId">
+                  Package<span className="text-red-500 ml-1">*</span>
+                </Label>
+                <Select onValueChange={(value) => setValue("packageId", value)}>
+                  <SelectTrigger
+                    className={errors.packageId ? "border-red-500" : ""}
+                  >
                     <SelectValue placeholder="Select package" />
                   </SelectTrigger>
                   <SelectContent>
@@ -360,16 +374,12 @@ const CreatePMSchedulePage = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                {renderError(errors.packageId)}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="pmGroupId">PM Group</Label>
-                <Select
-                  value={formData.pmGroupId}
-                  onValueChange={(value) =>
-                    handleSelectChange("pmGroupId", value)
-                  }
-                >
+                <Select onValueChange={(value) => setValue("pmGroupId", value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select PM group" />
                   </SelectTrigger>
@@ -384,14 +394,15 @@ const CreatePMSchedulePage = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="facilityId">Facility</Label>
+                <Label htmlFor="facilityId">
+                  Facility<span className="text-red-500 ml-1">*</span>
+                </Label>
                 <Select
-                  value={formData.facilityId}
-                  onValueChange={(value) =>
-                    handleSelectChange("facilityId", value)
-                  }
+                  onValueChange={(value) => setValue("facilityId", value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger
+                    className={errors.facilityId ? "border-red-500" : ""}
+                  >
                     <SelectValue placeholder="Select facility" />
                   </SelectTrigger>
                   <SelectContent>
@@ -402,6 +413,7 @@ const CreatePMSchedulePage = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                {renderError(errors.facilityId)}
               </div>
 
               {/* Description and Notes */}
@@ -409,11 +421,9 @@ const CreatePMSchedulePage = () => {
                 <Label htmlFor="pmDescription">PM Description</Label>
                 <Textarea
                   id="pmDescription"
-                  name="pmDescription"
-                  value={formData.pmDescription}
-                  onChange={handleChange}
                   placeholder="Describe the maintenance schedule..."
                   className="min-h-[100px]"
+                  {...register("pmDescription")}
                 />
               </div>
 
@@ -421,11 +431,9 @@ const CreatePMSchedulePage = () => {
                 <Label htmlFor="serviceNotes">Service Notes</Label>
                 <Textarea
                   id="serviceNotes"
-                  name="serviceNotes"
-                  value={formData.serviceNotes}
-                  onChange={handleChange}
                   placeholder="Enter any service notes..."
                   className="min-h-[100px]"
+                  {...register("serviceNotes")}
                 />
               </div>
 
@@ -433,11 +441,9 @@ const CreatePMSchedulePage = () => {
                 <Label htmlFor="checksheetNotes">Checksheet Notes</Label>
                 <Textarea
                   id="checksheetNotes"
-                  name="checksheetNotes"
-                  value={formData.checksheetNotes}
-                  onChange={handleChange}
                   placeholder="Enter checksheet notes..."
                   className="min-h-[100px]"
+                  {...register("checksheetNotes")}
                 />
               </div>
 
@@ -445,11 +451,9 @@ const CreatePMSchedulePage = () => {
                 <Label htmlFor="additionalInfo">Additional Information</Label>
                 <Textarea
                   id="additionalInfo"
-                  name="additionalInfo"
-                  value={formData.additionalInfo}
-                  onChange={handleChange}
                   placeholder="Enter any additional information..."
                   className="min-h-[100px]"
+                  {...register("additionalInfo")}
                 />
               </div>
             </div>
@@ -462,7 +466,9 @@ const CreatePMSchedulePage = () => {
               >
                 Cancel
               </Button>
-              <Button type="submit">Create Schedule</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Creating..." : "Create Schedule"}
+              </Button>
             </div>
           </form>
         </CardContent>
