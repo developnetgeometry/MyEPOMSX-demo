@@ -29,7 +29,7 @@ export const useWorkOrderData = () => {
 // Fetch a single work order by ID
 export const useWorkOrderDataById = (id: number) => {
   return useQuery({
-    queryKey: ["e-work-order-data", id],
+    queryKey: ["e-work-order-data-id", id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("e_work_order")

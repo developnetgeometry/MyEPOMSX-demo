@@ -62,10 +62,9 @@ const WorkRequestDetailPage: React.FC = () => {
             description: "Work request has been deleted successfully!",
             variant: "default",
           });
-          refetch();
           setIsConfirmationDialogOpen(false);
-          queryClient.invalidateQueries({ queryKey: ["e-new-work-request-data"] });
           navigate('/work-orders/work-request');
+          queryClient.invalidateQueries({ queryKey: ["e-new-work-request-data"] });
         } catch (error) {
           toast({
             title: "Error",
@@ -194,7 +193,7 @@ const WorkRequestDetailPage: React.FC = () => {
             });
 
             refetch();
-            queryClient.invalidateQueries({ queryKey: ["e-new-work-request-data",id] });
+            queryClient.invalidateQueries({ queryKey: ["e-new-work-request-data", id] });
           }
           setIsConfirmationDialogOpen(false);
         } catch (error) {

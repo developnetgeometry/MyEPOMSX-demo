@@ -38,7 +38,7 @@ export const useWorkRequestData = () => {
 };
 export const useWorkRequestDataById = (id: number) => {
     return useQuery({
-        queryKey: ["e-new-work-request-data", id],
+        queryKey: ["e-new-work-request-data-id", id],
         queryFn: async () => {
             try {
                 // Fetch data from e_new_work_request
