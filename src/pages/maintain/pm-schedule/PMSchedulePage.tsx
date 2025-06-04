@@ -58,7 +58,7 @@ interface PMSchedule {
   description: string;
   packageNo?: string;
   asset: string;
-  tasks?: string;
+  task?: string;
   frequency: string;
   workCenter?: string;
   nextDueDate: string;
@@ -117,7 +117,7 @@ const PMSchedulePage: React.FC = () => {
       accessorKey: "package.package_no",
     },
     { id: "asset_id", header: "Asset", accessorKey: "asset.asset_name" },
-    { id: "task_id", header: "Tasks", accessorKey: "task.task_name" },
+    { id: "task_id", header: "Task", accessorKey: "task.task_name" },
     { id: "frequency_id", header: "Frequency", accessorKey: "frequency.name" },
     {
       id: "work_center_id",
