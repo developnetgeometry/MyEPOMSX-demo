@@ -72,7 +72,7 @@ import TaskLibraryPage from "@/pages/maintain/TaskLibraryPage";
 import TaskLibraryDetailPage from "@/pages/maintain/TaskLibraryDetailPage";
 import WOHistoryPage from "@/pages/work-orders/work-order-history/WOHistoryPage";
 import WOHistoryDetailPage from "@/pages/work-orders/work-order-history/WOHistoryDetailPage";
-// import WorkOrderDetailPage from "@/pages/maintain/WorkOrderDetailPage";
+import WorkOrderDetailPage from '@/pages/work-orders/work-order-list/WorkOrderListDetailPage';
 import WorkOrderListPage from "@/pages/work-orders/work-order-list/WorkOrderListPage";
 import WorkRequestPage from "@/pages/work-orders/work-request/WorkRequestPage";
 import WorkRequestDetailPage from "@/pages/work-orders/work-request/WorkRequestDetailPage";
@@ -715,68 +715,9 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
+      {/* Work Orders Routes */}
       <Route
-        path="/maintain/wo-history"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <WOHistoryPage />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/maintain/wo-history/:id"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <WOHistoryDetailPage />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/maintain/work-orders"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <WorkOrderListPage />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/maintain/work-order-list"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <WorkOrderListPage />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-      {/* <Route
-        path="/maintain/work-order-list/:id"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <WorkOrderDetailPage />
-            </Layout>
-          </ProtectedRoute>
-        }
-      /> */}
-      {/* <Route
-        path="/maintain/work-orders/:id"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <WorkOrderDetailPage />
-            </Layout>
-          </ProtectedRoute>
-        }
-      /> */}
-      <Route
-        path="/maintain/work-request"
+        path="/work-orders/work-request"
         element={
           <ProtectedRoute>
             <Layout>
@@ -785,8 +726,9 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
+
       <Route
-        path="/maintain/work-request/:id"
+        path="/work-orders/work-request/:id"
         element={
           <ProtectedRoute>
             <Layout>
@@ -795,6 +737,51 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
+
+      <Route
+        path="/work-orders/work-order-list"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <WorkOrderListPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/work-orders/work-order-list/:id"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <WorkOrderDetailPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/work-orders/wo-history"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <WOHistoryPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/work-orders/wo-history/:id"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <WOHistoryDetailPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
 
       {/* Measure Routes */}
       <Route
