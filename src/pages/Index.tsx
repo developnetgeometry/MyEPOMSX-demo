@@ -27,7 +27,8 @@ const Index = () => {
     return (
       <div className="space-y-6">
         <div className="flex justify-end">
-        <Overview />
+          <Overview />
+        </div>
       </div>
     );
   }
