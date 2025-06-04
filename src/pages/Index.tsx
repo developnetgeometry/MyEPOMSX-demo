@@ -26,9 +26,7 @@ const Index = () => {
   if (user) {
     return (
       <div className="space-y-6">
-        {/* <div className="flex justify-end">
-          <UserProfile />
-        </div> */}
+        <div className="flex justify-end">
         <Overview />
       </div>
     );
