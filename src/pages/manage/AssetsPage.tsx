@@ -5,11 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Archive, Printer } from "lucide-react";
 import DataTable from "@/components/shared/DataTable";
-import { packages, systems, facilityLocations } from "@/data/sampleData";
 import { Asset, AssetWithRelations } from "@/types/manage";
-import ManageDialog from "@/components/manage/ManageDialog";
 import { Column } from "@/components/shared/DataTable";
-import * as z from "zod";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +18,6 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { Badge } from "@/components/ui/badge";
 import {
   useAssetHierarchy,
   useAssetsWithRelations,
@@ -29,11 +25,6 @@ import {
 import HierarchyNode from "@/components/ui/hierarchy";
 
 const AssetsPage: React.FC = () => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [currentItem, setCurrentItem] = useState<AssetWithRelations | null>(
-    null
-  );
   const [selectedNode, setSelectedNode] = useState<any | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState<AssetWithRelations | null>(
@@ -63,27 +54,15 @@ const AssetsPage: React.FC = () => {
   };
 
   const handleAddNew = () => {
-    setIsEditMode(false);
-    setCurrentItem(null);
-    setIsDialogOpen(true);
+    navigate("/manage/assets/add");
   };
 
   const handleEdit = (item: Asset) => {
-    setIsEditMode(true);
-    setCurrentItem(item);
-    setIsDialogOpen(true);
+    navigate(`/manage/assets/${item.id}`);
   };
 
   const handleRowClick = (row: Asset) => {
     navigate(`/manage/assets/${row.id}`);
-  };
-
-  const handleSubmit = (values: any) => {
-    if (isEditMode && currentItem) {
-      console.log("Update asset with values:", values);
-    } else {
-      console.log("Create new asset with values:", values);
-    }
   };
 
   const columns: Column[] = [
@@ -121,11 +100,6 @@ const AssetsPage: React.FC = () => {
       accessorKey: "asset_tag",
       cell: (value) => value.name || "-",
     },
-    // {
-    //   id: 'model',
-    //   header: 'Model',
-    //   accessorKey: 'model',
-    // },
     {
       id: "asset_status",
       header: "Status",
@@ -136,90 +110,6 @@ const AssetsPage: React.FC = () => {
       id: "sceCode",
       header: "SCE Code",
       accessorKey: "asset_sce.sce_code",
-    },
-    // {
-    //   id: 'criticalityCode',
-    //   header: 'Criticality Code',
-    //   accessorKey: 'criticalityCode',
-    // },
-  ];
-
-  const formSchema = z.object({
-    assetNo: z.string().min(1, "Asset No is required"),
-    name: z.string().min(1, "Asset Name is required"),
-    packageId: z.string().min(1, "Package is required"),
-    systemId: z.string().min(1, "System is required"),
-    facilityId: z.string().min(1, "Facility is required"),
-    assetTag: z.string().min(1, "Asset Tag is required"),
-    model: z.string().min(1, "Model is required"),
-    status: z.string().min(1, "Status is required"),
-    sceCode: z.string().min(1, "SCE Code is required"),
-    criticalityCode: z.string().min(1, "Criticality Code is required"),
-  });
-
-  const packageOptions = packages.map((pkg) => ({
-    value: pkg.id,
-    label: pkg.name,
-  }));
-
-  const systemOptions = systems.map((system) => ({
-    value: system.id,
-    label: system.name,
-  }));
-
-  const facilityOptions = facilityLocations.map((facility) => ({
-    value: facility.id,
-    label: facility.name,
-  }));
-
-  const statusOptions = [
-    { value: "Active", label: "Active" },
-    { value: "Inactive", label: "Inactive" },
-    { value: "Maintenance", label: "Maintenance" },
-    { value: "Decommissioned", label: "Decommissioned" },
-  ];
-
-  const criticalityOptions = [
-    { value: "A", label: "A - Critical" },
-    { value: "B", label: "B - Important" },
-    { value: "C", label: "C - Standard" },
-  ];
-
-  const formFields = [
-    { name: "assetNo", label: "Asset No", type: "text" as const },
-    { name: "name", label: "Asset Name", type: "text" as const },
-    {
-      name: "packageId",
-      label: "Package",
-      type: "select" as const,
-      options: packageOptions,
-    },
-    {
-      name: "systemId",
-      label: "System",
-      type: "select" as const,
-      options: systemOptions,
-    },
-    {
-      name: "facilityId",
-      label: "Facility",
-      type: "select" as const,
-      options: facilityOptions,
-    },
-    { name: "assetTag", label: "Asset Tag", type: "text" as const },
-    { name: "model", label: "Model", type: "text" as const },
-    {
-      name: "status",
-      label: "Status",
-      type: "select" as const,
-      options: statusOptions,
-    },
-    { name: "sceCode", label: "SCE Code", type: "text" as const },
-    {
-      name: "criticalityCode",
-      label: "Criticality Code",
-      type: "select" as const,
-      options: criticalityOptions,
     },
   ];
 
@@ -353,37 +243,15 @@ const AssetsPage: React.FC = () => {
         </CardContent>
       </Card>
 
-      <ManageDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        title={isEditMode ? "Edit Asset" : "Add New Asset"}
-        formSchema={formSchema}
-        defaultValues={
-          currentItem || {
-            assetNo: "",
-            name: "",
-            packageId: "",
-            systemId: "",
-            facilityId: "",
-            assetTag: "",
-            model: "",
-            status: "Active",
-            sceCode: "",
-            criticalityCode: "",
-          }
-        }
-        formFields={formFields}
-        onSubmit={handleSubmit}
-        isEdit={isEditMode}
-      />
-
       {/* Asset Details Drawer */}
       <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
         <DrawerContent className="max-h-[85vh]">
           <DrawerHeader className="border-b border-gray-200 pb-4">
-            {/* <DrawerTitle className="text-xl font-semibold">{selectedAsset?.name || 'Asset Details'}</DrawerTitle> */}
+            <DrawerTitle className="text-xl font-semibold">
+              {selectedAsset?.asset_name || "Asset Details"}
+            </DrawerTitle>
             <DrawerDescription>
-              {/* Asset ID: {selectedAsset?.assetNo} */}
+              Asset ID: {selectedAsset?.asset_no}
             </DrawerDescription>
           </DrawerHeader>
 
@@ -400,25 +268,25 @@ const AssetsPage: React.FC = () => {
                         <span className="text-xs text-gray-500 block">
                           Asset Name
                         </span>
-                        {/* <span className="text-sm font-medium">{selectedAsset.name}</span> */}
+                        <span className="text-sm font-medium">
+                          {selectedAsset.asset_name}
+                        </span>
                       </div>
                       <div className="bg-gray-50 p-3 rounded-md">
                         <span className="text-xs text-gray-500 block">
                           Asset Tag
                         </span>
-                        {/* <span className="text-sm font-medium">{selectedAsset.assetTag}</span> */}
-                      </div>
-                      <div className="bg-gray-50 p-3 rounded-md">
-                        <span className="text-xs text-gray-500 block">
-                          Model
+                        <span className="text-sm font-medium">
+                          {selectedAsset.asset_tag?.name || "-"}
                         </span>
-                        {/* <span className="text-sm font-medium">{selectedAsset.model}</span> */}
                       </div>
                       <div className="bg-gray-50 p-3 rounded-md">
                         <span className="text-xs text-gray-500 block">
                           Status
                         </span>
-                        {/* <StatusBadge status={selectedAsset.status} /> */}
+                        <StatusBadge
+                          status={selectedAsset.asset_status?.name || "Unknown"}
+                        />
                       </div>
                     </div>
                   </div>
@@ -434,19 +302,25 @@ const AssetsPage: React.FC = () => {
                         <span className="text-xs text-gray-500 block">
                           System
                         </span>
-                        {/* <span className="text-sm font-medium">{selectedAsset.system}</span> */}
+                        <span className="text-sm font-medium">
+                          {selectedAsset.system?.system_name || "-"}
+                        </span>
                       </div>
                       <div className="bg-gray-50 p-3 rounded-md">
                         <span className="text-xs text-gray-500 block">
                           Package
                         </span>
-                        {/* <span className="text-sm font-medium">{selectedAsset.package}</span> */}
+                        <span className="text-sm font-medium">
+                          {selectedAsset.package?.package_name || "-"}
+                        </span>
                       </div>
                       <div className="bg-gray-50 p-3 rounded-md">
                         <span className="text-xs text-gray-500 block">
                           Facility
                         </span>
-                        {/* <span className="text-sm font-medium">{selectedAsset.facility}</span> */}
+                        <span className="text-sm font-medium">
+                          {selectedAsset.facility?.location_name || "-"}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -463,19 +337,12 @@ const AssetsPage: React.FC = () => {
                       <span className="text-xs text-gray-500 block">
                         SCE Code
                       </span>
-                      {/* <span className="text-sm font-medium">{selectedAsset.sceCode}</span> */}
-                    </div>
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <span className="text-xs text-gray-500 block">
-                        Criticality Code
+                      <span className="text-sm font-medium">
+                        {selectedAsset.asset_sce &&
+                        selectedAsset.asset_sce.length > 0
+                          ? selectedAsset.asset_sce[0].sce_code
+                          : "-"}
                       </span>
-                      {/* <Badge variant={
-                        selectedAsset.criticalityCode === 'A' ? 'danger' :
-                        selectedAsset.criticalityCode === 'B' ? 'warning' : 'success'
-                      }>
-                        {selectedAsset.criticalityCode === 'A' ? 'A - Critical' :
-                         selectedAsset.criticalityCode === 'B' ? 'B - Important' : 'C - Standard'}
-                      </Badge> */}
                     </div>
                   </div>
                 </div>
