@@ -41,6 +41,7 @@ import AverageUARSPage from "@/pages/admin/settings/AverageUARSPage";
 import AverageUARSDetailPage from "@/pages/admin/settings/AverageUARSDetailPage";
 
 // Manage Pages
+import AssetAddPage from "@/pages/manage/AssetAddPage";
 import AssetDetailPage from "@/pages/manage/AssetDetailPage";
 import AssetDetailsPage from "@/pages/manage/AssetDetailsPage";
 import AssetHierarchyPage from "@/pages/manage/AssetHierarchyPage";
@@ -68,7 +69,7 @@ import SystemDetailPage from "@/pages/manage/SystemDetailPage";
 // Maintain Pages
 import PMSchedulePage from "@/pages/maintain/pm-schedule/PMSchedulePage";
 import PMScheduleDetailPage from "@/pages/maintain/pm-schedule/PMScheduleDetailPage";
-import CreatePMSchedulePage from '@/pages/maintain/pm-schedule/CreatePMSchedulePage';
+import CreatePMSchedulePage from "@/pages/maintain/pm-schedule/CreatePMSchedulePage";
 import TaskLibraryPage from "@/pages/maintain/TaskLibraryPage";
 import TaskLibraryDetailPage from "@/pages/maintain/TaskLibraryDetailPage";
 
@@ -446,6 +447,16 @@ const AppRoutes: React.FC = () => {
       />
 
       {/* Manage Routes */}
+      <Route
+        path="/manage/assets/add"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <AssetAddPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/manage/assets"
         element={
