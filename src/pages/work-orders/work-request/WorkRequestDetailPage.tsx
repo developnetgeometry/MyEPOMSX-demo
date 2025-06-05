@@ -194,6 +194,7 @@ const WorkRequestDetailPage: React.FC = () => {
 
             refetch();
             queryClient.invalidateQueries({ queryKey: ["e-new-work-request-data", id] });
+            queryClient.invalidateQueries({ queryKey: ["e-work-order-data"] });
           }
           setIsConfirmationDialogOpen(false);
         } catch (error) {
@@ -225,7 +226,6 @@ const WorkRequestDetailPage: React.FC = () => {
               work_order_type: 1,
               work_order_status_id: 1,
               description: workRequest.description,
-              work_order_no: workRequest.work_request_no,
               cm_work_order_id: workRequest.cm_work_order_id,
               asset_id: workRequest.asset_id?.id,
             };

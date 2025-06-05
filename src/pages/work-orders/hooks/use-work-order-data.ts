@@ -58,7 +58,6 @@ export const insertWorkOrderData = async (workOrderData: {
   pm_work_order_id?: number;
   work_order_status_id?: number;
   description?: string;
-  work_order_no?: string;
   cm_work_order_id?: number;
   created_at?: string; // Use ISO string format for timestamps
   completed_at?: string; // Use ISO string format for timestamps
@@ -70,6 +69,7 @@ export const insertWorkOrderData = async (workOrderData: {
   due_date?: string; // Use ISO string format for dates
 }) => {
   try {
+
     const { data, error } = await supabase
       .from("e_work_order")
       .insert([workOrderData]);

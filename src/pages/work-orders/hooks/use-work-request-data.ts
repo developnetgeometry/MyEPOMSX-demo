@@ -17,7 +17,7 @@ export const useWorkRequestData = () => {
                     maintenance_type (id, code, name), requested_by, 
                     priority_id (id, name), 
                     finding_detail, anomaly_report, quick_incident_report,
-                    work_request_no, work_request_prefix, is_work_order_created`
+                    work_request_no, is_work_order_created`
                 )
                 .order("id", { ascending: false });
 
@@ -54,7 +54,7 @@ export const useWorkRequestDataById = (id: number) => {
             maintenance_type (id, code, name), requested_by, 
             priority_id (id, name), 
             finding_detail, anomaly_report, quick_incident_report,
-            work_request_no, work_request_prefix, is_work_order_created`
+            work_request_no, is_work_order_created`
                     )
                     .eq("id", id)
                     .single();
@@ -114,7 +114,6 @@ export const insertWorkRequestData = async (workRequestData: {
     finding_detail?: string;
     anomaly_report?: boolean;
     quick_incident_report?: boolean;
-    work_request_prefix?: string;
 }) => {
     try {
         const { data, error } = await supabase
@@ -153,7 +152,6 @@ export const updateWorkRequestData = async (
         finding_detail?: string;
         anomaly_report?: boolean;
         quick_incident_report?: boolean;
-        work_request_prefix?: string;
         is_work_order_created?: boolean;
     }>
 ) => {
