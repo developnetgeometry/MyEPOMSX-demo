@@ -157,6 +157,20 @@ export const useDisciplineOptions = () => {
   });
 };
 
+export const usePMGroupOptions = () => {
+  return useQuery({
+    queryKey: ["pMGroupOptions"],
+    queryFn: () => PMScheduleService.getPMGroupOptions(),
+  });
+};
+
+export const usePMSCEGroupOptions = () => {
+  return useQuery({
+    queryKey: ["pMSCEGroupOptions"],
+    queryFn: () => PMScheduleService.getPMSCEGroupOptions(),
+  });
+};
+
 export const usePMScheduleCustomTasks = (pmScheduleId: number | undefined) => {
   return useQuery({
     queryKey: scheduleKeys.customTasks(pmScheduleId),

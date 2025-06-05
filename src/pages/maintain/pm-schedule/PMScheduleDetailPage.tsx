@@ -697,22 +697,22 @@ const PMScheduleDetailPage: React.FC = () => {
 
             <div>
               <h4 className="text-sm font-medium text-gray-500">Asset</h4>
-              <p className="text-base">{pmScheduleDetail?.asset.asset_name}</p>
+              <p className="text-base">{pmScheduleDetail?.asset?.asset_name}</p>
             </div>
 
             <div>
               <h4 className="text-sm font-medium text-gray-500">Tasks</h4>
-              <p className="text-base">{pmScheduleDetail?.task.task_name}</p>
+              <p className="text-base">{pmScheduleDetail?.task?.task_name}</p>
             </div>
 
             <div>
               <h4 className="text-sm font-medium text-gray-500">Frequency</h4>
-              <p className="text-base">{pmScheduleDetail?.frequency.name}</p>
+              <p className="text-base">{pmScheduleDetail?.frequency?.name}</p>
             </div>
 
             <div>
               <h4 className="text-sm font-medium text-gray-500">Work Center</h4>
-              <p className="text-base">{pmScheduleDetail?.work_center.name}</p>
+              <p className="text-base">{pmScheduleDetail?.work_center?.name}</p>
             </div>
 
             <div>

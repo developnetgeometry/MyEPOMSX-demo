@@ -56,7 +56,10 @@ export interface System {
   system_name: string | null;
   is_active: boolean | null;
   // Add related data
-  facility?: Facility | null;
+  facility?: {
+    location_name: string;
+    location_code: string;
+  };
 }
 
 // Package Types
@@ -77,6 +80,18 @@ export interface Package {
   // Related data
   package_type?: PackageType | null;
   system?: System | null;
+}
+
+export interface PackageData {
+  id: number;
+  package_no: string;
+  package_name: string | null;
+  package_tag: string | null;
+  system_id: number | null;
+  package_type_id: number | null;
+  is_active: boolean | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 export interface AssetTag {

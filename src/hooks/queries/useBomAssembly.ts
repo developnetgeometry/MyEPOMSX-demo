@@ -118,13 +118,12 @@ export const useDeleteSparePart = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: bomAssemblyService.deleteSparePart,
-    onSuccess: (_, id, context: { bomId: number } | undefined) => {
-      if (context?.bomId) {
-        queryClient.invalidateQueries({
-          queryKey: ["spareParts", context.bomId],
-        });
-      }
+    mutationFn: ({ id, bomId }: { id: number; bomId: number }) => 
+      bomAssemblyService.deleteSparePart(id),
+    onSuccess: (_, { bomId }) => {
+      queryClient.invalidateQueries({
+        queryKey: ["spareParts", bomId],
+      });
     },
   });
 };
