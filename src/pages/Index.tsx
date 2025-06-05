@@ -1,8 +1,6 @@
-import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProject } from "@/contexts/ProjectContext";
 import Overview from "./Overview";
-import UserProfile from "@/components/auth/UserProfile";
 import { Loader2 } from "lucide-react";
 
 const Index = () => {
@@ -26,7 +24,7 @@ const Index = () => {
   if (user) {
     return (
       <div className="space-y-6">
-          <Overview />
+        <Overview />
       </div>
     );
   }

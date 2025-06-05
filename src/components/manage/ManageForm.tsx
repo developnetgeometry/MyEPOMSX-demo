@@ -14,7 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { toast } from "sonner";
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -63,19 +63,23 @@ const ManageForm = ({
   });
 
   // Group fields by section
-  const mainFields = fields.filter(f => !f.section || f.section === "main");
-  const dateLocationFields = fields.filter(f => f.section === "dates");
-  const maintenanceFields = fields.filter(f => f.section === "maintenance");
-  const additionalFields = fields.filter(f => f.section === "additional");
+  const mainFields = fields.filter((f) => !f.section || f.section === "main");
+  const dateLocationFields = fields.filter((f) => f.section === "dates");
+  const maintenanceFields = fields.filter((f) => f.section === "maintenance");
+  const additionalFields = fields.filter((f) => f.section === "additional");
 
-  const [attachReport, setAttachReport] = useState(defaultValues.attachReport || false);
-  const [childIncidentReport, setChildIncidentReport] = useState(defaultValues.childIncidentReport || false);
+  const [attachReport, setAttachReport] = useState(
+    defaultValues.attachReport || false
+  );
+  const [childIncidentReport, setChildIncidentReport] = useState(
+    defaultValues.childIncidentReport || false
+  );
 
   const handleSubmit = (values: any) => {
     const finalValues = {
       ...values,
       attachReport,
-      childIncidentReport
+      childIncidentReport,
     };
     onSubmit(finalValues);
   };
@@ -96,12 +100,20 @@ const ManageForm = ({
               control={form.control}
               name={field.name}
               render={({ field: formField }) => (
-                <FormItem className={field.width === "half" ? "" : "col-span-2"}>
+                <FormItem
+                  className={field.width === "half" ? "" : "col-span-2"}
+                >
                   <FormLabel>
-                    {field.label} {field.required && <span className="text-destructive">*</span>}
-                    {isCurrencyField(field.name, field.label) && field.type === 'number' && (
-                      <span className="text-xs text-muted-foreground ml-1">(RM)</span>
+                    {field.label}{" "}
+                    {field.required && (
+                      <span className="text-destructive">*</span>
                     )}
+                    {isCurrencyField(field.name, field.label) &&
+                      field.type === "number" && (
+                        <span className="text-xs text-muted-foreground ml-1">
+                          (RM)
+                        </span>
+                      )}
                   </FormLabel>
                   <FormControl>
                     {field.type === "select" ? (
@@ -122,7 +134,13 @@ const ManageForm = ({
                         </SelectContent>
                       </Select>
                     ) : field.type === "number" ? (
-                      <div className={isCurrencyField(field.name, field.label) ? "relative" : ""}>
+                      <div
+                        className={
+                          isCurrencyField(field.name, field.label)
+                            ? "relative"
+                            : ""
+                        }
+                      >
                         {isCurrencyField(field.name, field.label) && (
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <span className="text-gray-500">RM</span>
@@ -132,10 +150,16 @@ const ManageForm = ({
                           type="number"
                           step={field.isCurrencyField ? 0.01 : 1}
                           {...formField}
-                          onChange={(e) => formField.onChange(Number(e.target.value))}
+                          onChange={(e) =>
+                            formField.onChange(Number(e.target.value))
+                          }
                           disabled={isSubmitting}
                           placeholder={field.placeholder}
-                          className={isCurrencyField(field.name, field.label) ? "pl-10" : ""}
+                          className={
+                            isCurrencyField(field.name, field.label)
+                              ? "pl-10"
+                              : ""
+                          }
                         />
                       </div>
                     ) : field.type === "date" ? (
@@ -152,7 +176,11 @@ const ManageForm = ({
                         className="min-h-[150px]"
                       />
                     ) : (
-                      <Input {...formField} disabled={isSubmitting} placeholder={field.placeholder} />
+                      <Input
+                        {...formField}
+                        disabled={isSubmitting}
+                        placeholder={field.placeholder}
+                      />
                     )}
                   </FormControl>
                   <FormMessage />
@@ -165,7 +193,9 @@ const ManageForm = ({
         {/* Dates & Location Section */}
         {dateLocationFields.length > 0 && (
           <>
-            <h3 className="text-sm font-medium text-muted-foreground mt-6">📅 Dates & Location</h3>
+            <h3 className="text-sm font-medium text-muted-foreground mt-6">
+              📅 Dates & Location
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {dateLocationFields.map((field) => (
                 <FormField
@@ -174,7 +204,12 @@ const ManageForm = ({
                   name={field.name}
                   render={({ field: formField }) => (
                     <FormItem>
-                      <FormLabel>{field.label} {field.required && <span className="text-destructive">*</span>}</FormLabel>
+                      <FormLabel>
+                        {field.label}{" "}
+                        {field.required && (
+                          <span className="text-destructive">*</span>
+                        )}
+                      </FormLabel>
                       <FormControl>
                         {field.type === "select" ? (
                           <Select
@@ -183,11 +218,16 @@ const ManageForm = ({
                             disabled={isSubmitting}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder={`Select ${field.label}`} />
+                              <SelectValue
+                                placeholder={`Select ${field.label}`}
+                              />
                             </SelectTrigger>
                             <SelectContent>
                               {field.options?.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
+                                <SelectItem
+                                  key={option.value}
+                                  value={option.value}
+                                >
                                   {option.label}
                                 </SelectItem>
                               ))}
@@ -200,7 +240,11 @@ const ManageForm = ({
                             disabled={isSubmitting}
                           />
                         ) : (
-                          <Input {...formField} disabled={isSubmitting} placeholder={field.placeholder} />
+                          <Input
+                            {...formField}
+                            disabled={isSubmitting}
+                            placeholder={field.placeholder}
+                          />
                         )}
                       </FormControl>
                       <FormMessage />
@@ -215,7 +259,9 @@ const ManageForm = ({
         {/* Maintenance Details Section */}
         {maintenanceFields.length > 0 && (
           <>
-            <h3 className="text-sm font-medium text-muted-foreground mt-6">🛠 Maintenance Details</h3>
+            <h3 className="text-sm font-medium text-muted-foreground mt-6">
+              🛠 Maintenance Details
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {maintenanceFields.map((field) => (
                 <FormField
@@ -225,10 +271,16 @@ const ManageForm = ({
                   render={({ field: formField }) => (
                     <FormItem>
                       <FormLabel>
-                        {field.label} {field.required && <span className="text-destructive">*</span>}
-                        {isCurrencyField(field.name, field.label) && field.type === 'number' && (
-                          <span className="text-xs text-muted-foreground ml-1">(RM)</span>
+                        {field.label}{" "}
+                        {field.required && (
+                          <span className="text-destructive">*</span>
                         )}
+                        {isCurrencyField(field.name, field.label) &&
+                          field.type === "number" && (
+                            <span className="text-xs text-muted-foreground ml-1">
+                              (RM)
+                            </span>
+                          )}
                       </FormLabel>
                       <FormControl>
                         {field.type === "select" ? (
@@ -238,18 +290,29 @@ const ManageForm = ({
                             disabled={isSubmitting}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder={`Select ${field.label}`} />
+                              <SelectValue
+                                placeholder={`Select ${field.label}`}
+                              />
                             </SelectTrigger>
                             <SelectContent>
                               {field.options?.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
+                                <SelectItem
+                                  key={option.value}
+                                  value={option.value}
+                                >
                                   {option.label}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                         ) : field.type === "number" ? (
-                          <div className={isCurrencyField(field.name, field.label) ? "relative" : ""}>
+                          <div
+                            className={
+                              isCurrencyField(field.name, field.label)
+                                ? "relative"
+                                : ""
+                            }
+                          >
                             {isCurrencyField(field.name, field.label) && (
                               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <span className="text-gray-500">RM</span>
@@ -259,10 +322,16 @@ const ManageForm = ({
                               type="number"
                               step={field.isCurrencyField ? 0.01 : 1}
                               {...formField}
-                              onChange={(e) => formField.onChange(Number(e.target.value))}
+                              onChange={(e) =>
+                                formField.onChange(Number(e.target.value))
+                              }
                               disabled={isSubmitting}
                               placeholder={field.placeholder}
-                              className={isCurrencyField(field.name, field.label) ? "pl-10" : ""}
+                              className={
+                                isCurrencyField(field.name, field.label)
+                                  ? "pl-10"
+                                  : ""
+                              }
                             />
                           </div>
                         ) : field.type === "date" ? (
@@ -272,7 +341,11 @@ const ManageForm = ({
                             disabled={isSubmitting}
                           />
                         ) : (
-                          <Input {...formField} disabled={isSubmitting} placeholder={field.placeholder} />
+                          <Input
+                            {...formField}
+                            disabled={isSubmitting}
+                            placeholder={field.placeholder}
+                          />
                         )}
                       </FormControl>
                       <FormMessage />
@@ -287,7 +360,9 @@ const ManageForm = ({
         {/* Additional Fields */}
         {additionalFields.length > 0 && (
           <>
-            <h3 className="text-sm font-medium text-muted-foreground mt-6">🧾 Additional Fields</h3>
+            <h3 className="text-sm font-medium text-muted-foreground mt-6">
+              🧾 Additional Fields
+            </h3>
             <div className="space-y-4">
               {additionalFields.map((field) => (
                 <FormField
@@ -296,7 +371,12 @@ const ManageForm = ({
                   name={field.name}
                   render={({ field: formField }) => (
                     <FormItem>
-                      <FormLabel>{field.label} {field.required && <span className="text-destructive">*</span>}</FormLabel>
+                      <FormLabel>
+                        {field.label}{" "}
+                        {field.required && (
+                          <span className="text-destructive">*</span>
+                        )}
+                      </FormLabel>
                       <FormControl>
                         {field.type === "textarea" ? (
                           <Textarea
@@ -306,7 +386,11 @@ const ManageForm = ({
                             className="min-h-[150px]"
                           />
                         ) : (
-                          <Input {...formField} disabled={isSubmitting} placeholder={field.placeholder} />
+                          <Input
+                            {...formField}
+                            disabled={isSubmitting}
+                            placeholder={field.placeholder}
+                          />
                         )}
                       </FormControl>
                       <FormMessage />
@@ -322,10 +406,12 @@ const ManageForm = ({
         {showFileUploads && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
             <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="attachReport" 
+              <Checkbox
+                id="attachReport"
                 checked={attachReport}
-                onCheckedChange={(checked) => setAttachReport(checked as boolean)}
+                onCheckedChange={(checked) =>
+                  setAttachReport(checked as boolean)
+                }
               />
               <div className="grid gap-1.5 leading-none">
                 <label
@@ -337,17 +423,21 @@ const ManageForm = ({
                 {attachReport && (
                   <div className="flex items-center mt-2 border rounded p-2 bg-muted/30">
                     <Upload className="h-4 w-4 mr-2" />
-                    <span className="text-xs text-muted-foreground">Click to upload or drag and drop</span>
+                    <span className="text-xs text-muted-foreground">
+                      Click to upload or drag and drop
+                    </span>
                   </div>
                 )}
               </div>
             </div>
 
             <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="childIncidentReport" 
+              <Checkbox
+                id="childIncidentReport"
                 checked={childIncidentReport}
-                onCheckedChange={(checked) => setChildIncidentReport(checked as boolean)}
+                onCheckedChange={(checked) =>
+                  setChildIncidentReport(checked as boolean)
+                }
               />
               <div className="grid gap-1.5 leading-none">
                 <label
@@ -359,7 +449,9 @@ const ManageForm = ({
                 {childIncidentReport && (
                   <div className="flex items-center mt-2 border rounded p-2 bg-muted/30">
                     <Upload className="h-4 w-4 mr-2" />
-                    <span className="text-xs text-muted-foreground">Click to upload or drag and drop</span>
+                    <span className="text-xs text-muted-foreground">
+                      Click to upload or drag and drop
+                    </span>
                   </div>
                 )}
               </div>
@@ -369,27 +461,25 @@ const ManageForm = ({
 
         <div className="flex justify-between pt-4">
           {onCancel && (
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={onCancel}
               disabled={isSubmitting}
             >
               Cancel
             </Button>
           )}
-          <Button 
-            type="submit"
-            disabled={isSubmitting}
-            className="ml-auto"
-          >
+          <Button type="submit" disabled={isSubmitting} className="ml-auto">
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {isEdit ? "Updating..." : "Creating..."}
               </>
+            ) : isEdit ? (
+              "Update"
             ) : (
-              isEdit ? "Update" : "Add Facilities"
+              "Add"
             )}
           </Button>
         </div>
