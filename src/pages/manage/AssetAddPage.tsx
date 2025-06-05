@@ -1,8 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import PageHeader from "@/components/shared/PageHeader";
-import { ArrowLeft, FileSpreadsheet, Upload } from "lucide-react";
+import {
+  ArrowLeft,
+  FileSpreadsheet,
+  Upload,
+  AlertTriangle,
+  XCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +24,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabaseClient";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/contexts/AuthContext";
 import { useAssetStatusOptions } from "@/hooks/queries/useAssetStatusOptions";
 import {
   useFacilityOptions,
@@ -36,12 +43,28 @@ import {
   useAssetAreaOptions,
   useAssetSensorOptions,
 } from "@/hooks/queries/useAssetDropdownOptions";
+import {
+  validateImageFile,
+  MAX_FILE_SIZE,
+  ALLOWED_FILE_TYPES,
+} from "@/services/assetImageService";
 
 const AssetAddPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth(); // Get user directly
   const [activeTab, setActiveTab] = useState("asset-info");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<{
+    total: number;
+    success: number;
+    inProgress: boolean;
+  }>({
+    total: 0,
+    success: 0,
+    inProgress: false,
+  });
+  const [fileErrors, setFileErrors] = useState<string[]>([]);
 
   // State for tracking selected values in cascading dropdowns
   // Facility > System > Package relationship
@@ -128,6 +151,25 @@ const AssetAddPage: React.FC = () => {
   const [assetImageFiles, setAssetImageFiles] = useState<File[]>([]);
   const [assetImagePreviews, setAssetImagePreviews] = useState<string[]>([]);
 
+  // Validate files before setting them
+  const validateFiles = (
+    files: File[]
+  ): { validFiles: File[]; errors: string[] } => {
+    const validFiles: File[] = [];
+    const errors: string[] = [];
+
+    Array.from(files).forEach((file, index) => {
+      const error = validateImageFile(file);
+      if (error) {
+        errors.push(`${file.name}: ${error}`);
+      } else {
+        validFiles.push(file);
+      }
+    });
+
+    return { validFiles, errors };
+  };
+
   const handleChange = (field: string, value: any) => {
     // Implementation of cascading dropdowns logic:
     // When parent dropdown changes, reset all child dropdowns
@@ -154,17 +196,34 @@ const AssetAddPage: React.FC = () => {
     } else if (field === "assetImage") {
       const files = value as File[];
       if (files && files.length > 0) {
-        setAssetImageFiles((prev) => [...prev, ...files]);
+        // Validate files before adding
+        const { validFiles, errors } = validateFiles(files);
 
-        const newPreviews = Array.from(files).map((file) =>
-          URL.createObjectURL(file)
-        );
-        setAssetImagePreviews((prev) => [...prev, ...newPreviews]);
+        if (errors.length > 0) {
+          setFileErrors((prev) => [...prev, ...errors]);
+          toast({
+            title: "File validation error",
+            description: errors[0],
+            variant: "destructive",
+          });
+        }
 
-        setFormData({
-          ...formData,
-          [field]: [...((formData.assetImage as File[]) || []), ...files],
-        });
+        if (validFiles.length > 0) {
+          setAssetImageFiles((prev) => [...prev, ...validFiles]);
+
+          const newPreviews = Array.from(validFiles).map((file) =>
+            URL.createObjectURL(file)
+          );
+          setAssetImagePreviews((prev) => [...prev, ...newPreviews]);
+
+          setFormData({
+            ...formData,
+            [field]: [
+              ...((formData.assetImage as File[]) || []),
+              ...validFiles,
+            ],
+          });
+        }
       }
     } else {
       setFormData({
@@ -204,6 +263,18 @@ const AssetAddPage: React.FC = () => {
         assetImage: newImages,
       };
     });
+
+    // Clear any errors for the removed image
+    setFileErrors((prev) => {
+      if (prev.length <= index) return prev;
+      const newErrors = [...prev];
+      newErrors.splice(index, 1);
+      return newErrors;
+    });
+  };
+
+  const clearFileErrors = () => {
+    setFileErrors([]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -211,6 +282,17 @@ const AssetAddPage: React.FC = () => {
 
     // Prevent multiple submissions
     if (isSubmitting) return;
+
+    // Ensure we have a user ID
+    if (!user?.id) {
+      toast({
+        title: "Authentication Error",
+        description:
+          "You need to be logged in to create an asset. Please log in and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -237,6 +319,7 @@ const AssetAddPage: React.FC = () => {
           serial_number: formData.assetSerialNo || null,
           area_id: formData.assetArea || null,
           asset_class_id: formData.assetClass || null,
+          asset_sce_id: formData.assetClass || null,
           specification: formData.assetSpecification || null,
           is_integrity: formData.assetIntegrity,
           is_reliability: formData.assetReliability,
@@ -245,9 +328,9 @@ const AssetAddPage: React.FC = () => {
           drawing_no: formData.assetDrawingNo || null,
           ex_class: formData.assetExClass || null,
           ex_certificate: formData.assetExCertificate || null,
-          created_by: "5495aba4-2446-41c3-a496-6502c0b10f4b", // You might want to replace this with actual user ID
+          created_by: user.id, // Use the actual logged-in user ID
           created_at: new Date().toISOString(),
-          // Leave asset_image_path empty for now, we'll update it after uploading images
+          // We no longer store image paths in asset_detail
         })
         .select("id")
         .single();
@@ -261,6 +344,15 @@ const AssetAddPage: React.FC = () => {
       const assetDetailId = assetDetailData?.id;
 
       // Step 2: Create the main asset record
+      // Find the selected status option to get its id
+      const selectedStatusOption = Array.isArray(statusOptionsData)
+        ? statusOptionsData.find(
+            (option) => String(option.value) === String(formData.assetStatus)
+          )
+        : undefined;
+
+      const statusId = selectedStatusOption?.id || formData.assetStatus || null;
+
       const { data: assetData, error: assetError } = await supabase
         .from("e_asset")
         .insert({
@@ -270,11 +362,11 @@ const AssetAddPage: React.FC = () => {
           asset_no: formData.assetNo,
           asset_name: formData.assetName,
           asset_tag_id: formData.assetTag,
-          status_id: formData.assetStatus,
+          status_id: statusId,
           asset_group_id: formData.assetGroup || null,
           commission_date: formData.commissionDate || null,
           asset_detail_id: assetDetailId,
-          created_by: "5495aba4-2446-41c3-a496-6502c0b10f4b", // Replace with actual user ID
+          created_by: user.id, // Use the actual logged-in user ID
           created_at: new Date().toISOString(),
         })
         .select("id")
@@ -286,33 +378,59 @@ const AssetAddPage: React.FC = () => {
 
       // Step 3: Upload images if any
       const assetId = assetData?.id;
-      let imageUrls: string[] = [];
+      let attachments = [];
 
       if (assetId && assetImageFiles.length > 0) {
-        // Import here to avoid circular dependencies
-        const { uploadMultipleAssetImages } = await import(
-          "@/services/assetImageService"
-        );
-        imageUrls = await uploadMultipleAssetImages(assetId, assetImageFiles);
+        try {
+          setUploadStatus({
+            total: assetImageFiles.length,
+            success: 0,
+            inProgress: true,
+          });
 
-        // Step 4: Update asset_detail with image paths if images were uploaded
-        if (imageUrls.length > 0) {
-          const { error: updateError } = await supabase
-            .from("e_asset_detail")
-            .update({
-              asset_image_path: imageUrls.join(","), // Store as comma-separated string
-              updated_at: new Date().toISOString(),
-              updated_by: "system", // Replace with actual user ID
-            })
-            .eq("id", assetDetailId);
+          // Import here to avoid circular dependencies
+          const { uploadMultipleAssetImages } = await import(
+            "@/services/assetImageService"
+          );
 
-          if (updateError) {
-            console.error(
-              "Error updating asset_detail with image paths:",
-              updateError
-            );
-            // Continue execution even if update fails
+          // Upload images and save to e_asset_attachment table
+          // Use the user ID from the auth context
+          attachments = await uploadMultipleAssetImages(
+            assetId,
+            assetImageFiles,
+            user.id
+          );
+
+          setUploadStatus((prev) => ({
+            ...prev,
+            success: attachments.length,
+            inProgress: false,
+          }));
+
+          if (attachments.length === 0) {
+            console.error("Failed to upload images or save attachments");
+            toast({
+              title: "Warning",
+              description: "Asset created but images could not be uploaded",
+              variant: "destructive",
+            });
+          } else if (attachments.length < assetImageFiles.length) {
+            toast({
+              title: "Partial Upload",
+              description: `Asset created but only ${attachments.length} out of ${assetImageFiles.length} images were uploaded`,
+              variant: "default",
+            });
           }
+        } catch (uploadError) {
+          console.error("Error during image upload:", uploadError);
+          // Continue execution even if uploads fail
+          toast({
+            title: "Upload Error",
+            description:
+              "There was a problem uploading images. The asset was created without images.",
+            variant: "destructive",
+          });
+          setUploadStatus((prev) => ({ ...prev, inProgress: false }));
         }
       }
 
@@ -341,6 +459,13 @@ const AssetAddPage: React.FC = () => {
   const handleCancel = () => {
     navigate("/manage/assets");
   };
+
+  // Clear ObjectURLs on component unmount
+  useEffect(() => {
+    return () => {
+      assetImagePreviews.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, []);
 
   return (
     <div className="space-y-6">
