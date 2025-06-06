@@ -174,17 +174,19 @@ export const assetService = {
   async getItemsByBomId(bomId: number): Promise<any> {
     const { data, error } = await supabase
       .from("e_spare_parts")
-      .select(`
+      .select(
+        `
         *,
         item_master: item_master_id(*, unit: unit_id(*))
-      `)
+      `
+      )
       .eq("bom_id", bomId)
-      .order('created_at', { ascending: true }); // Optional: add sorting
-  
+      .order("created_at", { ascending: true }); // Optional: add sorting
+
     if (error) {
       throw new Error(`Error fetching BOM items: ${error.message}`);
     }
-  
+
     return data || [];
   },
 
@@ -192,20 +194,22 @@ export const assetService = {
     // @ts-ignore
     const { data, error } = await supabase
       .from("e_work_order")
-      .select(`
+      .select(
+        `
         id,
         work_order_no,
         due_date,
         task:e_task!task_id(task_name),
         status:e_work_order_status!work_order_status_id(name)
-      `)
+      `
+      )
       .eq("asset_id", assetId)
       .order("created_at", { ascending: false });
-  
+
     if (error) {
       throw new Error(`Error fetching work orders: ${error.message}`);
     }
-  
+
     return data || [];
   },
 
@@ -215,11 +219,119 @@ export const assetService = {
       .from("e_asset_attachment")
       .select("*")
       .eq("asset_id", assetId);
-  
+
     if (error) {
       throw new Error(`Error fetching attachments: ${error.message}`);
     }
-  
+
     return data || [];
-  }
+  },
+
+  async getAssetHierarchyNodeDetails(
+    nodeType: string,
+    nodeId: string | number
+  ): Promise<any> {
+    switch (nodeType) {
+      case "facility":
+        const { data: facilityData, error: facilityError } = await supabase
+          .from("e_facility")
+          .select("*")
+          .eq("id", Number(nodeId))
+          .single();
+
+        if (facilityError) {
+          throw new Error(
+            `Error fetching facility details: ${facilityError.message}`
+          );
+        }
+
+        return facilityData;
+
+      case "system":
+        const { data: systemData, error: systemError } = await supabase
+          .from("e_system")
+          .select("*")
+          .eq("id", Number(nodeId))
+          .single();
+
+        if (systemError) {
+          throw new Error(
+            `Error fetching system details: ${systemError.message}`
+          );
+        }
+
+        return systemData;
+
+      case "package":
+        const { data: packageData, error: packageError } = await supabase
+          .from("e_package")
+          .select(
+            `
+            *,
+            assets:e_asset(
+              id,
+              asset_no,
+              asset_name,
+              commission_date,
+              asset_status:e_asset_status(name),
+              asset_detail:e_asset_detail(
+                specification,
+                serial_number,
+                model,
+                maker_no,
+                manufacturer:e_manufacturer(name),
+                type:e_asset_type(name, category:e_asset_category(name)),
+                asset_class:e_asset_class(name)
+              )
+            )
+          `
+          )
+          .eq("id", Number(nodeId))
+          .single();
+
+        if (packageError) {
+          throw new Error(
+            `Error fetching package details: ${packageError.message}`
+          );
+        }
+
+        return packageData;
+
+      case "asset":
+        const { data: assetData, error: assetError } = await supabase
+          .from("e_asset")
+          .select(
+            `
+            *,
+            facility:e_facility(location_name),
+            system:e_system(system_name),
+            package:e_package(package_name),
+            asset_tag:e_asset_tag(name),
+            asset_status:e_asset_status(name),
+            asset_detail:e_asset_detail(
+              specification,
+              serial_number,
+              model,
+              maker_no,
+              manufacturer:e_manufacturer(name),
+              type:e_asset_type(name, category:e_asset_category(name)),
+              asset_class:e_asset_class(name)
+            )
+          `
+          )
+          .eq("id", Number(nodeId))
+          .single();
+
+        if (assetError) {
+          throw new Error(
+            `Error fetching asset details: ${assetError.message}`
+          );
+        }
+
+        return assetData;
+
+      default:
+        throw new Error(`Unknown node type: ${nodeType}`);
+    }
+  },
 };

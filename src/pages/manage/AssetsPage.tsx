@@ -20,9 +20,11 @@ import {
 } from "@/components/ui/drawer";
 import {
   useAssetHierarchy,
+  useAssetHierarchyNodeDetails,
   useAssetsWithRelations,
 } from "@/hooks/queries/useAssets";
 import HierarchyNode from "@/components/ui/hierarchy";
+import { Loader2 } from "lucide-react";
 
 const AssetsPage: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<any | null>(null);
@@ -39,8 +41,26 @@ const AssetsPage: React.FC = () => {
     error: hierarchyError,
   } = useAssetHierarchy();
 
+  const {
+    data: nodeDetails,
+    isLoading: isNodeDetailsLoading,
+    error: nodeDetailsError,
+  } = useAssetHierarchyNodeDetails(
+    selectedNode?.type || "",
+    selectedNode?.id || ""
+  );
+
   const handleNodeSelect = (node: any) => {
     setSelectedNode(node);
+
+    // If the selected node is an asset, we could optionally navigate directly to its detail page
+    // or show a button to navigate in the metadata section
+    if (node.type === "asset") {
+      // Option 1: Direct navigation (commented out)
+      // navigate(`/manage/assets/${node.id}`);
+      // Option 2: Just set selected node to show details in the sidebar
+      // This is already done with setSelectedNode(node) above
+    }
   };
 
   const handleExpandAll = () => {
@@ -221,11 +241,484 @@ const AssetsPage: React.FC = () => {
                       </div>
 
                       <div className="p-4 border rounded-md">
-                        <h4 className="text-sm font-medium mb-2">Metadata</h4>
-                        <p className="text-sm text-gray-500">
-                          Additional information about this {selectedNode.type}{" "}
-                          would be displayed here.
-                        </p>
+                        <h4 className="text-sm font-medium mb-2 flex items-center justify-between">
+                          <span>Metadata</span>
+                          {isNodeDetailsLoading && (
+                            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                          )}
+                        </h4>
+
+                        {isNodeDetailsLoading ? (
+                          <p className="text-sm text-gray-500">
+                            Loading details...
+                          </p>
+                        ) : nodeDetailsError ? (
+                          <p className="text-sm text-red-500">
+                            Error loading details
+                          </p>
+                        ) : (
+                          <>
+                            {selectedNode.type === "package" && nodeDetails && (
+                              <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div className="p-2 bg-gray-50 rounded-md">
+                                    <span className="text-xs text-gray-500 block">
+                                      Package Code
+                                    </span>
+                                    <span className="text-sm font-medium">
+                                      {nodeDetails.package_code || "-"}
+                                    </span>
+                                  </div>
+                                  <div className="p-2 bg-gray-50 rounded-md">
+                                    <span className="text-xs text-gray-500 block">
+                                      Total Assets
+                                    </span>
+                                    <span className="text-sm font-medium">
+                                      {nodeDetails.assets?.length || 0}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Package Assets Summary */}
+                                {nodeDetails.assets &&
+                                  nodeDetails.assets.length > 0 && (
+                                    <div className="mt-4">
+                                      <h5 className="text-xs font-medium text-gray-500 mb-2">
+                                        Assets in this Package
+                                      </h5>
+                                      <div className="border rounded-md divide-y divide-gray-100 overflow-hidden">
+                                        {nodeDetails.assets.map(
+                                          (asset: any) => (
+                                            <div
+                                              key={asset.id}
+                                              className="p-3 text-sm hover:bg-gray-50"
+                                            >
+                                              <div className="flex justify-between mb-1">
+                                                <span className="font-medium">
+                                                  {asset.asset_name ||
+                                                    asset.asset_no}
+                                                </span>
+                                                {asset.asset_status ? (
+                                                  <StatusBadge
+                                                    status={
+                                                      asset.asset_status.name
+                                                    }
+                                                  />
+                                                ) : null}
+                                              </div>
+                                              <div className="grid grid-cols-2 gap-1 mt-2">
+                                                {asset.asset_detail
+                                                  ?.manufacturer?.name && (
+                                                  <div>
+                                                    <span className="text-xs text-gray-500 block">
+                                                      Manufacturer
+                                                    </span>
+                                                    <span className="text-xs">
+                                                      {
+                                                        asset.asset_detail
+                                                          .manufacturer.name
+                                                      }
+                                                    </span>
+                                                  </div>
+                                                )}
+                                                {asset.asset_detail?.model && (
+                                                  <div>
+                                                    <span className="text-xs text-gray-500 block">
+                                                      Model
+                                                    </span>
+                                                    <span className="text-xs">
+                                                      {asset.asset_detail.model}
+                                                    </span>
+                                                  </div>
+                                                )}
+                                                {asset.asset_detail
+                                                  ?.serial_number && (
+                                                  <div>
+                                                    <span className="text-xs text-gray-500 block">
+                                                      Serial Number
+                                                    </span>
+                                                    <span className="text-xs">
+                                                      {
+                                                        asset.asset_detail
+                                                          .serial_number
+                                                      }
+                                                    </span>
+                                                  </div>
+                                                )}
+                                                {asset.asset_detail?.type
+                                                  ?.name && (
+                                                  <div>
+                                                    <span className="text-xs text-gray-500 block">
+                                                      Type
+                                                    </span>
+                                                    <span className="text-xs">
+                                                      {
+                                                        asset.asset_detail.type
+                                                          .name
+                                                      }
+                                                    </span>
+                                                  </div>
+                                                )}
+                                              </div>
+                                            </div>
+                                          )
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                {/* Asset Distribution by Category/Type */}
+                                <div>
+                                  <h5 className="text-xs font-medium text-gray-500 mb-2">
+                                    Asset Distribution
+                                  </h5>
+                                  <div className="grid grid-cols-1 gap-1">
+                                    {nodeDetails.assets &&
+                                      Array.from(
+                                        new Set(
+                                          nodeDetails.assets
+                                            .filter(
+                                              (asset: any) =>
+                                                asset.asset_detail?.type
+                                                  ?.category?.name
+                                            )
+                                            .map(
+                                              (asset: any) =>
+                                                asset.asset_detail.type.category
+                                                  .name
+                                            )
+                                        )
+                                      ).map((category: string) => {
+                                        const count = nodeDetails.assets.filter(
+                                          (asset: any) =>
+                                            asset.asset_detail?.type?.category
+                                              ?.name === category
+                                        ).length;
+
+                                        return (
+                                          <div
+                                            key={category}
+                                            className="flex justify-between items-center p-2 bg-gray-50 rounded-md"
+                                          >
+                                            <span className="text-xs">
+                                              {category}
+                                            </span>
+                                            <span className="text-xs font-medium">
+                                              {count}
+                                            </span>
+                                          </div>
+                                        );
+                                      })}
+                                    {(!nodeDetails.assets ||
+                                      nodeDetails.assets.length === 0) && (
+                                      <div className="p-2 bg-gray-50 rounded-md">
+                                        <span className="text-xs text-gray-500">
+                                          No category data available
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Asset Distribution by Status */}
+                                <div>
+                                  <h5 className="text-xs font-medium text-gray-500 mb-2">
+                                    Assets by Status
+                                  </h5>
+                                  <div className="grid grid-cols-1 gap-1">
+                                    {nodeDetails.statistics?.assetsByStatus &&
+                                      Object.entries(
+                                        nodeDetails.statistics.assetsByStatus
+                                      ).map(([status, count]) => (
+                                        <div
+                                          key={status}
+                                          className="flex justify-between items-center p-2 bg-gray-50 rounded-md"
+                                        >
+                                          <div className="flex items-center">
+                                            <div
+                                              className={`w-2 h-2 rounded-full mr-2 ${
+                                                status === "Operational"
+                                                  ? "bg-green-500"
+                                                  : status ===
+                                                    "Under Maintenance"
+                                                  ? "bg-orange-500"
+                                                  : status === "Out of Service"
+                                                  ? "bg-red-500"
+                                                  : "bg-gray-500"
+                                              }`}
+                                            ></div>
+                                            <span className="text-xs">
+                                              {status}
+                                            </span>
+                                          </div>
+                                          <span className="text-xs font-medium">
+                                            {count}
+                                          </span>
+                                        </div>
+                                      ))}
+                                    {(!nodeDetails.statistics?.assetsByStatus ||
+                                      Object.keys(
+                                        nodeDetails.statistics?.assetsByStatus
+                                      ).length === 0) && (
+                                      <div className="p-2 bg-gray-50 rounded-md">
+                                        <span className="text-xs text-gray-500">
+                                          No status data available
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Recent Assets List (showing just first 5) */}
+                                <div>
+                                  <h5 className="text-xs font-medium text-gray-500 mb-2">
+                                    Recent Assets
+                                  </h5>
+                                  <div className="grid grid-cols-1 gap-1 max-h-[200px] overflow-y-auto">
+                                    {nodeDetails.assets &&
+                                      nodeDetails.assets
+                                        .slice(0, 5)
+                                        .map((asset: any) => (
+                                          <div
+                                            key={asset.id}
+                                            className="p-2 bg-gray-50 rounded-md"
+                                          >
+                                            <div className="flex justify-between">
+                                              <span className="text-xs font-medium">
+                                                {asset.asset_name ||
+                                                  asset.asset_no}
+                                              </span>
+                                              <StatusBadge
+                                                status={
+                                                  asset.asset_status?.name ||
+                                                  "Unknown"
+                                                }
+                                              />
+                                            </div>
+                                            <span className="text-xs text-gray-500 block mt-1">
+                                              {asset.asset_detail?.category
+                                                ?.name || "Uncategorized"}{" "}
+                                              •
+                                              {asset.asset_detail?.manufacturer
+                                                ?.name ||
+                                                "Unknown Manufacturer"}
+                                            </span>
+                                          </div>
+                                        ))}
+                                    {(!nodeDetails.assets ||
+                                      nodeDetails.assets.length === 0) && (
+                                      <div className="p-2 bg-gray-50 rounded-md">
+                                        <span className="text-xs text-gray-500">
+                                          No assets in this package
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {selectedNode.type === "facility" &&
+                              nodeDetails && (
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div className="p-2 bg-gray-50 rounded-md">
+                                    <span className="text-xs text-gray-500 block">
+                                      Location Name
+                                    </span>
+                                    <span className="text-sm font-medium">
+                                      {nodeDetails.location_name || "-"}
+                                    </span>
+                                  </div>
+                                  <div className="p-2 bg-gray-50 rounded-md">
+                                    <span className="text-xs text-gray-500 block">
+                                      Location Code
+                                    </span>
+                                    <span className="text-sm font-medium">
+                                      {nodeDetails.location_code || "-"}
+                                    </span>
+                                  </div>
+                                  <div className="p-2 bg-gray-50 rounded-md">
+                                    <span className="text-xs text-gray-500 block">
+                                      Address
+                                    </span>
+                                    <span className="text-sm font-medium">
+                                      {nodeDetails.address || "-"}
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
+
+                            {selectedNode.type === "system" && nodeDetails && (
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="p-2 bg-gray-50 rounded-md">
+                                  <span className="text-xs text-gray-500 block">
+                                    System Name
+                                  </span>
+                                  <span className="text-sm font-medium">
+                                    {nodeDetails.system_name || "-"}
+                                  </span>
+                                </div>
+                                <div className="p-2 bg-gray-50 rounded-md">
+                                  <span className="text-xs text-gray-500 block">
+                                    System Code
+                                  </span>
+                                  <span className="text-sm font-medium">
+                                    {nodeDetails.system_code || "-"}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+
+                            {selectedNode.type === "asset" && nodeDetails && (
+                              <div className="space-y-3">
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div className="p-2 bg-gray-50 rounded-md">
+                                    <span className="text-xs text-gray-500 block">
+                                      Asset Name
+                                    </span>
+                                    <span className="text-sm font-medium">
+                                      {nodeDetails.asset_name || "-"}
+                                    </span>
+                                  </div>
+                                  <div className="p-2 bg-gray-50 rounded-md">
+                                    <span className="text-xs text-gray-500 block">
+                                      Asset No
+                                    </span>
+                                    <span className="text-sm font-medium">
+                                      {nodeDetails.asset_no || "-"}
+                                    </span>
+                                  </div>
+                                  <div className="p-2 bg-gray-50 rounded-md">
+                                    <span className="text-xs text-gray-500 block">
+                                      Status
+                                    </span>
+                                    <StatusBadge
+                                      status={
+                                        nodeDetails.asset_status?.name ||
+                                        "Unknown"
+                                      }
+                                    />
+                                  </div>
+                                  <div className="p-2 bg-gray-50 rounded-md">
+                                    <span className="text-xs text-gray-500 block">
+                                      Commission Date
+                                    </span>
+                                    <span className="text-sm font-medium">
+                                      {nodeDetails.commission_date
+                                        ? new Date(
+                                            nodeDetails.commission_date
+                                          ).toLocaleDateString()
+                                        : "-"}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {nodeDetails.asset_detail && (
+                                  <div>
+                                    <h5 className="text-xs font-medium text-gray-500 mb-2">
+                                      Asset Details
+                                    </h5>
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <div className="p-2 bg-gray-50 rounded-md">
+                                        <span className="text-xs text-gray-500 block">
+                                          Category
+                                        </span>
+                                        <span className="text-sm font-medium">
+                                          {nodeDetails.asset_detail.category
+                                            ?.name || "-"}
+                                        </span>
+                                      </div>
+                                      <div className="p-2 bg-gray-50 rounded-md">
+                                        <span className="text-xs text-gray-500 block">
+                                          Type
+                                        </span>
+                                        <span className="text-sm font-medium">
+                                          {nodeDetails.asset_detail.type
+                                            ?.name || "-"}
+                                        </span>
+                                      </div>
+                                      <div className="p-2 bg-gray-50 rounded-md">
+                                        <span className="text-xs text-gray-500 block">
+                                          Manufacturer
+                                        </span>
+                                        <span className="text-sm font-medium">
+                                          {nodeDetails.asset_detail.manufacturer
+                                            ?.name || "-"}
+                                        </span>
+                                      </div>
+                                      <div className="p-2 bg-gray-50 rounded-md">
+                                        <span className="text-xs text-gray-500 block">
+                                          Model
+                                        </span>
+                                        <span className="text-sm font-medium">
+                                          {nodeDetails.asset_detail.model ||
+                                            "-"}
+                                        </span>
+                                      </div>
+                                      <div className="p-2 bg-gray-50 rounded-md">
+                                        <span className="text-xs text-gray-500 block">
+                                          Serial Number
+                                        </span>
+                                        <span className="text-sm font-medium">
+                                          {nodeDetails.asset_detail
+                                            .serial_number || "-"}
+                                        </span>
+                                      </div>
+                                      <div className="p-2 bg-gray-50 rounded-md">
+                                        <span className="text-xs text-gray-500 block">
+                                          Area
+                                        </span>
+                                        <span className="text-sm font-medium">
+                                          {nodeDetails.asset_detail.area
+                                            ?.name || "-"}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {nodeDetails.asset_sce &&
+                                  nodeDetails.asset_sce.length > 0 && (
+                                    <div>
+                                      <h5 className="text-xs font-medium text-gray-500 mb-2">
+                                        SCE Information
+                                      </h5>
+                                      <div className="grid grid-cols-2 gap-3">
+                                        <div className="p-2 bg-gray-50 rounded-md">
+                                          <span className="text-xs text-gray-500 block">
+                                            SCE Code
+                                          </span>
+                                          <span className="text-sm font-medium">
+                                            {nodeDetails.asset_sce[0]
+                                              .sce_code || "-"}
+                                          </span>
+                                        </div>
+                                        <div className="p-2 bg-gray-50 rounded-md">
+                                          <span className="text-xs text-gray-500 block">
+                                            Group Name
+                                          </span>
+                                          <span className="text-sm font-medium">
+                                            {nodeDetails.asset_sce[0]
+                                              .group_name || "-"}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                              </div>
+                            )}
+
+                            {selectedNode.type !== "facility" &&
+                              selectedNode.type !== "system" &&
+                              selectedNode.type !== "package" &&
+                              selectedNode.type !== "asset" && (
+                                <p className="text-sm text-gray-500">
+                                  Additional information about this{" "}
+                                  {selectedNode.type} would be displayed here.
+                                </p>
+                              )}
+                          </>
+                        )}
                       </div>
                     </div>
                   ) : (
