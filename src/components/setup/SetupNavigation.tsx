@@ -1,9 +1,24 @@
-
-import React from 'react';
-import { useLocation, Link } from 'react-router-dom';
-import { Building, User, Ship, Wrench, Thermometer, Settings } from 'lucide-react';
-import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from '@/components/ui/navigation-menu';
-import { cn } from '@/lib/utils';
+import React from "react";
+import { useLocation, Link } from "react-router-dom";
+import {
+  Building,
+  User,
+  Ship,
+  Wrench,
+  Thermometer,
+  Settings,
+  Users,
+} from "lucide-react";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
+import { cn } from "@/lib/utils";
 
 type SetupNavItem = {
   name: string;
@@ -13,25 +28,30 @@ type SetupNavItem = {
 
 const setupNavItems: SetupNavItem[] = [
   {
-    name: 'Client',
-    path: '/admin/setup/client',
-    icon: <User className="mr-2 h-4 w-4" />
+    name: "Client",
+    path: "/admin/setup/client",
+    icon: <User className="mr-2 h-4 w-4" />,
   },
   {
-    name: 'Project',
-    path: '/admin/setup/project',
-    icon: <Ship className="mr-2 h-4 w-4" />
+    name: "Project",
+    path: "/admin/setup/project",
+    icon: <Ship className="mr-2 h-4 w-4" />,
   },
   {
-    name: 'Sensor',
-    path: '/admin/setup/sensor',
-    icon: <Thermometer className="mr-2 h-4 w-4" />
+    name: "Sensor",
+    path: "/admin/setup/sensor",
+    icon: <Thermometer className="mr-2 h-4 w-4" />,
   },
   {
-    name: 'Work Center',
-    path: '/admin/setup/work-center',
-    icon: <Settings className="mr-2 h-4 w-4" />
-  }
+    name: "Work Center",
+    path: "/admin/setup/work-center",
+    icon: <Settings className="mr-2 h-4 w-4" />,
+  },
+  {
+    name: "User Management",
+    path: "/admin/setup/user-management",
+    icon: <Users className="mr-2 h-4 w-4" />,
+  },
 ];
 
 const SetupNavigation = () => {
@@ -45,11 +65,13 @@ const SetupNavigation = () => {
           {setupNavItems.map((item) => (
             <NavigationMenuItem key={item.name}>
               <Link to={item.path}>
-                <NavigationMenuLink 
+                <NavigationMenuLink
                   className={cn(
                     navigationMenuTriggerStyle(),
                     "flex items-center",
-                    currentPath === item.path ? "bg-accent text-accent-foreground" : ""
+                    currentPath === item.path
+                      ? "bg-accent text-accent-foreground"
+                      : ""
                   )}
                 >
                   {item.icon}
