@@ -11,12 +11,14 @@ export const assetKeys = {
   details: () => [...assetKeys.all, "detail"] as const,
   detail: (id: number) => [...assetKeys.details(), id] as const,
   withRelations: () => [...assetKeys.all, "withRelations"] as const,
-  hierarchy: () => [...assetKeys.all, 'hierarchy'] as const,
-  workOrdersByAsset: (assetId: number) => [...assetKeys.detail(assetId), "workOrders"] as const,
+  hierarchy: () => [...assetKeys.all, "hierarchy"] as const,
+  workOrdersByAsset: (assetId: number) =>
+    [...assetKeys.detail(assetId), "workOrders"] as const,
   bomItems: () => [...assetKeys.all, "bomItems"] as const,
   bomItemsByBomId: (bomId: number) => [...assetKeys.bomItems(), bomId] as const,
   attachments: () => [...assetKeys.all, "attachments"] as const,
-  attachmentsByAssetId: (assetId: number) => [...assetKeys.attachments(), assetId] as const,
+  attachmentsByAssetId: (assetId: number) =>
+    [...assetKeys.attachments(), assetId] as const,
 };
 
 export const useAssets = () => {
@@ -50,8 +52,19 @@ export const useAssetsWithRelations = () => {
 
 export const useAssetHierarchy = () => {
   return useQuery({
-    queryKey: assetKeys.hierarchy(), // You'll need to add this to your assetKeys
+    queryKey: assetKeys.hierarchy(),
     queryFn: () => assetService.getAssetHierarchy(),
+  });
+};
+
+export const useAssetHierarchyNodeDetails = (
+  nodeType: string,
+  nodeId: string | number
+) => {
+  return useQuery({
+    queryKey: [...assetKeys.hierarchy(), nodeType, nodeId],
+    queryFn: () => assetService.getAssetHierarchyNodeDetails(nodeType, nodeId),
+    enabled: !!nodeId && !!nodeType,
   });
 };
 
@@ -75,7 +88,6 @@ export const useAssetWithRelations = (id: number) => {
     enabled: !!id,
   });
 };
-
 
 export const useItemByBomId = (bomId: number) => {
   return useQuery({
