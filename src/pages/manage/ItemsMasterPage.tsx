@@ -208,8 +208,7 @@ const ItemsMasterPage: React.FC<ItemsMasterPageProps> = ({
   ];
 
   const handleAddNew = () => {
-    setCurrentItem(null);
-    setIsDialogOpen(true);
+    navigate("/manage/items-master/add");
   };
 
   const handleSubmit = async (values: any) => {

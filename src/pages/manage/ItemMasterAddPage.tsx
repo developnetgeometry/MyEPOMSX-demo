@@ -1,5 +1,3 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,72 +17,57 @@ import {
   useManufacturerOptions,
   useUnitOptions,
   useCriticalityOptions,
+  useAddItemMaster,
   useItemGroupOptions,
-  useUpdateItemMaster,
-  useItemMasterDetail,
 } from "@/hooks/queries/useItemsMaster";
 import { useCategoryOptions } from "@/hooks/queries/useItemsMaster";
 import { useToast } from "@/hooks/use-toast";
 import { validateImageFile } from "@/services/assetImageService";
-import {
-  ArrowLeft,
-  Upload,
-  Wrench,
-  List,
-  Paperclip,
-  File,
-  Trash2,
-} from "lucide-react";
+import { uploadMultipleItemImages } from "@/services/itemMasterAttachmentService";
+import { ArrowLeft, Upload, Wrench } from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { z } from "zod";
-import { supabase } from "@/lib/supabaseClient";
-
-interface ItemAttachment {
-  id: number;
-  file_name: string;
-  file_type: string;
-  file_size: number;
-  file_path: string;
-  created_at: string;
-}
 
 // Zod validation schema
-// const formSchema = z.object({
-//   itemsNo: z.string().min(1, "Item No is required"),
-//   itemsName: z.string().min(1, "Item Name is required"),
-//   itemsGroup: z.string().min(1, "Item Group is required"),
-//   category: z.string().min(1, "Category is required"),
-//   type: z.string().min(1, "Type is required"),
-//   manufacturer: z.string().min(1, "Manufacturer is required"),
-//   partsNo: z.string().min(1, "Manufacturer Parts No is required"),
-//   modelNo: z.string().min(1, "Model No is required"),
-//   unit: z.string().min(1, "Unit is required"),
-//   specification: z.string().min(1, "Specification is required"),
-//   criticality: z.string().min(1, "Criticality is required"),
-//   itemsAttachment: z
-//     .array(z.any())
-//     .optional()
-//     .refine(
-//       (files) => !files || files.every((file) => file instanceof File),
-//       "Invalid file format"
-//     ),
-// });
+const formSchema = z.object({
+  itemsNo: z.string().min(1, "Item No is required"),
+  itemsName: z.string().min(1, "Item Name is required"),
+  itemsGroup: z.string().min(1, "Item Group is required"),
+  category: z.string().min(1, "Category is required"),
+  type: z.string().min(1, "Type is required"),
+  manufacturer: z.string().min(1, "Manufacturer is required"),
+  partsNo: z.string().min(1, "Manufacturer Parts No is required"),
+  modelNo: z.string().min(1, "Model No is required"),
+  unit: z.string().min(1, "Unit is required"),
+  specification: z.string().min(1, "Specification is required"),
+  criticality: z.string().min(1, "Criticality is required"),
+  itemsAttachment: z
+    .array(z.any())
+    .optional()
+    .refine(
+      (files) => files.every((file) => file instanceof File),
+      "Invalid file format"
+    ),
+});
 
-const ItemsMasterDetailPage = () => {
-  const { id } = useParams<{ id: string }>();
+const ItemMasterAddPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("items-master");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { toast } = useToast();
 
-  // attachments
-  const [existingAttachments, setExistingAttachments] = useState<
-    ItemAttachment[]
-  >([]);
-  const [deletedAttachmentIds, setDeletedAttachmentIds] = useState<number[]>(
-    []
-  );
+  const [uploadStatus, setUploadStatus] = useState<{
+    total: number;
+    success: number;
+    inProgress: boolean;
+  }>({
+    total: 0,
+    success: 0,
+    inProgress: false,
+  });
 
   // Cascading dropdowns state
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(
@@ -123,9 +106,7 @@ const ItemsMasterDetailPage = () => {
   const { data: itemsGroupOptions } = useItemGroupOptions();
   const { data: unitOptions } = useUnitOptions();
   const { data: criticalityOptions } = useCriticalityOptions();
-  const updateItemMasterMutation = useUpdateItemMaster(Number(id));
-
-  const { data: itemData, isLoading, error } = useItemMasterDetail(Number(id));
+  const addItemMasterMutation = useAddItemMaster();
 
   // Form data
   const [formData, setFormData] = useState({
@@ -143,79 +124,25 @@ const ItemsMasterDetailPage = () => {
     itemsAttachment: [],
   });
 
-  // Pre-populate form when data is available
-  useEffect(() => {
-    if (itemData) {
-      setFormData({
-        itemsNo: itemData.item_no || "",
-        itemsName: itemData.item_name || "",
-        itemsGroup: itemData.item_group?.id
-          ? String(itemData.item_group.id)
-          : "",
-        category: itemData.item_category?.id
-          ? String(itemData.item_category.id)
-          : "",
-        type: itemData.item_type?.id ? String(itemData.item_type.id) : "",
-        manufacturer: itemData.item_manufacturer?.id
-          ? String(itemData.item_manufacturer.id)
-          : "",
-        partsNo: itemData.manufacturer_part_no || "",
-        modelNo: itemData.model_no || "",
-        unit: itemData.item_unit?.id ? String(itemData.item_unit.id) : "",
-        specification: itemData.specification || "",
-        criticality: itemData.item_criticality?.id
-          ? String(itemData.item_criticality.id)
-          : "",
-        itemsAttachment: [],
-      });
-
-      const fetchAttachments = async () => {
-        if (itemData?.id) {
-          try {
-            const { data, error } = await supabase
-              .from("e_item_master_attachment")
-              .select(
-                "id, file_name, file_type, file_size, file_path, created_at"
-              )
-              .eq("item_master_id", itemData.id);
-            if (error) throw new Error(error.message);
-            setExistingAttachments(data || []);
-          } catch (error) {
-            console.error("Error fetching attachments:", error);
-            toast({
-              title: "Error",
-              description:
-                error instanceof Error ? error.message : "An error occurred",
-              variant: "destructive",
-            });
-          }
-        }
-      };
-
-      if (itemData) {
-        fetchAttachments();
-      }
-    }
-  }, [itemData]);
-
   // Form handlers
+  // Complete handleSubmit function for ItemMasterAddPage
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    // Prevent multiple submissions
     if (isSubmitting) return;
 
-    if (!user.id) {
-      toast({
-        title: "Unauthorized",
-        description: "You are not logged in",
-        variant: "destructive",
-      });
+    // Ensure we have a user ID
+    if (!user?.id) {
+      toast.error(
+        "You need to be logged in to create an item. Please log in and try again."
+      );
       return;
     }
 
     // Validate form data
     try {
-      // formSchema.parse(formData);
+      formSchema.parse(formData);
       setErrors({});
     } catch (validationError) {
       if (validationError instanceof z.ZodError) {
@@ -240,85 +167,87 @@ const ItemsMasterDetailPage = () => {
 
     setIsSubmitting(true);
 
-    const transformedData = {
-      id: Number(id),
-      item_no: formData.itemsNo,
-      item_name: formData.itemsName,
-      item_group: Number(formData.itemsGroup),
-      category_id: Number(formData.category),
-      type_id: Number(formData.type),
-      manufacturer: Number(formData.manufacturer),
-      manufacturer_part_no: formData.partsNo,
-      model_no: formData.modelNo,
-      specification: formData.specification,
-      unit_id: Number(formData.unit),
-      criticality_id: Number(formData.criticality),
-      is_active: true,
-    };
-
     try {
-      toast({
-        title: "Updating item...",
-      });
+      // Show loading toast
+      toast.success("Processing item creation and uploading images...");
 
-      // 1. Update the item master record
-      await updateItemMasterMutation.mutateAsync(transformedData);
+      console.log("Submitting form data:", formData);
 
-      // 2. Handle deleted attachments
-      if (deletedAttachmentIds.length > 0) {
+      // Step 1: Create the item master record first
+      const transformedData = {
+        item_no: formData.itemsNo,
+        item_name: formData.itemsName,
+        item_group: Number(formData.itemsGroup),
+        category_id: Number(formData.category),
+        type_id: Number(formData.type),
+        manufacturer: Number(formData.manufacturer),
+        manufacturer_part_no: formData.partsNo,
+        model_no: formData.modelNo,
+        specification: formData.specification,
+        unit_id: Number(formData.unit),
+        criticality_id: Number(formData.criticality),
+        is_active: true,
+        created_by: user.id,
+        created_at: new Date().toISOString(),
+      };
+
+      // Use the mutation to create the item and get the result
+      const itemResult = await addItemMasterMutation.mutateAsync(
+        transformedData
+      );
+
+      // Step 2: Upload images if any (assuming the mutation returns the created item with id)
+      const itemId = itemResult?.id; // Adjust this based on your mutation response structure
+
+      if (itemId && itemsAttachment.length > 0) {
         try {
-          const { error } = await supabase
-            .from("e_item_master_attachment")
-            .delete()
-            .in("id", deletedAttachmentIds);
-
-          if (error) throw error;
-          toast({
-            title: `Deleted ${deletedAttachmentIds.length} attachments`,
+          setUploadStatus({
+            total: itemsAttachment.length,
+            success: 0,
+            inProgress: true,
           });
-        } catch (deleteError) {
-          console.error("Error deleting attachments:", deleteError);
-          toast({
-            title: "Error deleting attachments",
-            description: deleteError.message,
-            variant: "destructive",
-          });
-        }
-      }
 
-      // 3. Upload new attachments
-      if (itemsAttachment.length > 0) {
-        try {
-          const { uploadMultipleItemImages } = await import(
-            "@/services/itemMasterAttachmentService"
+          // Upload images and save to item attachment table
+          const attachments = await uploadMultipleItemImages(
+            itemId,
+            itemsAttachment,
+            user.id
           );
 
-          await uploadMultipleItemImages(Number(id), itemsAttachment, user.id);
+          setUploadStatus((prev) => ({
+            ...prev,
+            success: attachments.length,
+            inProgress: false,
+          }));
 
-          toast({
-            title: `Uploaded ${itemsAttachment.length} new attachments`,
-          });
+          if (attachments.length === 0) {
+            console.error("Failed to upload images or save attachments");
+            toast.error("Item created but images could not be uploaded");
+          } else if (attachments.length < itemsAttachment.length) {
+            toast.success(
+              `Item created but only ${attachments.length} out of ${itemsAttachment.length} images were uploaded`
+            );
+          }
         } catch (uploadError) {
-          console.error("Error uploading new attachments:", uploadError);
-          toast({
-            title: "Error uploading attachments",
-            description: uploadError.message,
-            variant: "destructive",
-          });
+          console.error("Error during image upload:", uploadError);
+          // Continue execution even if uploads fail
+          toast.error(
+            "There was a problem uploading images. The item was created without images."
+          );
+          setUploadStatus((prev) => ({ ...prev, inProgress: false }));
         }
       }
 
-      toast({
-        title: "Item updated successfully",
-        variant: "default",
-      });
+      // Show success message
+      toast.success("Item created successfully!");
+
+      // Navigate back to items master list
       navigate("/manage/items-master");
     } catch (error) {
-      toast({
-        title: "Error updating item",
-        description: error.message,
-        variant: "destructive",
-      });
+      console.error("Error submitting form:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create item"
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -354,11 +283,7 @@ const ItemsMasterDetailPage = () => {
         const { validFiles, errors } = validateFiles(files);
         if (errors.length > 0) {
           setFileErrors((prev) => [...prev, ...errors]);
-          toast({
-            title: "File upload error",
-            description: errors.join("\n"),
-            variant: "destructive",
-          });
+          toast.error("Please upload valid files.");
         }
 
         if (validFiles.length > 0) {
@@ -423,38 +348,11 @@ const ItemsMasterDetailPage = () => {
     });
   };
 
-  const handleDeleteExistingAttachment = (id: number) => {
-    setDeletedAttachmentIds((prev) => [...prev, id]);
-    setExistingAttachments((prev) => prev.filter((attach) => attach.id !== id));
-    toast({
-      title: "Attachment marked for deletion",
-      description: "The attachment will be removed when you save changes",
-    });
-  };
-
-  const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return bytes + " bytes";
-    else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
-    else return (bytes / 1048576).toFixed(1) + " MB";
-  };
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (error) {
-    return <div>Error: {error.message}</div>;
-  }
-
-  if (!itemData) {
-    return <div>Item with id {id} not found</div>;
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <PageHeader
-          title="Edit Item Master"
+          title="Add Item Master"
           icon={<Wrench className="h-6 w-6" />}
         />
         <Button
@@ -518,9 +416,9 @@ const ItemsMasterDetailPage = () => {
                           ))}
                         </SelectContent>
                       </Select>
-                      {errors.itemsGroup && (
+                      {errors.category && (
                         <p className="text-red-500 text-sm">
-                          {errors.itemsGroup}
+                          {errors.category}
                         </p>
                       )}
                     </div>
@@ -755,88 +653,9 @@ const ItemsMasterDetailPage = () => {
               <TabsContent value="attachment">
                 <div className="space-y-4">
                   <div className="space-y-2">
-
-                    {/* Existing attachments */}
-                    {existingAttachments.length > 0 && (
-                      <div className="mb-6">
-                        <h3 className="text-lg font-medium mb-4">
-                          Existing Attachments
-                        </h3>
-                        <div className="rounded-md border">
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                              <thead>
-                                <tr className="bg-muted border-b">
-                                  <th className="py-3 px-4 text-left font-medium">
-                                    File Name
-                                  </th>
-                                  <th className="py-3 px-4 text-left font-medium">
-                                    Type
-                                  </th>
-                                  <th className="py-3 px-4 text-left font-medium">
-                                    Size
-                                  </th>
-                                  <th className="py-3 px-4 text-left font-medium">
-                                    Upload Date
-                                  </th>
-                                  <th className="py-3 px-4 text-right font-medium">
-                                    Actions
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {existingAttachments.map((file) => (
-                                  <tr key={file.id} className="border-b">
-                                    <td className="py-3 px-4 flex items-center gap-2">
-                                      <File className="h-4 w-4" />
-                                      <a
-                                        href={file.file_path}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-blue-600 hover:underline"
-                                      >
-                                        {file.file_name}
-                                      </a>
-                                    </td>
-                                    <td className="py-3 px-4">
-                                      {file.file_type
-                                        .split("/")[1]
-                                        ?.toUpperCase() || "IMAGE"}
-                                    </td>
-                                    <td className="py-3 px-4">
-                                      {formatFileSize(file.file_size)}
-                                    </td>
-                                    <td className="py-3 px-4">
-                                      {new Date(
-                                        file.created_at
-                                      ).toLocaleDateString()}
-                                    </td>
-                                    <td className="py-3 px-4 text-right">
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        type="button"
-                                        onClick={() =>
-                                          handleDeleteExistingAttachment(
-                                            file.id
-                                          )
-                                        }
-                                        className="h-8 w-8 p-0 text-gray-500 hover:text-red-600 hover:bg-red-50"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                        <span className="sr-only">Delete</span>
-                                      </Button>
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    {/* New attachments */}
-                    <h3 className="text-lg font-medium mb-4">Add New Images</h3>
+                    <Label htmlFor="assetImage">
+                      Asset Images<span className="text-red-500">*</span>
+                    </Label>
                     <div className="border-2 border-dashed border-gray-300 rounded-md p-6 flex flex-col items-center justify-center relative">
                       {attachmentPreviews.length > 0 ? (
                         <div className="w-full">
@@ -933,7 +752,7 @@ const ItemsMasterDetailPage = () => {
                       Back
                     </Button>
                     <Button type="submit" disabled={isSubmitting}>
-                      {isSubmitting ? "Saving..." : "Save Changes"}
+                      {isSubmitting ? "Creating..." : "Create Item"}
                     </Button>
                   </div>
                 </div>
@@ -946,4 +765,4 @@ const ItemsMasterDetailPage = () => {
   );
 };
 
-export default ItemsMasterDetailPage;
+export default ItemMasterAddPage;

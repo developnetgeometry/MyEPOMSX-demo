@@ -116,6 +116,7 @@ import PurchaseOrderFormPage from "@/pages/purchasing/PurchaseOrderFormPage";
 import GoodsReceivePage from "@/pages/purchasing/GoodsReceivePage";
 import GoodsReceiveDetailPage from "@/pages/purchasing/GoodsReceiveDetailPage";
 import GoodsReceiveFormPage from "@/pages/purchasing/GoodsReceiveFormPage";
+import ItemMasterAddPage from "@/pages/manage/ItemMasterAddPage";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -571,6 +572,16 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <Layout>
               <CreatePurchaseOrderPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/manage/items-master/add"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <ItemMasterAddPage />
             </Layout>
           </ProtectedRoute>
         }
