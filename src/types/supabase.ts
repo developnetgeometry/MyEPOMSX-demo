@@ -77,6 +77,7 @@ export type Database = {
           facility_id: number | null
           id: number
           package_id: number | null
+          parent_asset_no: number | null
           status_id: number | null
           system_id: number | null
           updated_at: string | null
@@ -1060,6 +1061,7 @@ export type Database = {
           description: string | null
           file_path: string | null
           id: number
+          is_form_new_work_attachment: boolean | null
           updated_at: string | null
           updated_by: string | null
         }
@@ -1070,6 +1072,7 @@ export type Database = {
           description?: string | null
           file_path?: string | null
           id?: number
+          is_form_new_work_attachment?: boolean | null
           updated_at?: string | null
           updated_by?: string | null
         }
@@ -1080,6 +1083,7 @@ export type Database = {
           description?: string | null
           file_path?: string | null
           id?: number
+          is_form_new_work_attachment?: boolean | null
           updated_at?: string | null
           updated_by?: string | null
         }
@@ -1528,6 +1532,7 @@ export type Database = {
           name: string
           updated_at: string | null
           updated_by: string | null
+          value: number | null
         }
         Insert: {
           created_at?: string | null
@@ -1536,6 +1541,7 @@ export type Database = {
           name: string
           updated_at?: string | null
           updated_by?: string | null
+          value?: number | null
         }
         Update: {
           created_at?: string | null
@@ -1544,6 +1550,7 @@ export type Database = {
           name?: string
           updated_at?: string | null
           updated_by?: string | null
+          value?: number | null
         }
         Relationships: []
       }
@@ -2041,6 +2048,7 @@ export type Database = {
           name: string
           updated_at: string | null
           updated_by: string | null
+          value: number | null
         }
         Insert: {
           created_at?: string | null
@@ -2049,6 +2057,7 @@ export type Database = {
           name: string
           updated_at?: string | null
           updated_by?: string | null
+          value?: number | null
         }
         Update: {
           created_at?: string | null
@@ -2057,6 +2066,7 @@ export type Database = {
           name?: string
           updated_at?: string | null
           updated_by?: string | null
+          value?: number | null
         }
         Relationships: []
       }
@@ -2068,6 +2078,7 @@ export type Database = {
           name: string
           updated_at: string | null
           updated_by: string | null
+          value: number | null
         }
         Insert: {
           created_at?: string | null
@@ -2076,6 +2087,7 @@ export type Database = {
           name: string
           updated_at?: string | null
           updated_by?: string | null
+          value?: number | null
         }
         Update: {
           created_at?: string | null
@@ -2084,6 +2096,7 @@ export type Database = {
           name?: string
           updated_at?: string | null
           updated_by?: string | null
+          value?: number | null
         }
         Relationships: []
       }
@@ -2155,6 +2168,13 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "e_store"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "e_inventory_rack_id_fkey"
+            columns: ["rack_id"]
+            isOneToOne: false
+            referencedRelation: "e_rack"
             referencedColumns: ["id"]
           },
         ]
@@ -2930,6 +2950,7 @@ export type Database = {
       }
       e_material_construction: {
         Row: {
+          composition: string | null
           created_at: string | null
           created_by: string | null
           id: number
@@ -2939,6 +2960,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          composition?: string | null
           created_at?: string | null
           created_by?: string | null
           id?: number
@@ -2948,6 +2970,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          composition?: string | null
           created_at?: string | null
           created_by?: string | null
           id?: number
@@ -2987,21 +3010,36 @@ export type Database = {
       }
       e_new_work_attachment: {
         Row: {
+          created_at: string | null
+          created_by: string | null
           description: string | null
           file_path: string | null
           id: number
+          is_from_new_work_attachment: boolean | null
+          updated_at: string | null
+          updated_by: string | null
           work_request_id: number | null
         }
         Insert: {
+          created_at?: string | null
+          created_by?: string | null
           description?: string | null
           file_path?: string | null
           id?: number
+          is_from_new_work_attachment?: boolean | null
+          updated_at?: string | null
+          updated_by?: string | null
           work_request_id?: number | null
         }
         Update: {
+          created_at?: string | null
+          created_by?: string | null
           description?: string | null
           file_path?: string | null
           id?: number
+          is_from_new_work_attachment?: boolean | null
+          updated_at?: string | null
+          updated_by?: string | null
           work_request_id?: number | null
         }
         Relationships: [
@@ -3502,36 +3540,6 @@ export type Database = {
           created_by?: string | null
           id?: never
           name?: string
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Relationships: []
-      }
-      e_piping_material_construction: {
-        Row: {
-          created_at: string | null
-          created_by: string | null
-          id: number
-          identification: string
-          metals: string | null
-          updated_at: string | null
-          updated_by: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          created_by?: string | null
-          id?: never
-          identification: string
-          metals?: string | null
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          created_by?: string | null
-          id?: never
-          identification?: string
-          metals?: string | null
           updated_at?: string | null
           updated_by?: string | null
         }
@@ -4585,33 +4593,6 @@ export type Database = {
         ]
       }
       e_project_type: {
-        Row: {
-          created_at: string | null
-          created_by: string | null
-          id: number
-          name: string
-          updated_at: string | null
-          updated_by: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          created_by?: string | null
-          id?: never
-          name: string
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          created_by?: string | null
-          id?: never
-          name?: string
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Relationships: []
-      }
-      e_pv_material_construction: {
         Row: {
           created_at: string | null
           created_by: string | null
@@ -5873,6 +5854,47 @@ export type Database = {
         }
         Relationships: []
       }
+      i_ims_attachment: {
+        Row: {
+          asset_detail_id: number | null
+          attachment_path: string | null
+          created_at: string | null
+          created_by: string | null
+          id: number
+          remark: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          asset_detail_id?: number | null
+          attachment_path?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          remark?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          asset_detail_id?: number | null
+          attachment_path?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          remark?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "i_ims_pv_attachment_e_asset_detail_fk"
+            columns: ["asset_detail_id"]
+            isOneToOne: false
+            referencedRelation: "e_asset_detail"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       i_ims_cof_assessment_cof_prod: {
         Row: {
           asset_detail_id: number | null
@@ -6068,6 +6090,106 @@ export type Database = {
         }
         Relationships: []
       }
+      i_ims_design: {
+        Row: {
+          allowable_stress_mpa: number | null
+          asset_detail_id: number | null
+          corrosion_allowance: number | null
+          created_at: string | null
+          created_by: string | null
+          dead_legs: boolean | null
+          design_pressure: number | null
+          design_temperature: number | null
+          ext_env_id: number | null
+          geometry_id: number | null
+          id: number
+          ims_asset_type_id: number | null
+          internal_diameter: number | null
+          length: number | null
+          mix_point: boolean | null
+          operating_pressure_mpa: number | null
+          operating_temperature: number | null
+          outer_diameter: number | null
+          pipe_support: boolean | null
+          soil_water_interface: boolean | null
+          updated_at: string | null
+          updated_by: string | null
+          welding_efficiency: number | null
+        }
+        Insert: {
+          allowable_stress_mpa?: number | null
+          asset_detail_id?: number | null
+          corrosion_allowance?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          dead_legs?: boolean | null
+          design_pressure?: number | null
+          design_temperature?: number | null
+          ext_env_id?: number | null
+          geometry_id?: number | null
+          id?: number
+          ims_asset_type_id?: number | null
+          internal_diameter?: number | null
+          length?: number | null
+          mix_point?: boolean | null
+          operating_pressure_mpa?: number | null
+          operating_temperature?: number | null
+          outer_diameter?: number | null
+          pipe_support?: boolean | null
+          soil_water_interface?: boolean | null
+          updated_at?: string | null
+          updated_by?: string | null
+          welding_efficiency?: number | null
+        }
+        Update: {
+          allowable_stress_mpa?: number | null
+          asset_detail_id?: number | null
+          corrosion_allowance?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          dead_legs?: boolean | null
+          design_pressure?: number | null
+          design_temperature?: number | null
+          ext_env_id?: number | null
+          geometry_id?: number | null
+          id?: number
+          ims_asset_type_id?: number | null
+          internal_diameter?: number | null
+          length?: number | null
+          mix_point?: boolean | null
+          operating_pressure_mpa?: number | null
+          operating_temperature?: number | null
+          outer_diameter?: number | null
+          pipe_support?: boolean | null
+          soil_water_interface?: boolean | null
+          updated_at?: string | null
+          updated_by?: string | null
+          welding_efficiency?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "i_ims_design_e_asset_detail_fk"
+            columns: ["asset_detail_id"]
+            isOneToOne: false
+            referencedRelation: "e_asset_detail"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_design_e_ext_env_fk"
+            columns: ["ext_env_id"]
+            isOneToOne: false
+            referencedRelation: "e_ext_env"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_design_e_geometry_fk"
+            columns: ["geometry_id"]
+            isOneToOne: false
+            referencedRelation: "e_geometry"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       i_ims_general: {
         Row: {
           asset_detail_id: number | null
@@ -6195,179 +6317,91 @@ export type Database = {
           },
         ]
       }
-      i_ims_piping_design: {
+      i_ims_inspection: {
         Row: {
-          allowable_stress_mpa: number | null
           asset_detail_id: number | null
-          corrosion_allowance: number | null
           created_at: string | null
           created_by: string | null
-          dead_legs: boolean | null
-          design_pressure_mpa: number | null
-          design_temperature: number | null
-          ext_env: number | null
-          geometry: number | null
           id: number
-          internal_diameter: number | null
-          length: string | null
-          mix_point: boolean | null
-          operating_pressure_mpa: number | null
-          operating_temperature: number | null
-          outer_diameter: number | null
-          pipe_support: boolean | null
-          soil_water_interface: boolean | null
+          inspection_plan: string | null
           updated_at: string | null
           updated_by: string | null
-          welding_efficiency: number | null
         }
         Insert: {
-          allowable_stress_mpa?: number | null
           asset_detail_id?: number | null
-          corrosion_allowance?: number | null
           created_at?: string | null
           created_by?: string | null
-          dead_legs?: boolean | null
-          design_pressure_mpa?: number | null
-          design_temperature?: number | null
-          ext_env?: number | null
-          geometry?: number | null
           id?: number
-          internal_diameter?: number | null
-          length?: string | null
-          mix_point?: boolean | null
-          operating_pressure_mpa?: number | null
-          operating_temperature?: number | null
-          outer_diameter?: number | null
-          pipe_support?: boolean | null
-          soil_water_interface?: boolean | null
+          inspection_plan?: string | null
           updated_at?: string | null
           updated_by?: string | null
-          welding_efficiency?: number | null
         }
         Update: {
-          allowable_stress_mpa?: number | null
           asset_detail_id?: number | null
-          corrosion_allowance?: number | null
           created_at?: string | null
           created_by?: string | null
-          dead_legs?: boolean | null
-          design_pressure_mpa?: number | null
-          design_temperature?: number | null
-          ext_env?: number | null
-          geometry?: number | null
           id?: number
-          internal_diameter?: number | null
-          length?: string | null
-          mix_point?: boolean | null
-          operating_pressure_mpa?: number | null
-          operating_temperature?: number | null
-          outer_diameter?: number | null
-          pipe_support?: boolean | null
-          soil_water_interface?: boolean | null
+          inspection_plan?: string | null
           updated_at?: string | null
           updated_by?: string | null
-          welding_efficiency?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "i_ims_inspection_e_asset_detail_fk"
+            columns: ["asset_detail_id"]
+            isOneToOne: false
+            referencedRelation: "e_asset_detail"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      i_ims_piping_protection: {
+      i_ims_inspection_attachment: {
         Row: {
           asset_detail_id: number | null
-          coating_quality: number | null
-          cr_exp: string | null
+          attachment_path: string | null
           created_at: string | null
           created_by: string | null
-          detection_system: number | null
-          fsext_corr: string | null
           id: number
-          isolation_system: number | null
-          line_description: string | null
-          minimum_thickness: number | null
-          mitigation_system: number | null
-          online_monitor: number | null
-          post_weld_heat_treatment: number | null
-          replacement_line: string | null
-          srext_corr: string | null
-          trd_mm: number | null
+          ims_inspection_id: number | null
           updated_at: string | null
           updated_by: string | null
         }
         Insert: {
           asset_detail_id?: number | null
-          coating_quality?: number | null
-          cr_exp?: string | null
+          attachment_path?: string | null
           created_at?: string | null
           created_by?: string | null
-          detection_system?: number | null
-          fsext_corr?: string | null
           id?: number
-          isolation_system?: number | null
-          line_description?: string | null
-          minimum_thickness?: number | null
-          mitigation_system?: number | null
-          online_monitor?: number | null
-          post_weld_heat_treatment?: number | null
-          replacement_line?: string | null
-          srext_corr?: string | null
-          trd_mm?: number | null
+          ims_inspection_id?: number | null
           updated_at?: string | null
           updated_by?: string | null
         }
         Update: {
           asset_detail_id?: number | null
-          coating_quality?: number | null
-          cr_exp?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          detection_system?: number | null
-          fsext_corr?: string | null
-          id?: number
-          isolation_system?: number | null
-          line_description?: string | null
-          minimum_thickness?: number | null
-          mitigation_system?: number | null
-          online_monitor?: number | null
-          post_weld_heat_treatment?: number | null
-          replacement_line?: string | null
-          srext_corr?: string | null
-          trd_mm?: number | null
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Relationships: []
-      }
-      i_ims_piping_service: {
-        Row: {
-          asset_detail_id: number | null
-          created_at: string | null
-          created_by: string | null
-          id: number
-          toxic_mass_fraction: number | null
-          toxicity: number | null
-          updated_at: string | null
-          updated_by: string | null
-        }
-        Insert: {
-          asset_detail_id?: number | null
+          attachment_path?: string | null
           created_at?: string | null
           created_by?: string | null
           id?: number
-          toxic_mass_fraction?: number | null
-          toxicity?: number | null
+          ims_inspection_id?: number | null
           updated_at?: string | null
           updated_by?: string | null
         }
-        Update: {
-          asset_detail_id?: number | null
-          created_at?: string | null
-          created_by?: string | null
-          id?: number
-          toxic_mass_fraction?: number | null
-          toxicity?: number | null
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "i_ims_inspection_attachment_e_asset_detail_fk"
+            columns: ["asset_detail_id"]
+            isOneToOne: false
+            referencedRelation: "e_asset_detail"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_inspection_attachment_i_ims_inspection_fk"
+            columns: ["ims_inspection_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_inspection"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       i_ims_pof_assessment_general: {
         Row: {
@@ -6417,296 +6451,157 @@ export type Database = {
         }
         Relationships: []
       }
-      i_ims_pv_attachment: {
+      i_ims_protection: {
         Row: {
           asset_detail_id: number | null
-          attachment_file: string | null
+          coating_quality_id: number | null
           created_at: string | null
           created_by: string | null
-          id: number | null
-          updated_at: string | null
-          updated_by: string | null
-        }
-        Insert: {
-          asset_detail_id?: number | null
-          attachment_file?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          id?: number | null
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Update: {
-          asset_detail_id?: number | null
-          attachment_file?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          id?: number | null
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Relationships: []
-      }
-      i_ims_pv_design: {
-        Row: {
-          allowable_stress_mpa: number | null
-          asset_detail_id: number | null
-          corrosion_allowance: number | null
-          created_at: string | null
-          created_by: string | null
-          deadleg: boolean | null
-          design_pressure: number | null
-          design_temperature: number | null
-          ext_env: number | null
-          geometry: number | null
+          design_fabrication_id: number | null
+          detection_system_id: number | null
           id: number
-          inner_diameter: number | null
-          length: number | null
-          mixpoint: boolean | null
-          operating_temperature: number | null
-          outer_diameter: number | null
-          pipe_support: boolean | null
-          soil_water_interface: boolean | null
-          updated_at: string | null
-          updated_by: string | null
-        }
-        Insert: {
-          allowable_stress_mpa?: number | null
-          asset_detail_id?: number | null
-          corrosion_allowance?: number | null
-          created_at?: string | null
-          created_by?: string | null
-          deadleg?: boolean | null
-          design_pressure?: number | null
-          design_temperature?: number | null
-          ext_env?: number | null
-          geometry?: number | null
-          id?: number
-          inner_diameter?: number | null
-          length?: number | null
-          mixpoint?: boolean | null
-          operating_temperature?: number | null
-          outer_diameter?: number | null
-          pipe_support?: boolean | null
-          soil_water_interface?: boolean | null
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Update: {
-          allowable_stress_mpa?: number | null
-          asset_detail_id?: number | null
-          corrosion_allowance?: number | null
-          created_at?: string | null
-          created_by?: string | null
-          deadleg?: boolean | null
-          design_pressure?: number | null
-          design_temperature?: number | null
-          ext_env?: number | null
-          geometry?: number | null
-          id?: number
-          inner_diameter?: number | null
-          length?: number | null
-          mixpoint?: boolean | null
-          operating_temperature?: number | null
-          outer_diameter?: number | null
-          pipe_support?: boolean | null
-          soil_water_interface?: boolean | null
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Relationships: []
-      }
-      i_ims_pv_inspection: {
-        Row: {
-          asset_detail_id: number | null
-          created_at: string | null
-          created_by: string | null
-          id: number
-          inspection_plan: string | null
-          report_attachment: string | null
-          updated_at: string | null
-          updated_by: string | null
-        }
-        Insert: {
-          asset_detail_id?: number | null
-          created_at?: string | null
-          created_by?: string | null
-          id?: number
-          inspection_plan?: string | null
-          report_attachment?: string | null
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Update: {
-          asset_detail_id?: number | null
-          created_at?: string | null
-          created_by?: string | null
-          id?: number
-          inspection_plan?: string | null
-          report_attachment?: string | null
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Relationships: []
-      }
-      i_ims_pv_protection: {
-        Row: {
-          asset_detail_id: number | null
-          coating_quality: number | null
-          created_at: string | null
-          created_by: string | null
-          design_fabrication: number | null
-          id: number
-          insulation_complexity: string | null
+          ims_asset_type_id: number | null
+          insulation_complexity_id: number | null
           insulation_condition: string | null
           insulation_type_id: number | null
-          interface: number | null
+          interface_id: number | null
+          isolation_system_id: number | null
+          line_description: string | null
           lining_condition: string | null
-          lining_monitoring: number | null
-          lining_type: number | null
+          lining_monitoring: string | null
+          lining_type: string | null
+          minimum_thickness: number | null
+          mitigation_system_id: number | null
           online_monitor: number | null
+          post_weld_heat_treatment: number | null
+          replacement_line: string | null
           updated_at: string | null
           updated_by: string | null
         }
         Insert: {
           asset_detail_id?: number | null
-          coating_quality?: number | null
+          coating_quality_id?: number | null
           created_at?: string | null
           created_by?: string | null
-          design_fabrication?: number | null
+          design_fabrication_id?: number | null
+          detection_system_id?: number | null
           id?: number
-          insulation_complexity?: string | null
+          ims_asset_type_id?: number | null
+          insulation_complexity_id?: number | null
           insulation_condition?: string | null
           insulation_type_id?: number | null
-          interface?: number | null
+          interface_id?: number | null
+          isolation_system_id?: number | null
+          line_description?: string | null
           lining_condition?: string | null
-          lining_monitoring?: number | null
-          lining_type?: number | null
+          lining_monitoring?: string | null
+          lining_type?: string | null
+          minimum_thickness?: number | null
+          mitigation_system_id?: number | null
           online_monitor?: number | null
+          post_weld_heat_treatment?: number | null
+          replacement_line?: string | null
           updated_at?: string | null
           updated_by?: string | null
         }
         Update: {
           asset_detail_id?: number | null
-          coating_quality?: number | null
+          coating_quality_id?: number | null
           created_at?: string | null
           created_by?: string | null
-          design_fabrication?: number | null
+          design_fabrication_id?: number | null
+          detection_system_id?: number | null
           id?: number
-          insulation_complexity?: string | null
+          ims_asset_type_id?: number | null
+          insulation_complexity_id?: number | null
           insulation_condition?: string | null
           insulation_type_id?: number | null
-          interface?: number | null
+          interface_id?: number | null
+          isolation_system_id?: number | null
+          line_description?: string | null
           lining_condition?: string | null
-          lining_monitoring?: number | null
-          lining_type?: number | null
+          lining_monitoring?: string | null
+          lining_type?: string | null
+          minimum_thickness?: number | null
+          mitigation_system_id?: number | null
           online_monitor?: number | null
+          post_weld_heat_treatment?: number | null
+          replacement_line?: string | null
           updated_at?: string | null
           updated_by?: string | null
         }
-        Relationships: []
-      }
-      i_ims_pv_risk: {
-        Row: {
-          asset_detail_id: number | null
-          cof$: number | null
-          cofm2: number | null
-          created_at: string | null
-          created_by: string | null
-          dbrit: number | null
-          dextd: number | null
-          dhtha: number | null
-          dmfat: number | null
-          dscc: number | null
-          dthin: number | null
-          f1: number | null
-          id: number
-          pof: number | null
-          risk_level: number | null
-          risk_ranking: number | null
-          updated_at: string | null
-          updated_by: string | null
-        }
-        Insert: {
-          asset_detail_id?: number | null
-          cof$?: number | null
-          cofm2?: number | null
-          created_at?: string | null
-          created_by?: string | null
-          dbrit?: number | null
-          dextd?: number | null
-          dhtha?: number | null
-          dmfat?: number | null
-          dscc?: number | null
-          dthin?: number | null
-          f1?: number | null
-          id?: number
-          pof?: number | null
-          risk_level?: number | null
-          risk_ranking?: number | null
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Update: {
-          asset_detail_id?: number | null
-          cof$?: number | null
-          cofm2?: number | null
-          created_at?: string | null
-          created_by?: string | null
-          dbrit?: number | null
-          dextd?: number | null
-          dhtha?: number | null
-          dmfat?: number | null
-          dscc?: number | null
-          dthin?: number | null
-          f1?: number | null
-          id?: number
-          pof?: number | null
-          risk_level?: number | null
-          risk_ranking?: number | null
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Relationships: []
-      }
-      i_ims_pv_service: {
-        Row: {
-          asset_detail_id: number | null
-          created_at: string | null
-          created_by: string | null
-          fluid_phase: number | null
-          fluid_representive: number | null
-          id: number
-          toxic_mass_fraction: number | null
-          toxicity: number | null
-          updated_at: string | null
-          updated_by: string | null
-        }
-        Insert: {
-          asset_detail_id?: number | null
-          created_at?: string | null
-          created_by?: string | null
-          fluid_phase?: number | null
-          fluid_representive?: number | null
-          id?: number
-          toxic_mass_fraction?: number | null
-          toxicity?: number | null
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Update: {
-          asset_detail_id?: number | null
-          created_at?: string | null
-          created_by?: string | null
-          fluid_phase?: number | null
-          fluid_representive?: number | null
-          id?: number
-          toxic_mass_fraction?: number | null
-          toxicity?: number | null
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "i_ims_protection_e_asset_detail_fk"
+            columns: ["asset_detail_id"]
+            isOneToOne: false
+            referencedRelation: "e_asset_detail"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_protection_e_coating_quality_fk"
+            columns: ["coating_quality_id"]
+            isOneToOne: false
+            referencedRelation: "e_coating_quality"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_protection_e_design_fabrication_fk"
+            columns: ["design_fabrication_id"]
+            isOneToOne: false
+            referencedRelation: "e_design_fabrication"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_protection_e_detection_system_fk"
+            columns: ["detection_system_id"]
+            isOneToOne: false
+            referencedRelation: "e_detection_system"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_protection_e_insulation_type_fk"
+            columns: ["insulation_type_id"]
+            isOneToOne: false
+            referencedRelation: "e_insulation_type"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_protection_e_interface_fk"
+            columns: ["interface_id"]
+            isOneToOne: false
+            referencedRelation: "e_interface"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_protection_e_isolation_system_fk"
+            columns: ["isolation_system_id"]
+            isOneToOne: false
+            referencedRelation: "e_isolation_system"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_protection_e_mitigation_system_fk"
+            columns: ["mitigation_system_id"]
+            isOneToOne: false
+            referencedRelation: "e_mitigation_system"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_protection_e_online_monitor_fk"
+            columns: ["online_monitor"]
+            isOneToOne: false
+            referencedRelation: "e_online_monitor"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_protection_i_insulation_complexity_fk"
+            columns: ["insulation_complexity_id"]
+            isOneToOne: false
+            referencedRelation: "i_insulation_complexity"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       "i_ims_risk_&_irp": {
         Row: {
@@ -6769,7 +6664,86 @@ export type Database = {
           updated_at?: string | null
           updated_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "i_ims_risk__irp_e_asset_detail_fk"
+            columns: ["asset_detail_id"]
+            isOneToOne: false
+            referencedRelation: "e_asset_detail"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      i_ims_service: {
+        Row: {
+          asset_detail_id: number | null
+          created_at: string | null
+          created_by: string | null
+          fluid_phase_id: number | null
+          fluid_representive_id: number | null
+          id: number
+          ims_asset_type_id: number | null
+          toxic_mass_fraction: number | null
+          toxicity_id: number | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          asset_detail_id?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          fluid_phase_id?: number | null
+          fluid_representive_id?: number | null
+          id?: number
+          ims_asset_type_id?: number | null
+          toxic_mass_fraction?: number | null
+          toxicity_id?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          asset_detail_id?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          fluid_phase_id?: number | null
+          fluid_representive_id?: number | null
+          id?: number
+          ims_asset_type_id?: number | null
+          toxic_mass_fraction?: number | null
+          toxicity_id?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "i_ims_service_e_asset_detail_fk"
+            columns: ["asset_detail_id"]
+            isOneToOne: false
+            referencedRelation: "e_asset_detail"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_service_e_fluid_phase_fk"
+            columns: ["fluid_phase_id"]
+            isOneToOne: false
+            referencedRelation: "e_fluid_phase"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_service_e_fluid_representive_fk"
+            columns: ["fluid_representive_id"]
+            isOneToOne: false
+            referencedRelation: "e_fluid_representive"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_service_e_toxicity_fk"
+            columns: ["toxicity_id"]
+            isOneToOne: false
+            referencedRelation: "e_toxicity"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       i_inspection_efficiency: {
         Row: {
@@ -6786,6 +6760,36 @@ export type Database = {
         }
         Relationships: []
       }
+      i_insulation_complexity: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: number
+          name: string | null
+          updated_at: string | null
+          updated_by: string | null
+          value: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          name?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          name?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: number | null
+        }
+        Relationships: []
+      }
       i_lining_monitoring: {
         Row: {
           created_at: string | null
@@ -6798,7 +6802,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           created_by?: string | null
-          id: number
+          id?: number
           name?: string | null
           updated_at?: string | null
           updated_by?: string | null
@@ -6825,7 +6829,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           created_by?: string | null
-          id: number
+          id?: number
           name?: string | null
           updated_at?: string | null
           updated_by?: string | null
@@ -6855,55 +6859,224 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          description: string | null
+          email: string
+          full_name: string | null
+          id: string
+          is_active: boolean | null
+          is_deleted: boolean | null
+          updated_at: string
+          user_type_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          description?: string | null
+          email: string
+          full_name?: string | null
+          id: string
+          is_active?: boolean | null
+          is_deleted?: boolean | null
+          updated_at?: string
+          user_type_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_deleted?: boolean | null
+          updated_at?: string
+          user_type_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_user_type_id_fkey"
+            columns: ["user_type_id"]
+            isOneToOne: false
+            referencedRelation: "user_type"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       r_rms_uptime: {
         Row: {
-          asset_id: number | null
-          code: string | null
+          asset_detail_id: number | null
+          created_at: string | null
+          created_by: string | null
           date: string | null
           id: number
           planned_shutdown: number | null
-          sum_running_hour: number | null
           unplanned_shutdown: number | null
+          updated_at: string | null
+          updated_by: string | null
           uptime: number | null
         }
         Insert: {
-          asset_id?: number | null
-          code?: string | null
+          asset_detail_id?: number | null
+          created_at?: string | null
+          created_by?: string | null
           date?: string | null
           id?: number
           planned_shutdown?: number | null
-          sum_running_hour?: number | null
           unplanned_shutdown?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
           uptime?: number | null
         }
         Update: {
-          asset_id?: number | null
-          code?: string | null
+          asset_detail_id?: number | null
+          created_at?: string | null
+          created_by?: string | null
           date?: string | null
           id?: number
           planned_shutdown?: number | null
-          sum_running_hour?: number | null
           unplanned_shutdown?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
           uptime?: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "r_rms_uptime_e_asset_fk"
-            columns: ["asset_id"]
+            foreignKeyName: "r_rms_uptime_e_asset_detail_fk"
+            columns: ["asset_detail_id"]
             isOneToOne: false
-            referencedRelation: "e_asset"
+            referencedRelation: "e_asset_detail"
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_projects: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          project_id: number
+          updated_at: string | null
+          updated_by: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          project_id: number
+          updated_at?: string | null
+          updated_by?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          project_id?: number
+          updated_at?: string | null
+          updated_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_projects_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "e_project"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_projects_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_type: {
+        Row: {
+          created_by: string | null
+          created_when: string | null
+          description: string | null
+          id: string
+          name: string | null
+          priority: number | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          created_by?: string | null
+          created_when?: string | null
+          description?: string | null
+          id?: string
+          name?: string | null
+          priority?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          created_by?: string | null
+          created_when?: string | null
+          description?: string | null
+          id?: string
+          name?: string | null
+          priority?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      work_order_sequence: {
+        Row: {
+          current_number: number
+          year: number
+        }
+        Insert: {
+          current_number?: number
+          year: number
+        }
+        Update: {
+          current_number?: number
+          year?: number
+        }
+        Relationships: []
+      }
+      work_request_sequence: {
+        Row: {
+          current_number: number
+          year: number
+        }
+        Insert: {
+          current_number?: number
+          year: number
+        }
+        Update: {
+          current_number?: number
+          year?: number
+        }
+        Relationships: []
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      admin_update_user_password: {
+        Args: { user_id: string; new_password: string }
+        Returns: undefined
+      }
       assign_user_to_project: {
         Args: { p_user_id: string; p_project_id: number }
         Returns: undefined
+      }
+      direct_query: {
+        Args: { query_text: string }
+        Returns: Json
       }
       get_project_assigned_users: {
         Args: { p_project_id: number }
@@ -6912,6 +7085,14 @@ export type Database = {
           email: string
           full_name: string
           avatar_url: string
+        }[]
+      }
+      get_table_columns: {
+        Args: { param_table_name: string }
+        Returns: {
+          column_name: string
+          data_type: string
+          is_nullable: boolean
         }[]
       }
       get_user_assigned_projects: {
@@ -6949,6 +7130,23 @@ export type Database = {
           is_deleted: boolean
           project_assignments: Json
         }[]
+      }
+      get_users_with_types: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          email: string
+          full_name: string
+          user_type_id: string
+          user_type: Json
+          created_at: string
+          updated_at: string
+          avatar_url: string
+        }[]
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
       remove_user_from_project: {
         Args: { p_user_id: string; p_project_id: number }

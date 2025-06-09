@@ -82,7 +82,7 @@ export const updateCmAttachmentData = async (
     // Fetch the existing record to get the old file path
     const { data: existingData, error: fetchError } = await supabase
       .from("e_cm_attachment")
-      .select("file_path")
+      .select("file_path, is_form_new_work_attachment")
       .eq("id", id)
       .single();
 
@@ -92,7 +92,8 @@ export const updateCmAttachmentData = async (
     }
 
     // Delete the old file from storage if a new file is provided
-    if (file && existingData?.file_path) {
+    if (existingData?.is_form_new_work_attachment !== true && existingData?.file_path) {
+
       const oldStoragePath = existingData.file_path.replace(`/${BUCKET_NAME_ATTACHMENT}/`, "");
       const { error: deleteError } = await supabase.storage
         .from(BUCKET_NAME_ATTACHMENT)
@@ -144,7 +145,7 @@ export const deleteCmAttachmentData = async (id: number) => {
     // Fetch the existing record to get the file path
     const { data: existingData, error: fetchError } = await supabase
       .from("e_cm_attachment")
-      .select("file_path")
+      .select("file_path, is_form_new_work_attachment")
       .eq("id", id)
       .single();
 
@@ -154,7 +155,7 @@ export const deleteCmAttachmentData = async (id: number) => {
     }
 
     // Delete the file from storage
-    if (existingData?.file_path) {
+    if (existingData?.is_form_new_work_attachment !== true && existingData?.file_path) {
       const storagePath = existingData.file_path.replace(`/${BUCKET_NAME_ATTACHMENT}/`, "");
       const { error: deleteError } = await supabase.storage
         .from(BUCKET_NAME_ATTACHMENT)

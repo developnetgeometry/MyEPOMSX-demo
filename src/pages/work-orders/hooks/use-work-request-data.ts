@@ -211,7 +211,6 @@ export const insertCmGeneral = async (cmGeneralData: {
     due_date?: string;
     downtime?: number;
     work_request_id: number;
-    work_order_no?: string;
 }) => {
     try {
         const { data, error } = await supabase

@@ -297,16 +297,16 @@ const WorkRequestDetailPage: React.FC = () => {
             </TabsList>
 
             <TabsContent value="taskDetail">
-              {id && <TaskDetailTab newWorkRequestId={Number(id)} />}
+              {id && workRequest && <TaskDetailTab newWorkRequestId={Number(id)} cmStatusId={workRequest.cm_status_id?.id}/>}
             </TabsContent>
             <TabsContent value="reports">
-              {id && <ReportsTab workRequestId={Number(id)} />}
+              {id && workRequest && <ReportsTab workRequestId={Number(id)} cmStatusId={workRequest.cm_status_id?.id} />}
             </TabsContent>
             <TabsContent value="failure">
-              {id && <FailureTab workRequestId={Number(id)} />}
+              {id && workRequest && <FailureTab workRequestId={Number(id)} cmStatusId={workRequest.cm_status_id?.id} />}
             </TabsContent>
             <TabsContent value="attachment">
-              {id && <AttachmentTab workRequestId={Number(id)} />}
+              {id && workRequest && <AttachmentTab workRequestId={Number(id)} cmStatusId={workRequest.cm_status_id?.id} />}
             </TabsContent>
           </Tabs>
         </CardContent>

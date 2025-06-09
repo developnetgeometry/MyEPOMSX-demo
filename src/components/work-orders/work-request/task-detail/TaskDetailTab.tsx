@@ -22,9 +22,10 @@ import { X } from "lucide-react";
 
 interface TaskDetailPageProps {
   newWorkRequestId: number; // Passed as a prop to this page
+  cmStatusId: number; // This prop is not used in the current implementation, but can be added if needed
 }
 
-const TaskDetailPage: React.FC<TaskDetailPageProps> = ({ newWorkRequestId }) => {
+const TaskDetailPage: React.FC<TaskDetailPageProps> = ({ newWorkRequestId, cmStatusId }) => {
   const { data: tasks, isLoading, refetch } = useNewTaskDetailData(newWorkRequestId);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<any | null>(null);
@@ -59,44 +60,36 @@ const TaskDetailPage: React.FC<TaskDetailPageProps> = ({ newWorkRequestId }) => 
     }
   };
 
-const handleFormSubmit = async (formData: any) => {
-  try {
-    if (editingTask) {
-      await updateTaskDetailData(editingTask.id, formData);
-      toast({
-        title: "Success",
-        description: "Task updated successfully!",
-        variant: "default",
-      });
-    } else {
-      await insertTaskDetailData({ ...formData, new_work_request_id: newWorkRequestId });
-      toast({
-        title: "Success",
-        description: "Task added successfully!",
-        variant: "default",
-      });
-    }
-    setIsDialogOpen(false);
-    refetch();
-  } catch (error: any) {
-    console.error("Failed to save task data:", error);
+  const handleFormSubmit = async (formData: any) => {
+    try {
+      if (editingTask) {
+        await updateTaskDetailData(editingTask.id, formData);
+        toast({
+          title: "Success",
+          description: "Task updated successfully!",
+          variant: "default",
+        });
+      } else {
+        await insertTaskDetailData({ ...formData, new_work_request_id: newWorkRequestId });
+        toast({
+          title: "Success",
+          description: "Task added successfully!",
+          variant: "default",
+        });
+      }
+      setIsDialogOpen(false);
+      refetch();
+    } catch (error: any) {
+      console.error("Failed to save task data:", error);
 
-    // Check for specific error code 23505
-    if (error.code === "23505") {
-      toast({
-        title: "Error",
-        description: "Task Sequence already exists.",
-        variant: "destructive",
-      });
-    } else {
       toast({
         title: "Error",
         description: "Failed to save task data.",
         variant: "destructive",
       });
+
     }
-  }
-};
+  };
 
   const columns: Column[] = [
     { id: "task_sequence", header: "Task Sequence", accessorKey: "task_sequence" },
@@ -107,7 +100,7 @@ const handleFormSubmit = async (formData: any) => {
     <div className="space-y-6 mt-6">
       <PageHeader
         title="Task Details"
-        onAddNew={handleAddNew}
+        onAddNew={cmStatusId == 3 ? null : handleAddNew}
         addNewLabel="New Task"
       />
 
@@ -117,8 +110,8 @@ const handleFormSubmit = async (formData: any) => {
         <DataTable
           columns={columns}
           data={tasks || []}
-          onEdit={handleEditTask}
-          onDelete={handleDeleteTask}
+          onEdit={cmStatusId == 3 ? null : handleEditTask}
+          onDelete={cmStatusId == 3 ? null : handleDeleteTask}
         />
       )}
 

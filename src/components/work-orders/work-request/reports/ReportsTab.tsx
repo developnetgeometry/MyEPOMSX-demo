@@ -32,9 +32,10 @@ import {
 
 interface ReportsTabProps {
   workRequestId: number; // Passed as a prop to this page
+  cmStatusId: number;
 }
 
-const ReportsTab: React.FC<ReportsTabProps> = ({ workRequestId }) => {
+const ReportsTab: React.FC<ReportsTabProps> = ({ workRequestId, cmStatusId }) => {
   const { data: reports, isLoading, refetch } = useWorkRequestReportData(workRequestId);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingReport, setEditingReport] = useState<any | null>(null);
@@ -116,12 +117,13 @@ const ReportsTab: React.FC<ReportsTabProps> = ({ workRequestId }) => {
   return (
     <div className="space-y-6 mt-6">
       {/* <pre>{JSON.stringify(reports, null, 2)}</pre> */}
-
-      <PageHeader
-        title="Reports"
-        onAddNew={reports?.length >= 1 ? null : handleAddNew}
-        addNewLabel="New Report"
-      />
+      {(reports &&
+        <PageHeader
+          title="Reports"
+          onAddNew={cmStatusId == 3 ? null : reports?.length >= 1 ? null : handleAddNew}
+          addNewLabel="New Report"
+        />
+      )}
       {isLoading ? (
         <Loading />
       ) : (
@@ -208,20 +210,24 @@ const ReportsTab: React.FC<ReportsTabProps> = ({ workRequestId }) => {
                 </div>
 
                 <div className="flex justify-end space-x-2 mt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEditReport(report)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDeleteClick(report)}
-                  >
-                    Delete
-                  </Button>
+                  {(cmStatusId !== 3 &&
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditReport(report)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteClick(report)}
+                      >
+                        Delete
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             ))
