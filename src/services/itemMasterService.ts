@@ -63,6 +63,10 @@ export const itemMasterService = {
       .select()
       .single();
 
+    if (error.code === '23505') {
+      throw new Error(`Item master with Item No ${item.item_no} already exists`);
+    }
+
     if (error) {
       throw new Error(`Error creating item master: ${error.message}`);
     }

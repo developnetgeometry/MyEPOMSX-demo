@@ -22,7 +22,7 @@ import {
 } from "@/hooks/queries/useItemsMaster";
 import { useCategoryOptions } from "@/hooks/queries/useItemsMaster";
 import { useToast } from "@/hooks/use-toast";
-import { validateImageFile } from "@/services/assetImageService";
+import { validateImageFile } from "@/services/itemMasterAttachmentService";
 import { uploadMultipleItemImages } from "@/services/itemMasterAttachmentService";
 import { ArrowLeft, Upload, Wrench } from "lucide-react";
 import { useState } from "react";
@@ -58,6 +58,7 @@ const ItemMasterAddPage = () => {
   const [activeTab, setActiveTab] = useState("items-master");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [duplicateError, setDuplicateError] = useState<string | null>(null);
 
   const [uploadStatus, setUploadStatus] = useState<{
     total: number;
@@ -125,7 +126,6 @@ const ItemMasterAddPage = () => {
   });
 
   // Form handlers
-  // Complete handleSubmit function for ItemMasterAddPage
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -245,6 +245,9 @@ const ItemMasterAddPage = () => {
       navigate("/manage/items-master");
     } catch (error) {
       console.error("Error submitting form:", error);
+      setActiveTab("items-master");
+
+      // Generic error handling
       toast.error(
         error instanceof Error ? error.message : "Failed to create item"
       );
@@ -335,7 +338,7 @@ const ItemMasterAddPage = () => {
       newAttachemnt.splice(index, 1);
       return {
         ...prev,
-        assetImage: newAttachemnt,
+        itemsAttachment: newAttachemnt,
       };
     });
 
@@ -384,12 +387,16 @@ const ItemMasterAddPage = () => {
                         id="item_no"
                         placeholder="Enter Item No"
                         value={formData.itemsNo}
-                        onChange={(e) =>
-                          handleChange("itemsNo", e.target.value)
-                        }
+                        onChange={(e) => {
+                          handleChange("itemsNo", e.target.value);
+                          setDuplicateError(null);
+                        }}
                       />
                       {errors.itemsNo && (
                         <p className="text-red-500 text-sm">{errors.itemsNo}</p>
+                      )}
+                      {duplicateError && (
+                        <p className="text-red-500 text-sm">{duplicateError}</p>
                       )}
                     </div>
                     <div className="space-y-2">
@@ -653,8 +660,8 @@ const ItemMasterAddPage = () => {
               <TabsContent value="attachment">
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="assetImage">
-                      Asset Images<span className="text-red-500">*</span>
+                    <Label htmlFor="itemAttachment">
+                      Attachments<span className="text-red-500">*</span>
                     </Label>
                     <div className="border-2 border-dashed border-gray-300 rounded-md p-6 flex flex-col items-center justify-center relative">
                       {attachmentPreviews.length > 0 ? (
@@ -683,7 +690,7 @@ const ItemMasterAddPage = () => {
                           <div className="flex flex-col items-center mt-4">
                             <div className="relative w-full h-12">
                               <input
-                                id="assetImage"
+                                id="itemAttachment"
                                 type="file"
                                 multiple
                                 accept="image/*"
@@ -698,7 +705,9 @@ const ItemMasterAddPage = () => {
                               className="mt-2 z-20"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                document.getElementById("assetImage")?.click();
+                                document
+                                  .getElementById("itemAttachment")
+                                  ?.click();
                               }}
                             >
                               Add More Images
@@ -713,7 +722,7 @@ const ItemMasterAddPage = () => {
                           </p>
                           <div className="relative w-full h-12">
                             <input
-                              id="assetImage"
+                              id="itemAttachment"
                               type="file"
                               multiple
                               accept="image/*"
@@ -728,7 +737,9 @@ const ItemMasterAddPage = () => {
                             className="mt-2 z-20"
                             onClick={(e) => {
                               e.stopPropagation();
-                              document.getElementById("assetImage")?.click();
+                              document
+                                .getElementById("itemAttachment")
+                                ?.click();
                             }}
                           >
                             Select Files
