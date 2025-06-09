@@ -73,6 +73,8 @@ import PMScheduleDetailPage from "@/pages/maintain/pm-schedule/PMScheduleDetailP
 import CreatePMSchedulePage from "@/pages/maintain/pm-schedule/CreatePMSchedulePage";
 import TaskLibraryPage from "@/pages/maintain/TaskLibraryPage";
 import TaskLibraryDetailPage from "@/pages/maintain/TaskLibraryDetailPage";
+
+// Work Orders Pages
 import WOHistoryPage from "@/pages/work-orders/work-order-history/WOHistoryPage";
 import WOHistoryDetailPage from "@/pages/work-orders/work-order-history/WOHistoryDetailPage";
 import WorkOrderDetailPage from "@/pages/work-orders/work-order-list/WorkOrderListDetailPage";
@@ -117,6 +119,7 @@ import PurchaseOrderFormPage from "@/pages/purchasing/PurchaseOrderFormPage";
 import GoodsReceivePage from "@/pages/purchasing/GoodsReceivePage";
 import GoodsReceiveDetailPage from "@/pages/purchasing/GoodsReceiveDetailPage";
 import GoodsReceiveFormPage from "@/pages/purchasing/GoodsReceiveFormPage";
+import ItemMasterAddPage from "@/pages/manage/ItemMasterAddPage";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -587,6 +590,16 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route
+        path="/manage/items-master/add"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <ItemMasterAddPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/manage/items-master"
         element={
           <ProtectedRoute>
@@ -738,6 +751,7 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
+
       {/* Work Orders Routes */}
       <Route
         path="/work-orders/work-request"
@@ -749,7 +763,6 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/work-orders/work-request/:id"
         element={
@@ -760,7 +773,6 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/work-orders/work-order-list"
         element={
@@ -771,7 +783,6 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/work-orders/work-order-list/:id"
         element={
@@ -782,7 +793,6 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/work-orders/wo-history"
         element={
@@ -793,7 +803,6 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/work-orders/wo-history/:id"
         element={

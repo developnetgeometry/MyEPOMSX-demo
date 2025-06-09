@@ -6,7 +6,7 @@ import {
   insertCmReportData,
   updateCmReportData,
   deleteCmReportData,
-} from "../hooks/use-cm-report-data";
+} from "../hooks/cm/use-cm-report-data";
 import ReportsDialogForm from "@/components/work-orders/work-request/reports/ReportsDialogForm";
 import {
   Dialog,
@@ -31,11 +31,11 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface CmReportsTabProps {
-  workRequestId: number; // Passed as a prop to this page
+  cmGeneralId: number; // Passed as a prop to this page
 }
 
-const CmReportsTab: React.FC<CmReportsTabProps> = ({ workRequestId }) => {
-  const { data: reports, isLoading, refetch } = useCmReportData(workRequestId);
+const CmReportsTab: React.FC<CmReportsTabProps> = ({ cmGeneralId }) => {
+  const { data: reports, isLoading, refetch } = useCmReportData(cmGeneralId);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingReport, setEditingReport] = useState<any | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -94,7 +94,7 @@ const CmReportsTab: React.FC<CmReportsTabProps> = ({ workRequestId }) => {
           variant: "default",
         });
       } else {
-        await insertCmReportData({ ...formData, work_request_id: workRequestId });
+        await insertCmReportData({ ...formData, cm_general_id: cmGeneralId });
         toast({
           title: "Success",
           description: "Report added successfully!",

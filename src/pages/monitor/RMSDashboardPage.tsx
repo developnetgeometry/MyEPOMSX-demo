@@ -1,9 +1,21 @@
+
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import PageHeader from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, TooltipProps } from 'recharts';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer, 
+  TooltipProps,
+  ReferenceLine
+} from 'recharts';
 import KpiCard from '@/components/shared/KpiCard';
 import { Calendar, Database, Activity, AlertTriangle, Gauge } from 'lucide-react';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
@@ -11,39 +23,109 @@ import Breadcrumbs from '@/components/shared/Breadcrumbs';
 import { cn } from '@/lib/utils';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { addDays, subDays } from 'date-fns';
+import { formatPercentage } from '@/utils/formatters';
 
 // Sample data for utilization, availability & reliability asset wise
 const assetPerformanceData = [
   {
-    name: 'Asset A',
-    utilization: 78,
-    availability: 92,
-    reliability: 87,
+    name: 'Diesel Engine Generator',
+    utilization: 79.14,
+    availability: 97.14,
+    reliability: 97.56,
+    mttrAvailability: 100.00,
+    mttrReliability: 100.00,
+    target: 95
   },
   {
-    name: 'Asset B',
-    utilization: 82,
-    availability: 94,
-    reliability: 89,
+    name: 'Turbine Gen',
+    utilization: 79.99,
+    availability: 99.99,
+    reliability: 99.99,
+    mttrAvailability: 100.00,
+    mttrReliability: 100.00,
+    target: 95
   },
   {
-    name: 'Asset C',
-    utilization: 76,
-    availability: 90,
-    reliability: 85,
+    name: 'Gas Comp',
+    utilization: 86.68,
+    availability: 99.68,
+    reliability: 99.76,
+    mttrAvailability: 99.94,
+    mttrReliability: 99.94,
+    target: 95
   },
   {
-    name: 'Asset D',
-    utilization: 85,
-    availability: 96,
-    reliability: 92,
+    name: 'Air Compressor',
+    utilization: 90.00,
+    availability: 100.00,
+    reliability: 100.00,
+    mttrAvailability: 100.00,
+    mttrReliability: 100.00,
+    target: 95
   },
   {
-    name: 'Asset E',
-    utilization: 74,
-    availability: 88,
-    reliability: 79,
+    name: 'MOL Pump',
+    utilization: 99.91,
+    availability: 99.91,
+    reliability: 99.76,
+    mttrAvailability: 100.00,
+    mttrReliability: 100.00,
+    target: 95
   },
+  {
+    name: 'Crane',
+    utilization: 97.77,
+    availability: 97.77,
+    reliability: 98.54,
+    mttrAvailability: 100.00,
+    mttrReliability: 100.00,
+    target: 95
+  },
+  {
+    name: 'SWIP',
+    utilization: 100.00,
+    availability: 100.00,
+    reliability: 100.00,
+    mttrAvailability: 100.00,
+    mttrReliability: 100.00,
+    target: 95
+  },
+  {
+    name: 'BWIP',
+    utilization: 100.00,
+    availability: 100.00,
+    reliability: 100.00,
+    mttrAvailability: 100.00,
+    mttrReliability: 100.00,
+    target: 95
+  },
+  {
+    name: 'Cooling Water Pump',
+    utilization: 100.00,
+    availability: 100.00,
+    reliability: 100.00,
+    mttrAvailability: 100.00,
+    mttrReliability: 100.00,
+    target: 95
+  },
+  {
+    name: 'Vacuum Pump',
+    utilization: 100.00,
+    availability: 100.00,
+    reliability: 100.00,
+    mttrAvailability: 100.00,
+    mttrReliability: 100.00,
+    target: 95
+  },
+  {
+    name: 'Water Injection to Well',
+    utilization: 100.00,
+    availability: 100.00,
+    reliability: 100.00,
+    mttrAvailability: 100.00,
+    mttrReliability: 100.00,
+    target: 95
+  }
 ];
 
 // Sample data for average metrics
@@ -88,7 +170,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
         <p className="font-medium">{label}</p>
         {payload.map((entry, index) => (
           <p key={index} style={{ color: entry.color }}>
-            {entry.name}: {entry.value}%
+            {entry.name}: {formatPercentage(entry.value as number)}
           </p>
         ))}
       </div>
@@ -163,23 +245,38 @@ const RMSDashboardPage = () => {
         {/* Utilization, Availability & Reliability Asset Wise */}
         <Card className="col-span-1 xl:col-span-2">
           <CardHeader>
-            <CardTitle>Utilization, Availability & Reliability Asset Wise</CardTitle>
+            <CardTitle>Vital System Availability and Reliability Per Quarter</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-80 mb-6">
+            <div className="h-[500px] mb-6">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart 
                   data={assetPerformanceData}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 100 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis domain={[0, 100]} label={{ value: '%', angle: -90, position: 'insideLeft' }} />
+                  <XAxis 
+                    dataKey="name" 
+                    angle={-45} 
+                    textAnchor="end" 
+                    height={100} 
+                    interval={0} 
+                    tick={{fontSize: 12}}
+                  />
+                  <YAxis 
+                    domain={[0, 100]} 
+                    label={{ value: '%', angle: -90, position: 'insideLeft' }} 
+                    tickCount={11}
+                    tickFormatter={(value) => `${value}`}
+                    ticks={[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]}
+                  />
                   <Tooltip content={<CustomTooltip />} />
-                  <Legend />
-                  <Bar dataKey="utilization" name="Utilization" fill="#8884d8" />
-                  <Bar dataKey="availability" name="Availability" fill="#82ca9d" />
-                  <Bar dataKey="reliability" name="Reliability" fill="#ffc658" />
+                  <Legend verticalAlign="top" height={36} />
+                  <Bar dataKey="availability" name="Availability" fill="#8bc34a" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="mttrAvailability" name="MTTR Availability" fill="#4caf50" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="reliability" name="Reliability" fill="#03a9f4" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="mttrReliability" name="MTTR Reliability" fill="#2196f3" radius={[4, 4, 0, 0]} />
+                  <ReferenceLine y={95} stroke="red" strokeWidth={2} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -187,7 +284,7 @@ const RMSDashboardPage = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Metric</TableHead>
+                    <TableHead>System</TableHead>
                     {assetPerformanceData.map((asset) => (
                       <TableHead key={asset.name}>{asset.name}</TableHead>
                     ))}
@@ -195,21 +292,33 @@ const RMSDashboardPage = () => {
                 </TableHeader>
                 <TableBody>
                   <TableRow>
-                    <TableCell className="font-medium">Utilization %</TableCell>
+                    <TableCell className="font-medium">Availability %</TableCell>
                     {assetPerformanceData.map((asset) => (
-                      <TableCell key={`${asset.name}-util`}>{asset.utilization}%</TableCell>
+                      <TableCell key={`${asset.name}-avail`}>{formatPercentage(asset.availability)}</TableCell>
                     ))}
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-medium">Availability %</TableCell>
+                    <TableCell className="font-medium">MTTR Availability %</TableCell>
                     {assetPerformanceData.map((asset) => (
-                      <TableCell key={`${asset.name}-avail`}>{asset.availability}%</TableCell>
+                      <TableCell key={`${asset.name}-mttr-avail`}>{formatPercentage(asset.mttrAvailability)}</TableCell>
                     ))}
                   </TableRow>
                   <TableRow>
                     <TableCell className="font-medium">Reliability %</TableCell>
                     {assetPerformanceData.map((asset) => (
-                      <TableCell key={`${asset.name}-rel`}>{asset.reliability}%</TableCell>
+                      <TableCell key={`${asset.name}-rel`}>{formatPercentage(asset.reliability)}</TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">MTTR Reliability %</TableCell>
+                    {assetPerformanceData.map((asset) => (
+                      <TableCell key={`${asset.name}-mttr-rel`}>{formatPercentage(asset.mttrReliability)}</TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Reliability Target (CC) %</TableCell>
+                    {assetPerformanceData.map((asset) => (
+                      <TableCell key={`${asset.name}-target`}>{formatPercentage(asset.target)}</TableCell>
                     ))}
                   </TableRow>
                 </TableBody>
@@ -253,15 +362,15 @@ const RMSDashboardPage = () => {
                 <TableBody>
                   <TableRow>
                     <TableCell className="font-medium">Average Utilization</TableCell>
-                    <TableCell>{averageMetricsData[0].utilization}%</TableCell>
+                    <TableCell>{formatPercentage(averageMetricsData[0].utilization)}</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell className="font-medium">Average Availability</TableCell>
-                    <TableCell>{averageMetricsData[0].availability}%</TableCell>
+                    <TableCell>{formatPercentage(averageMetricsData[0].availability)}</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell className="font-medium">Average Reliability</TableCell>
-                    <TableCell>{averageMetricsData[0].reliability}%</TableCell>
+                    <TableCell>{formatPercentage(averageMetricsData[0].reliability)}</TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
@@ -305,13 +414,13 @@ const RMSDashboardPage = () => {
                   <TableRow>
                     <TableCell className="font-medium">Availability %</TableCell>
                     {systemReliabilityData.map((system) => (
-                      <TableCell key={`${system.name}-avail`}>{system.availability}%</TableCell>
+                      <TableCell key={`${system.name}-avail`}>{formatPercentage(system.availability)}</TableCell>
                     ))}
                   </TableRow>
                   <TableRow>
                     <TableCell className="font-medium">Reliability %</TableCell>
                     {systemReliabilityData.map((system) => (
-                      <TableCell key={`${system.name}-rel`}>{system.reliability}%</TableCell>
+                      <TableCell key={`${system.name}-rel`}>{formatPercentage(system.reliability)}</TableCell>
                     ))}
                   </TableRow>
                 </TableBody>
