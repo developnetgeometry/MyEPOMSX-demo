@@ -320,6 +320,11 @@ const sidebarItems: SidebarItemType[] = [
             path: "/admin/setup/user-management",
             icon: Users,
           },
+          {
+            name: "Lookup Data Management",
+            path: "/admin/setup/lookup-management",
+            icon: Database,
+          },
         ],
       },
       // Settings submodule
