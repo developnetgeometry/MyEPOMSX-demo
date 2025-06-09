@@ -135,6 +135,7 @@ const DataTable: React.FC<DataTableProps> = ({
         .map((row) =>
           columns
             .map((col) => {
+              if (!col.accessorKey) return "";
               const value = row[col.accessorKey];
               return typeof value === "string" ? `"${value}"` : value;
             })
@@ -160,6 +161,10 @@ const DataTable: React.FC<DataTableProps> = ({
   // Process cell value to apply Malaysian Ringgit formatting automatically
   const formatCellValue = (column: Column, row: any): React.ReactNode => {
     const accessorKey = column.accessorKey;
+
+    if (!accessorKey) {
+      return null; // Return null if accessorKey is undefined
+    }
 
     // Handle nested keys (e.g., "project_type.name")
     const value = accessorKey.split(".").reduce((obj, key) => obj?.[key], row);

@@ -20,6 +20,7 @@ import SensorDetailPage from "@/pages/admin/setup/sensor/SensorDetailPage";
 // import VendorDetailPage from "@/pages/admin/setup/VendorDetailPage";
 import WorkCenterPage from "@/pages/admin/setup/work-center/WorkCenterPage";
 import WorkCenterDetailPage from "@/pages/admin/setup/work-center/WorkCenterDetailPage";
+import UserManagementPage from "@/pages/admin/setup/user-management";
 
 // Settings Pages
 import AssetClassPage from "@/pages/admin/settings/AssetClassPage";
@@ -269,6 +270,16 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <Layout>
               <WorkCenterDetailPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/setup/user-management"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <UserManagementPage />
             </Layout>
           </ProtectedRoute>
         }
