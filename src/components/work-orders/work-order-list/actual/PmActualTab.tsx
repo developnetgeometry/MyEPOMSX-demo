@@ -2,17 +2,17 @@ import React, { useState } from "react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable, { Column } from "@/components/shared/DataTable";
 import {
-  useCmActualLabourData,
-  insertCmActualLabourData,
-  updateCmActualLabourData,
-  deleteCmActualLabourData,
-} from "../hooks/cm/use-cm-actual-labour-data";
+  usePmActualLabourData,
+  insertPmActualLabourData,
+  updatePmActualLabourData,
+  deletePmActualLabourData,
+} from "../hooks/pm/use-pm-actual-labour-data";
 import {
-  useCmActualMaterialData,
-  insertCmActualMaterialData,
-  updateCmActualMaterialData,
-  deleteCmActualMaterialData,
-} from "../hooks/cm/use-cm-actual-material-data";
+  usePmActualMaterialData,
+  insertPmActualMaterialData,
+  updatePmActualMaterialData,
+  deletePmActualMaterialData,
+} from "../hooks/pm/use-pm-actual-material-data";
 import ActualLabourDialogForm from "./ActualLabourDialogForm";
 import ActualMaterialDialogForm from "./ActualMaterialDialogForm";
 import {
@@ -27,14 +27,14 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 
-interface CmActualTabProps {
-  cmGeneralId: number; // Passed as a prop to this page
+interface PmActualTabProps {
+  pmWoId: number; // Passed as a prop to this page
   workCenterId: number; // WorkCenterId to fetch employee data
 }
 
-const CmActualTab: React.FC<CmActualTabProps> = ({ cmGeneralId, workCenterId }) => {
-  const { data: labourData, isLoading: isLabourLoading, refetch: refetchLabour } = useCmActualLabourData(cmGeneralId);
-  const { data: materialData, isLoading: isMaterialLoading, refetch: refetchMaterial } = useCmActualMaterialData(cmGeneralId);
+const PmActualTab: React.FC<PmActualTabProps> = ({ pmWoId, workCenterId }) => {
+  const { data: labourData, isLoading: isLabourLoading, refetch: refetchLabour } = usePmActualLabourData(pmWoId);
+  const { data: materialData, isLoading: isMaterialLoading, refetch: refetchMaterial } = usePmActualMaterialData(pmWoId);
 
   const [isLabourDialogOpen, setIsLabourDialogOpen] = useState(false);
   const [editingLabour, setEditingLabour] = useState<any | null>(null);
@@ -57,7 +57,7 @@ const CmActualTab: React.FC<CmActualTabProps> = ({ cmGeneralId, workCenterId }) 
 
   const handleDeleteLabour = async (labour: any) => {
     try {
-      await deleteCmActualLabourData(labour.id);
+      await deletePmActualLabourData(labour.id);
       toast({
         title: "Success",
         description: "Labour record deleted successfully!",
@@ -77,14 +77,14 @@ const CmActualTab: React.FC<CmActualTabProps> = ({ cmGeneralId, workCenterId }) 
   const handleLabourFormSubmit = async (formData: any) => {
     try {
       if (editingLabour) {
-        await updateCmActualLabourData(editingLabour.id, formData);
+        await updatePmActualLabourData(editingLabour.id, formData);
         toast({
           title: "Success",
           description: "Labour record updated successfully!",
           variant: "default",
         });
       } else {
-        await insertCmActualLabourData({ ...formData, cm_general_id: cmGeneralId });
+        await insertPmActualLabourData({ ...formData, pm_wo_id: pmWoId });
         toast({
           title: "Success",
           description: "Labour record added successfully!",
@@ -116,7 +116,7 @@ const CmActualTab: React.FC<CmActualTabProps> = ({ cmGeneralId, workCenterId }) 
 
   const handleDeleteMaterial = async (material: any) => {
     try {
-      await deleteCmActualMaterialData(material.id);
+      await deletePmActualMaterialData(material.id);
       toast({
         title: "Success",
         description: "Material record deleted successfully!",
@@ -136,14 +136,14 @@ const CmActualTab: React.FC<CmActualTabProps> = ({ cmGeneralId, workCenterId }) 
   const handleMaterialFormSubmit = async (formData: any) => {
     try {
       if (editingMaterial) {
-        await updateCmActualMaterialData(editingMaterial.id, formData);
+        await updatePmActualMaterialData(editingMaterial.id, formData);
         toast({
           title: "Success",
           description: "Material record updated successfully!",
           variant: "default",
         });
       } else {
-        await insertCmActualMaterialData({ ...formData, cm_general_id: cmGeneralId });
+        await insertPmActualMaterialData({ ...formData, pm_wo_id: pmWoId });
         toast({
           title: "Success",
           description: "Material record added successfully!",
@@ -176,9 +176,6 @@ const CmActualTab: React.FC<CmActualTabProps> = ({ cmGeneralId, workCenterId }) 
 
   return (
     <div className="space-y-6 mt-6">
-      {/* <pre>{JSON.stringify(labourData, null, 2)}</pre>
-      <pre>{JSON.stringify(materialData, null, 2)}</pre> */}
-
       <PageHeader
         title="Labour Details"
         onAddNew={handleAddNewLabour}
@@ -269,4 +266,4 @@ const CmActualTab: React.FC<CmActualTabProps> = ({ cmGeneralId, workCenterId }) 
   );
 };
 
-export default CmActualTab;
+export default PmActualTab;

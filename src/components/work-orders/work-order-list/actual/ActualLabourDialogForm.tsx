@@ -6,14 +6,14 @@ import Loading from "@/components/shared/Loading"; // Import the Loading compone
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEmployeeByWorkCenterId } from "@/components/work-orders/work-order-list/hooks/use-employee-by-work-center-id";
 
-interface CmActualLabourDialogFormProps {
+interface ActualLabourDialogFormProps {
   onSubmit: (formData: any) => Promise<void>; // Assuming onSubmit is async
   onCancel: () => void;
   initialData?: any; // Optional initial data for editing
   workCenterId: number; // WorkCenterId to fetch employee data
 }
 
-const CmActualLabourDialogForm: React.FC<CmActualLabourDialogFormProps> = ({
+const ActualLabourDialogForm: React.FC<ActualLabourDialogFormProps> = ({
   onSubmit,
   onCancel,
   initialData,
@@ -99,4 +99,4 @@ const CmActualLabourDialogForm: React.FC<CmActualLabourDialogFormProps> = ({
   );
 };
 
-export default CmActualLabourDialogForm;
+export default ActualLabourDialogForm;

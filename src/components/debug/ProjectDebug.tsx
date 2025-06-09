@@ -24,7 +24,7 @@ export const ProjectDebug: React.FC = () => {
 
   return (
     <div className="fixed bottom-4 right-4 bg-white border border-gray-300 rounded p-4 shadow-lg text-xs max-w-sm z-50">
-      <h3 className="font-bold mb-2">Debug Info</h3>
+      {/* <h3 className="font-bold mb-2">Debug Info</h3>
       <div className="space-y-1">
         <div>Auth Loading: {authLoading ? "Yes" : "No"}</div>
         <div>User ID: {user?.id || "None"}</div>
@@ -41,7 +41,7 @@ export const ProjectDebug: React.FC = () => {
         >
           {projectLoading ? "Refreshing..." : "Refresh Projects"}
         </Button>
-      </div>
+      </div> */}
     </div>
   );
 };
