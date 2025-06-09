@@ -66,6 +66,21 @@ export interface CreateItemMasterDTO {
   is_active: boolean;
 }
 
+export interface UpdateItemMasterDTO {
+  item_no?: string;
+  item_name?: string;
+  item_group?: number;
+  category_id?: number;
+  type_id?: number;
+  manufacturer?: number;
+  manufacturer_part_no?: string;
+  model_no?: string;
+  specification?: string;
+  unit_id?: number;
+  criticality_id?: number;
+  is_active?: boolean;
+}
+
 export interface ItemMasterWithRelations extends ItemMaster {
   group?: ItemGroup | null;
   category?: AssetCategory | null;

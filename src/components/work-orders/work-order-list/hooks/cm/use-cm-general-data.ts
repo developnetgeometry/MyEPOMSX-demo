@@ -14,7 +14,7 @@ export const useCmGeneralData = () => {
           package_id (id, package_no, package_name), asset_id (id, asset_name), 
           completed_by, closed_by, date_finding, target_start_date, target_end_date, 
           asset_available_time, requested_by, approved_by, cm_sce_code (id, cm_group_name, cm_sce_code), 
-          due_date, downtime, work_request_id, work_order_no, created_by, created_at, updated_by, updated_at`
+          due_date, downtime, work_request_id, created_by, created_at, updated_by, updated_at`
         )
         .order("id", { ascending: true });
 
@@ -41,7 +41,7 @@ export const useCmGeneralDataById = (id: number) => {
           package_id (id, package_no, package_name), asset_id (id, asset_name), 
           completed_by, closed_by, date_finding, target_start_date, target_end_date, 
           asset_available_time, requested_by, approved_by, cm_sce_code (id, cm_group_name, cm_sce_code), 
-          due_date, downtime, work_request_id, work_order_no, created_by, created_at, updated_by, updated_at`
+          due_date, downtime, work_request_id, created_by, created_at, updated_by, updated_at`
         )
         .eq("id", id)
         .single();
@@ -79,7 +79,6 @@ export const updateCmGeneralData = async (
     due_date?: string; // ISO timestamp
     downtime?: number;
     work_request_id?: number;
-    work_order_no?: string;
     created_by?: string; // UUID
     created_at?: string; // ISO timestamp
     updated_by?: string; // UUID

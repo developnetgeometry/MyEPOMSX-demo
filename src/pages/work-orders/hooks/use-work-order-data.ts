@@ -29,13 +29,13 @@ export const useWorkOrderData = () => {
 // Fetch a single work order by ID
 export const useWorkOrderDataById = (id: number) => {
   return useQuery({
-    queryKey: ["e-work-order-data", id],
+    queryKey: ["e-work-order-data-id", id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("e_work_order")
         .select(
           `id, work_order_type, pm_work_order_id, work_order_status_id (id, name), description, 
-          work_order_no, cm_work_order_id (id, work_request_id, work_center_id), created_at, completed_at, created_by, 
+          work_order_no, cm_work_order_id (id, work_center_id, work_request_id), created_at, completed_at, created_by, 
           updated_by, updated_at, asset_id, task_id (id, task_code,task_name), due_date`
         )
         .eq("id", id)
@@ -58,7 +58,6 @@ export const insertWorkOrderData = async (workOrderData: {
   pm_work_order_id?: number;
   work_order_status_id?: number;
   description?: string;
-  work_order_no?: string;
   cm_work_order_id?: number;
   created_at?: string; // Use ISO string format for timestamps
   completed_at?: string; // Use ISO string format for timestamps
@@ -70,6 +69,7 @@ export const insertWorkOrderData = async (workOrderData: {
   due_date?: string; // Use ISO string format for dates
 }) => {
   try {
+
     const { data, error } = await supabase
       .from("e_work_order")
       .insert([workOrderData]);

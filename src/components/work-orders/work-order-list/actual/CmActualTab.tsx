@@ -6,13 +6,13 @@ import {
   insertCmActualLabourData,
   updateCmActualLabourData,
   deleteCmActualLabourData,
-} from "../hooks/use-cm-actual-labour-data";
+} from "../hooks/cm/use-cm-actual-labour-data";
 import {
   useCmActualMaterialData,
   insertCmActualMaterialData,
   updateCmActualMaterialData,
   deleteCmActualMaterialData,
-} from "../hooks/use-cm-actual-material-data";
+} from "../hooks/cm/use-cm-actual-material-data";
 import CmActualLabourDialogForm from "./CmActualLabourDialogForm";
 import CmActualMaterialDialogForm from "./CmActualMaterialDialogForm";
 import {

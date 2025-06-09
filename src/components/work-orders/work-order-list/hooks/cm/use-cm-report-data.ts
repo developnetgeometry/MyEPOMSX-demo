@@ -1,9 +1,9 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 
-export const useCmReportData = (workRequestId: number) => {
+export const useCmReportData = (cmGeneralId: number) => {
   return useQuery({
-    queryKey: ["e-cm-report", workRequestId],
+    queryKey: ["e-cm-report", cmGeneralId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("e_cm_report")
@@ -15,9 +15,9 @@ export const useCmReportData = (workRequestId: number) => {
           service_asset, pressure, temp, operating_history,
           time_in_servicehr, 
           material_class_id (id, name),
-          design_code, work_request_id`
+          design_code, cm_general_id`
         )
-        .eq("work_request_id", workRequestId)
+        .eq("cm_general_id", cmGeneralId)
         .order("id", { ascending: true });
 
       if (error) {
@@ -27,12 +27,12 @@ export const useCmReportData = (workRequestId: number) => {
 
       return data;
     },
-    enabled: !!workRequestId, // Only fetch if workRequestId is provided
+    enabled: !!cmGeneralId,
   });
 };
 
 export const insertCmReportData = async (reportData: {
-  work_request_id: number;
+  cm_general_id: number;
   weather_condition?: string;
   visibility?: string;
   wind_speed_direction?: string;
