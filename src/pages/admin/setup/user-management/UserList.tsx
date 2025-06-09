@@ -108,58 +108,43 @@ const UserList: React.FC = () => {
     setIsLoading(true);
     try {
       // Use the new optimized RPC function that includes project assignments and status fields
-      const { data: rpcData, error: rpcError } = await (supabase as any).rpc(
-        "get_users_with_details"
-      );
+      // const { data: rpcData, error: rpcError } = await (supabase as any).rpc(
+      //   "get_users_with_details"
+      // );
 
-      if (!rpcError && rpcData) {
-        setUsers(rpcData as UserWithDetails[]);
-        setFilteredUsers(rpcData as UserWithDetails[]);
-      } else {
-        // Fallback to regular join if RPC not available
-        console.warn(
-          "Falling back to regular query - RPC not available:",
-          rpcError
-        );
-
-        // Get user profiles with user types
-        const { data, error } = await (supabase as any)
-          .from("profiles")
-          .select(
-            `
-            id, 
-            email, 
-            full_name, 
-            created_at, 
-            user_type_id,
-            is_active,
-            is_deleted,
-            user_type:user_type_id (id, name, description)
+      const { data, error } = await (supabase as any)
+        .from("profiles")
+        .select(
           `
-          )
-          .eq("is_deleted", false)
-          .order("created_at", { ascending: false });
+          id, 
+          email, 
+          full_name, 
+          created_at, 
+          user_type_id,
+          is_active,
+          is_deleted,
+          user_type:user_type_id (id, name, description)
+        `
+        )
+        .eq("is_deleted", false)
+        .order("created_at", { ascending: false });
 
-        if (error) throw error;
+      if (error) throw error;
 
-        // Transform the data to match the expected format from the RPC function
-        const transformedData = (data || []).map((user: any) => ({
-          ...user,
-          // Explicitly format the user_type object to ensure it has the right structure
-          user_type: user.user_type
-            ? {
-                id: user.user_type.id,
-                name: user.user_type.name || "Unknown",
-                description: user.user_type.description || null,
-              }
-            : null,
-          // Add empty project assignments array if not present
-          project_assignments: [],
-        })) as UserWithDetails[];
+      const transformedData = (data || []).map((user: any) => ({
+        ...user,
+        user_type: user.user_type
+          ? {
+              id: user.user_type.id,
+              name: user.user_type.name || "Unknown",
+              description: user.user_type.description || null,
+            }
+          : null,
+        project_assignments: [],
+      })) as UserWithDetails[];
 
-        setUsers(transformedData);
-        setFilteredUsers(transformedData);
-      }
+      setUsers(transformedData);
+      setFilteredUsers(transformedData);
     } catch (error: any) {
       toast({
         title: "Error fetching users",
