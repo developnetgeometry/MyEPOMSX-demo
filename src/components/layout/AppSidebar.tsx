@@ -315,6 +315,11 @@ const sidebarItems: SidebarItemType[] = [
             path: "/admin/setup/work-center",
             icon: Wrench,
           },
+          {
+            name: "User Management",
+            path: "/admin/setup/user-management",
+            icon: Users,
+          },
         ],
       },
       // Settings submodule

@@ -888,7 +888,7 @@ export type Database = {
           },
         ]
       }
-      e_circuit_id: {
+      e_circuit: {
         Row: {
           created_at: string | null
           created_by: string | null
@@ -2929,6 +2929,36 @@ export type Database = {
         }
         Relationships: []
       }
+      e_material_construction: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: number
+          material_construction_type: number | null
+          name: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          material_construction_type?: number | null
+          name: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          material_construction_type?: number | null
+          name?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       e_mitigation_system: {
         Row: {
           created_at: string | null
@@ -3415,6 +3445,33 @@ export type Database = {
         }
         Update: {
           abbreviation_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: never
+          name?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      e_pipe_class: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: number
+          name: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: never
+          name: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
           created_at?: string | null
           created_by?: string | null
           id?: never
@@ -6014,78 +6071,81 @@ export type Database = {
       }
       i_ims_general: {
         Row: {
-          area: string | null
           asset_detail_id: number | null
           circuit_id: number | null
+          clad_thickness: number | null
           cladding: boolean | null
           created_at: string | null
           created_by: string | null
           description: string | null
           id: number
           ims_asset_type_id: number | null
+          inner_diameter: number | null
           insulation: boolean | null
           internal_lining: boolean | null
           line_h2s: boolean | null
           line_no: string | null
-          material_construction: number | null
+          material_construction_id: number | null
           nominal_bore_diameter: number | null
           normal_wall_thickness: number | null
-          pipe_schedule: number | null
-          pressure_railing: string | null
+          pipe_class_id: number | null
+          pipe_schedule_id: number | null
+          pressure_rating: number | null
           pwht: boolean | null
-          system: string | null
           tmin: string | null
           updated_at: string | null
           updated_by: string | null
           year_in_service: string | null
         }
         Insert: {
-          area?: string | null
           asset_detail_id?: number | null
           circuit_id?: number | null
+          clad_thickness?: number | null
           cladding?: boolean | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           id?: number
           ims_asset_type_id?: number | null
+          inner_diameter?: number | null
           insulation?: boolean | null
           internal_lining?: boolean | null
           line_h2s?: boolean | null
           line_no?: string | null
-          material_construction?: number | null
+          material_construction_id?: number | null
           nominal_bore_diameter?: number | null
           normal_wall_thickness?: number | null
-          pipe_schedule?: number | null
-          pressure_railing?: string | null
+          pipe_class_id?: number | null
+          pipe_schedule_id?: number | null
+          pressure_rating?: number | null
           pwht?: boolean | null
-          system?: string | null
           tmin?: string | null
           updated_at?: string | null
           updated_by?: string | null
           year_in_service?: string | null
         }
         Update: {
-          area?: string | null
           asset_detail_id?: number | null
           circuit_id?: number | null
+          clad_thickness?: number | null
           cladding?: boolean | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           id?: number
           ims_asset_type_id?: number | null
+          inner_diameter?: number | null
           insulation?: boolean | null
           internal_lining?: boolean | null
           line_h2s?: boolean | null
           line_no?: string | null
-          material_construction?: number | null
+          material_construction_id?: number | null
           nominal_bore_diameter?: number | null
           normal_wall_thickness?: number | null
-          pipe_schedule?: number | null
-          pressure_railing?: string | null
+          pipe_class_id?: number | null
+          pipe_schedule_id?: number | null
+          pressure_rating?: number | null
           pwht?: boolean | null
-          system?: string | null
           tmin?: string | null
           updated_at?: string | null
           updated_by?: string | null
@@ -6100,6 +6160,34 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "i_ims_general_e_circuit_id_fk"
+            columns: ["circuit_id"]
+            isOneToOne: false
+            referencedRelation: "e_circuit"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_general_e_material_construction_fk"
+            columns: ["material_construction_id"]
+            isOneToOne: false
+            referencedRelation: "e_material_construction"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_general_e_pipe_class_fk"
+            columns: ["pipe_class_id"]
+            isOneToOne: false
+            referencedRelation: "e_pipe_class"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_general_e_pipe_schedule_fk"
+            columns: ["pipe_schedule_id"]
+            isOneToOne: false
+            referencedRelation: "e_pipe_schedule"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "i_ims_general_i_ims_asset_type_fk"
             columns: ["ims_asset_type_id"]
             isOneToOne: false
@@ -6110,9 +6198,10 @@ export type Database = {
       }
       i_ims_piping_design: {
         Row: {
-          allowable_stress_mpa: number | null
+          area: string | null
           asset_detail_id: number | null
-          corrosion_allowance: number | null
+          circuit_id: number | null
+          cladding: boolean | null
           created_at: string | null
           created_by: string | null
           dead_legs: boolean | null
@@ -6772,27 +6861,36 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          description: string | null
           email: string
           full_name: string | null
           id: string
+          is_active: boolean | null
+          is_deleted: boolean | null
           updated_at: string
           user_type_id: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          description?: string | null
           email: string
           full_name?: string | null
           id: string
+          is_active?: boolean | null
+          is_deleted?: boolean | null
           updated_at?: string
           user_type_id: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          description?: string | null
           email?: string
           full_name?: string | null
           id?: string
+          is_active?: boolean | null
+          is_deleted?: boolean | null
           updated_at?: string
           user_type_id?: string
         }
@@ -6894,8 +6992,9 @@ export type Database = {
       }
       user_type: {
         Row: {
-          created_at: string | null
           created_by: string | null
+          created_when: string | null
+          description: string | null
           id: string
           name: string | null
           priority: number | null
@@ -6903,8 +7002,9 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
-          created_at?: string | null
           created_by?: string | null
+          created_when?: string | null
+          description?: string | null
           id?: string
           name?: string | null
           priority?: number | null
@@ -6912,8 +7012,9 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
-          created_at?: string | null
           created_by?: string | null
+          created_when?: string | null
+          description?: string | null
           id?: string
           name?: string | null
           priority?: number | null
@@ -6988,6 +7089,22 @@ export type Database = {
           full_name: string
           avatar_url: string
           user_type_id: string
+        }[]
+      }
+      get_users_with_details: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          email: string
+          full_name: string
+          user_type_id: string
+          user_type: Json
+          created_at: string
+          updated_at: string
+          avatar_url: string
+          is_active: boolean
+          is_deleted: boolean
+          project_assignments: Json
         }[]
       }
       remove_user_from_project: {

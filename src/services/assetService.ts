@@ -308,14 +308,39 @@ export const assetService = {
             package:e_package(package_name),
             asset_tag:e_asset_tag(name),
             asset_status:e_asset_status(name),
+            asset_group:e_asset_group(name),
+            asset_sce:e_asset_sce(*),
+            asset_installation:e_asset_installation(
+              actual_installation_date,
+              actual_startup_date,
+              warranty_date,
+              drawing_no,
+              orientation,
+              overall_height,
+              overall_length,
+              overall_width
+            ),
             asset_detail:e_asset_detail(
+              *,
               specification,
               serial_number,
               model,
               maker_no,
+              is_integrity,
+              is_reliability,
               manufacturer:e_manufacturer(name),
               type:e_asset_type(name, category:e_asset_category(name)),
-              asset_class:e_asset_class(name)
+              asset_class:e_asset_class(name),
+              area:e_asset_area(name),
+              child_assets:e_asset_detail!parent_asset_id(
+                *,
+                asset:e_asset(
+                  id,
+                  asset_no,
+                  asset_name,
+                  asset_status:e_asset_status(name)
+                )
+              )
             )
           `
           )

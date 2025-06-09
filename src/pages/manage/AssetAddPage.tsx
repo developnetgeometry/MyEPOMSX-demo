@@ -1066,7 +1066,7 @@ const AssetAddPage: React.FC = () => {
                       </Select>
                     </div>
 
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                       <Label htmlFor="assetExClass">Asset Ex Class</Label>
                       <Input
                         id="assetExClass"
@@ -1089,7 +1089,7 @@ const AssetAddPage: React.FC = () => {
                         }
                         placeholder="Enter asset EX certificate"
                       />
-                    </div>
+                    </div> */}
                   </div>
 
                   <div className="space-y-4">

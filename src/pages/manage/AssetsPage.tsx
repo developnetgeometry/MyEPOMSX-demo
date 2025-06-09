@@ -616,7 +616,7 @@ const AssetsPage: React.FC = () => {
                                 {nodeDetails.asset_detail && (
                                   <div>
                                     <h5 className="text-xs font-medium text-gray-500 mb-2">
-                                      Asset Details
+                                      Asset Technical Information
                                     </h5>
                                     <div className="grid grid-cols-2 gap-3">
                                       <div className="p-2 bg-gray-50 rounded-md">
@@ -624,8 +624,8 @@ const AssetsPage: React.FC = () => {
                                           Category
                                         </span>
                                         <span className="text-sm font-medium">
-                                          {nodeDetails.asset_detail.category
-                                            ?.name || "-"}
+                                          {nodeDetails.asset_detail.type
+                                            ?.category?.name || "-"}
                                         </span>
                                       </div>
                                       <div className="p-2 bg-gray-50 rounded-md">
@@ -673,13 +673,208 @@ const AssetsPage: React.FC = () => {
                                             ?.name || "-"}
                                         </span>
                                       </div>
+                                      <div className="p-2 bg-gray-50 rounded-md">
+                                        <span className="text-xs text-gray-500 block">
+                                          Asset Class
+                                        </span>
+                                        <span className="text-sm font-medium">
+                                          {nodeDetails.asset_detail.asset_class
+                                            ?.name || "-"}
+                                        </span>
+                                      </div>
+                                      <div className="p-2 bg-gray-50 rounded-md">
+                                        <span className="text-xs text-gray-500 block">
+                                          Maker Number
+                                        </span>
+                                        <span className="text-sm font-medium">
+                                          {nodeDetails.asset_detail.maker_no ||
+                                            "-"}
+                                        </span>
+                                      </div>
+
+                                      <div className="p-2 bg-gray-50 rounded-md col-span-2">
+                                        <span className="text-xs text-gray-500 block">
+                                          Specification
+                                        </span>
+                                        <span className="text-sm font-medium">
+                                          {nodeDetails.asset_detail
+                                            .specification || "-"}
+                                        </span>
+                                      </div>
+
+                                      <div className="p-2 bg-gray-50 rounded-md">
+                                        <span className="text-xs text-gray-500 block">
+                                          Integrity Critical
+                                        </span>
+                                        <span className="text-sm font-medium">
+                                          {nodeDetails.asset_detail.is_integrity
+                                            ? "Yes"
+                                            : "No"}
+                                        </span>
+                                      </div>
+                                      <div className="p-2 bg-gray-50 rounded-md">
+                                        <span className="text-xs text-gray-500 block">
+                                          Reliability Critical
+                                        </span>
+                                        <span className="text-sm font-medium">
+                                          {nodeDetails.asset_detail
+                                            .is_reliability
+                                            ? "Yes"
+                                            : "No"}
+                                        </span>
+                                      </div>
                                     </div>
                                   </div>
                                 )}
 
+                                {nodeDetails.asset_installation && (
+                                  <div className="mt-4">
+                                    <h5 className="text-xs font-medium text-gray-500 mb-2">
+                                      Installation Information
+                                    </h5>
+                                    <div className="grid grid-cols-2 gap-3">
+                                      {nodeDetails.asset_installation
+                                        .actual_installation_date && (
+                                        <div className="p-2 bg-gray-50 rounded-md">
+                                          <span className="text-xs text-gray-500 block">
+                                            Installation Date
+                                          </span>
+                                          <span className="text-sm font-medium">
+                                            {new Date(
+                                              nodeDetails.asset_installation.actual_installation_date
+                                            ).toLocaleDateString()}
+                                          </span>
+                                        </div>
+                                      )}
+                                      {nodeDetails.asset_installation
+                                        .actual_startup_date && (
+                                        <div className="p-2 bg-gray-50 rounded-md">
+                                          <span className="text-xs text-gray-500 block">
+                                            Startup Date
+                                          </span>
+                                          <span className="text-sm font-medium">
+                                            {new Date(
+                                              nodeDetails.asset_installation.actual_startup_date
+                                            ).toLocaleDateString()}
+                                          </span>
+                                        </div>
+                                      )}
+                                      {nodeDetails.asset_installation
+                                        .warranty_date && (
+                                        <div className="p-2 bg-gray-50 rounded-md">
+                                          <span className="text-xs text-gray-500 block">
+                                            Warranty Date
+                                          </span>
+                                          <span className="text-sm font-medium">
+                                            {new Date(
+                                              nodeDetails.asset_installation.warranty_date
+                                            ).toLocaleDateString()}
+                                          </span>
+                                        </div>
+                                      )}
+                                      {nodeDetails.asset_installation
+                                        .drawing_no && (
+                                        <div className="p-2 bg-gray-50 rounded-md">
+                                          <span className="text-xs text-gray-500 block">
+                                            Drawing No
+                                          </span>
+                                          <span className="text-sm font-medium">
+                                            {
+                                              nodeDetails.asset_installation
+                                                .drawing_no
+                                            }
+                                          </span>
+                                        </div>
+                                      )}
+
+                                      {nodeDetails.asset_installation
+                                        .orientation && (
+                                        <div className="p-2 bg-gray-50 rounded-md">
+                                          <span className="text-xs text-gray-500 block">
+                                            Orientation
+                                          </span>
+                                          <span className="text-sm font-medium">
+                                            {
+                                              nodeDetails.asset_installation
+                                                .orientation
+                                            }
+                                          </span>
+                                        </div>
+                                      )}
+
+                                      {(nodeDetails.asset_installation
+                                        .overall_height ||
+                                        nodeDetails.asset_installation
+                                          .overall_length ||
+                                        nodeDetails.asset_installation
+                                          .overall_width) && (
+                                        <div className="p-2 bg-gray-50 rounded-md">
+                                          <span className="text-xs text-gray-500 block">
+                                            Dimensions (H×L×W)
+                                          </span>
+                                          <span className="text-sm font-medium">
+                                            {nodeDetails.asset_installation
+                                              .overall_height || "-"}
+                                            ×
+                                            {nodeDetails.asset_installation
+                                              .overall_length || "-"}
+                                            ×
+                                            {nodeDetails.asset_installation
+                                              .overall_width || "-"}
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {nodeDetails.asset_detail?.child_assets &&
+                                  nodeDetails.asset_detail.child_assets.length >
+                                    0 && (
+                                    <div className="mt-4">
+                                      <h5 className="text-xs font-medium text-gray-500 mb-2">
+                                        Child Assets (
+                                        {
+                                          nodeDetails.asset_detail.child_assets
+                                            .length
+                                        }
+                                        )
+                                      </h5>
+                                      <div className="border rounded-md divide-y divide-gray-100 overflow-hidden">
+                                        {nodeDetails.asset_detail.child_assets.map(
+                                          (childAsset: any) => (
+                                            <div
+                                              key={childAsset.id}
+                                              className="p-2 text-sm hover:bg-gray-50"
+                                            >
+                                              <div className="flex justify-between items-center">
+                                                <span className="font-medium">
+                                                  {childAsset.asset
+                                                    ?.asset_name ||
+                                                    childAsset.asset
+                                                      ?.asset_no ||
+                                                    "-"}
+                                                </span>
+                                                {childAsset.asset
+                                                  ?.asset_status && (
+                                                  <StatusBadge
+                                                    status={
+                                                      childAsset.asset
+                                                        .asset_status.name
+                                                    }
+                                                  />
+                                                )}
+                                              </div>
+                                            </div>
+                                          )
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+
                                 {nodeDetails.asset_sce &&
                                   nodeDetails.asset_sce.length > 0 && (
-                                    <div>
+                                    <div className="mt-4">
                                       <h5 className="text-xs font-medium text-gray-500 mb-2">
                                         SCE Information
                                       </h5>
