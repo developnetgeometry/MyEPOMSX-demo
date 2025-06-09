@@ -6198,9 +6198,10 @@ export type Database = {
       }
       i_ims_piping_design: {
         Row: {
-          allowable_stress_mpa: number | null
+          area: string | null
           asset_detail_id: number | null
-          corrosion_allowance: number | null
+          circuit_id: number | null
+          cladding: boolean | null
           created_at: string | null
           created_by: string | null
           dead_legs: boolean | null
