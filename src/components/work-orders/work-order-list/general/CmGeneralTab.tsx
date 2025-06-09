@@ -3,7 +3,7 @@ import PageHeader from "@/components/shared/PageHeader";
 import {
   useCmGeneralDataById,
   updateCmGeneralData,
-} from "../hooks/use-cm-general-data";
+} from "../hooks/cm/use-cm-general-data";
 import CmGeneralDialogForm from "./CmGeneralDialogForm";
 import {
   Dialog,
@@ -61,14 +61,6 @@ const CmGeneralTab: React.FC<CmGeneralTabProps> = ({ cmGeneralId }) => {
         <div className="space-y-4">
           <div className="border rounded-lg p-4 shadow-sm bg-white">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label className="block text-sm font-medium text-gray-700">Work Order No</Label>
-                <Input
-                  className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                  value={cmGeneral.work_order_no ?? "N/A"}
-                  readOnly
-                />
-              </div>
               <div>
                 <Label className="block text-sm font-medium text-gray-700">Priority</Label>
                 <Input

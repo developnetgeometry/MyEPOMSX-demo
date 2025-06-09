@@ -15,7 +15,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import TaskDetailTab from '@/components/work-orders/work-request/task-detail/TaskDetailTab';
 import ReportsTab from '@/components/work-orders/work-request/reports/ReportsTab';
 import FailureTab from '@/components/work-orders/work-request/failure/FailureTab';
-import AttachmentTab from '@/components/work-orders/work-request/attachment/AttachmentTab';
 import { useToast } from '@/hooks/use-toast';
 import { ConfirmationDialog, ConfirmVariant } from '@/components/ui/confirmation-dialog';
 import { useQueryClient } from "@tanstack/react-query";
@@ -29,6 +28,8 @@ import RelatedWoTab from '@/components/work-orders/work-order-list/relatedWo/Rel
 import CmReportsTab from '@/components/work-orders/work-order-list/reports/CmReportsTab';
 import CmDeferTab from '@/components/work-orders/work-order-list/defer/CmDeferTab';
 import CmFailureTab from '@/components/work-orders/work-order-list/failure/CmFailureTab';
+import CmAttachmentTab from '@/components/work-orders/work-order-list/attachment/CmAttachmentTab';
+import CmTaskDetailTab from '@/components/work-orders/work-order-list/task-detail/CmTaskDetailTab';
 
 
 const WorkOrderListDetailPage: React.FC = () => {
@@ -153,7 +154,18 @@ const WorkOrderListDetailPage: React.FC = () => {
                 )}
                 {(workOrder?.work_order_type === 2 &&
                   <>
+                    <TabsTrigger value="generalPm">General</TabsTrigger>
+                    <TabsTrigger value="taskDetailPm">Task Detail</TabsTrigger>
+                    <TabsTrigger value="planPm">Plan</TabsTrigger>
+                    <TabsTrigger value="actualPm">Actual</TabsTrigger>
                     <TabsTrigger value="relatedWoPm">Related WO</TabsTrigger>
+                    <TabsTrigger value="reportPm">Reports</TabsTrigger>
+                    <TabsTrigger value="deferPm">Defer</TabsTrigger>
+                    <TabsTrigger value="attachmentPm">Attachment</TabsTrigger>
+                    <TabsTrigger value="criteriaPm">Min Acceptance Criteria</TabsTrigger>
+                    <TabsTrigger value="checksheetPm">Checksheet</TabsTrigger>
+                    <TabsTrigger value="additionalInfoPm">Additional Info</TabsTrigger>
+                    <TabsTrigger value="maintainGroupPm">Maintanable Group</TabsTrigger>
                   </>
                 )}
 
@@ -175,16 +187,16 @@ const WorkOrderListDetailPage: React.FC = () => {
                     {id && <RelatedWoTab assetId={Number(workOrder.asset_id)} />}
                   </TabsContent>
                   <TabsContent value="reportsCm">
-                    {id && <CmReportsTab workRequestId={workOrder.cm_work_order_id.work_request_id} />}
+                    {id && <CmReportsTab cmGeneralId={Number(workOrder.cm_work_order_id.id)} />}
                   </TabsContent>
                   <TabsContent value="deferCm">
                     {id && <CmDeferTab cmGeneralId={Number(workOrder.cm_work_order_id.id)} />}
                   </TabsContent>
                   <TabsContent value="attachmentCm">
-                    {id && <AttachmentTab workRequestId={workOrder.cm_work_order_id.work_request_id} />}
+                    {id && <CmAttachmentTab cmGeneralId={Number(workOrder.cm_work_order_id.id)} />}
                   </TabsContent>
                   <TabsContent value="taskDetailCm">
-                    {id && <TaskDetailTab newWorkRequestId={workOrder.cm_work_order_id.work_request_id} />}
+                    {id && <CmTaskDetailTab cmGeneralId={Number(workOrder.cm_work_order_id.id)} />}
                   </TabsContent>
                   <TabsContent value="failureCm">
                     {id && <CmFailureTab workRequestId={workOrder.cm_work_order_id.work_request_id} />}
@@ -193,8 +205,38 @@ const WorkOrderListDetailPage: React.FC = () => {
               )}
               {(workOrder?.work_order_type === 2 &&
                 <>
+                  <TabsContent value="generalPm">
+                    <h1>general</h1>
+                  </TabsContent>
+                  <TabsContent value="taskDetailPm">
+                    <h1>task detail</h1>
+                  </TabsContent>
+                  <TabsContent value="planPm">
+                    <h1>plan</h1>
+                  </TabsContent>
                   <TabsContent value="relatedWoPm">
                     {id && <RelatedWoTab assetId={Number(workOrder.asset_id)} />}
+                  </TabsContent>
+                  <TabsContent value="reportPm">
+                    <h1>report</h1>
+                  </TabsContent>
+                  <TabsContent value="deferPm">
+                    <h1>defer</h1>
+                  </TabsContent>
+                  <TabsContent value="attachmentPm">
+                    <h1>attachment</h1>
+                  </TabsContent>
+                  <TabsContent value="criteriaPm">
+                    <h1>criteria</h1>
+                  </TabsContent>
+                  <TabsContent value="checksheetPm">
+                    <h1>checksheet</h1>
+                  </TabsContent>
+                  <TabsContent value="additionalInfoPm">
+                    <h1>additional info</h1>
+                  </TabsContent>
+                  <TabsContent value="maintainGroupPm">
+                    <h1>Maintain group</h1>
                   </TabsContent>
                 </>
               )}

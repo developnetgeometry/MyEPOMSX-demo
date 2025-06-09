@@ -77,6 +77,7 @@ export type Database = {
           facility_id: number | null
           id: number
           package_id: number | null
+          parent_asset_no: number | null
           status_id: number | null
           system_id: number | null
           updated_at: string | null
@@ -95,6 +96,7 @@ export type Database = {
           facility_id?: number | null
           id?: number
           package_id?: number | null
+          parent_asset_no?: number | null
           status_id?: number | null
           system_id?: number | null
           updated_at?: string | null
@@ -113,6 +115,7 @@ export type Database = {
           facility_id?: number | null
           id?: number
           package_id?: number | null
+          parent_asset_no?: number | null
           status_id?: number | null
           system_id?: number | null
           updated_at?: string | null
@@ -175,6 +178,13 @@ export type Database = {
             referencedRelation: "e_system"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "e_asset_parent_asset_no_fkey"
+            columns: ["parent_asset_no"]
+            isOneToOne: false
+            referencedRelation: "e_asset"
+            referencedColumns: ["id"]
+          },
         ]
       }
       e_asset_area: {
@@ -209,7 +219,10 @@ export type Database = {
           asset_id: number | null
           created_at: string
           created_by: string | null
+          file_name: string | null
           file_path: string | null
+          file_size: number | null
+          file_type: string | null
           id: number
           notes: string | null
           type: string | null
@@ -220,7 +233,10 @@ export type Database = {
           asset_id?: number | null
           created_at?: string
           created_by?: string | null
+          file_name?: string | null
           file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
           id?: number
           notes?: string | null
           type?: string | null
@@ -231,7 +247,10 @@ export type Database = {
           asset_id?: number | null
           created_at?: string
           created_by?: string | null
+          file_name?: string | null
           file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
           id?: number
           notes?: string | null
           type?: string | null
@@ -250,6 +269,44 @@ export type Database = {
       }
       e_asset_category: {
         Row: {
+          asset_category_group_id: number | null
+          created_at: string | null
+          created_by: string | null
+          id: number
+          name: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          asset_category_group_id?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: never
+          name: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          asset_category_group_id?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: never
+          name?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "e_asset_category_e_asset_category_group_fk"
+            columns: ["asset_category_group_id"]
+            isOneToOne: false
+            referencedRelation: "e_asset_category_group"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      e_asset_category_group: {
+        Row: {
           created_at: string | null
           created_by: string | null
           id: number
@@ -260,7 +317,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           created_by?: string | null
-          id?: never
+          id?: number
           name: string
           updated_at?: string | null
           updated_by?: string | null
@@ -268,7 +325,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           created_by?: string | null
-          id?: never
+          id?: number
           name?: string
           updated_at?: string | null
           updated_by?: string | null
@@ -306,10 +363,14 @@ export type Database = {
         Row: {
           area_id: number | null
           asset_class_id: number | null
+          asset_image_path: string | null
           bom_id: number | null
           category_id: number | null
           created_at: string | null
           created_by: string | null
+          drawing_no: string | null
+          ex_certificate: string | null
+          ex_class: string | null
           hs_code: string | null
           id: number
           iot_sensor_id: number | null
@@ -329,10 +390,14 @@ export type Database = {
         Insert: {
           area_id?: number | null
           asset_class_id?: number | null
+          asset_image_path?: string | null
           bom_id?: number | null
           category_id?: number | null
           created_at?: string | null
           created_by?: string | null
+          drawing_no?: string | null
+          ex_certificate?: string | null
+          ex_class?: string | null
           hs_code?: string | null
           id?: number
           iot_sensor_id?: number | null
@@ -352,10 +417,14 @@ export type Database = {
         Update: {
           area_id?: number | null
           asset_class_id?: number | null
+          asset_image_path?: string | null
           bom_id?: number | null
           category_id?: number | null
           created_at?: string | null
           created_by?: string | null
+          drawing_no?: string | null
+          ex_certificate?: string | null
+          ex_class?: string | null
           hs_code?: string | null
           id?: number
           iot_sensor_id?: number | null
@@ -700,6 +769,7 @@ export type Database = {
       e_asset_type: {
         Row: {
           asset_category_id: number | null
+          asset_type_group_id: number | null
           created_at: string | null
           created_by: string | null
           id: number
@@ -709,6 +779,7 @@ export type Database = {
         }
         Insert: {
           asset_category_id?: number | null
+          asset_type_group_id?: number | null
           created_at?: string | null
           created_by?: string | null
           id?: number
@@ -718,6 +789,7 @@ export type Database = {
         }
         Update: {
           asset_category_id?: number | null
+          asset_type_group_id?: number | null
           created_at?: string | null
           created_by?: string | null
           id?: number
@@ -733,7 +805,41 @@ export type Database = {
             referencedRelation: "e_asset_category"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "e_asset_type_e_asset_type_group_fk"
+            columns: ["asset_type_group_id"]
+            isOneToOne: false
+            referencedRelation: "e_asset_type_group"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      e_asset_type_group: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: number
+          name: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          name: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          name?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
       }
       e_bom_assembly: {
         Row: {
@@ -946,6 +1052,7 @@ export type Database = {
       }
       e_cm_attachment: {
         Row: {
+          cm_general_id: number | null
           created_at: string | null
           created_by: string | null
           description: string | null
@@ -953,9 +1060,9 @@ export type Database = {
           id: number
           updated_at: string | null
           updated_by: string | null
-          work_request_attachment_id: number | null
         }
         Insert: {
+          cm_general_id?: number | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -963,9 +1070,9 @@ export type Database = {
           id?: number
           updated_at?: string | null
           updated_by?: string | null
-          work_request_attachment_id?: number | null
         }
         Update: {
+          cm_general_id?: number | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -973,14 +1080,13 @@ export type Database = {
           id?: number
           updated_at?: string | null
           updated_by?: string | null
-          work_request_attachment_id?: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "e_cm_attachment_e_new_work_attachment_fk"
-            columns: ["work_request_attachment_id"]
+            foreignKeyName: "e_cm_attachment_cm_general_id_fkey"
+            columns: ["cm_general_id"]
             isOneToOne: false
-            referencedRelation: "e_new_work_attachment"
+            referencedRelation: "e_cm_general"
             referencedColumns: ["id"]
           },
         ]
@@ -1100,7 +1206,6 @@ export type Database = {
           updated_at: string | null
           updated_by: string | null
           work_center_id: number | null
-          work_order_no: string | null
           work_request_id: number | null
         }
         Insert: {
@@ -1126,7 +1231,6 @@ export type Database = {
           updated_at?: string | null
           updated_by?: string | null
           work_center_id?: number | null
-          work_order_no?: string | null
           work_request_id?: number | null
         }
         Update: {
@@ -1152,24 +1256,9 @@ export type Database = {
           updated_at?: string | null
           updated_by?: string | null
           work_center_id?: number | null
-          work_order_no?: string | null
           work_request_id?: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "e_cm_general_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "e_asset"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "e_cm_general_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "e_asset"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "e_cm_general_asset_id_fkey"
             columns: ["asset_id"]
@@ -1231,6 +1320,7 @@ export type Database = {
       e_cm_report: {
         Row: {
           alarm_trigger: string | null
+          cm_general_id: number | null
           created_at: string | null
           created_by: string | null
           design_code: string | null
@@ -1253,10 +1343,10 @@ export type Database = {
           visibility: string | null
           weather_condition: string | null
           wind_speed_direction: string | null
-          work_request_id: number | null
         }
         Insert: {
           alarm_trigger?: string | null
+          cm_general_id?: number | null
           created_at?: string | null
           created_by?: string | null
           design_code?: string | null
@@ -1279,10 +1369,10 @@ export type Database = {
           visibility?: string | null
           weather_condition?: string | null
           wind_speed_direction?: string | null
-          work_request_id?: number | null
         }
         Update: {
           alarm_trigger?: string | null
+          cm_general_id?: number | null
           created_at?: string | null
           created_by?: string | null
           design_code?: string | null
@@ -1305,21 +1395,20 @@ export type Database = {
           visibility?: string | null
           weather_condition?: string | null
           wind_speed_direction?: string | null
-          work_request_id?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "e_cm_report_e_cm_general_fk"
+            columns: ["cm_general_id"]
+            isOneToOne: false
+            referencedRelation: "e_cm_general"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "e_cm_report_e_material_class_fk"
             columns: ["material_class_id"]
             isOneToOne: false
             referencedRelation: "e_material_class"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "e_cm_report_e_new_work_request_fk"
-            columns: ["work_request_id"]
-            isOneToOne: false
-            referencedRelation: "e_new_work_request"
             referencedColumns: ["id"]
           },
           {
@@ -2311,7 +2400,7 @@ export type Database = {
           },
         ]
       }
-      e_inventory_tansfer: {
+      e_inventory_transfer: {
         Row: {
           created_at: string | null
           created_by: string | null
@@ -3025,7 +3114,6 @@ export type Database = {
           work_center_id: number | null
           work_request_date: string | null
           work_request_no: string | null
-          work_request_prefix: string | null
         }
         Insert: {
           anomaly_report?: boolean | null
@@ -3052,7 +3140,6 @@ export type Database = {
           work_center_id?: number | null
           work_request_date?: string | null
           work_request_no?: string | null
-          work_request_prefix?: string | null
         }
         Update: {
           anomaly_report?: boolean | null
@@ -3079,7 +3166,6 @@ export type Database = {
           work_center_id?: number | null
           work_request_date?: string | null
           work_request_no?: string | null
-          work_request_prefix?: string | null
         }
         Relationships: [
           {
@@ -4358,21 +4444,6 @@ export type Database = {
           name?: string
           updated_at?: string | null
           updated_by?: string | null
-        }
-        Relationships: []
-      }
-      e_priority_type: {
-        Row: {
-          id: number
-          name: string
-        }
-        Insert: {
-          id?: never
-          name: string
-        }
-        Update: {
-          id?: never
-          name?: string
         }
         Relationships: []
       }
@@ -6715,6 +6786,33 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       r_rms_uptime: {
         Row: {
           asset_id: number | null
@@ -6755,6 +6853,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      work_order_sequence: {
+        Row: {
+          current_number: number
+          year: number
+        }
+        Insert: {
+          current_number?: number
+          year: number
+        }
+        Update: {
+          current_number?: number
+          year?: number
+        }
+        Relationships: []
+      }
+      work_request_sequence: {
+        Row: {
+          current_number: number
+          year: number
+        }
+        Insert: {
+          current_number?: number
+          year: number
+        }
+        Update: {
+          current_number?: number
+          year?: number
+        }
+        Relationships: []
       }
     }
     Views: {

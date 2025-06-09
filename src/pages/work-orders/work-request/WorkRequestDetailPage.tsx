@@ -185,6 +185,8 @@ const WorkRequestDetailPage: React.FC = () => {
             };
 
             await insertCmGeneral(cmGeneralData);
+            // Step 3: Trigger supabase on insert e_cm_general to copy table
+            // work_request to e_cm_general
 
             toast({
               title: "Success",

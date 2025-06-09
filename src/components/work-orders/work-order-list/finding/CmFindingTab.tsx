@@ -6,7 +6,7 @@ import {
   insertCmFindingData,
   updateCmFindingData,
   deleteCmFindingData,
-} from "../hooks/use-cm-finding-data";
+} from "../hooks/cm/use-cm-finding-data";
 import CmFindingDialogForm from "./CmFindingDialogForm";
 import {
   Dialog,
