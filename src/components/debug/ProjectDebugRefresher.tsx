@@ -2,12 +2,7 @@ import React, { useState } from "react";
 import { useProject } from "@/contexts/ProjectContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-// import { ReloadIcon } from "@radix-ui/react-icons";
 
-/**
- * A more advanced debug component for project context monitoring and manual refresh.
- * Only appears in development mode.
- */
 export const ProjectDebugRefresher: React.FC = () => {
   const {
     currentProject,
@@ -18,6 +13,7 @@ export const ProjectDebugRefresher: React.FC = () => {
   } = useProject();
   const [refreshCount, setRefreshCount] = useState(0);
   const [lastRefreshed, setLastRefreshed] = useState<string | null>(null);
+  const [minimized, setMinimized] = useState(false);
 
   if (process.env.NODE_ENV !== "development") {
     return null;
@@ -34,23 +30,50 @@ export const ProjectDebugRefresher: React.FC = () => {
     }
   };
 
-  return (
-    <Card className="fixed bottom-4 left-4 bg-white border border-gray-300 rounded p-4 shadow-lg text-xs max-w-sm z-50 overflow-auto max-h-[300px]">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="font-bold">Project Status Monitor</h3>
+  if (minimized) {
+    return (
+      <div className="fixed bottom-4 right-4 z-50">
         <Button
-          onClick={handleRefreshProjects}
           size="sm"
           variant="outline"
-          className="h-8 px-2"
-          disabled={projectLoading}
+          className="rounded-full px-3 py-1 shadow"
+          onClick={() => setMinimized(false)}
+          aria-label="Expand Project Debug Refresher"
         >
-          {projectLoading ? (
-            <a className="mr-2 h-3 w-3 animate-spin" />
-          ) : (
-            "Refresh"
-          )}
+          &#9654; {/* Right-pointing triangle */}
         </Button>
+      </div>
+    );
+  }
+
+  return (
+    <Card className="fixed bottom-4 right-4 bg-white border border-gray-300 rounded p-4 shadow-lg text-xs max-w-sm z-50 overflow-auto max-h-[300px]">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="font-bold">Project Status Monitor</h3>
+        <div className="flex gap-1">
+          <Button
+            onClick={handleRefreshProjects}
+            size="sm"
+            variant="outline"
+            className="h-8 px-2"
+            disabled={projectLoading}
+          >
+            {projectLoading ? (
+              <a className="mr-2 h-3 w-3 animate-spin" />
+            ) : (
+              "Refresh"
+            )}
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 px-2"
+            onClick={() => setMinimized(true)}
+            aria-label="Minimize Project Debug Refresher"
+          >
+            &#8211; {/* En dash as minimize icon */}
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-1 text-left">
