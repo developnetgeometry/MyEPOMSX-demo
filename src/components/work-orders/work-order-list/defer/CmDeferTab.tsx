@@ -6,7 +6,7 @@ import {
   insertCmDeferData,
   updateCmDeferData,
   deleteCmDeferData,
-} from "../hooks/use-cm-defer-data";
+} from "../hooks/cm/use-cm-defer-data";
 import CmDeferDialogForm from "./CmDeferDialogForm";
 import {
   Dialog,

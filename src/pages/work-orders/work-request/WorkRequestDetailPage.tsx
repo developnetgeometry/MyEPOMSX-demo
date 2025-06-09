@@ -62,10 +62,9 @@ const WorkRequestDetailPage: React.FC = () => {
             description: "Work request has been deleted successfully!",
             variant: "default",
           });
-          refetch();
           setIsConfirmationDialogOpen(false);
-          queryClient.invalidateQueries({ queryKey: ["e-new-work-request-data"] });
           navigate('/work-orders/work-request');
+          queryClient.invalidateQueries({ queryKey: ["e-new-work-request-data"] });
         } catch (error) {
           toast({
             title: "Error",
@@ -186,6 +185,8 @@ const WorkRequestDetailPage: React.FC = () => {
             };
 
             await insertCmGeneral(cmGeneralData);
+            // Step 3: Trigger supabase on insert e_cm_general to copy table
+            // work_request to e_cm_general
 
             toast({
               title: "Success",
@@ -194,7 +195,8 @@ const WorkRequestDetailPage: React.FC = () => {
             });
 
             refetch();
-            queryClient.invalidateQueries({ queryKey: ["e-new-work-request-data",id] });
+            queryClient.invalidateQueries({ queryKey: ["e-new-work-request-data", id] });
+            queryClient.invalidateQueries({ queryKey: ["e-work-order-data"] });
           }
           setIsConfirmationDialogOpen(false);
         } catch (error) {
@@ -226,7 +228,6 @@ const WorkRequestDetailPage: React.FC = () => {
               work_order_type: 1,
               work_order_status_id: 1,
               description: workRequest.description,
-              work_order_no: workRequest.work_request_no,
               cm_work_order_id: workRequest.cm_work_order_id,
               asset_id: workRequest.asset_id?.id,
             };

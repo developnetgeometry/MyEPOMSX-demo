@@ -77,7 +77,6 @@ export type Database = {
           facility_id: number | null
           id: number
           package_id: number | null
-          parent_asset_no: number | null
           status_id: number | null
           system_id: number | null
           updated_at: string | null
@@ -6857,53 +6856,6 @@ export type Database = {
         }
         Relationships: []
       }
-      profiles: {
-        Row: {
-          avatar_url: string | null
-          created_at: string
-          description: string | null
-          email: string
-          full_name: string | null
-          id: string
-          is_active: boolean | null
-          is_deleted: boolean | null
-          updated_at: string
-          user_type_id: string
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string
-          description?: string | null
-          email: string
-          full_name?: string | null
-          id: string
-          is_active?: boolean | null
-          is_deleted?: boolean | null
-          updated_at?: string
-          user_type_id: string
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string
-          description?: string | null
-          email?: string
-          full_name?: string | null
-          id?: string
-          is_active?: boolean | null
-          is_deleted?: boolean | null
-          updated_at?: string
-          user_type_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_user_type_id_fkey"
-            columns: ["user_type_id"]
-            isOneToOne: false
-            referencedRelation: "user_type"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       r_rms_uptime: {
         Row: {
           asset_id: number | null
@@ -6944,114 +6896,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      user_projects: {
-        Row: {
-          created_at: string | null
-          created_by: string | null
-          id: string
-          project_id: number
-          updated_at: string | null
-          updated_by: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          created_by?: string | null
-          id?: string
-          project_id: number
-          updated_at?: string | null
-          updated_by?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          created_by?: string | null
-          id?: string
-          project_id?: number
-          updated_at?: string | null
-          updated_by?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_projects_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "e_project"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_projects_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_type: {
-        Row: {
-          created_by: string | null
-          created_when: string | null
-          description: string | null
-          id: string
-          name: string | null
-          priority: number | null
-          updated_at: string | null
-          updated_by: string | null
-        }
-        Insert: {
-          created_by?: string | null
-          created_when?: string | null
-          description?: string | null
-          id?: string
-          name?: string | null
-          priority?: number | null
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Update: {
-          created_by?: string | null
-          created_when?: string | null
-          description?: string | null
-          id?: string
-          name?: string | null
-          priority?: number | null
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Relationships: []
-      }
-      work_order_sequence: {
-        Row: {
-          current_number: number
-          year: number
-        }
-        Insert: {
-          current_number?: number
-          year: number
-        }
-        Update: {
-          current_number?: number
-          year?: number
-        }
-        Relationships: []
-      }
-      work_request_sequence: {
-        Row: {
-          current_number: number
-          year: number
-        }
-        Insert: {
-          current_number?: number
-          year: number
-        }
-        Update: {
-          current_number?: number
-          year?: number
-        }
-        Relationships: []
       }
     }
     Views: {

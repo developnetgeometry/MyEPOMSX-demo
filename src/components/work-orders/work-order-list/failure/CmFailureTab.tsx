@@ -11,7 +11,7 @@ interface CmFailureTabProps {
 }
 
 const CmFailureTab: React.FC<CmFailureTabProps> = ({ workRequestId }) => {
-    const { data: failures, isLoading, refetch } = useNewWorkFailureData(workRequestId);
+    const { data: failures, isLoading} = useNewWorkFailureData(workRequestId);
 
     return (
         <div className="space-y-6 mt-6">
