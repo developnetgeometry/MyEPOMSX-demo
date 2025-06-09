@@ -33,6 +33,8 @@ const defaultContext: ProjectContextType = {
   error: null,
 };
 
+const PROJECT_STORAGE_KEY = "myepomsx_current_project";
+
 const ProjectContext = createContext<ProjectContextType>(defaultContext);
 
 export const useProject = () => {

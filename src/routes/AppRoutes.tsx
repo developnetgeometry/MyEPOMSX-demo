@@ -8,6 +8,7 @@ import Index from "@/pages/Index";
 import Overview from "@/pages/Overview";
 
 // Admin Pages
+import AdminDashboard from "@/pages/admin/Dashboard";
 import ClientPage from "@/pages/admin/setup/client/ClientPage";
 import ClientDetailPage from "@/pages/admin/setup/client/ClientDetailPage";
 // import CompanyPage from "@/pages/admin/setup/CompanyPage";
@@ -125,6 +126,9 @@ const AppRoutes: React.FC = () => {
       {/* Public auth route */}
       <Route path="/auth" element={<AuthRoute />} />
 
+      {/* Redirect /login to /auth for compatibility */}
+      <Route path="/login" element={<AuthRoute />} />
+
       {/* Redirect root to auth for unauthenticated users */}
       <Route path="/" element={<AuthRoute />} />
 
@@ -153,6 +157,14 @@ const AppRoutes: React.FC = () => {
       />
 
       {/* Admin Routes */}
+      <Route
+        path="/admin/dashboard"
+        element={
+          <ProtectedRoute>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/admin/setup/client"
         element={
