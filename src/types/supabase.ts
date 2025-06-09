@@ -6319,7 +6319,10 @@ export type Database = {
       }
       i_ims_inspection: {
         Row: {
+          area: string | null
           asset_detail_id: number | null
+          circuit_id: number | null
+          cladding: boolean | null
           created_at: string | null
           created_by: string | null
           id: number
@@ -6462,6 +6465,212 @@ export type Database = {
           id: number
           ims_asset_type_id: number | null
           insulation_complexity_id: number | null
+          insulation_condition: string | null
+          insulation_type_id: number | null
+          interface_id: number | null
+          isolation_system_id: number | null
+          line_description: string | null
+          lining_condition: string | null
+          lining_monitoring: string | null
+          lining_type: string | null
+          minimum_thickness: number | null
+          mitigation_system_id: number | null
+          online_monitor: number | null
+          post_weld_heat_treatment: number | null
+          replacement_line: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          asset_detail_id?: number | null
+          coating_quality_id?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          design_fabrication_id?: number | null
+          detection_system_id?: number | null
+          id?: number
+          ims_asset_type_id?: number | null
+          insulation_complexity_id?: number | null
+          insulation_condition?: string | null
+          insulation_type_id?: number | null
+          interface_id?: number | null
+          isolation_system_id?: number | null
+          line_description?: string | null
+          lining_condition?: string | null
+          lining_monitoring?: string | null
+          lining_type?: string | null
+          minimum_thickness?: number | null
+          mitigation_system_id?: number | null
+          online_monitor?: number | null
+          post_weld_heat_treatment?: number | null
+          replacement_line?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          asset_detail_id?: number | null
+          coating_quality_id?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          design_fabrication_id?: number | null
+          detection_system_id?: number | null
+          id?: number
+          ims_asset_type_id?: number | null
+          insulation_complexity_id?: number | null
+          insulation_condition?: string | null
+          insulation_type_id?: number | null
+          interface_id?: number | null
+          isolation_system_id?: number | null
+          line_description?: string | null
+          lining_condition?: string | null
+          lining_monitoring?: string | null
+          lining_type?: string | null
+          minimum_thickness?: number | null
+          mitigation_system_id?: number | null
+          online_monitor?: number | null
+          post_weld_heat_treatment?: number | null
+          replacement_line?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "i_ims_protection_e_coating_quality_fk"
+            columns: ["coating_quality_id"]
+            isOneToOne: false
+            referencedRelation: "e_coating_quality"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_protection_e_design_fabrication_fk"
+            columns: ["design_fabrication_id"]
+            isOneToOne: false
+            referencedRelation: "e_design_fabrication"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_protection_e_detection_system_fk"
+            columns: ["detection_system_id"]
+            isOneToOne: false
+            referencedRelation: "e_detection_system"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_protection_e_insulation_type_fk"
+            columns: ["insulation_type_id"]
+            isOneToOne: false
+            referencedRelation: "e_insulation_type"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_protection_e_interface_fk"
+            columns: ["interface_id"]
+            isOneToOne: false
+            referencedRelation: "e_interface"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_protection_e_isolation_system_fk"
+            columns: ["isolation_system_id"]
+            isOneToOne: false
+            referencedRelation: "e_isolation_system"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_protection_e_mitigation_system_fk"
+            columns: ["mitigation_system_id"]
+            isOneToOne: false
+            referencedRelation: "e_mitigation_system"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_protection_e_online_monitor_fk"
+            columns: ["online_monitor"]
+            isOneToOne: false
+            referencedRelation: "e_online_monitor"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_protection_i_insulation_complexity_fk"
+            columns: ["insulation_complexity_id"]
+            isOneToOne: false
+            referencedRelation: "i_insulation_complexity"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      i_ims_pv_attachment: {
+        Row: {
+          asset_detail_id: number | null
+          attachment_file: string | null
+          created_at: string | null
+          created_by: string | null
+          id: number | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          asset_detail_id?: number | null
+          attachment_file?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          asset_detail_id?: number | null
+          attachment_file?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      i_ims_pv_inspection: {
+        Row: {
+          asset_detail_id: number | null
+          created_at: string | null
+          created_by: string | null
+          id: number
+          inspection_plan: string | null
+          report_attachment: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          asset_detail_id?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          inspection_plan?: string | null
+          report_attachment?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          asset_detail_id?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          inspection_plan?: string | null
+          report_attachment?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      i_ims_pv_protection: {
+        Row: {
+          asset_detail_id: number | null
+          coating_quality: number | null
+          created_at: string | null
+          created_by: string | null
+          design_fabrication: number | null
+          id: number
+          insulation_complexity: string | null
           insulation_condition: string | null
           insulation_type_id: number | null
           interface_id: number | null
@@ -6757,6 +6966,36 @@ export type Database = {
         Update: {
           id?: number
           name?: string | null
+        }
+        Relationships: []
+      }
+      i_insulation_complexity: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: number
+          name: string | null
+          updated_at: string | null
+          updated_by: string | null
+          value: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          name?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          name?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: number | null
         }
         Relationships: []
       }

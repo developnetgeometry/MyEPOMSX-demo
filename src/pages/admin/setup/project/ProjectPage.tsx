@@ -1,9 +1,16 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable, { Column } from "@/components/shared/DataTable";
-import { useProjectData, insertProjectData, updateProjectData, deleteProjectData } from "../hooks/use-project-data";
+import {
+  useProjectData,
+  insertProjectData,
+  updateProjectData,
+  deleteProjectData,
+} from "../hooks/use-project-data";
 import ProjectDialogForm from "./ProjectDialogForm";
+import AdminLayout from "@/components/layout/AdminLayout";
+import { findProjects, ProjectFilter } from "@/utils/project-data-utils";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +31,34 @@ const ProjectPage: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<any | null>(null);
   const { toast } = useToast();
+  const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
+
+  // Enhanced search functionality using project-data-utils
+  useEffect(() => {
+    const fetchFilteredProjects = async () => {
+      if (searchQuery.trim() === "") {
+        setFilteredProjects(projects || []);
+        return;
+      }
+
+      const filter: ProjectFilter = {
+        searchTerm: searchQuery,
+        sortBy: "name",
+      };
+
+      try {
+        const results = await findProjects(filter);
+        setFilteredProjects(results);
+      } catch (error) {
+        console.error("Error searching projects:", error);
+        setFilteredProjects(projects || []);
+      }
+    };
+
+    if (!isLoading && projects) {
+      fetchFilteredProjects();
+    }
+  }, [searchQuery, projects, isLoading]);
 
   const handleRowClick = (row: any) => {
     navigate(`/admin/setup/project/${row.id}`);
@@ -91,31 +126,29 @@ const ProjectPage: React.FC = () => {
     }
   };
 
-  const filteredProjects = useMemo(() => {
-    if (!projects) return [];
-    if (!searchQuery) return projects;
-    const lower = searchQuery.toLowerCase();
-    return projects.filter(
-      (project: any) =>
-        project.project_code?.toLowerCase().includes(lower) ||
-        project.project_name?.toLowerCase().includes(lower) ||
-        project.short_name?.toLowerCase().includes(lower) ||
-        project.project_type?.name.toLowerCase().includes(lower) ||
-        project.start_date?.toLowerCase().includes(lower) ||
-        project.end_date?.toLowerCase().includes(lower) ||
-        project.fund_code?.toLowerCase().includes(lower) ||
-        project.project_purpose?.toLowerCase().includes(lower) ||
-        project.remark?.toLowerCase().includes(lower)
-    );
-  }, [projects, searchQuery]);
+  // Removed duplicate filteredProjects declaration to avoid redeclaration error.
 
   const columns: Column[] = [
     { id: "project_code", header: "Project Code", accessorKey: "project_code" },
     { id: "project_name", header: "Project Name", accessorKey: "project_name" },
     { id: "short_name", header: "Short Name", accessorKey: "short_name" },
-    { id: "project_type", header: "Project Type", accessorKey: "project_type.name" },
-    { id: "start_date", header: "Start Date", accessorKey: "start_date", cell: (value: any) => formatDate(value) },
-    { id: "end_date", header: "End Date", accessorKey: "end_date", cell: (value: any) => formatDate(value) },
+    {
+      id: "project_type",
+      header: "Project Type",
+      accessorKey: "project_type.name",
+    },
+    {
+      id: "start_date",
+      header: "Start Date",
+      accessorKey: "start_date",
+      cell: (value: any) => formatDate(value),
+    },
+    {
+      id: "end_date",
+      header: "End Date",
+      accessorKey: "end_date",
+      cell: (value: any) => formatDate(value),
+    },
     { id: "fund_code", header: "Fund Code", accessorKey: "fund_code" },
   ];
 
@@ -145,14 +178,20 @@ const ProjectPage: React.FC = () => {
           <DialogHeader>
             <div className="flex items-start justify-between w-full">
               <div>
-                <DialogTitle>{editingProject ? "Edit Project" : "Add New Project"}</DialogTitle>
+                <DialogTitle>
+                  {editingProject ? "Edit Project" : "Add New Project"}
+                </DialogTitle>
                 <DialogDescription>
                   {editingProject
                     ? "Update the details of the project."
                     : "Fill in the details to add a new project."}
                 </DialogDescription>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setIsDialogOpen(false)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsDialogOpen(false)}
+              >
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -169,4 +208,13 @@ const ProjectPage: React.FC = () => {
   );
 };
 
-export default ProjectPage;
+// Wrap the component with AdminLayout for consistency with other admin pages
+const ProjectPageWithLayout = () => {
+  return (
+    <AdminLayout>
+      <ProjectPage />
+    </AdminLayout>
+  );
+};
+
+export default ProjectPageWithLayout;

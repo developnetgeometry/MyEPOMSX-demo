@@ -8,6 +8,7 @@ import Index from "@/pages/Index";
 import Overview from "@/pages/Overview";
 
 // Admin Pages
+import AdminDashboard from "@/pages/admin/Dashboard";
 import ClientPage from "@/pages/admin/setup/client/ClientPage";
 import ClientDetailPage from "@/pages/admin/setup/client/ClientDetailPage";
 // import CompanyPage from "@/pages/admin/setup/CompanyPage";
@@ -21,6 +22,7 @@ import SensorDetailPage from "@/pages/admin/setup/sensor/SensorDetailPage";
 import WorkCenterPage from "@/pages/admin/setup/work-center/WorkCenterPage";
 import WorkCenterDetailPage from "@/pages/admin/setup/work-center/WorkCenterDetailPage";
 import UserManagementPage from "@/pages/admin/setup/user-management";
+import LookupManagementPage from "@/pages/admin/setup/lookup-management";
 
 // Settings Pages
 import AssetClassPage from "@/pages/admin/settings/AssetClassPage";
@@ -119,12 +121,16 @@ import PurchaseOrderFormPage from "@/pages/purchasing/PurchaseOrderFormPage";
 import GoodsReceivePage from "@/pages/purchasing/GoodsReceivePage";
 import GoodsReceiveDetailPage from "@/pages/purchasing/GoodsReceiveDetailPage";
 import GoodsReceiveFormPage from "@/pages/purchasing/GoodsReceiveFormPage";
+import ItemMasterAddPage from "@/pages/manage/ItemMasterAddPage";
 
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
       {/* Public auth route */}
       <Route path="/auth" element={<AuthRoute />} />
+
+      {/* Redirect /login to /auth for compatibility */}
+      <Route path="/login" element={<AuthRoute />} />
 
       {/* Redirect root to auth for unauthenticated users */}
       <Route path="/" element={<AuthRoute />} />
@@ -154,6 +160,14 @@ const AppRoutes: React.FC = () => {
       />
 
       {/* Admin Routes */}
+      <Route
+        path="/admin/dashboard"
+        element={
+          <ProtectedRoute>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/admin/setup/client"
         element={
@@ -280,6 +294,16 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <Layout>
               <UserManagementPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/setup/lookup-management"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <LookupManagementPage />
             </Layout>
           </ProtectedRoute>
         }
@@ -584,6 +608,16 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <Layout>
               <CreatePurchaseOrderPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/manage/items-master/add"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <ItemMasterAddPage />
             </Layout>
           </ProtectedRoute>
         }
