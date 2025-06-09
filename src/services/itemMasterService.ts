@@ -1,5 +1,9 @@
 import { supabase } from "@/lib/supabaseClient";
-import { CreateItemMasterDTO, ItemMasterDetaiWithRelations, ItemMasterWithRelations } from "@/types/material";
+import {
+  CreateItemMasterDTO,
+  ItemMasterDetaiWithRelations,
+  ItemMasterWithRelations,
+} from "@/types/material";
 
 export const itemMasterService = {
   async getItemMaster(): Promise<ItemMasterWithRelations[]> {
@@ -19,6 +23,20 @@ export const itemMasterService = {
 
     if (error) {
       throw new Error(`Error fetching items master: ${error.message}`);
+    }
+
+    return data || [];
+  },
+
+  async getItemMasterOptions() {
+    const { data, error } = await supabase
+      .from("e_item_master")
+      .select("id, item_no, item_name")
+      .order("item_no");
+
+    if (error) {
+      console.error("Error fetching item master options:", error);
+      throw error;
     }
 
     return data || [];
@@ -52,7 +70,6 @@ export const itemMasterService = {
   },
 
   async createItemMaster(item: CreateItemMasterDTO) {
-
     const { data, error } = await supabase
       .from("e_item_master")
       .insert(item)
@@ -64,5 +81,5 @@ export const itemMasterService = {
     }
 
     return data;
-  }
+  },
 };

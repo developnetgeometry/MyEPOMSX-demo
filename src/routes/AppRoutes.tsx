@@ -117,6 +117,7 @@ import PurchaseOrderFormPage from "@/pages/purchasing/PurchaseOrderFormPage";
 import GoodsReceivePage from "@/pages/purchasing/GoodsReceivePage";
 import GoodsReceiveDetailPage from "@/pages/purchasing/GoodsReceiveDetailPage";
 import GoodsReceiveFormPage from "@/pages/purchasing/GoodsReceiveFormPage";
+import InventoryAddPage from "@/pages/manage/InventoryAddPage";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -562,6 +563,16 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <Layout>
               <InventoryPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/manage/inventory/add"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <InventoryAddPage />
             </Layout>
           </ProtectedRoute>
         }
