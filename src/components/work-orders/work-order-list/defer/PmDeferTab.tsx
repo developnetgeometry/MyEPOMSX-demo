@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable, { Column } from "@/components/shared/DataTable";
 import {
-  useCmDeferData,
-  insertCmDeferData,
-  updateCmDeferData,
-  deleteCmDeferData,
-} from "../hooks/cm/use-cm-defer-data";
+  usePmDeferData,
+  insertPmDeferData,
+  updatePmDeferData,
+  deletePmDeferData,
+} from "../hooks/pm/use-pm-defer-data";
 import DeferDialogForm from "./DeferDialogForm";
 import {
   Dialog,
@@ -21,13 +21,12 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { formatDate } from "@/utils/formatters";
 
-
-interface CmDeferTabProps {
-  cmGeneralId: number; // Passed as a prop to this page
+interface PmDeferTabProps {
+  pmWoId: number; // Passed as a prop to this page
 }
 
-const CmDeferTab: React.FC<CmDeferTabProps> = ({ cmGeneralId }) => {
-  const { data: defers, isLoading, refetch } = useCmDeferData(cmGeneralId);
+const PmDeferTab: React.FC<PmDeferTabProps> = ({ pmWoId }) => {
+  const { data: defers, isLoading, refetch } = usePmDeferData(pmWoId);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingDefer, setEditingDefer] = useState<any | null>(null);
   const { toast } = useToast();
@@ -44,7 +43,7 @@ const CmDeferTab: React.FC<CmDeferTabProps> = ({ cmGeneralId }) => {
 
   const handleDeleteDefer = async (defer: any) => {
     try {
-      await deleteCmDeferData(defer.id);
+      await deletePmDeferData(defer.id);
       toast({
         title: "Success",
         description: "Defer deleted successfully!",
@@ -64,14 +63,14 @@ const CmDeferTab: React.FC<CmDeferTabProps> = ({ cmGeneralId }) => {
   const handleFormSubmit = async (formData: any) => {
     try {
       if (editingDefer) {
-        await updateCmDeferData(editingDefer.id, formData);
+        await updatePmDeferData(editingDefer.id, formData);
         toast({
           title: "Success",
           description: "Defer updated successfully!",
           variant: "default",
         });
       } else {
-        await insertCmDeferData({ ...formData, cm_general_id: cmGeneralId });
+        await insertPmDeferData({ ...formData, pm_wo_id: pmWoId });
         toast({
           title: "Success",
           description: "Defer added successfully!",
@@ -125,14 +124,20 @@ const CmDeferTab: React.FC<CmDeferTabProps> = ({ cmGeneralId }) => {
           <DialogHeader>
             <div className="flex items-start justify-between w-full">
               <div>
-                <DialogTitle>{editingDefer ? "Edit Defer" : "Add New Defer"}</DialogTitle>
+                <DialogTitle>
+                  {editingDefer ? "Edit Defer" : "Add New Defer"}
+                </DialogTitle>
                 <DialogDescription>
                   {editingDefer
                     ? "Update the details of the defer."
                     : "Fill in the details to add a new defer."}
                 </DialogDescription>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setIsDialogOpen(false)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsDialogOpen(false)}
+              >
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -149,4 +154,4 @@ const CmDeferTab: React.FC<CmDeferTabProps> = ({ cmGeneralId }) => {
   );
 };
 
-export default CmDeferTab;
+export default PmDeferTab;

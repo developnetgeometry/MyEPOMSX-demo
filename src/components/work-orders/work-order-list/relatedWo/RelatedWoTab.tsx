@@ -5,6 +5,7 @@ import DataTable, { Column } from "@/components/shared/DataTable";
 import { userWorkOrderDataByAsset } from "@/pages/work-orders/hooks/use-work-order-data";
 import Loading from "@/components/shared/Loading";
 import { formatDate } from "@/utils/formatters";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface RelatedWoTabProps {
   assetId: number; // Passed as a prop to this page
@@ -12,9 +13,11 @@ interface RelatedWoTabProps {
 
 const RelatedWoTab: React.FC<RelatedWoTabProps> = ({ assetId }) => {
   const navigate = useNavigate();
-  const { data: workOrders, isLoading} = userWorkOrderDataByAsset(assetId);
+  const queryClient = useQueryClient();
+  const { data: workOrders, isLoading } = userWorkOrderDataByAsset(assetId);
 
   const handleRowClick = (row: any) => {
+    queryClient.invalidateQueries({ queryKey: ["e-new-work-request-data", row.id] });
     navigate(`/work-orders/work-order-list/${row.id}`);
   };
 
@@ -28,7 +31,7 @@ const RelatedWoTab: React.FC<RelatedWoTabProps> = ({ assetId }) => {
 
   return (
     <div className="space-y-6 mt-6">
-            {/* <pre>{JSON.stringify(workOrders, null, 2)}</pre> */}
+      {/* <pre>{JSON.stringify(workOrders, null, 2)}</pre> */}
 
       <PageHeader title="Related Work Orders" />
 

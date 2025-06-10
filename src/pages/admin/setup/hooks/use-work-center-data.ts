@@ -20,6 +20,26 @@ export const useWorkCenterData = () => {
     });
 };
 
+export const useWorkCenterActiveData = () => {
+    return useQuery({
+        queryKey: ["e-work-center-data"],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from("e_work_center")
+                .select("id, code, name, type, effective_date, remark, is_active")
+                .eq("is_active", true)
+                .order("id");
+
+            if (error) {
+                console.error("Error fetching e_work_center data:", error);
+                throw error;
+            }
+
+            return data;
+        },
+    });
+};
+
 export const insertWorkCenterData = async (workCenterData: {
     code: string;
     name?: string;

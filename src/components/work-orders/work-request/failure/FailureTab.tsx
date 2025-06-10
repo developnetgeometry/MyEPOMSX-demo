@@ -31,9 +31,10 @@ import {
 
 interface FailureTabProps {
   workRequestId: number;
+  cmStatusId: number; // This prop is not used in the current implementation, but can be added if needed
 }
 
-const FailureTab: React.FC<FailureTabProps> = ({ workRequestId }) => {
+const FailureTab: React.FC<FailureTabProps> = ({ workRequestId, cmStatusId }) => {
   const { data: failures, isLoading, refetch } = useNewWorkFailureData(workRequestId);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingFailure, setEditingFailure] = useState<any | null>(null);
@@ -114,12 +115,13 @@ const FailureTab: React.FC<FailureTabProps> = ({ workRequestId }) => {
 
   return (
     <div className="space-y-6 mt-6">
-      <PageHeader
-        title="Failure Impact Section"
-        onAddNew={failures?.length >= 1 ? null : handleAddNew}
-        addNewLabel="Add New Failure"
-      />
-
+      {(failures &&
+        <PageHeader
+          title="Failure Impact Section"
+          onAddNew={cmStatusId == 3 ? null : failures?.length >= 1 ? null : handleAddNew}
+          addNewLabel="Add New Failure"
+        />
+      )}
       {isLoading ? (
         <Loading />
       ) : (
@@ -184,20 +186,24 @@ const FailureTab: React.FC<FailureTabProps> = ({ workRequestId }) => {
                 </div>
 
                 <div className="flex justify-end space-x-2 mt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEditFailure(failure)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDeleteClick(failure)}
-                  >
-                    Delete
-                  </Button>
+                  {(cmStatusId !== 3 &&
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditFailure(failure)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteClick(failure)}
+                      >
+                        Delete
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             ))

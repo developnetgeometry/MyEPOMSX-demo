@@ -1,20 +1,20 @@
 import { BUCKET_NAME_ATTACHMENT, supabase, SUPABASE_BUCKET_URL } from "@/lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 
-const ATTACHMENT_TYPE = "cm-attachment";
+const ATTACHMENT_TYPE = "pm-attachment";
 
-export const useCmAttachmentData = (cmGeneralId: number) => {
+export const usePmAttachmentData = (pmWoId: number) => {
   return useQuery({
-    queryKey: ["e-cm-attachment", cmGeneralId],
+    queryKey: ["e-pm-attachment", pmWoId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("e_cm_attachment")
-        .select(`id, file_path, description, cm_general_id`)
-        .eq("cm_general_id", cmGeneralId)
+        .from("e_pm_attachment")
+        .select(`id, file_path, description, pm_wo_id`)
+        .eq("pm_wo_id", pmWoId)
         .order("id", { ascending: true });
 
       if (error) {
-        console.error("Error fetching e_cm_attachment data:", error);
+        console.error("Error fetching e_pm_attachment data:", error);
         throw error;
       }
 
@@ -24,20 +24,20 @@ export const useCmAttachmentData = (cmGeneralId: number) => {
         file_path: `${SUPABASE_BUCKET_URL}${attachment.file_path}`,
       }));
     },
-    enabled: !!cmGeneralId, // Only fetch if cmGeneralId is provided
+    enabled: !!pmWoId, // Only fetch if pmWoId is provided
   });
 };
 
-export const insertCmAttachmentData = async (attachmentData: {
-  cm_general_id: number;
+export const insertPmAttachmentData = async (attachmentData: {
+  pm_wo_id: number;
   file: File;
   description?: string;
 }) => {
   try {
-    const { cm_general_id, file, description } = attachmentData;
+    const { pm_wo_id, file, description } = attachmentData;
 
     // Generate file path for storage and database
-    const fileName = `${cm_general_id}_${Date.now()}_${file.name}`;
+    const fileName = `${pm_wo_id}_${Date.now()}_${file.name}`;
     const storagePath = `${ATTACHMENT_TYPE}/${fileName}`;
     const dbFilePath = `/${BUCKET_NAME_ATTACHMENT}/${storagePath}`;
 
@@ -53,22 +53,22 @@ export const insertCmAttachmentData = async (attachmentData: {
 
     // Insert record into the database
     const { data, error } = await supabase
-      .from("e_cm_attachment")
-      .insert([{ cm_general_id, file_path: dbFilePath, description }]);
+      .from("e_pm_attachment")
+      .insert([{ pm_wo_id, file_path: dbFilePath, description }]);
 
     if (error) {
-      console.error("Error inserting e_cm_attachment data:", error);
+      console.error("Error inserting e_pm_attachment data:", error);
       throw error;
     }
 
     return data;
   } catch (err) {
-    console.error("Unexpected error inserting e_cm_attachment data:", err);
+    console.error("Unexpected error inserting e_pm_attachment data:", err);
     throw err;
   }
 };
 
-export const updateCmAttachmentData = async (
+export const updatePmAttachmentData = async (
   id: number,
   updatedData: {
     description?: string;
@@ -79,28 +79,28 @@ export const updateCmAttachmentData = async (
 
     // Update only the description in the database
     const { data, error } = await supabase
-      .from("e_cm_attachment")
+      .from("e_pm_attachment")
       .update({ description })
       .eq("id", id);
 
     if (error) {
-      console.error("Error updating e_cm_attachment data:", error);
+      console.error("Error updating e_pm_attachment data:", error);
       throw error;
     }
 
     return data;
   } catch (err) {
-    console.error("Unexpected error updating e_cm_attachment data:", err);
+    console.error("Unexpected error updating e_pm_attachment data:", err);
     throw err;
   }
 };
 
-export const deleteCmAttachmentData = async (id: number) => {
+export const deletePmAttachmentData = async (id: number) => {
   try {
     // Fetch the existing record to get the file path
     const { data: existingData, error: fetchError } = await supabase
-      .from("e_cm_attachment")
-      .select("file_path, is_from_new_work_attachment")
+      .from("e_pm_attachment")
+      .select("file_path")
       .eq("id", id)
       .single();
 
@@ -110,7 +110,7 @@ export const deleteCmAttachmentData = async (id: number) => {
     }
 
     // Delete the file from storage
-    if (existingData?.is_from_new_work_attachment !== true && existingData?.file_path) {
+    if (existingData?.file_path) {
       const storagePath = existingData.file_path.replace(`/${BUCKET_NAME_ATTACHMENT}/`, "");
       const { error: deleteError } = await supabase.storage
         .from(BUCKET_NAME_ATTACHMENT)
@@ -124,18 +124,18 @@ export const deleteCmAttachmentData = async (id: number) => {
 
     // Delete the record from the database
     const { data, error } = await supabase
-      .from("e_cm_attachment")
+      .from("e_pm_attachment")
       .delete()
       .eq("id", id);
 
     if (error) {
-      console.error("Error deleting e_cm_attachment data:", error);
+      console.error("Error deleting e_pm_attachment data:", error);
       throw error;
     }
 
     return data;
   } catch (err) {
-    console.error("Unexpected error deleting e_cm_attachment data:", err);
+    console.error("Unexpected error deleting e_pm_attachment data:", err);
     throw err;
   }
 };

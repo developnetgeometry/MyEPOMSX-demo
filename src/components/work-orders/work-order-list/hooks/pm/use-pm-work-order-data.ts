@@ -8,11 +8,11 @@ export const usePmWorkOrderData = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("e_pm_work_order")
-        .select(`id, due_date, maintenance_id (), is_active, priority_id,
+        .select(`id, due_date, maintenance_id (id, name), is_active, priority_id,
           work_center_id, discipline_id, task_id, frequency_id, asset_id,
           system_id, package_id, pm_group_id, asset_sce_code_id,
-          pm_description, pm_schedule_id, facility_id, completed
-          _by, closed_by, created_by, created_at,
+          pm_description, pm_schedule_id, facility_id, 
+          completed_by, closed_by, created_by, created_at,
           updated_by, updated_at`)
         .order("id", { ascending: true });
 
@@ -33,7 +33,14 @@ export const usePmWorkOrderDataById = (id: number) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("e_pm_work_order")
-        .select("*") // Fetch all columns
+        .select(`id, due_date, maintenance_id (id, name), is_active, priority_id (id, name),
+          work_center_id (id, code, name, type), discipline_id (id, code, name, description),
+          task_id (task_code,task_name), frequency_id (id, frequency_code, name), asset_id (asset_no, asset_name),
+          system_id (id, system_code, system_no), package_id (package_name, package_tag),
+          asset_sce_code_id (id, sce_code, group_name),
+          pm_description, pm_schedule_id, facility_id (id, location_code, location_name),
+          completed_by, closed_by, created_by, created_at,
+          updated_by, updated_at`)
         .eq("id", id)
         .single();
 

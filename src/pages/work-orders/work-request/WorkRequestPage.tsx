@@ -88,7 +88,7 @@ const WorkRequestPage: React.FC = () => {
       accessorKey: "cm_status_id.name", // Accessing the nested `name` field in `cm_status_id`
       cell: (value) => <StatusBadge status={value} />,
     },
-    { id: "requested_by", header: "Requested By", accessorKey: "requested_by" },
+    { id: "requested_by", header: "Requested By", accessorKey: "requested_by.full_name" },
     { id: "work_center", header: "Work Center", accessorKey: "work_center_id.name" }, // Accessing `name` in `work_center_id`
     { id: "asset", header: "Asset", accessorKey: "asset_id.asset_name" }, // Accessing `asset_name` in `asset_id`
     { id: "request_date", header: "Request Date", accessorKey: "work_request_date", cell: (value: any) => formatDate(value) },

@@ -55,44 +55,36 @@ const CmTaskDetailPage: React.FC<CmTaskDetailPageProps> = ({ cmGeneralId }) => {
     }
   };
 
-const handleFormSubmit = async (formData: any) => {
-  try {
-    if (editingTask) {
-      await updateTaskDetailData(editingTask.id, formData);
-      toast({
-        title: "Success",
-        description: "Task updated successfully!",
-        variant: "default",
-      });
-    } else {
-      await insertTaskDetailData({ ...formData, cm_general_id: cmGeneralId });
-      toast({
-        title: "Success",
-        description: "Task added successfully!",
-        variant: "default",
-      });
-    }
-    setIsDialogOpen(false);
-    refetch();
-  } catch (error: any) {
-    console.error("Failed to save task data:", error);
+  const handleFormSubmit = async (formData: any) => {
+    try {
+      if (editingTask) {
+        await updateTaskDetailData(editingTask.id, formData);
+        toast({
+          title: "Success",
+          description: "Task updated successfully!",
+          variant: "default",
+        });
+      } else {
+        await insertTaskDetailData({ ...formData, cm_general_id: cmGeneralId });
+        toast({
+          title: "Success",
+          description: "Task added successfully!",
+          variant: "default",
+        });
+      }
+      setIsDialogOpen(false);
+      refetch();
+    } catch (error: any) {
+      console.error("Failed to save task data:", error);
 
-    // Check for specific error code 23505
-    if (error.code === "23505") {
-      toast({
-        title: "Error",
-        description: "Task Sequence already exists.",
-        variant: "destructive",
-      });
-    } else {
       toast({
         title: "Error",
         description: "Failed to save task data.",
         variant: "destructive",
       });
+
     }
-  }
-};
+  };
 
   const columns: Column[] = [
     { id: "task_sequence", header: "Task Sequence", accessorKey: "task_sequence" },
