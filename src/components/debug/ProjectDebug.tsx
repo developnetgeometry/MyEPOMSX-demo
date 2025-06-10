@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProject } from "@/contexts/ProjectContext";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 export const ProjectDebug: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
@@ -12,36 +13,121 @@ export const ProjectDebug: React.FC = () => {
     error,
     refreshProjects,
   } = useProject();
+  const [minimized, setMinimized] = useState(false);
 
   if (process.env.NODE_ENV !== "development") {
     return null;
   }
 
   const handleRefreshProjects = () => {
-    console.log("Manual project refresh triggered");
+    console.log("Manual project refresh triggered via ProjectDebug");
     refreshProjects();
   };
 
-  return (
-    <div className="fixed bottom-4 right-4 bg-white border border-gray-300 rounded p-4 shadow-lg text-xs max-w-sm z-50">
-      {/* <h3 className="font-bold mb-2">Debug Info</h3>
-      <div className="space-y-1">
-        <div>Auth Loading: {authLoading ? "Yes" : "No"}</div>
-        <div>User ID: {user?.id || "None"}</div>
-        <div>Project Loading: {projectLoading ? "Yes" : "No"}</div>
-        <div>Projects Count: {projects.length}</div>
-        <div>Current Project: {currentProject?.name || "None"}</div>
-        <div>Current Project ID: {currentProject?.id || "None"}</div>
-        {error && <div className="text-red-600">Error: {error}</div>}
+  if (minimized) {
+    return (
+      <div className="fixed bottom-4 left-4 z-50">
         <Button
-          onClick={handleRefreshProjects}
           size="sm"
-          className="mt-2 bg-blue-500 hover:bg-blue-600 text-white"
-          disabled={projectLoading}
+          variant="outline"
+          className="rounded-full px-3 py-1 shadow"
+          onClick={() => setMinimized(false)}
+          aria-label="Expand Project Debug"
         >
-          {projectLoading ? "Refreshing..." : "Refresh Projects"}
+          &#9654; {/* Right-pointing triangle */}
         </Button>
-      </div> */}
-    </div>
+      </div>
+    );
+  }
+
+  return (
+    <Card className="fixed bottom-4 left-4 bg-white border border-gray-300 rounded p-4 shadow-lg text-xs max-w-sm z-50 overflow-auto max-h-[300px]">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="font-bold">Debug Info</h3>
+        <div className="flex gap-1">
+          <Button
+            onClick={handleRefreshProjects}
+            size="sm"
+            variant="outline"
+            className="h-8 px-2"
+            disabled={projectLoading}
+          >
+            {projectLoading ? (
+              <div className="mr-2 h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+            ) : (
+              "Refresh"
+            )}
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 px-2"
+            onClick={() => setMinimized(true)}
+            aria-label="Minimize Project Debug"
+          >
+            &#8211; {/* En dash as minimize icon */}
+          </Button>
+        </div>
+      </div>
+
+      <div className="space-y-1 text-left">
+        <div className="grid grid-cols-2 gap-1">
+          <span className="font-medium">Auth Status:</span>
+          <span className={authLoading ? "text-amber-500" : "text-green-500"}>
+            {authLoading ? "Loading..." : "Ready"}
+          </span>
+
+          <span className="font-medium">User ID:</span>
+          <span className="font-mono text-[10px] truncate">
+            {user?.id || "None"}
+          </span>
+
+          <span className="font-medium">Project Status:</span>
+          <span
+            className={projectLoading ? "text-amber-500" : "text-green-500"}
+          >
+            {projectLoading ? "Loading..." : "Ready"}
+          </span>
+
+          <span className="font-medium">Projects Count:</span>
+          <span>{projects.length}</span>
+
+          <span className="font-medium">Current Project:</span>
+          <span className="truncate" title={currentProject?.name || "None"}>
+            {currentProject?.name || "None"}
+          </span>
+
+          <span className="font-medium">Project ID:</span>
+          <span
+            className="font-mono text-[10px] truncate"
+            title={currentProject?.id || "None"}
+          >
+            {currentProject?.id || "None"}
+          </span>
+        </div>
+
+        {error && (
+          <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-red-600 whitespace-normal break-words">
+            Error: {error}
+          </div>
+        )}
+
+        {user && (
+          <div className="mt-2">
+            <div className="font-medium mb-1">User Details:</div>
+            <div className="p-2 bg-gray-50 border border-gray-200 rounded text-[10px]">
+              <div>Email: {user.email || "N/A"}</div>
+              <div>Role: {user.user_metadata?.role || "N/A"}</div>
+              <div>
+                Last Sign In:{" "}
+                {user.last_sign_in_at
+                  ? new Date(user.last_sign_in_at).toLocaleString()
+                  : "N/A"}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </Card>
   );
 };
