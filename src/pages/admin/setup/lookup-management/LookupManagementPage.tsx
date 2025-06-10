@@ -129,6 +129,10 @@ const LOOKUP_TABLES = [
   { table_name: "e_maintenance_type", display_name: "Maintenance Type" },
   { table_name: "e_manufacturer", display_name: "Manufacturer" },
   { table_name: "e_material_class", display_name: "Material Class" },
+  {
+    table_name: "e_material_construction",
+    display_name: "Material Construction",
+  },
   { table_name: "e_mitigation_system", display_name: "Mitigation System" },
   {
     table_name: "e_new_work_failure_type",

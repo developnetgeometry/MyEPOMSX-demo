@@ -28,10 +28,12 @@ interface UserProjectWithRelations {
   user_id: string;
   project_id: string;
   user: User | null;
-  project: Project & { 
-    description?: string | null;
-    short_name?: string | null;
-  } | null;
+  project:
+    | (Project & {
+        description?: string | null;
+        short_name?: string | null;
+      })
+    | null;
 }
 
 const ProjectAssignment: React.FC = () => {
@@ -50,8 +52,13 @@ const ProjectAssignment: React.FC = () => {
     null
   );
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [selectedProject, setSelectedProject] = useState<(Project & { description?: string | null; short_name?: string | null; }) | null>(null);
-  const [assignedProjects, setAssignedProjects] = useState<(Project & { description?: string | null; short_name?: string | null; })[]>([]);
+  const [selectedProject, setSelectedProject] = useState<
+    | (Project & { description?: string | null; short_name?: string | null })
+    | null
+  >(null);
+  const [assignedProjects, setAssignedProjects] = useState<
+    (Project & { description?: string | null; short_name?: string | null })[]
+  >([]);
   const [assignedUsers, setAssignedUsers] = useState<User[]>([]);
 
   useEffect(() => {
@@ -296,10 +303,10 @@ const ProjectAssignment: React.FC = () => {
     try {
       // Use our utility function to assign user to project
       const { success, error } = await assignUserToProject(
-        selectedUserId, 
+        selectedUserId,
         selectedProjectId.toString() // Convert to string as our utility expects string IDs
       );
-      
+
       if (!success) {
         throw new Error(error || "Failed to assign user to project");
       }
@@ -323,16 +330,19 @@ const ProjectAssignment: React.FC = () => {
     }
   };
 
-  const handleRemoveAssignment = async (userId: string, projectId: string | number) => {
+  const handleRemoveAssignment = async (
+    userId: string,
+    projectId: string | number
+  ) => {
     setIsLoading(true);
 
     try {
       // Use our utility function to remove user from project
       const { success, error } = await removeUserFromProject(
-        userId, 
+        userId,
         projectId.toString() // Convert to string as our utility expects string IDs
       );
-      
+
       if (!success) {
         throw new Error(error || "Failed to remove user from project");
       }
@@ -411,31 +421,29 @@ const ProjectAssignment: React.FC = () => {
                   <Label htmlFor="select-project">Assign Project</Label>
                   <div className="flex space-x-2">
                     <div className="flex-grow">
-                    <Select
-                      value={
-                        selectedProjectId !== null
-                          ? selectedProjectId
-                          : ""
-                      }
-                      onValueChange={(value) =>
-                        setSelectedProjectId(value || null)
-                      }
-                      disabled={!selectedUserId || isLoading}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a project" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {projects.map((project) => (
-                          <SelectItem
-                            key={project.id}
-                            value={String(project.id)}
-                          >
-                            {project.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      <Select
+                        value={
+                          selectedProjectId !== null ? selectedProjectId : ""
+                        }
+                        onValueChange={(value) =>
+                          setSelectedProjectId(value || null)
+                        }
+                        disabled={!selectedUserId || isLoading}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a project" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {projects.map((project) => (
+                            <SelectItem
+                              key={project.id}
+                              value={String(project.id)}
+                            >
+                              {project.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <Button
                       onClick={handleAssignProject}
@@ -503,11 +511,7 @@ const ProjectAssignment: React.FC = () => {
                 <div className="space-y-2">
                   <Label htmlFor="select-project">Select Project</Label>
                   <Select
-                    value={
-                      selectedProjectId !== null
-                        ? selectedProjectId
-                        : ""
-                    }
+                    value={selectedProjectId !== null ? selectedProjectId : ""}
                     onValueChange={(value) =>
                       setSelectedProjectId(value || null)
                     }
@@ -546,22 +550,22 @@ const ProjectAssignment: React.FC = () => {
                   <Label htmlFor="select-user">Assign User</Label>
                   <div className="flex space-x-2">
                     <div className="flex-grow">
-                    <Select
-                      value={selectedUserId}
-                      onValueChange={setSelectedUserId}
-                      disabled={!selectedProjectId || isLoading}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a user" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {users.map((user) => (
-                          <SelectItem key={user.id} value={user.id}>
-                            {user.full_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      <Select
+                        value={selectedUserId}
+                        onValueChange={setSelectedUserId}
+                        disabled={!selectedProjectId || isLoading}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a user" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {users.map((user) => (
+                            <SelectItem key={user.id} value={user.id}>
+                              {user.full_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <Button
                       onClick={handleAssignProject}
