@@ -1,30 +1,30 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 
-export const useCmDeferData = (cmGeneralId: number) => {
+export const usePmDeferData = (pmWoId: number) => {
   return useQuery({
-    queryKey: ["e-cm-defer-data", cmGeneralId],
+    queryKey: ["e-pm-defer-data", pmWoId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("e_cm_defer")
+        .from("e_pm_defer")
         .select(
-          "id, cm_general_id, previous_due_date, requested_by (id, email, full_name), remarks, new_due_date"
+          "id, pm_wo_id, previous_due_date, requested_by (id, email, full_name), remarks, new_due_date"
         )
-        .eq("cm_general_id", cmGeneralId);
+        .eq("pm_wo_id", pmWoId);
 
       if (error) {
-        console.error("Error fetching e_cm_defer data:", error);
+        console.error("Error fetching e_pm_defer data:", error);
         throw error;
       }
 
       return data;
     },
-    enabled: !!cmGeneralId, // Only fetch if cmGeneralId is provided
+    enabled: !!pmWoId, // Only fetch if pmWoId is provided
   });
 };
 
-export const insertCmDeferData = async (deferData: {
-  cm_general_id: number;
+export const insertPmDeferData = async (deferData: {
+  pm_wo_id: number;
   previous_due_date: string | null;
   requested_by: string | null;
   remarks: string | null;
@@ -32,25 +32,25 @@ export const insertCmDeferData = async (deferData: {
 }) => {
   try {
     const { data, error } = await supabase
-      .from("e_cm_defer")
+      .from("e_pm_defer")
       .insert([deferData]);
 
     if (error) {
-      console.error("Error inserting e_cm_defer data:", error);
+      console.error("Error inserting e_pm_defer data:", error);
       throw error;
     }
 
     return data;
   } catch (err) {
-    console.error("Unexpected error inserting e_cm_defer data:", err);
+    console.error("Unexpected error inserting e_pm_defer data:", err);
     throw err;
   }
 };
 
-export const updateCmDeferData = async (
+export const updatePmDeferData = async (
   id: number,
   updatedData: Partial<{
-    cm_general_id: number;
+    pm_wo_id: number;
     previous_due_date: string | null;
     requested_by: string | null;
     remarks: string | null;
@@ -59,37 +59,37 @@ export const updateCmDeferData = async (
 ) => {
   try {
     const { data, error } = await supabase
-      .from("e_cm_defer")
+      .from("e_pm_defer")
       .update(updatedData)
       .eq("id", id);
 
     if (error) {
-      console.error("Error updating e_cm_defer data:", error);
+      console.error("Error updating e_pm_defer data:", error);
       throw error;
     }
 
     return data;
   } catch (err) {
-    console.error("Unexpected error updating e_cm_defer data:", err);
+    console.error("Unexpected error updating e_pm_defer data:", err);
     throw err;
   }
 };
 
-export const deleteCmDeferData = async (id: number) => {
+export const deletePmDeferData = async (id: number) => {
   try {
     const { data, error } = await supabase
-      .from("e_cm_defer")
+      .from("e_pm_defer")
       .delete()
       .eq("id", id);
 
     if (error) {
-      console.error("Error deleting e_cm_defer data:", error);
+      console.error("Error deleting e_pm_defer data:", error);
       throw error;
     }
 
     return data;
   } catch (err) {
-    console.error("Unexpected error deleting e_cm_defer data:", err);
+    console.error("Unexpected error deleting e_pm_defer data:", err);
     throw err;
   }
 };

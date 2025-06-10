@@ -58,9 +58,7 @@ const CmAttachmentTab: React.FC<CmAttachmentTabProps> = ({ cmGeneralId }) => {
     try {
       if (editingAttachment) {
         await updateCmAttachmentData(editingAttachment.id, {
-          file: formData.file,
           description: formData.description,
-          cm_general_id: cmGeneralId,
         });
         toast({
           title: "Success",

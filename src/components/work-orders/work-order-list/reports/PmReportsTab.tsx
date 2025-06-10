@@ -1,13 +1,11 @@
 import React, { useState } from "react";
 import PageHeader from "@/components/shared/PageHeader";
-import DataTable, { Column } from "@/components/shared/DataTable";
 import {
-  useCmReportData,
-  insertCmReportData,
-  updateCmReportData,
-  deleteCmReportData,
-} from "../hooks/cm/use-cm-report-data";
-import ReportsDialogForm from "@/components/work-orders/work-request/reports/ReportsDialogForm";
+  usePmReportData,
+  insertPmReportData,
+  updatePmReportData,
+  deletePmReportData,
+} from "../hooks/pm/use-pm-report-data";
 import {
   Dialog,
   DialogContent,
@@ -24,18 +22,18 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import PmReportsDialogForm from "./PmReportsDialogForm";
 
-interface CmReportsTabProps {
-  cmGeneralId: number; // Passed as a prop to this page
+interface PmReportsTabProps {
+  pmWoId: number; // Passed as a prop to this page
 }
 
-const CmReportsTab: React.FC<CmReportsTabProps> = ({ cmGeneralId }) => {
-  const { data: reports, isLoading, refetch } = useCmReportData(cmGeneralId);
+const PmReportsTab: React.FC<PmReportsTabProps> = ({ pmWoId }) => {
+  const { data: reports, isLoading, refetch } = usePmReportData(pmWoId);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingReport, setEditingReport] = useState<any | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -62,7 +60,7 @@ const CmReportsTab: React.FC<CmReportsTabProps> = ({ cmGeneralId }) => {
     if (reportToDelete) {
       setIsDeleteLoading(true);
       try {
-        await deleteCmReportData(reportToDelete.id);
+        await deletePmReportData(reportToDelete.id);
         toast({
           title: "Success",
           description: "Report deleted successfully!",
@@ -87,14 +85,14 @@ const CmReportsTab: React.FC<CmReportsTabProps> = ({ cmGeneralId }) => {
   const handleFormSubmit = async (formData: any) => {
     try {
       if (editingReport) {
-        await updateCmReportData(editingReport.id, formData);
+        await updatePmReportData(editingReport.id, formData);
         toast({
           title: "Success",
           description: "Report updated successfully!",
           variant: "default",
         });
       } else {
-        await insertCmReportData({ ...formData, cm_general_id: cmGeneralId });
+        await insertPmReportData({ ...formData, pm_wo_id: pmWoId });
         toast({
           title: "Success",
           description: "Report added successfully!",
@@ -134,74 +132,24 @@ const CmReportsTab: React.FC<CmReportsTabProps> = ({ cmGeneralId }) => {
                 key={report?.id}
                 className="border rounded-lg p-4 shadow-sm bg-white"
               >
-                <div className="flex gap-6 flex-wrap md:flex-nowrap">
-                  {/* Environment Detail */}
-                  <div className="w-full md:w-1/2">
-                    <h5 className="text-md font-semibold mb-2 text-xl">Environment Detail</h5>
-                    <div className="grid grid-cols-2 gap-4 mt-4">
-                      <div className="font-medium text-gray-600">Weather Condition</div>
-                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.weather_condition?.trim() || "-"}</div>
-
-                      <div className="font-medium text-gray-600">Visibility</div>
-                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.visibility?.trim() || "-"}</div>
-
-                      <div className="font-medium text-gray-600">Wind Speed & Direction</div>
-                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.wind_speed_direction?.trim() || "-"}</div>
-
-                      <div className="font-medium text-gray-600">Sea Well</div>
-                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.sea_well?.trim() || "-"}</div>
-
-                      <div className="font-medium text-gray-600">Alarm Trigger</div>
-                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.alarm_trigger?.trim() || "-"}</div>
-
-                      <div className="font-medium text-gray-600">Time Failed</div>
-                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.time_failed?.trim() || "-"}</div>
-
-                      <div className="font-medium text-gray-600">Time Resume</div>
-                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.time_resume?.trim() || "-"}</div>
-
-                      <div className="font-medium text-gray-600">Shift</div>
-                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.shift?.trim() || "-"}</div>
-
-                      <div className="font-medium text-gray-600">Redundant</div>
-                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.redundant?.trim() || "-"}</div>
-
-                      <div className="font-medium text-gray-600">Other Detail</div>
-                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.other_detail?.trim() || "-"}</div>
-
-                      <div className="font-medium text-gray-600">Shutdown Type</div>
-                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.shutdown_type_id?.name?.trim() || "-"}</div>
-                    </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h5 className="text-md font-semibold mb-2">SCE Result</h5>
+                    <p>{report?.sce_result || "-"}</p>
                   </div>
-
-                  {/* Operation Detail */}
-                  <div className="w-full md:w-1/2">
-                    <h5 className="text-md font-semibold mb-2 text-xl">Operation Detail</h5>
-                    <div className="grid grid-cols-2 gap-4 mt-4">
-                      <div className="font-medium text-gray-600">Service Asset</div>
-                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.service_asset?.trim() || "-"}</div>
-
-                      <div className="font-medium text-gray-600">Pressure</div>
-                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.pressure?.trim() || "-"}</div>
-
-                      <div className="font-medium text-gray-600">Temperature</div>
-                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.temp?.trim() || "-"}</div>
-
-                      <div className="font-medium text-gray-600">Operating History</div>
-                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.operating_history?.trim() || "-"}</div>
-
-                      <div className="font-medium text-gray-600">Time in Service (hr)</div>
-                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.time_in_servicehr?.trim() || "-"}</div>
-
-                      <div className="font-medium text-gray-600">Material Class</div>
-                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.material_class_id?.name?.trim() || "-"}</div>
-
-                      <div className="font-medium text-gray-600">Design Code</div>
-                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.design_code?.trim() || "-"}</div>
-                    </div>
+                  <div>
+                    <h5 className="text-md font-semibold mb-2">Equipment Status</h5>
+                    <p>{report?.equipment_status || "-"}</p>
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <h5 className="text-md font-semibold mb-2">Detail Description</h5>
+                    <p>{report?.detail_description || "-"}</p>
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <h5 className="text-md font-semibold mb-2">General Maintenances</h5>
+                    <p>{report?.general_maintenances?.join(", ") || "-"}</p>
                   </div>
                 </div>
-
                 <div className="flex justify-end space-x-2 mt-4">
                   <Button
                     variant="outline"
@@ -242,7 +190,7 @@ const CmReportsTab: React.FC<CmReportsTabProps> = ({ cmGeneralId }) => {
             </div>
           </DialogHeader>
 
-          <ReportsDialogForm
+          <PmReportsDialogForm
             onSubmit={handleFormSubmit}
             onCancel={() => setIsDialogOpen(false)}
             initialData={editingReport}
@@ -278,4 +226,4 @@ const CmReportsTab: React.FC<CmReportsTabProps> = ({ cmGeneralId }) => {
   );
 };
 
-export default CmReportsTab;
+export default PmReportsTab;

@@ -2,12 +2,11 @@ import React, { useState } from "react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable, { Column } from "@/components/shared/DataTable";
 import {
-  useNewWorkAttachmentData,
-  insertNewWorkAttachmentData,
-  updateNewWorkAttachmentData,
-  deleteNewWorkAttachmentData,
-} from "../hooks/use-new-work-attachment-data";
-import AttachmentDialogForm from "./AttachmentDialogForm";
+  deletePmChecksheetData,
+  insertPmChecksheetData,
+  updatePmChecksheetData,
+  usePmChecksheetData,
+} from "../hooks/pm/use-pm-checksheet-data";
 import {
   Dialog,
   DialogContent,
@@ -19,42 +18,42 @@ import Loading from "@/components/shared/Loading";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
+import AttachmentDialogForm from "../../work-request/attachment/AttachmentDialogForm";
 
-interface AttachmentTabProps {
-  workRequestId: number; // Passed as a prop to this page
-  cmStatusId: number;
+interface PmChecksheetTabProps {
+  pmWoId: number; // Passed as a prop to this page
 }
 
-const AttachmentTab: React.FC<AttachmentTabProps> = ({ workRequestId, cmStatusId }) => {
-  const { data: attachments, isLoading, refetch } = useNewWorkAttachmentData(workRequestId);
+const PmChecksheetTab: React.FC<PmChecksheetTabProps> = ({ pmWoId }) => {
+  const { data: checksheets, isLoading, refetch } = usePmChecksheetData(pmWoId);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingAttachment, setEditingAttachment] = useState<any | null>(null);
+  const [editingChecksheet, setEditingChecksheet] = useState<any | null>(null);
   const { toast } = useToast();
 
   const handleAddNew = () => {
-    setEditingAttachment(null);
+    setEditingChecksheet(null);
     setIsDialogOpen(true);
   };
 
-  const handleEditAttachment = (attachment: any) => {
-    setEditingAttachment(attachment);
+  const handleEditChecksheet = (checksheet: any) => {
+    setEditingChecksheet(checksheet);
     setIsDialogOpen(true);
   };
 
-  const handleDeleteAttachment = async (attachment: any) => {
+  const handleDeleteChecksheet = async (checksheet: any) => {
     try {
-      await deleteNewWorkAttachmentData(attachment.id);
+      await deletePmChecksheetData(checksheet.id);
       toast({
         title: "Success",
-        description: "Attachment deleted successfully!",
+        description: "Checksheet deleted successfully!",
         variant: "default",
       });
       refetch();
     } catch (error) {
-      console.error("Failed to delete attachment data:", error);
+      console.error("Failed to delete checksheet data:", error);
       toast({
         title: "Error",
-        description: "Failed to delete attachment data.",
+        description: "Failed to delete checksheet data.",
         variant: "destructive",
       });
     }
@@ -62,34 +61,34 @@ const AttachmentTab: React.FC<AttachmentTabProps> = ({ workRequestId, cmStatusId
 
   const handleFormSubmit = async (formData: { file: File; description?: string }) => {
     try {
-      if (editingAttachment) {
-        await updateNewWorkAttachmentData(editingAttachment.id, {
+      if (editingChecksheet) {
+        await updatePmChecksheetData(editingChecksheet.id, {
           description: formData.description,
         });
         toast({
           title: "Success",
-          description: "Attachment updated successfully!",
+          description: "Checksheet updated successfully!",
           variant: "default",
         });
       } else {
-        await insertNewWorkAttachmentData({
+        await insertPmChecksheetData({
           file: formData.file,
           description: formData.description,
-          work_request_id: workRequestId,
+          pm_wo_id: pmWoId,
         });
         toast({
           title: "Success",
-          description: "Attachment added successfully!",
+          description: "Checksheet added successfully!",
           variant: "default",
         });
       }
       setIsDialogOpen(false);
       refetch();
     } catch (error: any) {
-      console.error("Failed to save attachment data:", error);
+      console.error("Failed to save checksheet data:", error);
       toast({
         title: "Error",
-        description: "Failed to save attachment data.",
+        description: "Failed to save checksheet data.",
         variant: "destructive",
       });
     }
@@ -103,9 +102,9 @@ const AttachmentTab: React.FC<AttachmentTabProps> = ({ workRequestId, cmStatusId
   return (
     <div className="space-y-6 mt-6">
       <PageHeader
-        title="Attachments"
-        onAddNew={cmStatusId == 3 ? null : handleAddNew}
-        addNewLabel="New Attachment"
+        title="Checksheet"
+        onAddNew={handleAddNew}
+        addNewLabel="New Checksheet"
       />
 
       {isLoading ? (
@@ -113,9 +112,9 @@ const AttachmentTab: React.FC<AttachmentTabProps> = ({ workRequestId, cmStatusId
       ) : (
         <DataTable
           columns={columns}
-          data={attachments || []}
-          onEdit={cmStatusId == 3 ? null : handleEditAttachment}
-          onDelete={cmStatusId == 3 ? null : handleDeleteAttachment}
+          data={checksheets || []}
+          onEdit={handleEditChecksheet}
+          onDelete={handleDeleteChecksheet}
         />
       )}
 
@@ -124,14 +123,20 @@ const AttachmentTab: React.FC<AttachmentTabProps> = ({ workRequestId, cmStatusId
           <DialogHeader>
             <div className="flex items-start justify-between w-full">
               <div>
-                <DialogTitle>{editingAttachment ? "Edit Attachment" : "Add New Attachment"}</DialogTitle>
+                <DialogTitle>
+                  {editingChecksheet ? "Edit Checksheet" : "Add New Checksheet"}
+                </DialogTitle>
                 <DialogDescription>
-                  {editingAttachment
-                    ? "Update the details of the attachment."
-                    : "Fill in the details to add a new attachment."}
+                  {editingChecksheet
+                    ? "Update the details of the checksheet."
+                    : "Fill in the details to add a new checksheet."}
                 </DialogDescription>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setIsDialogOpen(false)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsDialogOpen(false)}
+              >
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -140,7 +145,7 @@ const AttachmentTab: React.FC<AttachmentTabProps> = ({ workRequestId, cmStatusId
           <AttachmentDialogForm
             onSubmit={handleFormSubmit}
             onCancel={() => setIsDialogOpen(false)}
-            initialData={editingAttachment}
+            initialData={editingChecksheet}
           />
         </DialogContent>
       </Dialog>
@@ -148,4 +153,4 @@ const AttachmentTab: React.FC<AttachmentTabProps> = ({ workRequestId, cmStatusId
   );
 };
 
-export default AttachmentTab;
+export default PmChecksheetTab;

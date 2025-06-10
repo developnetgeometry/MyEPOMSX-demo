@@ -139,8 +139,15 @@ const WorkRequestDetailsCard: React.FC<WorkRequestDetailsCardProps> = ({
             </div>
             <div>
               <Label className="block text-sm font-medium text-gray-700">Requested By</Label>
-              <Input className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0" value={workRequest.requested_by ?? "N/A"} readOnly />
-            </div>
+              <Input
+                className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                value={
+                  workRequest.requested_by
+                    ? `${workRequest.requested_by.full_name.slice(0, 15)} (${workRequest.requested_by.email})`
+                    : "N/A"
+                }
+                readOnly
+              />            </div>
             <div>
               <Label className="block text-sm font-medium text-gray-700">Priority</Label>
               <Input className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0" value={workRequest.priority_id?.name ?? "N/A"} readOnly />

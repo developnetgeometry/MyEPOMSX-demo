@@ -2,13 +2,6 @@ import React, { useState } from "react";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable, { Column } from "@/components/shared/DataTable";
 import {
-  useCmDeferData,
-  insertCmDeferData,
-  updateCmDeferData,
-  deleteCmDeferData,
-} from "../hooks/cm/use-cm-defer-data";
-import DeferDialogForm from "./DeferDialogForm";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -19,43 +12,48 @@ import Loading from "@/components/shared/Loading";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
-import { formatDate } from "@/utils/formatters";
+import {
+  usePmTaskDetailData,
+  insertTaskDetailData,
+  updateTaskDetailData,
+  deleteTaskDetailData,
+} from "../hooks/pm/use-pm-task-detail-data";
+import PmTaskDetailDialogForm from "./PmTaskDetailDialogForm";
 
-
-interface CmDeferTabProps {
-  cmGeneralId: number; // Passed as a prop to this page
+interface PmTaskDetailTabProps {
+  pmWoId: number; // Passed as a prop to this page
 }
 
-const CmDeferTab: React.FC<CmDeferTabProps> = ({ cmGeneralId }) => {
-  const { data: defers, isLoading, refetch } = useCmDeferData(cmGeneralId);
+const PmTaskDetailTab: React.FC<PmTaskDetailTabProps> = ({ pmWoId }) => {
+  const { data: tasks, isLoading, refetch } = usePmTaskDetailData(pmWoId);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingDefer, setEditingDefer] = useState<any | null>(null);
+  const [editingTask, setEditingTask] = useState<any | null>(null);
   const { toast } = useToast();
 
   const handleAddNew = () => {
-    setEditingDefer(null);
+    setEditingTask(null);
     setIsDialogOpen(true);
   };
 
-  const handleEditDefer = (defer: any) => {
-    setEditingDefer(defer);
+  const handleEditTask = (task: any) => {
+    setEditingTask(task);
     setIsDialogOpen(true);
   };
 
-  const handleDeleteDefer = async (defer: any) => {
+  const handleDeleteTask = async (task: any) => {
     try {
-      await deleteCmDeferData(defer.id);
+      await deleteTaskDetailData(task.id);
       toast({
         title: "Success",
-        description: "Defer deleted successfully!",
+        description: "Task deleted successfully!",
         variant: "default",
       });
       refetch();
     } catch (error) {
-      console.error("Failed to delete defer:", error);
+      console.error("Failed to delete task data:", error);
       toast({
         title: "Error",
-        description: "Failed to delete defer.",
+        description: "Failed to delete task data.",
         variant: "destructive",
       });
     }
@@ -63,50 +61,44 @@ const CmDeferTab: React.FC<CmDeferTabProps> = ({ cmGeneralId }) => {
 
   const handleFormSubmit = async (formData: any) => {
     try {
-      if (editingDefer) {
-        await updateCmDeferData(editingDefer.id, formData);
+      if (editingTask) {
+        await updateTaskDetailData(editingTask.id, formData);
         toast({
           title: "Success",
-          description: "Defer updated successfully!",
+          description: "Task updated successfully!",
           variant: "default",
         });
       } else {
-        await insertCmDeferData({ ...formData, cm_general_id: cmGeneralId });
+        await insertTaskDetailData({ ...formData, pm_wo_id: pmWoId });
         toast({
           title: "Success",
-          description: "Defer added successfully!",
+          description: "Task added successfully!",
           variant: "default",
         });
       }
       setIsDialogOpen(false);
       refetch();
     } catch (error: any) {
-      console.error("Failed to save defer:", error);
+      console.error("Failed to save task data:", error);
       toast({
         title: "Error",
-        description: "Failed to save defer.",
+        description: "Failed to save task data.",
         variant: "destructive",
       });
     }
   };
 
   const columns: Column[] = [
-    { id: "previous_due_date", header: "Previous Due Date", accessorKey: "previous_due_date", cell: (value: any) => formatDate(value) },
-    { id: "new_due_date", header: "New Due Date", accessorKey: "new_due_date", cell: (value: any) => formatDate(value) },
-    { id: "remarks", header: "Remarks", accessorKey: "remarks" },
-    {
-      id: "requested_by",
-      header: "Requested By",
-      accessorKey: "requested_by.full_name",
-    },
+    { id: "sequence", header: "Task Sequence", accessorKey: "sequence" },
+    { id: "task_list", header: "Task List", accessorKey: "task_list" },
   ];
 
   return (
     <div className="space-y-6 mt-6">
       <PageHeader
-        title="Defers"
+        title="Task Details"
         onAddNew={handleAddNew}
-        addNewLabel="New Defer"
+        addNewLabel="New Task"
       />
 
       {isLoading ? (
@@ -114,9 +106,9 @@ const CmDeferTab: React.FC<CmDeferTabProps> = ({ cmGeneralId }) => {
       ) : (
         <DataTable
           columns={columns}
-          data={defers || []}
-          onEdit={handleEditDefer}
-          onDelete={handleDeleteDefer}
+          data={tasks || []}
+          onEdit={handleEditTask}
+          onDelete={handleDeleteTask}
         />
       )}
 
@@ -125,11 +117,11 @@ const CmDeferTab: React.FC<CmDeferTabProps> = ({ cmGeneralId }) => {
           <DialogHeader>
             <div className="flex items-start justify-between w-full">
               <div>
-                <DialogTitle>{editingDefer ? "Edit Defer" : "Add New Defer"}</DialogTitle>
+                <DialogTitle>{editingTask ? "Edit Task" : "Add New Task"}</DialogTitle>
                 <DialogDescription>
-                  {editingDefer
-                    ? "Update the details of the defer."
-                    : "Fill in the details to add a new defer."}
+                  {editingTask
+                    ? "Update the details of the task."
+                    : "Fill in the details to add a new task."}
                 </DialogDescription>
               </div>
               <Button variant="ghost" size="icon" onClick={() => setIsDialogOpen(false)}>
@@ -138,10 +130,10 @@ const CmDeferTab: React.FC<CmDeferTabProps> = ({ cmGeneralId }) => {
             </div>
           </DialogHeader>
 
-          <DeferDialogForm
+          <PmTaskDetailDialogForm
             onSubmit={handleFormSubmit}
             onCancel={() => setIsDialogOpen(false)}
-            initialData={editingDefer}
+            initialData={editingTask}
           />
         </DialogContent>
       </Dialog>
@@ -149,4 +141,4 @@ const CmDeferTab: React.FC<CmDeferTabProps> = ({ cmGeneralId }) => {
   );
 };
 
-export default CmDeferTab;
+export default PmTaskDetailTab;
