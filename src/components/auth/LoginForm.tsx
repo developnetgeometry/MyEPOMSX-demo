@@ -1,11 +1,16 @@
-
-import React, { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { LogIn, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { LogIn, Loader2 } from "lucide-react";
 
 interface LoginFormProps {
   loading: boolean;
@@ -14,10 +19,26 @@ interface LoginFormProps {
   setSuccess: (success: string | null) => void;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ loading, setLoading, setError, setSuccess }) => {
+const REMEMBER_EMAIL_KEY = "login_remembered_email";
+
+const LoginForm: React.FC<LoginFormProps> = ({
+  loading,
+  setLoading,
+  setError,
+  setSuccess,
+}) => {
   const { signIn } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    const rememberedEmail = localStorage.getItem(REMEMBER_EMAIL_KEY);
+    if (rememberedEmail) {
+      setEmail(rememberedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,13 +46,19 @@ const LoginForm: React.FC<LoginFormProps> = ({ loading, setLoading, setError, se
     setError(null);
     setSuccess(null);
 
+    if (rememberMe) {
+      localStorage.setItem(REMEMBER_EMAIL_KEY, email);
+    } else {
+      localStorage.removeItem(REMEMBER_EMAIL_KEY);
+    }
+
     const { error } = await signIn(email, password);
-    
+
     if (error) {
       setError(error.message);
       setLoading(false);
     } else {
-      setSuccess('Successfully logged in! Redirecting to dashboard...');
+      setSuccess("Successfully logged in! Redirecting to dashboard...");
       // The ProtectedRoute and AuthPage useEffect will handle the redirect when user state updates
     }
   };
@@ -60,7 +87,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ loading, setLoading, setError, se
               required
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="login-password">Password</Label>
             <Input
@@ -73,6 +100,19 @@ const LoginForm: React.FC<LoginFormProps> = ({ loading, setLoading, setError, se
             />
           </div>
 
+          <div className="flex items-center space-x-2">
+            <input
+              id="remember-me"
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="accent-primary"
+            />
+            <Label htmlFor="remember-me" className="cursor-pointer">
+              Remember me
+            </Label>
+          </div>
+
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? (
               <>
@@ -80,7 +120,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ loading, setLoading, setError, se
                 Signing in...
               </>
             ) : (
-              'Sign In'
+              "Sign In"
             )}
           </Button>
         </form>
