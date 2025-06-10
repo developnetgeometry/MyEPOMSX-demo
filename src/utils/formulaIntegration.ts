@@ -76,15 +76,15 @@ export const extractFormulaInputs = (
         inputs.operatingTemperature = Number(formData.operatingTemperature);
       if (formData.temperature)
         inputs.operatingTemperature = Number(formData.temperature);
-      if (formData.insulationType) inputs.insulationType = formData.insulationType;
+      if (formData.insulationType)
+        inputs.insulationType = formData.insulationType;
       if (formData.insulationCondition)
         inputs.insulationCondition = formData.insulationCondition;
       if (formData.moistureIngress)
         inputs.moistureIngress = formData.moistureIngress;
       if (formData.coatingCondition)
         inputs.coatingCondition = formData.coatingCondition;
-      if (formData.coatingType)
-        inputs.coatingCondition = formData.coatingType;
+      if (formData.coatingType) inputs.coatingCondition = formData.coatingType;
       if (formData.environmentalSeverity)
         inputs.environmentalSeverity = formData.environmentalSeverity;
       if (formData.environmentalExposure)
@@ -190,13 +190,29 @@ export const calculateAutomaticDamageFactors = async (formData: any) => {
       // Determine best DTHIN variant based on available data
       let variant = "DTHIN_17"; // Default to uniform corrosion
 
-      if (dthinInputs.h2sContent && typeof dthinInputs.h2sContent === 'number' && dthinInputs.h2sContent > 0) {
+      if (
+        dthinInputs.h2sContent &&
+        typeof dthinInputs.h2sContent === "number" &&
+        dthinInputs.h2sContent > 0
+      ) {
         variant = "DTHIN_10"; // Sour water corrosion
-      } else if (dthinInputs.temperature && typeof dthinInputs.temperature === 'number' && dthinInputs.temperature > 150) {
+      } else if (
+        dthinInputs.temperature &&
+        typeof dthinInputs.temperature === "number" &&
+        dthinInputs.temperature > 150
+      ) {
         variant = "DTHIN_8"; // Caustic corrosion (high temp)
-      } else if (dthinInputs.phLevel && typeof dthinInputs.phLevel === 'number' && dthinInputs.phLevel < 4) {
+      } else if (
+        dthinInputs.phLevel &&
+        typeof dthinInputs.phLevel === "number" &&
+        dthinInputs.phLevel < 4
+      ) {
         variant = "DTHIN_7"; // Acid corrosion
-      } else if (dthinInputs.flowVelocity && typeof dthinInputs.flowVelocity === 'number' && dthinInputs.flowVelocity > 3) {
+      } else if (
+        dthinInputs.flowVelocity &&
+        typeof dthinInputs.flowVelocity === "number" &&
+        dthinInputs.flowVelocity > 3
+      ) {
         variant = "DTHIN_5"; // Flow-assisted corrosion
       }
 
@@ -221,10 +237,11 @@ export const calculateAutomaticDamageFactors = async (formData: any) => {
     const dfcuiInputs = extractFormulaInputs(formData, "DFCUI");
     if (dfcuiInputs.operatingTemperature && dfcuiInputs.insulationType) {
       // Choose variant based on available data
-      const cuiVariant = dfcuiInputs.weatherExposure && dfcuiInputs.maintenanceFrequency 
-        ? "DFCUI_ADVANCED" 
-        : "DFCUI_BASIC";
-      
+      const cuiVariant =
+        dfcuiInputs.weatherExposure && dfcuiInputs.maintenanceFrequency
+          ? "DFCUI_ADVANCED"
+          : "DFCUI_BASIC";
+
       results.dfcui = await formulaService.calculate(
         "DFCUI",
         cuiVariant,

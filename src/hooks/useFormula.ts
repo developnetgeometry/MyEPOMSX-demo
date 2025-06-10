@@ -1,6 +1,12 @@
-import { useState, useCallback, useRef } from 'react';
-import { formulaService } from '@/services/formulaService';
-import { FormulaType, FormulaVariant, FormulaInput, FormulaResult, FormulaError } from '@/types/formulas';
+import { useState, useCallback, useRef } from "react";
+import { formulaService } from "@/services/formulaService";
+import {
+  FormulaType,
+  FormulaVariant,
+  FormulaInput,
+  FormulaResult,
+  FormulaError,
+} from "@/types/formulas";
 
 interface CalculationHistoryItem {
   id: string;
@@ -19,7 +25,11 @@ interface UseFormulaState {
 }
 
 interface UseFormulaReturn extends UseFormulaState {
-  calculate: (formulaType: FormulaType, variant: FormulaVariant, inputs: FormulaInput) => Promise<void>;
+  calculate: (
+    formulaType: FormulaType,
+    variant: FormulaVariant,
+    inputs: FormulaInput
+  ) => Promise<void>;
   clearResult: () => void;
   clearHistory: () => void;
   getLatestResult: () => FormulaResult | FormulaError | null;
@@ -42,54 +52,62 @@ export const useFormula = (): UseFormulaReturn => {
 
   const historyIdCounter = useRef(0);
 
-  const calculate = useCallback(async (
-    formulaType: FormulaType,
-    variant: FormulaVariant,
-    inputs: FormulaInput
-  ) => {
-    setState(prev => ({
-      ...prev,
-      isCalculating: true,
-      error: null,
-    }));
-
-    try {
-      const result = await formulaService.calculate(formulaType, variant, inputs);
-      
-      // Create history item
-      const historyItem: CalculationHistoryItem = {
-        id: `calc_${++historyIdCounter.current}`,
-        timestamp: new Date(),
-        formulaType,
-        variant,
-        inputs: { ...inputs },
-        result,
-      };
-
-      setState(prev => ({
+  const calculate = useCallback(
+    async (
+      formulaType: FormulaType,
+      variant: FormulaVariant,
+      inputs: FormulaInput
+    ) => {
+      setState((prev) => ({
         ...prev,
-        result: 'value' in result ? result : null,
-        error: 'error' in result ? result : null,
-        isCalculating: false,
-        history: [historyItem, ...prev.history.slice(0, 49)], // Keep last 50 calculations
+        isCalculating: true,
+        error: null,
       }));
-    } catch (error) {
-      const errorResult: FormulaError = {
-        code: 'CALCULATION_EXCEPTION',
-        message: error instanceof Error ? error.message : 'Unknown error occurred',
-      };
 
-      setState(prev => ({
-        ...prev,
-        result: null,
-        error: errorResult,
-        isCalculating: false,
-      }));
-    }
-  }, []);
+      try {
+        const result = await formulaService.calculate(
+          formulaType,
+          variant,
+          inputs
+        );
+
+        // Create history item
+        const historyItem: CalculationHistoryItem = {
+          id: `calc_${++historyIdCounter.current}`,
+          timestamp: new Date(),
+          formulaType,
+          variant,
+          inputs: { ...inputs },
+          result,
+        };
+
+        setState((prev) => ({
+          ...prev,
+          result: "value" in result ? result : null,
+          error: "error" in result ? result : null,
+          isCalculating: false,
+          history: [historyItem, ...prev.history.slice(0, 49)], // Keep last 50 calculations
+        }));
+      } catch (error) {
+        const errorResult: FormulaError = {
+          code: "CALCULATION_EXCEPTION",
+          message:
+            error instanceof Error ? error.message : "Unknown error occurred",
+        };
+
+        setState((prev) => ({
+          ...prev,
+          result: null,
+          error: errorResult,
+          isCalculating: false,
+        }));
+      }
+    },
+    []
+  );
 
   const clearResult = useCallback(() => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       result: null,
       error: null,
@@ -97,7 +115,7 @@ export const useFormula = (): UseFormulaReturn => {
   }, []);
 
   const clearHistory = useCallback(() => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       history: [],
     }));

@@ -235,8 +235,17 @@ export class FormulaService {
       variant: "DFCUI_BASIC",
       name: "Corrosion Under Insulation Damage Factor",
       description: "Basic CUI damage factor calculation",
-      requiredInputs: ["operatingTemperature", "insulationType", "insulationCondition"],
-      optionalInputs: ["moistureIngress", "coatingCondition", "environmentalSeverity", "operatingCycles"],
+      requiredInputs: [
+        "operatingTemperature",
+        "insulationType",
+        "insulationCondition",
+      ],
+      optionalInputs: [
+        "moistureIngress",
+        "coatingCondition",
+        "environmentalSeverity",
+        "operatingCycles",
+      ],
       outputUnit: "dimensionless",
       category: "Damage Factor",
       version: "1.0",
@@ -247,8 +256,19 @@ export class FormulaService {
       variant: "DFCUI_ADVANCED",
       name: "Advanced CUI Damage Factor",
       description: "Advanced CUI calculation with weather exposure factors",
-      requiredInputs: ["operatingTemperature", "insulationType", "insulationCondition", "weatherExposure"],
-      optionalInputs: ["moistureIngress", "coatingCondition", "environmentalSeverity", "operatingCycles", "maintenanceFrequency"],
+      requiredInputs: [
+        "operatingTemperature",
+        "insulationType",
+        "insulationCondition",
+        "weatherExposure",
+      ],
+      optionalInputs: [
+        "moistureIngress",
+        "coatingCondition",
+        "environmentalSeverity",
+        "operatingCycles",
+        "maintenanceFrequency",
+      ],
       outputUnit: "dimensionless",
       category: "Damage Factor",
       version: "1.0",
@@ -634,29 +654,30 @@ export class FormulaService {
       "Mineral Wool": 1.2,
       "Calcium Silicate": 1.0,
       "Cellular Glass": 0.3,
-      "Perlite": 1.5,
-      "Polyurethane": 0.8,
-      "Other": 1.0,
+      Perlite: 1.5,
+      Polyurethane: 0.8,
+      Other: 1.0,
     };
     const insulationFactor = insulationFactors[insulationType] || 1.0;
 
     // Insulation condition factor
     const conditionFactors = {
-      "Excellent": 0.2,
-      "Good": 0.5,
-      "Fair": 1.0,
-      "Poor": 2.0,
+      Excellent: 0.2,
+      Good: 0.5,
+      Fair: 1.0,
+      Poor: 2.0,
       "Very Poor": 3.0,
     };
-    const insulationConditionFactor = conditionFactors[insulationCondition] || 1.0;
+    const insulationConditionFactor =
+      conditionFactors[insulationCondition] || 1.0;
 
     // Moisture ingress factor
     const moistureFactors = {
-      "None": 0.1,
-      "Low": 0.5,
-      "Moderate": 1.0,
-      "High": 2.0,
-      "Severe": 3.0,
+      None: 0.1,
+      Low: 0.5,
+      Moderate: 1.0,
+      High: 2.0,
+      Severe: 3.0,
     };
     const moistureFactor = moistureFactors[moistureIngress] || 1.0;
 
@@ -665,19 +686,19 @@ export class FormulaService {
 
     // Environmental severity factor
     const environmentFactors = {
-      "Low": 0.5,
-      "Moderate": 1.0,
-      "High": 1.5,
-      "Severe": 2.0,
+      Low: 0.5,
+      Moderate: 1.0,
+      High: 1.5,
+      Severe: 2.0,
     };
     const environmentFactor = environmentFactors[environmentalSeverity] || 1.0;
 
     // Weather exposure factor
     const weatherFactors = {
-      "Indoor": 0.3,
-      "Sheltered": 0.7,
-      "Exposed": 1.0,
-      "Marine": 1.5,
+      Indoor: 0.3,
+      Sheltered: 0.7,
+      Exposed: 1.0,
+      Marine: 1.5,
     };
     const weatherFactor = weatherFactors[weatherExposure] || 1.0;
 
@@ -685,22 +706,26 @@ export class FormulaService {
     const cyclingFactor = Math.min(operatingCycles / 50, 2.0);
 
     // Maintenance factor (inverse relationship - more maintenance = lower factor)
-    const maintenanceFactor = Math.max(0.3, 1.0 - (maintenanceFrequency - 1) * 0.2);
+    const maintenanceFactor = Math.max(
+      0.3,
+      1.0 - (maintenanceFrequency - 1) * 0.2
+    );
 
     // Age factor
     const ageFactor = Math.min(age / 20, 1.5);
 
     // Calculate base DFCUI
-    let result = tempFactor * 
-                 insulationFactor * 
-                 insulationConditionFactor * 
-                 moistureFactor * 
-                 coatingFactor * 
-                 environmentFactor * 
-                 weatherFactor * 
-                 cyclingFactor * 
-                 maintenanceFactor * 
-                 ageFactor;
+    let result =
+      tempFactor *
+      insulationFactor *
+      insulationConditionFactor *
+      moistureFactor *
+      coatingFactor *
+      environmentFactor *
+      weatherFactor *
+      cyclingFactor *
+      maintenanceFactor *
+      ageFactor;
 
     // Apply variant-specific adjustments
     if (variant === "DFCUI_ADVANCED") {
@@ -713,9 +738,10 @@ export class FormulaService {
 
     return {
       value: Number(result.toFixed(4)),
-      formula: variant === "DFCUI_ADVANCED" 
-        ? "temp_factor * insulation_factor * condition_factor * moisture_factor * coating_factor * env_factor * weather_factor * cycling_factor * maintenance_factor * age_factor * 1.2"
-        : "temp_factor * insulation_factor * condition_factor * moisture_factor * coating_factor * env_factor * weather_factor * cycling_factor * maintenance_factor * age_factor",
+      formula:
+        variant === "DFCUI_ADVANCED"
+          ? "temp_factor * insulation_factor * condition_factor * moisture_factor * coating_factor * env_factor * weather_factor * cycling_factor * maintenance_factor * age_factor * 1.2"
+          : "temp_factor * insulation_factor * condition_factor * moisture_factor * coating_factor * env_factor * weather_factor * cycling_factor * maintenance_factor * age_factor",
       inputs: {
         tempFactor,
         insulationFactor,
@@ -729,9 +755,10 @@ export class FormulaService {
         ageFactor,
       },
       metadata: {
-        description: variant === "DFCUI_ADVANCED" 
-          ? "Advanced corrosion under insulation damage factor with weather exposure considerations"
-          : "Basic corrosion under insulation damage factor",
+        description:
+          variant === "DFCUI_ADVANCED"
+            ? "Advanced corrosion under insulation damage factor with weather exposure considerations"
+            : "Basic corrosion under insulation damage factor",
         unit: "dimensionless",
         range: { min: 0, max: 5 },
         notes: `CUI most active in temperature range 60-175°C. Current operating temperature: ${operatingTemperature}°C`,

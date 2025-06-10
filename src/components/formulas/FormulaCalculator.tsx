@@ -297,24 +297,31 @@ const FormulaCalculator: React.FC<FormulaCalculatorProps> = ({
           )}
 
           {/* Risk Matrix specific result */}
-          {result && 'riskLevel' in result && (
+          {result && "riskLevel" in result && (
             <div className="space-y-2">
               <Label className="text-sm text-muted-foreground">
                 Risk Assessment
               </Label>
               <div className="flex flex-wrap gap-2">
-                <Badge variant="outline">Level: {String(result.riskLevel)}</Badge>
-                {'riskCategory' in result && (
-                  <Badge variant="outline">Category: {String(result.riskCategory)}</Badge>
-                )}
-                {'priority' in result && (
-                  <Badge variant="outline">Priority: {String(result.priority)}</Badge>
-                )}
-                {'inspectionInterval' in result && result.inspectionInterval && (
+                <Badge variant="outline">
+                  Level: {String(result.riskLevel)}
+                </Badge>
+                {"riskCategory" in result && (
                   <Badge variant="outline">
-                    Interval: {String(result.inspectionInterval)} months
+                    Category: {String(result.riskCategory)}
                   </Badge>
                 )}
+                {"priority" in result && (
+                  <Badge variant="outline">
+                    Priority: {String(result.priority)}
+                  </Badge>
+                )}
+                {"inspectionInterval" in result &&
+                  result.inspectionInterval && (
+                    <Badge variant="outline">
+                      Interval: {String(result.inspectionInterval)} months
+                    </Badge>
+                  )}
               </div>
             </div>
           )}

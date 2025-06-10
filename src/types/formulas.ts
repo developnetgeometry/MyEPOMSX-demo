@@ -60,7 +60,13 @@ export interface DFExtInput extends FormulaInput {
 // DFCUI Formula Types (Corrosion Under Insulation)
 export interface DFCuiInput extends FormulaInput {
   operatingTemperature?: number; // °C
-  insulationType?: "Mineral Wool" | "Calcium Silicate" | "Cellular Glass" | "Perlite" | "Polyurethane" | "Other";
+  insulationType?:
+    | "Mineral Wool"
+    | "Calcium Silicate"
+    | "Cellular Glass"
+    | "Perlite"
+    | "Polyurethane"
+    | "Other";
   insulationCondition?: "Excellent" | "Good" | "Fair" | "Poor" | "Very Poor";
   moistureIngress?: "None" | "Low" | "Moderate" | "High" | "Severe";
   coatingCondition?: "Excellent" | "Good" | "Fair" | "Poor" | "Very Poor";

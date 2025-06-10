@@ -1,12 +1,12 @@
-import React from 'react';
-import PageHeader from '@/components/shared/PageHeader';
-import FormulaCalculator from '@/components/formulas/FormulaCalculator';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calculator, TrendingUp, AlertTriangle, Info } from 'lucide-react';
+import React from "react";
+import PageHeader from "@/components/shared/PageHeader";
+import FormulaCalculator from "@/components/formulas/FormulaCalculator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Calculator, TrendingUp, AlertTriangle, Info } from "lucide-react";
 
 const FormulaTestingPage: React.FC = () => {
   const handleResultChange = (result: any) => {
-    console.log('Formula result:', result);
+    console.log("Formula result:", result);
   };
 
   return (
@@ -20,7 +20,9 @@ const FormulaTestingPage: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">DTHIN Formulas</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              DTHIN Formulas
+            </CardTitle>
             <Calculator className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -40,7 +42,9 @@ const FormulaTestingPage: React.FC = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Other Damage Factors</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Other Damage Factors
+            </CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -59,7 +63,9 @@ const FormulaTestingPage: React.FC = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Risk Assessment</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Risk Assessment
+            </CardTitle>
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -99,28 +105,65 @@ const FormulaTestingPage: React.FC = () => {
             <div>
               <h4 className="font-semibold mb-2">DTHIN Formula Variants</h4>
               <div className="text-sm space-y-1">
-                <div><strong>DTHIN_1:</strong> Basic thinning damage factor</div>
-                <div><strong>DTHIN_2:</strong> Localized thinning with severity factor</div>
-                <div><strong>DTHIN_3:</strong> General thinning with uniformity factor</div>
-                <div><strong>DTHIN_4:</strong> Erosion-induced thinning</div>
-                <div><strong>DTHIN_5:</strong> Flow-assisted corrosion</div>
-                <div><strong>DTHIN_6:</strong> Microbiologically influenced corrosion</div>
-                <div><strong>DTHIN_7:</strong> Acid corrosion (pH dependent)</div>
-                <div><strong>DTHIN_8:</strong> Caustic corrosion (temp dependent)</div>
-                <div><strong>DTHIN_9:</strong> Amine-induced corrosion</div>
+                <div>
+                  <strong>DTHIN_1:</strong> Basic thinning damage factor
+                </div>
+                <div>
+                  <strong>DTHIN_2:</strong> Localized thinning with severity
+                  factor
+                </div>
+                <div>
+                  <strong>DTHIN_3:</strong> General thinning with uniformity
+                  factor
+                </div>
+                <div>
+                  <strong>DTHIN_4:</strong> Erosion-induced thinning
+                </div>
+                <div>
+                  <strong>DTHIN_5:</strong> Flow-assisted corrosion
+                </div>
+                <div>
+                  <strong>DTHIN_6:</strong> Microbiologically influenced
+                  corrosion
+                </div>
+                <div>
+                  <strong>DTHIN_7:</strong> Acid corrosion (pH dependent)
+                </div>
+                <div>
+                  <strong>DTHIN_8:</strong> Caustic corrosion (temp dependent)
+                </div>
+                <div>
+                  <strong>DTHIN_9:</strong> Amine-induced corrosion
+                </div>
               </div>
             </div>
             <div>
               <h4 className="font-semibold mb-2">Advanced Calculations</h4>
               <div className="text-sm space-y-1">
-                <div><strong>DTHIN_10:</strong> Sour water corrosion (H₂S + H₂O)</div>
-                <div><strong>DTHIN_11:</strong> High temperature H₂/H₂S damage</div>
-                <div><strong>DTHIN_12:</strong> Sulfidic corrosion</div>
-                <div><strong>DTHIN_13:</strong> Naphthenic acid corrosion</div>
-                <div><strong>DTHIN_14:</strong> Atmospheric corrosion</div>
-                <div><strong>DTHIN_15:</strong> Cooling water system corrosion</div>
-                <div><strong>DTHIN_16:</strong> Galvanic corrosion</div>
-                <div><strong>DTHIN_17:</strong> Uniform corrosion (default)</div>
+                <div>
+                  <strong>DTHIN_10:</strong> Sour water corrosion (H₂S + H₂O)
+                </div>
+                <div>
+                  <strong>DTHIN_11:</strong> High temperature H₂/H₂S damage
+                </div>
+                <div>
+                  <strong>DTHIN_12:</strong> Sulfidic corrosion
+                </div>
+                <div>
+                  <strong>DTHIN_13:</strong> Naphthenic acid corrosion
+                </div>
+                <div>
+                  <strong>DTHIN_14:</strong> Atmospheric corrosion
+                </div>
+                <div>
+                  <strong>DTHIN_15:</strong> Cooling water system corrosion
+                </div>
+                <div>
+                  <strong>DTHIN_16:</strong> Galvanic corrosion
+                </div>
+                <div>
+                  <strong>DTHIN_17:</strong> Uniform corrosion (default)
+                </div>
               </div>
             </div>
           </div>

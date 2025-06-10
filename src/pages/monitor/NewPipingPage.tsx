@@ -38,9 +38,9 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFormula } from "@/hooks/useFormula";
-import { 
-  calculateAutomaticDamageFactors, 
-  updateFormWithCalculatedValues 
+import {
+  calculateAutomaticDamageFactors,
+  updateFormWithCalculatedValues,
 } from "@/utils/formulaIntegration";
 
 const NewPipingPage: React.FC = () => {
@@ -49,7 +49,7 @@ const NewPipingPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("general");
   const [activeInspectionTab, setActiveInspectionTab] = useState("plan");
-  
+
   // Formula calculation states
   const [isCalculating, setIsCalculating] = useState(false);
   const [calculationResults, setCalculationResults] = useState<any>(null);
@@ -131,7 +131,7 @@ const NewPipingPage: React.FC = () => {
     criticality: "", // dropdown (High, Medium, Low)
     productionImpact: "", // dropdown
     lofFailureMode: "", // Loss of fluid failure mode
-    
+
     // Damage Factors - calculated automatically
     dfthin: "", // Thinning damage factor
     dfext: "", // External corrosion damage factor
@@ -158,12 +158,12 @@ const NewPipingPage: React.FC = () => {
         ...prev,
         [field]: value,
       };
-      
+
       // Trigger automatic calculations for relevant fields
       if (autoCalculateEnabled && shouldTriggerCalculation(field)) {
         triggerAutoCalculation(updatedData);
       }
-      
+
       return updatedData;
     });
   };
@@ -171,10 +171,22 @@ const NewPipingPage: React.FC = () => {
   // Fields that should trigger automatic calculations
   const shouldTriggerCalculation = (field: string): boolean => {
     const calculationTriggerFields = [
-      'wallThickness', 'corrosionAllowance', 'corrosionRate', 'internalCorrosion', 
-      'externalCorrosion', 'operatingPressure', 'designPressure', 'temperature', 
-      'operatingTemperature', 'h2sContent', 'pH', 'material', 'criticality',
-      'productionImpact', 'fluidVelocity', 'installationDate'
+      "wallThickness",
+      "corrosionAllowance",
+      "corrosionRate",
+      "internalCorrosion",
+      "externalCorrosion",
+      "operatingPressure",
+      "designPressure",
+      "temperature",
+      "operatingTemperature",
+      "h2sContent",
+      "pH",
+      "material",
+      "criticality",
+      "productionImpact",
+      "fluidVelocity",
+      "installationDate",
     ];
     return calculationTriggerFields.includes(field);
   };
@@ -187,13 +199,15 @@ const NewPipingPage: React.FC = () => {
       setIsCalculating(true);
       const results = await calculateAutomaticDamageFactors(updatedFormData);
       setCalculationResults(results);
-      
+
       // Update form with calculated values
-      const formWithCalculations = updateFormWithCalculatedValues(updatedFormData, results);
+      const formWithCalculations = updateFormWithCalculatedValues(
+        updatedFormData,
+        results
+      );
       setFormData(formWithCalculations);
-      
     } catch (error) {
-      console.error('Auto-calculation error:', error);
+      console.error("Auto-calculation error:", error);
     } finally {
       setIsCalculating(false);
     }
@@ -205,18 +219,20 @@ const NewPipingPage: React.FC = () => {
       setIsCalculating(true);
       const results = await calculateAutomaticDamageFactors(formData);
       setCalculationResults(results);
-      
+
       // Update form with calculated values
-      const formWithCalculations = updateFormWithCalculatedValues(formData, results);
+      const formWithCalculations = updateFormWithCalculatedValues(
+        formData,
+        results
+      );
       setFormData(formWithCalculations);
-      
+
       toast({
         title: "Calculations Complete",
         description: "Risk assessment values have been updated automatically.",
       });
-      
     } catch (error) {
-      console.error('Manual calculation error:', error);
+      console.error("Manual calculation error:", error);
       toast({
         title: "Calculation Error",
         description: "Failed to calculate risk assessment values.",
@@ -368,7 +384,7 @@ const NewPipingPage: React.FC = () => {
       if (calculationResults) {
         console.log("=== Formula Calculation Results ===");
         Object.entries(calculationResults).forEach(([key, result]) => {
-          if (result && typeof result === 'object' && 'value' in result) {
+          if (result && typeof result === "object" && "value" in result) {
             const formulaResult = result as any; // Type assertion for logging
             console.log(`${key}:`, {
               value: formulaResult.value,
@@ -1780,7 +1796,9 @@ const NewPipingPage: React.FC = () => {
                   <div className="border-b pb-4">
                     <div className="flex justify-between items-center">
                       <div>
-                        <h2 className="text-xl font-semibold">Risk Assessment</h2>
+                        <h2 className="text-xl font-semibold">
+                          Risk Assessment
+                        </h2>
                         <p className="text-sm text-muted-foreground">
                           Risk-based inspection and assessment information
                         </p>
@@ -1790,8 +1808,14 @@ const NewPipingPage: React.FC = () => {
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => setAutoCalculateEnabled(!autoCalculateEnabled)}
-                          className={autoCalculateEnabled ? "bg-green-50 border-green-200" : ""}
+                          onClick={() =>
+                            setAutoCalculateEnabled(!autoCalculateEnabled)
+                          }
+                          className={
+                            autoCalculateEnabled
+                              ? "bg-green-50 border-green-200"
+                              : ""
+                          }
                         >
                           <Calculator className="h-4 w-4 mr-1" />
                           Auto-calc {autoCalculateEnabled ? "ON" : "OFF"}
@@ -1820,7 +1844,9 @@ const NewPipingPage: React.FC = () => {
                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                         <div className="flex items-center gap-2">
                           <RefreshCw className="h-4 w-4 animate-spin text-blue-600" />
-                          <span className="text-blue-800 font-medium">Calculating damage factors and risk assessment...</span>
+                          <span className="text-blue-800 font-medium">
+                            Calculating damage factors and risk assessment...
+                          </span>
                         </div>
                       </div>
                     )}
@@ -1832,78 +1858,118 @@ const NewPipingPage: React.FC = () => {
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div className="space-y-3">
-                          <Label htmlFor="dthin">
-                            DF Thinning (DTHIN)
-                          </Label>
+                          <Label htmlFor="dthin">DF Thinning (DTHIN)</Label>
                           <Input
                             id="dthin"
-                            value={formData.dfthin || ''}
-                            onChange={(e) => handleInputChange('dfthin', e.target.value)}
-                            placeholder={calculationResults?.dthin ? 'Auto-calculated' : 'Enter value'}
-                            className={calculationResults?.dthin ? 'bg-green-50 border-green-200' : ''}
+                            value={formData.dfthin || ""}
+                            onChange={(e) =>
+                              handleInputChange("dfthin", e.target.value)
+                            }
+                            placeholder={
+                              calculationResults?.dthin
+                                ? "Auto-calculated"
+                                : "Enter value"
+                            }
+                            className={
+                              calculationResults?.dthin
+                                ? "bg-green-50 border-green-200"
+                                : ""
+                            }
                           />
                           <p className="text-xs text-muted-foreground">
-                            {calculationResults?.dthin && 'value' in calculationResults.dthin
-                              ? `Calculated: ${calculationResults.dthin.value.toFixed(4)}`
-                              : 'Based on thickness loss and corrosion'
-                            }
+                            {calculationResults?.dthin &&
+                            "value" in calculationResults.dthin
+                              ? `Calculated: ${calculationResults.dthin.value.toFixed(
+                                  4
+                                )}`
+                              : "Based on thickness loss and corrosion"}
                           </p>
                         </div>
 
                         <div className="space-y-3">
-                          <Label htmlFor="dfext">
-                            DF External (DFEXT)
-                          </Label>
+                          <Label htmlFor="dfext">DF External (DFEXT)</Label>
                           <Input
                             id="dfext"
-                            value={formData.dfext || ''}
-                            onChange={(e) => handleInputChange('dfext', e.target.value)}
-                            placeholder={calculationResults?.dfext ? 'Auto-calculated' : 'Enter value'}
-                            className={calculationResults?.dfext ? 'bg-green-50 border-green-200' : ''}
+                            value={formData.dfext || ""}
+                            onChange={(e) =>
+                              handleInputChange("dfext", e.target.value)
+                            }
+                            placeholder={
+                              calculationResults?.dfext
+                                ? "Auto-calculated"
+                                : "Enter value"
+                            }
+                            className={
+                              calculationResults?.dfext
+                                ? "bg-green-50 border-green-200"
+                                : ""
+                            }
                           />
                           <p className="text-xs text-muted-foreground">
-                            {calculationResults?.dfext && 'value' in calculationResults.dfext
-                              ? `Calculated: ${calculationResults.dfext.value.toFixed(4)}`
-                              : 'External corrosion damage factor'
-                            }
+                            {calculationResults?.dfext &&
+                            "value" in calculationResults.dfext
+                              ? `Calculated: ${calculationResults.dfext.value.toFixed(
+                                  4
+                                )}`
+                              : "External corrosion damage factor"}
                           </p>
                         </div>
 
                         <div className="space-y-3">
-                          <Label htmlFor="dfscc">
-                            DF SCC (DFSCC)
-                          </Label>
+                          <Label htmlFor="dfscc">DF SCC (DFSCC)</Label>
                           <Input
                             id="dfscc"
-                            value={formData.dfscc || ''}
-                            onChange={(e) => handleInputChange('dfscc', e.target.value)}
-                            placeholder={calculationResults?.dfscc ? 'Auto-calculated' : 'Enter value'}
-                            className={calculationResults?.dfscc ? 'bg-green-50 border-green-200' : ''}
+                            value={formData.dfscc || ""}
+                            onChange={(e) =>
+                              handleInputChange("dfscc", e.target.value)
+                            }
+                            placeholder={
+                              calculationResults?.dfscc
+                                ? "Auto-calculated"
+                                : "Enter value"
+                            }
+                            className={
+                              calculationResults?.dfscc
+                                ? "bg-green-50 border-green-200"
+                                : ""
+                            }
                           />
                           <p className="text-xs text-muted-foreground">
-                            {calculationResults?.dfscc && 'value' in calculationResults.dfscc
-                              ? `Calculated: ${calculationResults.dfscc.value.toFixed(4)}`
-                              : 'Stress corrosion cracking'
-                            }
+                            {calculationResults?.dfscc &&
+                            "value" in calculationResults.dfscc
+                              ? `Calculated: ${calculationResults.dfscc.value.toFixed(
+                                  4
+                                )}`
+                              : "Stress corrosion cracking"}
                           </p>
                         </div>
 
                         <div className="space-y-3">
-                          <Label htmlFor="dfmfat">
-                            DF Fatigue (DFMFAT)
-                          </Label>
+                          <Label htmlFor="dfmfat">DF Fatigue (DFMFAT)</Label>
                           <Input
                             id="dfmfat"
-                            value={formData.dfmfat || ''}
-                            onChange={(e) => handleInputChange('dfmfat', e.target.value)}
-                            placeholder={calculationResults?.dfmfat ? 'Auto-calculated' : 'Enter value'}
-                            className={calculationResults?.dfmfat ? 'bg-green-50 border-green-200' : ''}
+                            value={formData.dfmfat || ""}
+                            onChange={(e) =>
+                              handleInputChange("dfmfat", e.target.value)
+                            }
+                            placeholder={
+                              calculationResults?.dfmfat
+                                ? "Auto-calculated"
+                                : "Enter value"
+                            }
+                            className={
+                              calculationResults?.dfmfat
+                                ? "bg-green-50 border-green-200"
+                                : ""
+                            }
                           />
                           <p className="text-xs text-muted-foreground">
-                            {calculationResults?.dfmfat && 'value' in calculationResults.dfmfat
-                              ? `Calculated: ${calculationResults.dfmfat.value.toFixed(4)}`
-                              : 'Mechanical fatigue damage factor'
-                            }
+                            {calculationResults?.dfmfat &&
+                            "value" in calculationResults.dfmfat
+                              ? `Calculated: ${calculationResults.dfmfat.value.toFixed(
+                                  4
+                                )}`
+                              : "Mechanical fatigue damage factor"}
                           </p>
                         </div>
                       </div>
@@ -1922,13 +1988,17 @@ const NewPipingPage: React.FC = () => {
                             value={formData.riskRanking}
                             disabled
                             placeholder="Calculated automatically"
-                            className={calculationResults?.riskMatrix ? 'bg-green-50 border-green-200' : 'bg-muted'}
+                            className={
+                              calculationResults?.riskMatrix
+                                ? "bg-green-50 border-green-200"
+                                : "bg-muted"
+                            }
                           />
                           <p className="text-xs text-muted-foreground">
-                            {calculationResults?.riskMatrix && 'riskLevel' in calculationResults.riskMatrix
+                            {calculationResults?.riskMatrix &&
+                            "riskLevel" in calculationResults.riskMatrix
                               ? `Auto: ${calculationResults.riskMatrix.riskLevel} (Category ${calculationResults.riskMatrix.riskCategory})`
-                              : 'Auto-calculated based on PoF × CoF'
-                            }
+                              : "Auto-calculated based on PoF × CoF"}
                           </p>
                         </div>
 
@@ -1939,13 +2009,17 @@ const NewPipingPage: React.FC = () => {
                             value={formData.riskLevel}
                             disabled
                             placeholder="Calculated automatically"
-                            className={calculationResults?.riskMatrix ? 'bg-green-50 border-green-200' : 'bg-muted'}
+                            className={
+                              calculationResults?.riskMatrix
+                                ? "bg-green-50 border-green-200"
+                                : "bg-muted"
+                            }
                           />
                           <p className="text-xs text-muted-foreground">
-                            {calculationResults?.riskMatrix && 'priority' in calculationResults.riskMatrix
+                            {calculationResults?.riskMatrix &&
+                            "priority" in calculationResults.riskMatrix
                               ? `Priority: ${calculationResults.riskMatrix.priority}`
-                              : 'High/Medium/Low classification'
-                            }
+                              : "High/Medium/Low classification"}
                           </p>
                         </div>
 
@@ -1958,7 +2032,11 @@ const NewPipingPage: React.FC = () => {
                             value={formData.PoF}
                             disabled
                             placeholder="Calculated automatically"
-                            className={calculationResults?.riskMatrix ? 'bg-green-50 border-green-200' : 'bg-muted'}
+                            className={
+                              calculationResults?.riskMatrix
+                                ? "bg-green-50 border-green-200"
+                                : "bg-muted"
+                            }
                           />
                           <p className="text-xs text-muted-foreground">
                             Based on damage mechanisms
@@ -1974,14 +2052,20 @@ const NewPipingPage: React.FC = () => {
                             value={formData.CoF}
                             disabled
                             placeholder="Calculated automatically"
-                            className={calculationResults?.cofProd || calculationResults?.cofArea ? 'bg-green-50 border-green-200' : 'bg-muted'}
+                            className={
+                              calculationResults?.cofProd ||
+                              calculationResults?.cofArea
+                                ? "bg-green-50 border-green-200"
+                                : "bg-muted"
+                            }
                           />
                           <p className="text-xs text-muted-foreground">
-                            {(calculationResults?.cofProd && 'value' in calculationResults.cofProd) || 
-                             (calculationResults?.cofArea && 'value' in calculationResults.cofArea)
-                              ? 'Auto-calculated from impact assessment'
-                              : 'Based on safety & financial impact'
-                            }
+                            {(calculationResults?.cofProd &&
+                              "value" in calculationResults.cofProd) ||
+                            (calculationResults?.cofArea &&
+                              "value" in calculationResults.cofArea)
+                              ? "Auto-calculated from impact assessment"
+                              : "Based on safety & financial impact"}
                           </p>
                         </div>
                       </div>
@@ -2180,33 +2264,46 @@ const NewPipingPage: React.FC = () => {
                       </h4>
                       <ul className="text-sm text-blue-800 space-y-1">
                         <li>
-                          • <strong>Auto-calculation:</strong> {autoCalculateEnabled ? 'Enabled' : 'Disabled'} - 
+                          • <strong>Auto-calculation:</strong>{" "}
+                          {autoCalculateEnabled ? "Enabled" : "Disabled"} -
                           Formulas run automatically when relevant values change
                         </li>
                         <li>
-                          • <strong>DTHIN formulas:</strong> 17 variants automatically selected based on service conditions
+                          • <strong>DTHIN formulas:</strong> 17 variants
+                          automatically selected based on service conditions
                           (acid, caustic, flow-assisted, H₂S, etc.)
                         </li>
                         <li>
-                          • <strong>PoF calculation:</strong> Combined damage factors from thinning, SCC, fatigue, and external corrosion
+                          • <strong>PoF calculation:</strong> Combined damage
+                          factors from thinning, SCC, fatigue, and external
+                          corrosion
                         </li>
                         <li>
-                          • <strong>CoF calculation:</strong> Production and area-based consequences using API 581 methodology
+                          • <strong>CoF calculation:</strong> Production and
+                          area-based consequences using API 581 methodology
                         </li>
                         <li>
-                          • <strong>Risk Matrix:</strong> Automatic categorization (A-E) with inspection interval recommendations
+                          • <strong>Risk Matrix:</strong> Automatic
+                          categorization (A-E) with inspection interval
+                          recommendations
                         </li>
                         <li>
-                          • <strong>Green highlighted fields:</strong> Values calculated automatically by the formula engine
+                          • <strong>Green highlighted fields:</strong> Values
+                          calculated automatically by the formula engine
                         </li>
                       </ul>
                       {calculationResults && (
                         <div className="mt-3 pt-3 border-t border-blue-300">
                           <p className="text-xs text-blue-600">
-                            <strong>Last calculation:</strong> {new Date().toLocaleTimeString()} • 
-                            Active formulas: {Object.keys(calculationResults).filter(key => 
-                              calculationResults[key] && 'value' in calculationResults[key]
-                            ).length}
+                            <strong>Last calculation:</strong>{" "}
+                            {new Date().toLocaleTimeString()} • Active formulas:{" "}
+                            {
+                              Object.keys(calculationResults).filter(
+                                (key) =>
+                                  calculationResults[key] &&
+                                  "value" in calculationResults[key]
+                              ).length
+                            }
                           </p>
                         </div>
                       )}
