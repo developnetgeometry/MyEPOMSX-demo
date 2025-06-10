@@ -250,14 +250,14 @@ const taskFormFields = [
         <div className="flex justify-between items-start">
           <div>
             <div className="text-sm text-gray-500 mb-1">
-              {task.discipline.name}
+              {task?.discipline?.name ?? "N/A"}
             </div>
             <CardTitle className="text-lg font-medium">
-              {task.task_name}
+              {task?.task_name ?? "N/A"}
             </CardTitle>
           </div>
           <div className="bg-gray-100 text-gray-700 text-xs font-medium px-2.5 py-1 rounded">
-            {task.task_code}
+            {task?.task_code ?? "N/A"}
           </div>
         </div>
       </CardHeader>
