@@ -58,6 +58,8 @@ import {
   useAssetTypeOptions,
   useManufacturerOptions,
   useAssetAreaOptions,
+  useCriticalityOptions,
+  useSCEOptions,
 } from "@/hooks/queries/useAssetDropdownOptions";
 import { useAssetStatusOptions } from "@/hooks/queries/useAssetStatusOptions";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -137,6 +139,8 @@ const AssetDetailPage: React.FC = () => {
   const { data: typeOptions = [] as any[] } = useAssetTypeOptions();
   const { data: manufacturerOptions = [] as any[] } = useManufacturerOptions();
   const { data: areaOptions = [] as any[] } = useAssetAreaOptions();
+  const { data: criticalityOptions = [] as any[] } = useCriticalityOptions();
+  const { data: sceOptions = [] as any[] } = useSCEOptions();
 
   // For file upload
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -167,6 +171,11 @@ const AssetDetailPage: React.FC = () => {
     isReliability: false,
     isActive: true,
     iotSensorId: "",
+    // Criticality and SCE fields
+    isCriticality: false,
+    isSce: false,
+    criticalityId: "",
+    sceId: "",
     // Installation fields
     exClass: "",
     exCertificate: "",
@@ -192,6 +201,14 @@ const AssetDetailPage: React.FC = () => {
         is_reliability?: boolean;
         is_active?: boolean;
         iot_sensor_id?: number;
+        is_criticality?: boolean;
+        is_sce?: boolean;
+        criticality_id?: number;
+        sce_id?: number;
+        ex_class?: string;
+        ex_certificate?: string;
+        drawing_no?: string;
+        description?: string;
       };
 
       type Installation = {
@@ -230,14 +247,31 @@ const AssetDetailPage: React.FC = () => {
         isActive: assetDetail.is_active !== false, // Default to true if null
         iotSensorId: assetDetail.iot_sensor_id?.toString() || "",
 
+        // Criticality and SCE fields
+        isCriticality: assetDetail.is_criticality || false,
+        isSce: assetDetail.is_sce || false,
+        criticalityId: assetDetail.criticality_id?.toString() || "",
+        sceId: assetDetail.sce_id?.toString() || "",
+
         // Installation fields
-        exClass: installation.ex_class || "",
-        exCertificate: installation.ex_certificate || "",
-        drawingNo: installation.drawing_no || "",
-        description: installation.description || "",
+        exClass: assetDetail.ex_class || "",
+        exCertificate: assetDetail.ex_certificate || "",
+        drawingNo: assetDetail.drawing_no || "",
+        description: assetDetail.description || "",
       });
     }
   }, [asset]);
+
+  // Auto-clear success message after 3 seconds
+  useEffect(() => {
+    if (formSubmissionSuccess) {
+      const timer = setTimeout(() => {
+        setFormSubmissionSuccess(false);
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [formSubmissionSuccess]);
 
   const assetDetails = asset?.asset_detail;
   const bomID = assetDetails?.bom_id;
@@ -265,10 +299,27 @@ const AssetDetailPage: React.FC = () => {
       });
     }
 
-    setFormData({
-      ...formData,
-      [field]: value,
-    });
+    // Handle criticality and SCE checkbox logic
+    if (field === "isCriticality") {
+      // When Criticality checkbox is unchecked, reset the criticality dropdown value
+      setFormData({
+        ...formData,
+        [field]: value,
+        criticalityId: value ? formData.criticalityId : "",
+      });
+    } else if (field === "isSce") {
+      // When SCE checkbox is unchecked, reset the SCE dropdown value
+      setFormData({
+        ...formData,
+        [field]: value,
+        sceId: value ? formData.sceId : "",
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [field]: value,
+      });
+    }
 
     // Clear any general submission errors
     if (formSubmissionError) {
@@ -329,6 +380,10 @@ const AssetDetailPage: React.FC = () => {
           is_reliability?: boolean;
           is_active?: boolean;
           iot_sensor_id?: number;
+          is_criticality?: boolean;
+          is_sce?: boolean;
+          criticality_id?: number;
+          sce_id?: number;
         };
 
         type Installation = {
@@ -366,6 +421,12 @@ const AssetDetailPage: React.FC = () => {
           isReliability: assetDetail.is_reliability || false,
           isActive: assetDetail.is_active !== false,
           iotSensorId: assetDetail.iot_sensor_id?.toString() || "",
+
+          // Criticality and SCE fields
+          isCriticality: assetDetail.is_criticality || false,
+          isSce: assetDetail.is_sce || false,
+          criticalityId: assetDetail.criticality_id?.toString() || "",
+          sceId: assetDetail.sce_id?.toString() || "",
 
           // Installation fields
           exClass: installation.ex_class || "",
@@ -480,6 +541,16 @@ const AssetDetailPage: React.FC = () => {
             is_integrity: formData.isIntegrity,
             is_reliability: formData.isReliability,
             is_active: formData.isActive,
+            is_criticality: formData.isCriticality,
+            is_sce: formData.isSce,
+            criticality_id:
+              formData.criticalityId && formData.isCriticality
+                ? parseInt(formData.criticalityId)
+                : null,
+            sce_id:
+              formData.sceId && formData.isSce
+                ? parseInt(formData.sceId)
+                : null,
             iot_sensor_id: formData.iotSensorId
               ? parseInt(formData.iotSensorId)
               : null,
@@ -901,8 +972,16 @@ const AssetDetailPage: React.FC = () => {
                 }</span>
               </div>
               <div class="detail-item">
-                <span class="label">EC Class</span>
+                <span class="label">EX Class</span>
                 <span class="value">${formData.exClass || "-"}</span>
+              </div>
+              <div class="detail-item">
+                <span class="label">EX Certificate</span>
+                <span class="value">${formData.exCertificate || "-"}</span>
+              </div>
+              <div class="detail-item">
+                <span class="label">Drawing No</span>
+                <span class="value">${formData.drawingNo || "-"}</span>
               </div>
               <div class="detail-item">
                 <span class="label">Active</span>
@@ -1427,7 +1506,7 @@ const AssetDetailPage: React.FC = () => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium">EC Class</label>
+                <label className="text-sm font-medium">EX Class</label>
                 <Input
                   value={formData.exClass}
                   onChange={(e) => handleChange("exClass", e.target.value)}
@@ -1435,16 +1514,132 @@ const AssetDetailPage: React.FC = () => {
                 />
               </div>
 
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">EX Certificate</label>
+                <Input
+                  value={formData.exCertificate}
+                  onChange={(e) =>
+                    handleChange("exCertificate", e.target.value)
+                  }
+                  readOnly={!isEditing}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Drawing No</label>
+                <Input
+                  value={formData.drawingNo}
+                  onChange={(e) => handleChange("drawingNo", e.target.value)}
+                  readOnly={!isEditing}
+                />
+              </div>
+
               <div className="col-span-2 grid grid-cols-2 gap-4 pt-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="criticality"
-                    checked={true}
-                    disabled={!isEditing}
-                  />
-                  <label htmlFor="criticality" className="text-sm font-medium">
-                    Criticality
-                  </label>
+                {/* Criticality Section */}
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="criticality"
+                      checked={formData.isCriticality}
+                      onCheckedChange={(checked) =>
+                        handleChange("isCriticality", !!checked)
+                      }
+                      disabled={!isEditing}
+                    />
+                    <label
+                      htmlFor="criticality"
+                      className="text-sm font-medium"
+                    >
+                      Criticality
+                    </label>
+                  </div>
+
+                  {/* Show criticality dropdown if checkbox is checked */}
+                  {formData.isCriticality && (
+                    <div className="mt-2">
+                      {isEditing ? (
+                        <Select
+                          value={formData.criticalityId}
+                          onValueChange={(value) =>
+                            handleChange("criticalityId", value)
+                          }
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Criticality Level" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.isArray(criticalityOptions) &&
+                              criticalityOptions.map((option) => (
+                                <SelectItem
+                                  key={option.id}
+                                  value={String(option.value)}
+                                >
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <div className="text-sm text-gray-600">
+                          {criticalityOptions.find(
+                            (opt) => opt.value === formData.criticalityId
+                          )?.label || "Not selected"}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* SCE Section */}
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="sce"
+                      checked={formData.isSce}
+                      onCheckedChange={(checked) =>
+                        handleChange("isSce", !!checked)
+                      }
+                      disabled={!isEditing}
+                    />
+                    <label htmlFor="sce" className="text-sm font-medium">
+                      SCE Code
+                    </label>
+                  </div>
+
+                  {/* Show SCE dropdown if checkbox is checked */}
+                  {formData.isSce && (
+                    <div className="mt-2">
+                      {isEditing ? (
+                        <Select
+                          value={formData.sceId}
+                          onValueChange={(value) =>
+                            handleChange("sceId", value)
+                          }
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select SCE Code" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.isArray(sceOptions) &&
+                              sceOptions.map((option) => (
+                                <SelectItem
+                                  key={option.id}
+                                  value={String(option.value)}
+                                >
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <div className="text-sm text-gray-600">
+                          {sceOptions.find(
+                            (opt) => opt.value === formData.sceId
+                          )?.label || "Not selected"}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center space-x-2">
