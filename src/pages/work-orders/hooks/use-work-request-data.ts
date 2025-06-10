@@ -14,7 +14,7 @@ export const useWorkRequestData = () => {
                     package_id (id, package_no, package_tag, package_name), 
                     asset_id (id, asset_name), cm_sce_code (id, cm_group_name, cm_sce_code ), 
                     work_center_id (id, code, name), date_finding, 
-                    maintenance_type (id, code, name), requested_by, 
+                    maintenance_type (id, code, name), requested_by (id, email, full_name), 
                     priority_id (id, name), 
                     finding_detail, anomaly_report, quick_incident_report,
                     work_request_no, is_work_order_created`
@@ -51,7 +51,7 @@ export const useWorkRequestDataById = (id: number) => {
             package_id (id, package_no, package_tag, package_name), 
             asset_id (id, asset_name), cm_sce_code (id, cm_group_name, cm_sce_code ), 
             work_center_id (id, code, name), date_finding, 
-            maintenance_type (id, code, name), requested_by, 
+            maintenance_type (id, code, name), requested_by (id, email, full_name), 
             priority_id (id, name), 
             finding_detail, anomaly_report, quick_incident_report,
             work_request_no, is_work_order_created`

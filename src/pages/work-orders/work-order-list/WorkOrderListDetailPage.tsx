@@ -32,6 +32,13 @@ import PmGeneralTab from '@/components/work-orders/work-order-list/general/PmGen
 import PmTaskDetailTab from '@/components/work-orders/work-order-list/task-detail/PmTaskDetailTab';
 import PmActualTab from '@/components/work-orders/work-order-list/actual/PmActualTab';
 import PmPlanTab from '@/components/work-orders/work-order-list/plan/PmPlanTab';
+import PmReportsTab from '@/components/work-orders/work-order-list/reports/PmReportsTab';
+import PmDeferTab from '@/components/work-orders/work-order-list/defer/PmDeferTab';
+import PmAttachmentTab from '@/components/work-orders/work-order-list/attachment/PmAttachmentTab';
+import PmMinAcceptCriteriaTab from '@/components/work-orders/work-order-list/minAcceptCriteria/PmMinAcceptCriteriaTab';
+import PmChecksheetTab from '@/components/work-orders/work-order-list/checksheet/PmChecksheetTab';
+import PmAdditionalInfoTab from '@/components/work-orders/work-order-list/additionalInfo/PmAdditionalInfoTab';
+import PmMaintainGroupTab from '@/components/work-orders/work-order-list/maintainGroup/PmMaintainGroupTab';
 
 
 const WorkOrderListDetailPage: React.FC = () => {
@@ -215,9 +222,7 @@ const WorkOrderListDetailPage: React.FC = () => {
               {(workOrder?.work_order_type === 2 &&
                 <>
                   <TabsContent value="generalPm">
-                    <TabsContent value="generalPm">
-                      {id && <PmGeneralTab pmWoId={Number(workOrder.pm_work_order_id.id)} />}
-                    </TabsContent>
+                    {id && <PmGeneralTab pmWoId={Number(workOrder.pm_work_order_id.id)} />}
                   </TabsContent>
                   <TabsContent value="taskDetailPm">
                     {id && <PmTaskDetailTab pmWoId={Number(workOrder.pm_work_order_id.id)} />}
@@ -232,25 +237,25 @@ const WorkOrderListDetailPage: React.FC = () => {
                     {id && <RelatedWoTab assetId={Number(workOrder.asset_id)} />}
                   </TabsContent>
                   <TabsContent value="reportPm">
-                    <h1>report</h1>
+                    {id && <PmReportsTab pmWoId={Number(workOrder.pm_work_order_id.id)} />}
                   </TabsContent>
                   <TabsContent value="deferPm">
-                    <h1>defer</h1>
+                    {id && <PmDeferTab pmWoId={Number(workOrder.pm_work_order_id.id)} />}
                   </TabsContent>
                   <TabsContent value="attachmentPm">
-                    <h1>attachment</h1>
+                    {id && <PmAttachmentTab pmWoId={Number(workOrder.pm_work_order_id.id)} />}
                   </TabsContent>
                   <TabsContent value="criteriaPm">
-                    <h1>criteria</h1>
+                    {id && <PmMinAcceptCriteriaTab pmWoId={Number(workOrder.pm_work_order_id.id)} />}
                   </TabsContent>
                   <TabsContent value="checksheetPm">
-                    <h1>checksheet</h1>
+                    {id && <PmChecksheetTab pmWoId={Number(workOrder.pm_work_order_id.id)} />}
                   </TabsContent>
                   <TabsContent value="additionalInfoPm">
-                    <h1>additional info</h1>
+                    {id && <PmAdditionalInfoTab pmWoId={Number(workOrder.pm_work_order_id.id)} />}
                   </TabsContent>
                   <TabsContent value="maintainGroupPm">
-                    <h1>Maintain group</h1>
+                    {id && <PmMaintainGroupTab pmWoId={Number(workOrder.pm_work_order_id.id)} />}
                   </TabsContent>
                 </>
               )}

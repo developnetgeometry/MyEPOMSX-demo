@@ -1142,6 +1142,13 @@ export type Database = {
             referencedRelation: "e_cm_general"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "e_cm_defer_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       e_cm_finding: {
@@ -1555,33 +1562,6 @@ export type Database = {
         Relationships: []
       }
       e_criticality: {
-        Row: {
-          created_at: string | null
-          created_by: string | null
-          id: number
-          name: string
-          updated_at: string | null
-          updated_by: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          created_by?: string | null
-          id?: never
-          name: string
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          created_by?: string | null
-          id?: never
-          name?: string
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Relationships: []
-      }
-      e_data_confidence: {
         Row: {
           created_at: string | null
           created_by: string | null
@@ -3294,6 +3274,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "e_new_work_request_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "e_new_work_request_system_id_fkey"
             columns: ["system_id"]
             isOneToOne: false
@@ -3804,6 +3791,13 @@ export type Database = {
             columns: ["pm_wo_id"]
             isOneToOne: false
             referencedRelation: "e_pm_work_order"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "e_pm_defer_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -5294,6 +5288,35 @@ export type Database = {
         }
         Relationships: []
       }
+      i_code_sheet: {
+        Row: {
+          description: string | null
+          id: number
+          ims_asset_type_id: number
+          sheet_name: string
+        }
+        Insert: {
+          description?: string | null
+          id?: number
+          ims_asset_type_id: number
+          sheet_name: string
+        }
+        Update: {
+          description?: string | null
+          id?: number
+          ims_asset_type_id?: number
+          sheet_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "i_code_sheet_ims_asset_type_id_fkey"
+            columns: ["ims_asset_type_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_asset_type"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       i_data_confidence: {
         Row: {
           created_at: string | null
@@ -5410,150 +5433,115 @@ export type Database = {
       }
       i_df_ext: {
         Row: {
-          agecoat_year: number | null
-          agetk: number | null
-          art: number | null
-          bext_corrp1: number | null
-          bext_corrp2: number | null
-          bext_corrp3: number | null
-          cract_year: number | null
           created_at: string | null
           created_by: string | null
-          crexp: number | null
           data_confidence_id: number | null
-          dfextcorrf: number | null
-          fsextcorr: number | null
           id: number
           ims_por_assessment_id: number | null
           last_coating_date: string | null
           last_inspection_date: string | null
-          lext_corr1: number | null
-          lext_corr2: number | null
-          lext_corr3: number | null
-          poext_corrp1: number | null
-          poext_corrp2: number | null
-          poext_corrp3: number | null
-          srextcorr: number | null
           updated_at: string | null
           updated_by: string | null
         }
         Insert: {
-          agecoat_year?: number | null
-          agetk?: number | null
-          art?: number | null
-          bext_corrp1?: number | null
-          bext_corrp2?: number | null
-          bext_corrp3?: number | null
-          cract_year?: number | null
           created_at?: string | null
           created_by?: string | null
-          crexp?: number | null
           data_confidence_id?: number | null
-          dfextcorrf?: number | null
-          fsextcorr?: number | null
           id?: number
           ims_por_assessment_id?: number | null
           last_coating_date?: string | null
           last_inspection_date?: string | null
-          lext_corr1?: number | null
-          lext_corr2?: number | null
-          lext_corr3?: number | null
-          poext_corrp1?: number | null
-          poext_corrp2?: number | null
-          poext_corrp3?: number | null
-          srextcorr?: number | null
           updated_at?: string | null
           updated_by?: string | null
         }
         Update: {
-          agecoat_year?: number | null
-          agetk?: number | null
-          art?: number | null
-          bext_corrp1?: number | null
-          bext_corrp2?: number | null
-          bext_corrp3?: number | null
-          cract_year?: number | null
           created_at?: string | null
           created_by?: string | null
-          crexp?: number | null
           data_confidence_id?: number | null
-          dfextcorrf?: number | null
-          fsextcorr?: number | null
           id?: number
           ims_por_assessment_id?: number | null
           last_coating_date?: string | null
           last_inspection_date?: string | null
-          lext_corr1?: number | null
-          lext_corr2?: number | null
-          lext_corr3?: number | null
-          poext_corrp1?: number | null
-          poext_corrp2?: number | null
-          poext_corrp3?: number | null
-          srextcorr?: number | null
           updated_at?: string | null
           updated_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "i_df_ext_i_data_confidence_fk"
+            columns: ["data_confidence_id"]
+            isOneToOne: false
+            referencedRelation: "i_data_confidence"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_df_ext_i_ims_pof_assessment_general_fk"
+            columns: ["ims_por_assessment_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_pof_assessment_general"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       i_df_ext_clscc: {
         Row: {
-          age: number | null
-          age_coat: number | null
-          age_crack: number | null
-          coat_adj: number | null
           created_at: string | null
           created_by: string | null
-          dfextcisc: number | null
-          dfextcisccfb: number | null
-          ext_scc_susc: number | null
+          data_confidence_id: number | null
           id: number
           ims_pof_asessment_id: number | null
           inspection_efficiency: number | null
           last_coating_date: string | null
           last_inspection_date: string | null
-          svi: number | null
           updated_at: string | null
           updated_by: string | null
         }
         Insert: {
-          age?: number | null
-          age_coat?: number | null
-          age_crack?: number | null
-          coat_adj?: number | null
           created_at?: string | null
           created_by?: string | null
-          dfextcisc?: number | null
-          dfextcisccfb?: number | null
-          ext_scc_susc?: number | null
+          data_confidence_id?: number | null
           id?: number
           ims_pof_asessment_id?: number | null
           inspection_efficiency?: number | null
           last_coating_date?: string | null
           last_inspection_date?: string | null
-          svi?: number | null
           updated_at?: string | null
           updated_by?: string | null
         }
         Update: {
-          age?: number | null
-          age_coat?: number | null
-          age_crack?: number | null
-          coat_adj?: number | null
           created_at?: string | null
           created_by?: string | null
-          dfextcisc?: number | null
-          dfextcisccfb?: number | null
-          ext_scc_susc?: number | null
+          data_confidence_id?: number | null
           id?: number
           ims_pof_asessment_id?: number | null
           inspection_efficiency?: number | null
           last_coating_date?: string | null
           last_inspection_date?: string | null
-          svi?: number | null
           updated_at?: string | null
           updated_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "i_df_ext_clscc_i_data_confidence_fk"
+            columns: ["data_confidence_id"]
+            isOneToOne: false
+            referencedRelation: "i_data_confidence"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_df_ext_clscc_i_ims_pof_assessment_general_fk"
+            columns: ["ims_pof_asessment_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_pof_assessment_general"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_df_ext_clscc_i_inspection_efficiency_fk"
+            columns: ["inspection_efficiency"]
+            isOneToOne: false
+            referencedRelation: "i_inspection_efficiency"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       i_df_mfat: {
         Row: {
@@ -5723,95 +5711,56 @@ export type Database = {
       i_df_thin: {
         Row: {
           agerc: string | null
-          agetk: number | null
-          art: number | null
-          bthin1: number | null
-          bthin2: number | null
-          bthin3: number | null
-          cr_act: number | null
-          crcm: number | null
-          crexp: number | null
           data_confidence_id: number | null
-          dfthin_fb: number | null
-          dthinf: number | null
-          fs_thin: number | null
           id: number
           ims_pof_assessment_id: number | null
-          ithin1: number | null
-          ithin2: number | null
-          ithin3: number | null
           last_coating_date: string | null
           last_inspection_date: string | null
           nthin_a: number | null
           nthin_b: number | null
           nthin_c: number | null
           nthin_d: number | null
-          pothin1: number | null
-          pothin2: number | null
-          pothin3: number | null
-          sr_thin: number | null
         }
         Insert: {
           agerc?: string | null
-          agetk?: number | null
-          art?: number | null
-          bthin1?: number | null
-          bthin2?: number | null
-          bthin3?: number | null
-          cr_act?: number | null
-          crcm?: number | null
-          crexp?: number | null
           data_confidence_id?: number | null
-          dfthin_fb?: number | null
-          dthinf?: number | null
-          fs_thin?: number | null
           id?: number
           ims_pof_assessment_id?: number | null
-          ithin1?: number | null
-          ithin2?: number | null
-          ithin3?: number | null
           last_coating_date?: string | null
           last_inspection_date?: string | null
           nthin_a?: number | null
           nthin_b?: number | null
           nthin_c?: number | null
           nthin_d?: number | null
-          pothin1?: number | null
-          pothin2?: number | null
-          pothin3?: number | null
-          sr_thin?: number | null
         }
         Update: {
           agerc?: string | null
-          agetk?: number | null
-          art?: number | null
-          bthin1?: number | null
-          bthin2?: number | null
-          bthin3?: number | null
-          cr_act?: number | null
-          crcm?: number | null
-          crexp?: number | null
           data_confidence_id?: number | null
-          dfthin_fb?: number | null
-          dthinf?: number | null
-          fs_thin?: number | null
           id?: number
           ims_pof_assessment_id?: number | null
-          ithin1?: number | null
-          ithin2?: number | null
-          ithin3?: number | null
           last_coating_date?: string | null
           last_inspection_date?: string | null
           nthin_a?: number | null
           nthin_b?: number | null
           nthin_c?: number | null
           nthin_d?: number | null
-          pothin1?: number | null
-          pothin2?: number | null
-          pothin3?: number | null
-          sr_thin?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "i_df_thin_i_data_confidence_fk"
+            columns: ["data_confidence_id"]
+            isOneToOne: false
+            referencedRelation: "i_data_confidence"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_df_thin_i_ims_pof_assessment_general_fk"
+            columns: ["ims_pof_assessment_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_pof_assessment_general"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       i_env_severity: {
         Row: {
@@ -6969,6 +6918,7 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           date: string | null
+          description: string | null
           id: number
           planned_shutdown: number | null
           unplanned_shutdown: number | null
@@ -6982,6 +6932,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           date?: string | null
+          description?: string | null
           id?: number
           planned_shutdown?: number | null
           unplanned_shutdown?: number | null
@@ -6995,6 +6946,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           date?: string | null
+          description?: string | null
           id?: number
           planned_shutdown?: number | null
           unplanned_shutdown?: number | null
