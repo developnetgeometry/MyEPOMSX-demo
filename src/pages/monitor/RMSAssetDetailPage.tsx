@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import PageHeader from '@/components/shared/PageHeader';
@@ -13,185 +12,18 @@ import StatusBadge from '@/components/shared/StatusBadge';
 import { formatDateTime } from '@/utils/formatters';
 import UptimeEntryModal from '@/components/monitor/UptimeEntryModal';
 import CriticalAssetSummary from '@/components/monitor/CriticalAssetSummary';
+import { useAsset } from '@/hooks/monitor/useAssets';
 
-// Sample data for the asset
-const assetData = {
-  '1': {
-    id: '1',
-    assetNo: 'RMS-A001',
-    assetName: 'Compressor Station Alpha',
-    package: 'Gas Compression Package 1',
-    system: 'Gas Compression',
-    facility: 'North Field',
-    assetTag: 'COMP-001',
-    model: 'Atlas Copco GA 75',
-    status: 'Active',
-    sceCode: 'SCE-0023',
-    criticalityCode: 'C1',
-    healthStatus: 'Good',
-    lastSync: '2025-05-12 09:15:22',
-    description: 'Main compressor station for gas compression operations in the North Field. Provides critical pressure boost for the pipeline system.',
-    installationDate: '2023-06-15',
-    manufacturer: 'Atlas Copco',
-    serialNumber: 'AC75981234',
-    operatingTemperature: '85°C',
-    operatingPressure: '12.6 MPa',
-    location: 'Building A, Zone 3, North Field Facility',
-    maintenanceHistory: [
-      { date: '2025-01-15', type: 'Preventive', description: 'Quarterly inspection and filter replacement' },
-      { date: '2024-10-20', type: 'Corrective', description: 'Replaced pressure sensor due to drift' },
-      { date: '2024-07-05', type: 'Preventive', description: 'Semi-annual maintenance and calibration' }
-    ]
-  },
-  '2': {
-    id: '2',
-    assetNo: 'RMS-A002',
-    assetName: 'Flow Control Valve FCV-201',
-    package: 'Flow Control Package A',
-    system: 'Flow Control',
-    facility: 'Pipeline Junction B',
-    assetTag: 'FCV-201',
-    model: 'Fisher 8580',
-    status: 'Active',
-    sceCode: 'SCE-0045',
-    criticalityCode: 'C2',
-    healthStatus: 'Fair',
-    lastSync: '2025-05-12 08:45:30',
-    description: 'Critical flow control valve managing gas distribution at Pipeline Junction B. Controls throughput to secondary distribution network.',
-    installationDate: '2023-08-22',
-    manufacturer: 'Fisher',
-    serialNumber: 'F8580742198',
-    operatingTemperature: '65°C',
-    operatingPressure: '8.5 MPa',
-    location: 'Pipeline Junction B, Section 4',
-    maintenanceHistory: [
-      { date: '2025-02-10', type: 'Preventive', description: 'Quarterly calibration and inspection' },
-      { date: '2024-11-08', type: 'Corrective', description: 'Replaced valve stem seal due to minor leak' },
-      { date: '2024-08-15', type: 'Preventive', description: 'Semi-annual maintenance' }
-    ]
-  },
-  '3': {
-    id: '3',
-    assetNo: 'RMS-A003',
-    assetName: 'Pressure Transmitter PT-305',
-    package: 'Monitoring Package 3',
-    system: 'Pressure Monitoring',
-    facility: 'Central Processing',
-    assetTag: 'PT-305',
-    model: 'Rosemount 3051',
-    status: 'Active',
-    sceCode: 'SCE-0067',
-    criticalityCode: 'C3',
-    healthStatus: 'Poor',
-    lastSync: '2025-05-11 23:10:45',
-    description: 'High-accuracy pressure transmitter monitoring main processing line. Feeds critical data to control systems for safety monitoring.',
-    installationDate: '2023-09-01',
-    manufacturer: 'Rosemount',
-    serialNumber: 'RM3051567432',
-    operatingTemperature: '70°C',
-    operatingPressure: '15.2 MPa',
-    location: 'Process Area 2, Line 3, Central Processing Facility',
-    maintenanceHistory: [
-      { date: '2025-03-25', type: 'Corrective', description: 'Recalibration due to drift issues' },
-      { date: '2024-12-12', type: 'Preventive', description: 'Quarterly inspection' },
-      { date: '2024-09-05', type: 'Corrective', description: 'Replaced transmitter due to erratic readings' }
-    ]
-  },
-  '4': {
-    id: '4',
-    assetNo: 'RMS-A004',
-    assetName: 'Storage Tank Level Sensor',
-    package: 'Tank Farm Package 2',
-    system: 'Level Monitoring',
-    facility: 'Tank Farm',
-    assetTag: 'TK-LVL-004',
-    model: 'Endress+Hauser FMP51',
-    status: 'Inactive',
-    sceCode: 'SCE-0089',
-    criticalityCode: 'C1',
-    healthStatus: 'Good',
-    lastSync: '2025-05-12 10:30:15',
-    description: 'High-precision level measurement for primary storage tank. Provides continuous real-time data for inventory management.',
-    installationDate: '2023-07-12',
-    manufacturer: 'Endress+Hauser',
-    serialNumber: 'EH51982345',
-    operatingTemperature: '45°C',
-    operatingPressure: '0.2 MPa',
-    location: 'Tank Farm, Tank 4, North Side',
-    maintenanceHistory: [
-      { date: '2025-02-05', type: 'Preventive', description: 'Quarterly inspection and calibration' },
-      { date: '2024-10-18', type: 'Corrective', description: 'Firmware update to address calculation error' },
-      { date: '2024-07-22', type: 'Preventive', description: 'Semi-annual maintenance' }
-    ]
-  },
-  '5': {
-    id: '5',
-    assetNo: 'RMS-A005',
-    assetName: 'Pump Motor Temperature Sensor',
-    package: 'Pump Control Package 1',
-    system: 'Temperature Monitoring',
-    facility: 'Pump Station 2',
-    assetTag: 'TEMP-007',
-    model: 'Fluke 724',
-    status: 'Maintenance',
-    sceCode: 'SCE-0112',
-    criticalityCode: 'C1',
-    healthStatus: 'Critical',
-    lastSync: '2025-05-12 07:50:38',
-    description: 'Temperature monitoring for main transfer pump motor. Critical for preventing overheating and ensuring operational reliability.',
-    installationDate: '2023-05-30',
-    manufacturer: 'Fluke',
-    serialNumber: 'FL724901234',
-    operatingTemperature: '120°C',
-    operatingPressure: 'N/A',
-    location: 'Pump Station 2, Pump Array B, Position 3',
-    maintenanceHistory: [
-      { date: '2025-04-02', type: 'Corrective', description: 'Emergency replacement due to sensor failure' },
-      { date: '2024-11-15', type: 'Preventive', description: 'Quarterly inspection' },
-      { date: '2024-08-20', type: 'Corrective', description: 'Rewiring due to insulation damage' }
-    ]
-  },
-  '6': {
-    id: '6',
-    assetNo: 'RMS-A006',
-    assetName: 'Cooling Tower Fan Motor',
-    package: 'Cooling System Package A',
-    system: 'Cooling System',
-    facility: 'North Field',
-    assetTag: 'CT-FAN-003',
-    model: 'ABB ACS880',
-    status: 'Active',
-    sceCode: 'SCE-0134',
-    criticalityCode: 'C2',
-    healthStatus: 'Good',
-    lastSync: '2025-05-12 11:22:05',
-    description: 'Primary drive motor for cooling tower fan #3. Essential for maintaining optimal process temperatures across the facility.',
-    installationDate: '2023-08-05',
-    manufacturer: 'ABB',
-    serialNumber: 'ABB880762341',
-    operatingTemperature: '70°C',
-    operatingPressure: 'N/A',
-    location: 'Cooling Tower A, North Field Facility',
-    maintenanceHistory: [
-      { date: '2025-03-10', type: 'Preventive', description: 'Quarterly inspection and lubrication' },
-      { date: '2024-12-05', type: 'Preventive', description: 'Semi-annual maintenance' },
-      { date: '2024-09-18', type: 'Corrective', description: 'Bearing replacement' }
-    ]
-  }
-};
-
-// Sample telemetry data
-const generateTelemetryData = (hours = 24, baseTemp = 85, basePressure = 12, baseVibration = 2.5, id: string) => {
+// Sample telemetry data generator (keep this until you have real telemetry)
+const generateTelemetryData = (hours = 24, baseTemp = 85, basePressure = 12, baseVibration = 2.5, healthStatus = 'good') => {
   const multipliers: {[key: string]: number} = {
-    '1': 1.0,    // Normal readings
-    '2': 1.1,    // Slightly elevated
-    '3': 1.3,    // Poor health
-    '5': 1.8,    // Critical readings
-    '4': 0.9,    // Inactive - below normal
-    '6': 1.05    // Good but slightly above normal
+    'good': 1.0,
+    'fair': 1.1,
+    'poor': 1.3,
+    'critical': 1.8,
   };
   
-  const multiplier = multipliers[id] || 1;
+  const multiplier = multipliers[healthStatus.toLowerCase()] || 1;
   
   const data = [];
   const now = new Date();
@@ -201,7 +33,6 @@ const generateTelemetryData = (hours = 24, baseTemp = 85, basePressure = 12, bas
     const hour = time.getHours();
     const minute = time.getMinutes();
     
-    // Add some realistic variation
     const tempVariation = Math.sin(i / 3) * 5 * multiplier;
     const pressureVariation = Math.cos(i / 4) * 0.8 * multiplier;
     const vibrationVariation = Math.sin(i / 2) * 0.5 * multiplier;
@@ -217,36 +48,8 @@ const generateTelemetryData = (hours = 24, baseTemp = 85, basePressure = 12, bas
   return data;
 };
 
-// Sample uptime data for the asset
-const uptimeData = [
-  { 
-    id: "1-1", 
-    date: new Date("2025-05-11"), 
-    upTime: 23.5, 
-    unplannedShutdown: 0.5, 
-    plannedShutdown: 0.0, 
-    description: "Brief power fluctuation" 
-  },
-  { 
-    id: "1-2", 
-    date: new Date("2025-05-10"), 
-    upTime: 24.0, 
-    unplannedShutdown: 0.0, 
-    plannedShutdown: 0.0, 
-    description: "Normal operation" 
-  },
-  { 
-    id: "1-3", 
-    date: new Date("2025-05-09"), 
-    upTime: 18.5, 
-    unplannedShutdown: 0.0, 
-    plannedShutdown: 5.5, 
-    description: "Scheduled maintenance" 
-  }
-];
-
-// Sample alerts data
-const generateAlertData = (id: string) => {
+// Sample alerts data generator
+const generateAlertData = (healthStatus = 'good') => {
   const baseAlerts = [
     { 
       id: '1',
@@ -263,43 +66,26 @@ const generateAlertData = (id: string) => {
       threshold: '13.5 MPa',
       status: 'Warning',
       timestamp: '2025-05-12 09:30:15'
-    },
-    {
-      id: '3',
-      metric: 'Vibration',
-      value: '3.2 mm/s',
-      threshold: '3.0 mm/s',
-      status: 'Warning',
-      timestamp: '2025-05-12 10:15:38'
     }
   ];
   
-  // Customize based on asset health
-  if (id === '3') { // Poor health
+  if (healthStatus.toLowerCase() === 'poor') {
     return [
       ...baseAlerts,
       {
-        id: '4',
+        id: '3',
         metric: 'Temperature',
         value: '98.2°C',
         threshold: '95.0°C',
         status: 'Critical',
         timestamp: '2025-05-12 07:12:54'
-      },
-      {
-        id: '5',
-        metric: 'Vibration',
-        value: '4.5 mm/s',
-        threshold: '4.0 mm/s',
-        status: 'Critical',
-        timestamp: '2025-05-12 11:03:27'
       }
     ];
-  } else if (id === '5') { // Critical health
+  } else if (healthStatus.toLowerCase() === 'critical') {
     return [
       ...baseAlerts,
       {
-        id: '4',
+        id: '3',
         metric: 'Temperature',
         value: '110.5°C',
         threshold: '95.0°C',
@@ -307,20 +93,12 @@ const generateAlertData = (id: string) => {
         timestamp: '2025-05-12 07:12:54'
       },
       {
-        id: '5',
+        id: '4',
         metric: 'Vibration',
         value: '5.8 mm/s',
         threshold: '4.0 mm/s',
         status: 'Critical',
         timestamp: '2025-05-12 11:03:27'
-      },
-      {
-        id: '6',
-        metric: 'Current',
-        value: '42.3 A',
-        threshold: '40.0 A',
-        status: 'Critical',
-        timestamp: '2025-05-12 06:58:12'
       }
     ];
   }
@@ -329,32 +107,33 @@ const generateAlertData = (id: string) => {
 };
 
 const RMSAssetDetailPage: React.FC = () => {
-  const { id = "1" } = useParams<{ id: string }>();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [asset, setAsset] = useState(assetData[id as keyof typeof assetData]);
+  const [isUptimeModalOpen, setIsUptimeModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('basic');
   const [telemetryData, setTelemetryData] = useState<any[]>([]);
   const [alertsData, setAlertsData] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState('basic');
-  const [isUptimeModalOpen, setIsUptimeModalOpen] = useState(false);
-  const [assetUptimeData, setAssetUptimeData] = useState(uptimeData);
-  
-  useEffect(() => {
-    // Load the asset data based on ID
-    const currentAsset = assetData[id as keyof typeof assetData];
-    if (currentAsset) {
-      setAsset(currentAsset);
-      setTelemetryData(generateTelemetryData(24, 85, 12, 2.5, id));
-      setAlertsData(generateAlertData(id));
-    }
-  }, [id]);
 
-  if (!asset) {
-    return <div className="p-8">Asset not found</div>;
-  }
+  // Use React Query hook to fetch asset data
+  const {
+    data: asset,
+    isLoading,
+    error
+  } = useAsset(parseInt(id || '0'));
+
+  // Generate sample telemetry and alert data when asset loads
+  useEffect(() => {
+    if (asset) {
+      // You can calculate health status based on your business logic
+      const healthStatus = 'good'; // This should come from your monitoring system
+      setTelemetryData(generateTelemetryData(24, 85, 12, 2.5, healthStatus));
+      setAlertsData(generateAlertData(healthStatus));
+    }
+  }, [asset]);
 
   const handleSaveUptimeData = (assetId: string, entries: any[]) => {
-    console.log('Saving uptime data for asset:', assetId, entries);
-    setAssetUptimeData(entries);
+    console.log('Uptime data saved:', entries);
+    // The useRMSUptime hook handles the actual saving
   };
 
   // Function to get status indicator component
@@ -368,18 +147,48 @@ const RMSAssetDetailPage: React.FC = () => {
           <span className="text-green-700 font-medium">{status}</span>
         </div>
       );
-    } else if (lowercaseStatus === 'fair') {
-      return <StatusBadge status={status} />;
     } else {
       return <StatusBadge status={status} />;
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Asset Details"
+          subtitle="Loading..."
+          icon={<HardDrive className="h-6 w-6" />}
+        />
+        <div className="flex justify-center items-center h-64">
+          <div className="text-lg">Loading asset details...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !asset) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Asset Not Found"
+          subtitle="The requested asset could not be found"
+          icon={<HardDrive className="h-6 w-6" />}
+        />
+        <div className="flex justify-center items-center h-64">
+          <Button onClick={() => navigate('/monitor/rms-asset-list')}>
+            Back to Asset List
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`Asset: ${asset.assetName}`}
-        subtitle={asset.assetNo}
+        title={`Asset: ${asset.asset_name}`}
+        subtitle={asset.asset_no}
         icon={<HardDrive className="h-6 w-6" />}
       />
       
@@ -410,56 +219,56 @@ const RMSAssetDetailPage: React.FC = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Asset No</h3>
-                    <p>{asset.assetNo}</p>
+                    <p>{asset.asset_no}</p>
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Asset Name</h3>
-                    <p>{asset.assetName}</p>
+                    <p>{asset.asset_name}</p>
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Package</h3>
-                    <p>{asset.package}</p>
+                    <p>{asset.package?.name || 'N/A'}</p>
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">System</h3>
-                    <p>{asset.system}</p>
+                    <p>{asset.system?.name || 'N/A'}</p>
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Facility</h3>
-                    <p>{asset.facility}</p>
+                    <p>{asset.facility?.name || 'N/A'}</p>
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Asset Tag</h3>
-                    <p>{asset.assetTag}</p>
+                    <p>{asset.asset_tag?.tag_name || 'N/A'}</p>
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Model</h3>
-                    <p>{asset.model}</p>
+                    <p>{asset.asset_detail?.model || 'N/A'}</p>
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Status</h3>
-                    <p>{asset.status}</p>
+                    <p>{asset.status?.name || 'N/A'}</p>
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">SCE Code</h3>
-                    <p>{asset.sceCode}</p>
+                    <p>{asset.asset_sce?.sce_code || 'N/A'}</p>
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Criticality Code</h3>
-                    <p>{asset.criticalityCode}</p>
+                    <p>{asset.asset_sce?.criticality_code || 'N/A'}</p>
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500">Last Sync</h3>
-                    <p>{formatDateTime(asset.lastSync)}</p>
+                    <h3 className="text-sm font-medium text-gray-500">Commission Date</h3>
+                    <p>{asset.commission_date ? formatDateTime(asset.commission_date) : 'N/A'}</p>
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Health Status</h3>
-                    <StatusBadge status={asset.healthStatus} />
+                    <StatusBadge status="Good" />
                   </div>
                 </div>
                 <div className="mt-4">
-                  <h3 className="text-sm font-medium text-gray-500">Description</h3>
-                  <p className="mt-1">{asset.description}</p>
+                  <h3 className="text-sm font-medium text-gray-500">Specification</h3>
+                  <p className="mt-1">{asset.asset_detail?.specification || 'No specification available'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -471,28 +280,28 @@ const RMSAssetDetailPage: React.FC = () => {
               <CardContent>
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500">Installation Date</h3>
-                    <p>{asset.installationDate}</p>
+                    <h3 className="text-sm font-medium text-gray-500">Manufacturer</h3>
+                    <p>{asset.asset_detail?.manufacturer?.name || 'N/A'}</p>
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500">Manufacturer</h3>
-                    <p>{asset.manufacturer}</p>
+                    <h3 className="text-sm font-medium text-gray-500">Category</h3>
+                    <p>{asset.asset_detail?.category?.name || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Type</h3>
+                    <p>{asset.asset_detail?.type?.name || 'N/A'}</p>
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Serial Number</h3>
-                    <p>{asset.serialNumber}</p>
+                    <p>{asset.asset_detail?.serial_number || 'N/A'}</p>
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500">Operating Temperature</h3>
-                    <p>{asset.operatingTemperature}</p>
+                    <h3 className="text-sm font-medium text-gray-500">Asset Detail ID</h3>
+                    <p>{asset.asset_detail_id}</p>
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500">Operating Pressure</h3>
-                    <p>{asset.operatingPressure}</p>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Location</h3>
-                    <p>{asset.location}</p>
+                    <h3 className="text-sm font-medium text-gray-500">Created Date</h3>
+                    <p>{formatDateTime(asset.created_at)}</p>
                   </div>
                 </div>
               </CardContent>
@@ -564,25 +373,18 @@ const RMSAssetDetailPage: React.FC = () => {
         
         <TabsContent value="health" className="mt-6">
           <div className="space-y-6">
-            {/* Main Health Summary Card */}
             <Card className="border-green-100 bg-green-50/30">
               <CardContent className="p-6 flex items-center justify-center">
                 <div className="flex flex-col items-center space-y-2">
                   <h3 className="text-lg font-medium text-gray-700">Overall Health Status</h3>
                   <div className="flex items-center">
-                    <div className={`rounded-full w-4 h-4 mr-3 ${
-                      asset.healthStatus.toLowerCase() === 'good' ? 'bg-green-500' :
-                      asset.healthStatus.toLowerCase() === 'fair' ? 'bg-yellow-500' : 'bg-red-500'
-                    }`}></div>
-                    <span className="text-3xl font-bold">
-                      {asset.healthStatus}
-                    </span>
+                    <div className="rounded-full w-4 h-4 mr-3 bg-green-500"></div>
+                    <span className="text-3xl font-bold">Good</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
             
-            {/* Health Status Details */}
             <Card>
               <CardHeader>
                 <CardTitle>Health Status Details</CardTitle>
@@ -591,77 +393,21 @@ const RMSAssetDetailPage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex justify-between items-center p-3 border-b border-gray-100">
                     <span className="font-medium">Temperature Status</span>
-                    <div>
-                      {getStatusIndicator(
-                        asset.id === "5" ? "Critical" : 
-                        asset.id === "3" ? "Poor" : 
-                        asset.id === "2" ? "Fair" : "Good"
-                      )}
-                    </div>
+                    <div>{getStatusIndicator("Good")}</div>
                   </div>
-                  
                   <div className="flex justify-between items-center p-3 border-b border-gray-100">
                     <span className="font-medium">Pressure Status</span>
-                    <div>
-                      {getStatusIndicator(
-                        asset.id === "3" ? "Poor" : 
-                        asset.id === "2" ? "Fair" : "Good"
-                      )}
-                    </div>
+                    <div>{getStatusIndicator("Good")}</div>
                   </div>
-                  
                   <div className="flex justify-between items-center p-3 border-b border-gray-100">
                     <span className="font-medium">Vibration Status</span>
-                    <div>
-                      {getStatusIndicator(
-                        asset.id === "5" ? "Critical" : 
-                        asset.id === "3" ? "Poor" : "Good"
-                      )}
-                    </div>
+                    <div>{getStatusIndicator("Good")}</div>
                   </div>
-                  
                   <div className="flex justify-between items-center p-3 border-b border-gray-100">
                     <span className="font-medium">Overall Performance</span>
-                    <div>
-                      {getStatusIndicator(
-                        asset.id === "5" ? "Critical" : 
-                        asset.id === "3" ? "Poor" : 
-                        asset.id === "2" ? "Fair" : "Good"
-                      )}
-                    </div>
+                    <div>{getStatusIndicator("Good")}</div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-            
-            {/* Recent Maintenance History */}
-            <Card>
-              <CardHeader className="border-b">
-                <CardTitle>Recent Maintenance History</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-slate-50">
-                      <TableHead className="w-[120px]">Date</TableHead>
-                      <TableHead className="w-[120px]">Type</TableHead>
-                      <TableHead>Description</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {asset.maintenanceHistory?.map((item, index) => (
-                      <TableRow key={index} className="hover:bg-slate-50/50">
-                        <TableCell className="font-medium">{item.date}</TableCell>
-                        <TableCell>
-                          <Badge variant={item.type === "Preventive" ? "outline" : "secondary"} className="font-normal">
-                            {item.type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{item.description}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
               </CardContent>
             </Card>
           </div>
@@ -726,9 +472,9 @@ const RMSAssetDetailPage: React.FC = () => {
       <UptimeEntryModal
         open={isUptimeModalOpen}
         onOpenChange={setIsUptimeModalOpen}
-        assetId={asset.id}
-        assetName={asset.assetName}
-        initialData={assetUptimeData}
+        assetId={asset.id.toString()}
+        assetDetailId={asset.asset_detail_id}
+        assetName={asset.asset_name}
         onSave={handleSaveUptimeData}
       />
     </div>
