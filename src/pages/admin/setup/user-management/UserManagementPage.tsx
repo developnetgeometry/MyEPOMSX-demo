@@ -14,42 +14,38 @@ const UserManagementPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("user-list");
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
-        <PageHeader
-          title="User Management"
-          icon={<Users className="h-6 w-6" />}
-        />
+    <div className="space-y-6">
+      <PageHeader
+        title="User Management"
+        icon={<Users className="h-6 w-6" />}
+      />
 
-        <Card>
-          <CardContent className="pt-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid grid-cols-3 mb-6">
-                <TabsTrigger value="user-list">User List</TabsTrigger>
-                <TabsTrigger value="user-registration">
-                  Register User
-                </TabsTrigger>
-                <TabsTrigger value="project-assignment">
-                  Project Assignment
-                </TabsTrigger>
-              </TabsList>
+      <Card>
+        <CardContent className="pt-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid grid-cols-3 mb-6">
+              <TabsTrigger value="user-list">User List</TabsTrigger>
+              <TabsTrigger value="user-registration">Register User</TabsTrigger>
+              <TabsTrigger value="project-assignment">
+                Project Assignment
+              </TabsTrigger>
+            </TabsList>
 
-              <TabsContent value="user-list">
-                <UserList />
-              </TabsContent>
+            <TabsContent value="user-list">
+              <UserList />
+            </TabsContent>
 
-              <TabsContent value="user-registration">
-                <UserRegistration />
-              </TabsContent>
+            <TabsContent value="user-registration">
+              <UserRegistration />
+            </TabsContent>
 
-              <TabsContent value="project-assignment">
-                <ProjectAssignment />
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-      </div>
-    </AdminLayout>
+            <TabsContent value="project-assignment">
+              <ProjectAssignment />
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
