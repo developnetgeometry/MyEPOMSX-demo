@@ -65,6 +65,8 @@ import { useAssetStatusOptions } from "@/hooks/queries/useAssetStatusOptions";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useQueryClient } from "@tanstack/react-query";
 import { assetKeys } from "@/hooks/queries/useAssets";
+import InstallationFormDialog from "@/components/manage/InstallationFormDialog";
+import InstallationDetailDialog from "@/components/manage/InstallationDetailDialog";
 
 // Dummy data for IoT Tab
 const iotData = [
@@ -147,6 +149,13 @@ const AssetDetailPage: React.FC = () => {
   const [fileUploadError, setFileUploadError] = useState<string | null>(null);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const [isPrinting, setIsPrinting] = useState(false);
+
+  // Installation dialog states
+  const [isInstallationFormOpen, setIsInstallationFormOpen] = useState(false);
+  const [isInstallationDetailOpen, setIsInstallationDetailOpen] =
+    useState(false);
+  const [selectedInstallation, setSelectedInstallation] = useState<any>(null);
+  const [isEditingInstallation, setIsEditingInstallation] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -690,11 +699,61 @@ const AssetDetailPage: React.FC = () => {
   };
 
   const handleAddInstallation = () => {
-    toast({
-      title: "Success",
-      description: "Installation added successfully",
-      variant: "default",
-    });
+    setSelectedInstallation(null);
+    setIsEditingInstallation(false);
+    setIsInstallationFormOpen(true);
+  };
+
+  const handleViewInstallation = (installation: any) => {
+    setSelectedInstallation(installation);
+    setIsInstallationDetailOpen(true);
+  };
+
+  const handleEditInstallation = (installation: any) => {
+    setSelectedInstallation(installation);
+    setIsEditingInstallation(true);
+    setIsInstallationFormOpen(true);
+  };
+
+  const handleDeleteInstallation = async (installationId: number) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this installation record?"
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("e_asset_installation")
+        .delete()
+        .eq("id", installationId);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Success",
+        description: "Installation record deleted successfully",
+      });
+
+      // Refresh the asset data to update the installation list
+      refetch();
+    } catch (error: any) {
+      console.error("Error deleting installation:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete installation record",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleInstallationSuccess = () => {
+    // Refresh the asset data to show updated installations
+    refetch();
   };
 
   const handleAddChildAsset = () => {
@@ -1925,16 +1984,19 @@ const AssetDetailPage: React.FC = () => {
                     <TableHeader>
                       <TableRow className="bg-muted/50">
                         <TableHead className="text-left p-3 font-medium">
-                          Installation Type
-                        </TableHead>
-                        {/* <TableHead className="text-left p-3 font-medium">
-                          Installed Location
-                        </TableHead> */}
-                        <TableHead className="text-left p-3 font-medium">
                           Installation Date
                         </TableHead>
                         <TableHead className="text-left p-3 font-medium">
-                          Remarks
+                          Startup Date
+                        </TableHead>
+                        <TableHead className="text-left p-3 font-medium">
+                          Service Type
+                        </TableHead>
+                        <TableHead className="text-left p-3 font-medium">
+                          EX Certificate
+                        </TableHead>
+                        <TableHead className="text-left p-3 font-medium">
+                          Drawing No
                         </TableHead>
                         <TableHead className="text-left p-3 font-medium">
                           Actions
@@ -1942,27 +2004,71 @@ const AssetDetailPage: React.FC = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody className="divide-y">
-                      {assetInstallation.map((item) => (
-                        <TableRow key={item.id} className="hover:bg-muted/30">
-                          <TableCell className="p-3">
-                            {item.intermittent_service}
-                          </TableCell>
-                          {/* <TableCell className="p-3">
-                            {item.installedLocation}
-                          </TableCell> */}
-                          <TableCell className="p-3">
-                            {formatDate(item.actual_installation_date)}
-                          </TableCell>
-                          <TableCell className="p-3">
-                            {item.description}
-                          </TableCell>
-                          <TableCell className="p-3">
-                            <Button variant="ghost" size="sm">
-                              <Settings className="h-4 w-4" />
-                            </Button>
+                      {assetInstallation && assetInstallation.length > 0 ? (
+                        assetInstallation.map((item) => (
+                          <TableRow key={item.id} className="hover:bg-muted/30">
+                            <TableCell className="p-3">
+                              {item.actual_installation_date
+                                ? formatDate(item.actual_installation_date)
+                                : "-"}
+                            </TableCell>
+                            <TableCell className="p-3">
+                              {item.actual_startup_date
+                                ? formatDate(item.actual_startup_date)
+                                : "-"}
+                            </TableCell>
+                            <TableCell className="p-3">
+                              {item.intermittent_service || "-"}
+                            </TableCell>
+                            <TableCell className="p-3">
+                              {item.ex_certificate || "-"}
+                            </TableCell>
+                            <TableCell className="p-3">
+                              {item.drawing_no || "-"}
+                            </TableCell>
+                            <TableCell className="p-3">
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleViewInstallation(item)}
+                                  className="text-blue-600 hover:text-blue-800"
+                                >
+                                  View
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEditInstallation(item)}
+                                  className="text-green-600 hover:text-green-800"
+                                >
+                                  Edit
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleDeleteInstallation(item.id)
+                                  }
+                                  className="text-red-600 hover:text-red-800"
+                                >
+                                  Delete
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell
+                            colSpan={6}
+                            className="p-8 text-center text-muted-foreground"
+                          >
+                            No installation records found. Click the + button to
+                            add a new installation.
                           </TableCell>
                         </TableRow>
-                      ))}
+                      )}
                     </TableBody>
                   </Table>
                 </div>
@@ -2324,6 +2430,22 @@ const AssetDetailPage: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Installation Dialogs */}
+      <InstallationFormDialog
+        isOpen={isInstallationFormOpen}
+        onClose={() => setIsInstallationFormOpen(false)}
+        onSuccess={handleInstallationSuccess}
+        assetId={Number(id)}
+        installationData={selectedInstallation}
+        isEditMode={isEditingInstallation}
+      />
+
+      <InstallationDetailDialog
+        isOpen={isInstallationDetailOpen}
+        onClose={() => setIsInstallationDetailOpen(false)}
+        installationData={selectedInstallation}
+      />
     </div>
   );
 };
