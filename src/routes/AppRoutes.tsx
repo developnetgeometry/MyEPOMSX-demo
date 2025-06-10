@@ -98,6 +98,8 @@ import CriticalAssetsPage from "@/pages/monitor/CriticalAssetsPage";
 import IMSDashboardPage from "@/pages/monitor/IMSDashboardPage";
 import InspectionDataPage from "@/pages/monitor/InspectionDataPage";
 import IntegrityPage from "@/pages/monitor/IntegrityPage";
+import NewPressureVesselPage from "@/pages/monitor/NewPressureVesselPage";
+import NewPipingPage from "@/pages/monitor/NewPipingPage";
 import InventoryGroupsPage from "@/pages/monitor/InventoryGroupsPage";
 import RBIAssessmentPage from "@/pages/monitor/RBIAssessmentPage";
 import RBIAssessmentDetailPage from "@/pages/monitor/RBIAssessmentDetailPage";
@@ -946,6 +948,26 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <Layout>
               <IntegrityPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/monitor/integrity/new-pressure-vessel"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <NewPressureVesselPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/monitor/integrity/new-piping"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <NewPipingPage />
             </Layout>
           </ProtectedRoute>
         }
