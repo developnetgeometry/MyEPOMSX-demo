@@ -1890,7 +1890,7 @@ const AssetDetailPage: React.FC = () => {
                 <TabsTrigger value="bom">BOM</TabsTrigger>
                 <TabsTrigger value="workOrder">Work Order</TabsTrigger>
                 <TabsTrigger value="attachment">Attachment</TabsTrigger>
-                <TabsTrigger value="integrity">IoT</TabsTrigger>
+                {/* <TabsTrigger value="integrity">IoT</TabsTrigger> */}
               </TabsList>
 
               <TabsContent value="installation" className="pt-4">
