@@ -117,7 +117,7 @@ const Header: React.FC<HeaderProps> = ({
             />
           </div>
 
-          <DropdownMenu>
+          {/* <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
@@ -145,9 +145,9 @@ const Header: React.FC<HeaderProps> = ({
                 View all notifications
               </DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu> */}
 
-          <DropdownMenu>
+          {/* <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
                 <Settings className="h-5 w-5" />
@@ -162,7 +162,7 @@ const Header: React.FC<HeaderProps> = ({
               <DropdownMenuSeparator />
               <DropdownMenuItem>Help Center</DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu> */}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
