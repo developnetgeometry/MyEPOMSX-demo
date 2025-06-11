@@ -368,6 +368,7 @@ export type Database = {
           category_id: number | null
           created_at: string | null
           created_by: string | null
+          criticality_id: number | null
           drawing_no: string | null
           ex_certificate: string | null
           ex_class: string | null
@@ -375,6 +376,7 @@ export type Database = {
           id: number
           iot_sensor_id: number | null
           is_active: boolean | null
+          is_criticality: boolean | null
           is_integrity: boolean | null
           is_reliability: boolean | null
           is_sce: boolean | null
@@ -382,6 +384,7 @@ export type Database = {
           manufacturer_id: number | null
           model: string | null
           parent_asset_id: number | null
+          sce_id: number | null
           serial_number: string | null
           specification: string | null
           type_id: number | null
@@ -396,6 +399,7 @@ export type Database = {
           category_id?: number | null
           created_at?: string | null
           created_by?: string | null
+          criticality_id?: number | null
           drawing_no?: string | null
           ex_certificate?: string | null
           ex_class?: string | null
@@ -403,6 +407,7 @@ export type Database = {
           id?: number
           iot_sensor_id?: number | null
           is_active?: boolean | null
+          is_criticality?: boolean | null
           is_integrity?: boolean | null
           is_reliability?: boolean | null
           is_sce?: boolean | null
@@ -410,6 +415,7 @@ export type Database = {
           manufacturer_id?: number | null
           model?: string | null
           parent_asset_id?: number | null
+          sce_id?: number | null
           serial_number?: string | null
           specification?: string | null
           type_id?: number | null
@@ -424,6 +430,7 @@ export type Database = {
           category_id?: number | null
           created_at?: string | null
           created_by?: string | null
+          criticality_id?: number | null
           drawing_no?: string | null
           ex_certificate?: string | null
           ex_class?: string | null
@@ -431,6 +438,7 @@ export type Database = {
           id?: number
           iot_sensor_id?: number | null
           is_active?: boolean | null
+          is_criticality?: boolean | null
           is_integrity?: boolean | null
           is_reliability?: boolean | null
           is_sce?: boolean | null
@@ -438,6 +446,7 @@ export type Database = {
           manufacturer_id?: number | null
           model?: string | null
           parent_asset_id?: number | null
+          sce_id?: number | null
           serial_number?: string | null
           specification?: string | null
           type_id?: number | null
@@ -446,10 +455,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "e_asset_detail_asset_sce_id_fkey"
+            columns: ["sce_id"]
+            isOneToOne: false
+            referencedRelation: "e_asset_sce"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "e_asset_detail_bom_id_fkey"
             columns: ["bom_id"]
             isOneToOne: false
             referencedRelation: "e_bom_assembly"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "e_asset_detail_criticality_id_fkey"
+            columns: ["criticality_id"]
+            isOneToOne: false
+            referencedRelation: "e_criticality"
             referencedColumns: ["id"]
           },
           {
@@ -2935,6 +2958,8 @@ export type Database = {
           created_by: string | null
           id: number
           material_construction_type: number | null
+          mts_mpa: number | null
+          mys_mpa: number | null
           name: string
           updated_at: string | null
           updated_by: string | null
@@ -2945,6 +2970,8 @@ export type Database = {
           created_by?: string | null
           id?: number
           material_construction_type?: number | null
+          mts_mpa?: number | null
+          mys_mpa?: number | null
           name: string
           updated_at?: string | null
           updated_by?: string | null
@@ -2955,6 +2982,8 @@ export type Database = {
           created_by?: string | null
           id?: number
           material_construction_type?: number | null
+          mts_mpa?: number | null
+          mys_mpa?: number | null
           name?: string
           updated_at?: string | null
           updated_by?: string | null
@@ -3714,6 +3743,7 @@ export type Database = {
           description: string | null
           file_path: string | null
           id: number
+          is_from_pm_schedule: boolean | null
           pm_wo_id: number | null
           updated_at: string | null
           updated_by: string | null
@@ -3724,6 +3754,7 @@ export type Database = {
           description?: string | null
           file_path?: string | null
           id?: number
+          is_from_pm_schedule?: boolean | null
           pm_wo_id?: number | null
           updated_at?: string | null
           updated_by?: string | null
@@ -3734,6 +3765,7 @@ export type Database = {
           description?: string | null
           file_path?: string | null
           id?: number
+          is_from_pm_schedule?: boolean | null
           pm_wo_id?: number | null
           updated_at?: string | null
           updated_by?: string | null
@@ -4078,10 +4110,7 @@ export type Database = {
       }
       e_pm_schedule: {
         Row: {
-          additional_info: string | null
           asset_id: number | null
-          checksheet_attachment: string | null
-          checksheet_notes: string | null
           created_at: string | null
           created_by: string | null
           discipline_id: number | null
@@ -4097,7 +4126,6 @@ export type Database = {
           pm_no: string
           pm_sce_group_id: number | null
           priority_id: number | null
-          service_notes: string | null
           system_id: number | null
           task_id: number | null
           updated_at: string | null
@@ -4105,10 +4133,7 @@ export type Database = {
           work_center_id: number | null
         }
         Insert: {
-          additional_info?: string | null
           asset_id?: number | null
-          checksheet_attachment?: string | null
-          checksheet_notes?: string | null
           created_at?: string | null
           created_by?: string | null
           discipline_id?: number | null
@@ -4124,7 +4149,6 @@ export type Database = {
           pm_no: string
           pm_sce_group_id?: number | null
           priority_id?: number | null
-          service_notes?: string | null
           system_id?: number | null
           task_id?: number | null
           updated_at?: string | null
@@ -4132,10 +4156,7 @@ export type Database = {
           work_center_id?: number | null
         }
         Update: {
-          additional_info?: string | null
           asset_id?: number | null
-          checksheet_attachment?: string | null
-          checksheet_notes?: string | null
           created_at?: string | null
           created_by?: string | null
           discipline_id?: number | null
@@ -4151,7 +4172,6 @@ export type Database = {
           pm_no?: string
           pm_sce_group_id?: number | null
           priority_id?: number | null
-          service_notes?: string | null
           system_id?: number | null
           task_id?: number | null
           updated_at?: string | null
@@ -4241,6 +4261,340 @@ export type Database = {
             columns: ["work_center_id"]
             isOneToOne: false
             referencedRelation: "e_work_center"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      e_pm_schedule_additional_info: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: number
+          pm_schedule_id: number | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: number
+          pm_schedule_id?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: number
+          pm_schedule_id?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "e_pm_schedule_additional_info_pm_schedule_id_fkey"
+            columns: ["pm_schedule_id"]
+            isOneToOne: false
+            referencedRelation: "e_pm_schedule"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      e_pm_schedule_checksheet: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          file_path: string | null
+          id: number
+          is_from_pm_schedule: boolean | null
+          pm_schedule_id: number | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          file_path?: string | null
+          id?: number
+          is_from_pm_schedule?: boolean | null
+          pm_schedule_id?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          file_path?: string | null
+          id?: number
+          is_from_pm_schedule?: boolean | null
+          pm_schedule_id?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "e_pm_schedule_checksheet_schedule_fk"
+            columns: ["pm_schedule_id"]
+            isOneToOne: false
+            referencedRelation: "e_pm_schedule"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      e_pm_schedule_maintainable_group: {
+        Row: {
+          asset_id: number | null
+          created_at: string | null
+          created_by: string | null
+          group_id: number | null
+          id: number
+          pm_schedule_id: number | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          asset_id?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          group_id?: number | null
+          id?: number
+          pm_schedule_id?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          asset_id?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          group_id?: number | null
+          id?: number
+          pm_schedule_id?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "e_pm_schedule_maintainable_group_pm_schedule_id_fkey"
+            columns: ["pm_schedule_id"]
+            isOneToOne: false
+            referencedRelation: "e_pm_schedule"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_schedule_maintainable_group_e_asset_fk"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "e_asset"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_schedule_maintainable_group_e_asset_group_fk"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "e_asset_group"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      e_pm_schedule_min_acceptance_criteria: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          criteria: string | null
+          field_name: string | null
+          id: number
+          pm_schedule_id: number | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          criteria?: string | null
+          field_name?: string | null
+          id?: number
+          pm_schedule_id?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          criteria?: string | null
+          field_name?: string | null
+          id?: number
+          pm_schedule_id?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "e_pm_schedule_min_acceptance_criteria_schedule_fk"
+            columns: ["pm_schedule_id"]
+            isOneToOne: false
+            referencedRelation: "e_pm_schedule"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      e_pm_schedule_plan_labour: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          duration: number | null
+          employee_id: number | null
+          id: number
+          pm_schedule_id: number | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          duration?: number | null
+          employee_id?: number | null
+          id?: number
+          pm_schedule_id?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          duration?: number | null
+          employee_id?: number | null
+          id?: number
+          pm_schedule_id?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "e_pm_schedule_plan_labour_employee_fk"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "e_employee"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "e_pm_schedule_plan_labour_schedule_fk"
+            columns: ["pm_schedule_id"]
+            isOneToOne: false
+            referencedRelation: "e_pm_schedule"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      e_pm_schedule_plan_material: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: number
+          item_id: number | null
+          pm_schedule_id: number | null
+          quantity: number | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          item_id?: number | null
+          pm_schedule_id?: number | null
+          quantity?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          item_id?: number | null
+          pm_schedule_id?: number | null
+          quantity?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "e_pm_schedule_plan_material_item_fk"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "e_item_master"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "e_pm_schedule_plan_material_schedule_fk"
+            columns: ["pm_schedule_id"]
+            isOneToOne: false
+            referencedRelation: "e_pm_schedule"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      e_pm_schedule_task_detail: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: number
+          is_custom: boolean
+          is_deleted: boolean
+          is_template_copy: boolean
+          original_task_detail_id: number | null
+          pm_schedule_id: number | null
+          sequence: number | null
+          task_list: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          is_custom?: boolean
+          is_deleted?: boolean
+          is_template_copy?: boolean
+          original_task_detail_id?: number | null
+          pm_schedule_id?: number | null
+          sequence?: number | null
+          task_list?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          is_custom?: boolean
+          is_deleted?: boolean
+          is_template_copy?: boolean
+          original_task_detail_id?: number | null
+          pm_schedule_id?: number | null
+          sequence?: number | null
+          task_list?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "e_pm_schedule_task_detail_original_fk"
+            columns: ["original_task_detail_id"]
+            isOneToOne: false
+            referencedRelation: "e_task_detail"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "e_pm_schedule_task_detail_schedule_fk"
+            columns: ["pm_schedule_id"]
+            isOneToOne: false
+            referencedRelation: "e_pm_schedule"
             referencedColumns: ["id"]
           },
         ]
@@ -5436,6 +5790,7 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           data_confidence_id: number | null
+          dfextcorrf: number | null
           id: number
           ims_por_assessment_id: number | null
           last_coating_date: string | null
@@ -5447,6 +5802,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           data_confidence_id?: number | null
+          dfextcorrf?: number | null
           id?: number
           ims_por_assessment_id?: number | null
           last_coating_date?: string | null
@@ -5458,6 +5814,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           data_confidence_id?: number | null
+          dfextcorrf?: number | null
           id?: number
           ims_por_assessment_id?: number | null
           last_coating_date?: string | null
@@ -5487,6 +5844,7 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           data_confidence_id: number | null
+          df_ext_cl_scc: number | null
           id: number
           ims_pof_asessment_id: number | null
           inspection_efficiency: number | null
@@ -5499,6 +5857,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           data_confidence_id?: number | null
+          df_ext_cl_scc?: number | null
           id?: number
           ims_pof_asessment_id?: number | null
           inspection_efficiency?: number | null
@@ -5511,6 +5870,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           data_confidence_id?: number | null
+          df_ext_cl_scc?: number | null
           id?: number
           ims_pof_asessment_id?: number | null
           inspection_efficiency?: number | null
@@ -5550,18 +5910,18 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           cyclic_load_type: number | null
-          dmfat: number | null
+          data_confidence_id: number | null
           dmfatfb: number | null
           id: number
           ims_pof_assessment_id: number | null
           joint_branch_design: number | null
           pipe_complexity: number | null
           pipe_condition: number | null
-          previous_failure: number | null
+          previous_failure_id: number | null
           shaking_frequency: number | null
           updated_at: string | null
           updated_by: string | null
-          visible_audible_shaking: number | null
+          visible_audible_shaking_id: number | null
         }
         Insert: {
           brach_diameter?: number | null
@@ -5569,18 +5929,18 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           cyclic_load_type?: number | null
-          dmfat?: number | null
+          data_confidence_id?: number | null
           dmfatfb?: number | null
           id?: number
           ims_pof_assessment_id?: number | null
           joint_branch_design?: number | null
           pipe_complexity?: number | null
           pipe_condition?: number | null
-          previous_failure?: number | null
+          previous_failure_id?: number | null
           shaking_frequency?: number | null
           updated_at?: string | null
           updated_by?: string | null
-          visible_audible_shaking?: number | null
+          visible_audible_shaking_id?: number | null
         }
         Update: {
           brach_diameter?: number | null
@@ -5588,20 +5948,42 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           cyclic_load_type?: number | null
-          dmfat?: number | null
+          data_confidence_id?: number | null
           dmfatfb?: number | null
           id?: number
           ims_pof_assessment_id?: number | null
           joint_branch_design?: number | null
           pipe_complexity?: number | null
           pipe_condition?: number | null
-          previous_failure?: number | null
+          previous_failure_id?: number | null
           shaking_frequency?: number | null
           updated_at?: string | null
           updated_by?: string | null
-          visible_audible_shaking?: number | null
+          visible_audible_shaking_id?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "i_df_mfat_i_data_confidence_fk"
+            columns: ["data_confidence_id"]
+            isOneToOne: false
+            referencedRelation: "i_data_confidence"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_df_mfat_i_previous_failure_fk"
+            columns: ["previous_failure_id"]
+            isOneToOne: false
+            referencedRelation: "i_previous_failure"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_df_mfat_i_visible_audio_shaking_fk"
+            columns: ["visible_audible_shaking_id"]
+            isOneToOne: false
+            referencedRelation: "i_visible_audio_shaking"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       i_df_scc_scc: {
         Row: {
@@ -5712,6 +6094,7 @@ export type Database = {
         Row: {
           agerc: string | null
           data_confidence_id: number | null
+          dfthinfb: number | null
           id: number
           ims_pof_assessment_id: number | null
           last_coating_date: string | null
@@ -5724,6 +6107,7 @@ export type Database = {
         Insert: {
           agerc?: string | null
           data_confidence_id?: number | null
+          dfthinfb?: number | null
           id?: number
           ims_pof_assessment_id?: number | null
           last_coating_date?: string | null
@@ -5736,6 +6120,7 @@ export type Database = {
         Update: {
           agerc?: string | null
           data_confidence_id?: number | null
+          dfthinfb?: number | null
           id?: number
           ims_pof_assessment_id?: number | null
           last_coating_date?: string | null
@@ -5789,8 +6174,38 @@ export type Database = {
         }
         Relationships: []
       }
+      i_header_master: {
+        Row: {
+          code_sheet_id: number
+          header_label: string
+          header_value: number
+          id: number
+        }
+        Insert: {
+          code_sheet_id: number
+          header_label: string
+          header_value: number
+          id?: number
+        }
+        Update: {
+          code_sheet_id?: number
+          header_label?: string
+          header_value?: number
+          id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "i_header_master_code_sheet_id_fkey"
+            columns: ["code_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "i_code_sheet"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       i_ims_asset_type: {
         Row: {
+          code: string | null
           created_at: string | null
           created_by: string | null
           id: number
@@ -5799,6 +6214,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          code?: string | null
           created_at?: string | null
           created_by?: string | null
           id?: number
@@ -5807,6 +6223,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          code?: string | null
           created_at?: string | null
           created_by?: string | null
           id?: number
@@ -6837,6 +7254,125 @@ export type Database = {
         }
         Relationships: []
       }
+      i_previous_failure: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: number
+          name: string | null
+          updated_at: string | null
+          updated_by: string | null
+          value: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          name?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          name?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: number | null
+        }
+        Relationships: []
+      }
+      i_shaking_frequency: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: number
+          name: string | null
+          updated_at: string | null
+          updated_by: string | null
+          value: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          name?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          name?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: number | null
+        }
+        Relationships: []
+      }
+      i_spec_header_value: {
+        Row: {
+          cell_value: number | null
+          header_id: number
+          spec_id: number
+        }
+        Insert: {
+          cell_value?: number | null
+          header_id: number
+          spec_id: number
+        }
+        Update: {
+          cell_value?: number | null
+          header_id?: number
+          spec_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "i_spec_header_value_header_id_fkey"
+            columns: ["header_id"]
+            isOneToOne: false
+            referencedRelation: "i_header_master"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_spec_header_value_spec_id_fkey"
+            columns: ["spec_id"]
+            isOneToOne: false
+            referencedRelation: "i_spec_master"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      i_spec_master: {
+        Row: {
+          code_sheet_id: number
+          id: number
+          spec_code: string
+        }
+        Insert: {
+          code_sheet_id: number
+          id?: number
+          spec_code: string
+        }
+        Update: {
+          code_sheet_id?: number
+          id?: number
+          spec_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "i_spec_master_code_sheet_id_fkey"
+            columns: ["code_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "i_code_sheet"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       i_steelscontent: {
         Row: {
           created_at: string | null
@@ -6861,6 +7397,36 @@ export type Database = {
           name?: string | null
           updated_at?: string | null
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      i_visible_audio_shaking: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: number
+          name: string | null
+          updated_at: string | null
+          updated_by: string | null
+          value: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          name?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          name?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: number | null
         }
         Relationships: []
       }
@@ -7007,6 +7573,7 @@ export type Database = {
           created_when: string | null
           description: string | null
           id: string
+          is_active: boolean
           name: string | null
           priority: number | null
           updated_at: string | null
@@ -7017,6 +7584,7 @@ export type Database = {
           created_when?: string | null
           description?: string | null
           id?: string
+          is_active?: boolean
           name?: string | null
           priority?: number | null
           updated_at?: string | null
@@ -7027,6 +7595,7 @@ export type Database = {
           created_when?: string | null
           description?: string | null
           id?: string
+          is_active?: boolean
           name?: string | null
           priority?: number | null
           updated_at?: string | null
@@ -7069,6 +7638,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_create_user: {
+        Args: {
+          user_email: string
+          user_full_name: string
+          user_type_id: string
+        }
+        Returns: Json
+      }
       admin_update_user_password: {
         Args: { user_id: string; new_password: string }
         Returns: undefined
@@ -7076,6 +7653,14 @@ export type Database = {
       assign_user_to_project: {
         Args: { p_user_id: string; p_project_id: number }
         Returns: undefined
+      }
+      create_admin_user: {
+        Args: {
+          user_email: string
+          user_password: string
+          user_full_name: string
+        }
+        Returns: Json
       }
       direct_query: {
         Args: { query_text: string }

@@ -73,8 +73,8 @@ import SystemDetailPage from "@/pages/manage/SystemDetailPage";
 import PMSchedulePage from "@/pages/maintain/pm-schedule/PMSchedulePage";
 import PMScheduleDetailPage from "@/pages/maintain/pm-schedule/PMScheduleDetailPage";
 import CreatePMSchedulePage from "@/pages/maintain/pm-schedule/CreatePMSchedulePage";
-import TaskLibraryPage from "@/pages/maintain/TaskLibraryPage";
-import TaskLibraryDetailPage from "@/pages/maintain/TaskLibraryDetailPage";
+import TaskLibraryPage from "@/pages/maintain/task-detail/TaskLibraryPage";
+import TaskLibraryDetailPage from "@/pages/maintain/task-detail/TaskLibraryDetailPage";
 
 // Work Orders Pages
 import WOHistoryPage from "@/pages/work-orders/work-order-history/WOHistoryPage";
