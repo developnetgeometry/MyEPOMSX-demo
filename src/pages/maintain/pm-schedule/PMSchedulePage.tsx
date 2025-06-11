@@ -27,6 +27,8 @@ import { Input } from "@/components/ui/input";
 const PMSchedulePage: React.FC = () => {
   const navigate = useNavigate();
   const { data: pmSchedules, isLoading, refetch } = usePmScheduleData();
+  const [start_date, setStartDate] = useState<string | null>(null);
+  const [end_date, setEndDate] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<any | null>(null);
@@ -69,17 +71,41 @@ const PMSchedulePage: React.FC = () => {
 
   const filteredSchedules = useMemo(() => {
     if (!pmSchedules) return [];
-    if (!searchQuery) return pmSchedules;
-    const lower = searchQuery.toLowerCase();
-    return pmSchedules.filter(
-      (schedule: any) =>
-        schedule.pm_no?.toLowerCase().includes(lower) ||
-        schedule.pm_description?.toLowerCase().includes(lower) ||
-        schedule.asset_id?.asset_name?.toLowerCase().includes(lower) ||
-        schedule.work_center_id?.name?.toLowerCase().includes(lower) ||
-        schedule.frequency_id?.name?.toLowerCase().includes(lower)
-    );
-  }, [pmSchedules, searchQuery]);
+    let filtered = pmSchedules;
+
+    // Filter by search query
+    if (searchQuery) {
+      const lower = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (schedule: any) =>
+          schedule.pm_no?.toLowerCase().includes(lower) ||
+          schedule.pm_description?.toLowerCase().includes(lower) ||
+          schedule.asset_id?.asset_name?.toLowerCase().includes(lower) ||
+          schedule.work_center_id?.name?.toLowerCase().includes(lower) ||
+          schedule.frequency_id?.name?.toLowerCase().includes(lower)
+      );
+    }
+
+    // Filter by start_date and end_date
+    if (start_date || end_date) {
+      filtered = filtered.filter((schedule: any) => {
+        const dueDate = new Date(schedule.due_date).getTime();
+        const startDate = start_date ? new Date(start_date).getTime() : null;
+        const endDate = end_date ? new Date(end_date).getTime() : null;
+
+        if (startDate && endDate) {
+          return dueDate >= startDate && dueDate <= endDate;
+        } else if (startDate) {
+          return dueDate >= startDate;
+        } else if (endDate) {
+          return dueDate <= endDate;
+        }
+        return true;
+      });
+    }
+
+    return filtered;
+  }, [pmSchedules, searchQuery, start_date, end_date]);
 
   const columns: Column[] = [
     { id: "pm_no", header: "PM No", accessorKey: "pm_no" },
@@ -122,11 +148,12 @@ const PMSchedulePage: React.FC = () => {
               <Input
                 id="startDate"
                 type="date"
+                value={start_date || ""}
+                onChange={(e) => setStartDate(e.target.value)}
                 className="pl-3 pr-8"
               />
             </div>
           </div>
-
           <div className="space-y-2">
             <label
               htmlFor="endDate"
@@ -138,6 +165,8 @@ const PMSchedulePage: React.FC = () => {
               <Input
                 id="endDate"
                 type="date"
+                value={end_date || ""}
+                onChange={(e) => setEndDate(e.target.value)}
                 className="pl-3 pr-8"
               />
             </div>
@@ -145,6 +174,23 @@ const PMSchedulePage: React.FC = () => {
 
         </div>
 
+        <div className="space-y-2">
+          {(end_date || start_date) && (
+            <div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setStartDate(null);
+                  setEndDate(null);
+                }}
+              >
+                <X className="h-4 w-4 mr-1" />
+                Clear Dates
+              </Button>
+            </div>
+          )}
+        </div>
         <div className="flex gap-2">
           {/* <Button
             className="flex items-center gap-2"
@@ -157,7 +203,7 @@ const PMSchedulePage: React.FC = () => {
           <Button
             variant="outline"
             className="flex items-center gap-2"
-            // onClick={() => navigate("/maintain/pm-schedule/create")}
+          // onClick={() => navigate("/maintain/pm-schedule/create")}
           >
             <Plus className="h-4 w-4" /> Create Work Order
           </Button>
