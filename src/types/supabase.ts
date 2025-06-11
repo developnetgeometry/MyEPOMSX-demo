@@ -7432,6 +7432,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+<<<<<<< Updated upstream
           avatar_url: string | null
           created_at: string
           description: string | null
@@ -7466,6 +7467,39 @@ export type Database = {
           is_deleted?: boolean | null
           updated_at?: string
           user_type_id?: string
+=======
+          asset_detail_id: number | null
+          code: string | null
+          date: string | null
+          id: number
+          planned_shutdown: number | null
+          sum_running_hour: number | null
+          unplanned_shutdown: number | null
+          uptime: number | null
+          description: string | null
+        }
+        Insert: {
+          asset_detail_id?: number | null
+          code?: string | null
+          date?: string | null
+          id?: number
+          planned_shutdown?: number | null
+          sum_running_hour?: number | null
+          unplanned_shutdown?: number | null
+          uptime?: number | null
+          description?: string | null
+        }
+        Update: {
+          asset_detail_id?: number | null
+          code?: string | null
+          date?: string | null
+          id?: number
+          planned_shutdown?: number | null
+          sum_running_hour?: number | null
+          unplanned_shutdown?: number | null
+          uptime?: number | null
+          description?: string | null
+>>>>>>> Stashed changes
         }
         Relationships: [
           {
