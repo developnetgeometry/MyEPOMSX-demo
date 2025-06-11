@@ -267,10 +267,19 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
 
             {/* Asset Select */}
             <div className="space-y-2">
-              <Label htmlFor="asset_id">Asset<span className="text-red-500 ml-1">*</span></Label>
-              <SearchableSelect
-                options={
-                  apsf
+              <Label htmlFor="asset_id">
+                Asset<span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Select
+                value={formData.asset_id?.toString() || ""}
+                onValueChange={(value) => handleSelectChange("asset_id", parseInt(value))}
+                disabled={!formData.package_id} // Disable if no package is selected
+              >
+                <SelectTrigger id="asset_id" className="w-full">
+                  <SelectValue placeholder="Select Asset" />
+                </SelectTrigger>
+                <SelectContent>
+                  {apsf
                     ?.find((project) =>
                       project.facilities.some((facility) =>
                         facility.systems.some((system) =>
@@ -287,41 +296,52 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
                       system.packages.some((packageData) => packageData.id === formData.package_id)
                     )
                     ?.packages.find((packageData) => packageData.id === formData.package_id)
-                    ?.assets || []
-                }
-                value={formData.asset_id}
-                onChange={(value) => handleSelectChange("asset_id", value)}
-                placeholder="Select Asset"
-                searchBy={(asset) => [asset.asset_name, asset.asset_no]} // Search by asset name and number
-                getLabel={(asset) => asset.asset_name} // Display asset name
-                getValue={(asset) => asset.id} // Use asset ID as the value
-                disabled={!formData.package_id} // Disable if no package is selected
-              />
+                    ?.assets.map((asset) => (
+                      <SelectItem key={asset.id} value={asset.id.toString()}>
+                        {asset.asset_name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="cm_sce_code">CM SCE Code</Label>
-              <SearchableSelect
-                options={cmSce || []} // Use the cmSce data
-                value={formData.cm_sce_code}
-                onChange={(value) => handleSelectChange("cm_sce_code", value)}
-                placeholder="Select CM SCE Code"
-                searchBy={(item) => [item.cm_sce_code, item.cm_group_name]} // Search by cm_sce_code and cm_group_name
-                getLabel={(item) => `${item.cm_sce_code} - ${item.cm_group_name}`} // Display cm_sce_code and cm_group_name
-                getValue={(item) => item.id} // Use cm_sce_code as the value
-
-              />
+              <Select
+                value={formData.cm_sce_code?.toString() || ""}
+                onValueChange={(value) => handleSelectChange("cm_sce_code", parseInt(value))}
+              >
+                <SelectTrigger id="cm_sce_code" className="w-full">
+                  <SelectValue placeholder="Select CM SCE Code" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cmSce?.map((item) => (
+                    <SelectItem key={item.id} value={item.id.toString()}>
+                      {item.cm_sce_code} - {item.cm_group_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="work_center_id">Work Center<span className="text-red-500 ml-1">*</span></Label>
-              <SearchableSelect
-                options={workCenter || []} // Use the workCenter data
-                value={formData.work_center_id}
-                onChange={(value) => handleSelectChange("work_center_id", value)}
-                placeholder="Select Work Center"
-                searchBy={(item) => [item.id.toString(), item.code, item.name]} // Search by id, code, and name
-                getLabel={(item) => `${item.code} - ${item.name}`} // Display code and name
-                getValue={(item) => item.id}
-              />
+              <Label htmlFor="work_center_id">
+                Work Center<span className="text-red-500 ml-1">*</span>
+              </Label>
+              <Select
+                value={formData.work_center_id?.toString() || ""}
+                onValueChange={(value) => handleSelectChange("work_center_id", parseInt(value))}
+              >
+                <SelectTrigger id="work_center_id" className="w-full">
+                  <SelectValue placeholder="Select Work Center" />
+                </SelectTrigger>
+                <SelectContent>
+                  {workCenter?.map((item) => (
+                    <SelectItem key={item.id} value={item.id.toString()}>
+                      {item.code} - {item.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="date_finding">Date Finding<span className="text-red-500 ml-1">*</span></Label>

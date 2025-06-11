@@ -139,15 +139,21 @@ const PMScheduleDialogForm: React.FC<PMScheduleDialogFormProps> = ({
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="work_center_id">Work Center</Label>
-                            <SearchableSelect
-                                options={workCenters || []}
-                                value={formData.work_center_id}
-                                onChange={(value) => handleSelectChange("work_center_id", value)}
-                                placeholder="Select Work Center"
-                                searchBy={(item) => [item.code, item.name]}
-                                getLabel={(item) => `${item.code} - ${item.name}`}
-                                getValue={(item) => item.id}
-                            />
+                            <Select
+                                value={formData.work_center_id?.toString() || ""}
+                                onValueChange={(value) => handleSelectChange("work_center_id", parseInt(value))}
+                            >
+                                <SelectTrigger id="work_center_id" className="w-full">
+                                    <SelectValue placeholder="Select Work Center" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {workCenters?.map((workCenter) => (
+                                        <SelectItem key={workCenter.id} value={workCenter.id.toString()}>
+                                            {workCenter.code} - {workCenter.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="discipline_id">Discipline</Label>
