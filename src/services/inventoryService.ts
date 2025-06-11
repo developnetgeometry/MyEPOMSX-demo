@@ -49,11 +49,93 @@ export const inventoryService = {
     };
   },
 
+  async createReceiveInventory(payload: any) {
+    const { data, error } = await supabase.rpc("handle_receive_inventory", {
+      p_inventory_id: payload.inventory_id,
+      p_received_quantity: payload.received_quantity,
+      p_unit_price: payload.unit_price,
+      p_po_receive_no: payload.po_receive_no,
+      p_created_by: payload.created_by,
+      p_remark: payload.remark,
+      p_created_at: payload.created_at,
+    });
+
+    if (error) throw new Error(`Error creating receive: ${error.message}`);
+    return data;
+  },
+
+  async createIssueInventory(payload: any) {
+    const { data, error } = await supabase.rpc("handle_issue_inventory", {
+      p_inventory_id: payload.inventory_id,
+      p_quantity: payload.quantity,
+      p_work_order_no: payload.work_order_no,
+      p_created_by: payload.created_by,
+      p_remark: payload.remark,
+      p_created_at: payload.created_at,
+    });
+
+    if (error) {
+      throw new Error(`Error creating issue: ${error.message}`);
+    }
+    return data;
+  },
+
+  async createReturnInventory(payload: any) {
+    const { data, error } = await supabase.rpc("handle_return_inventory", {
+      p_inventory_id: payload.inventory_id,
+      p_quantity: payload.quantity,
+      p_work_order_no: payload.work_order_no,
+      p_created_by: payload.created_by,
+      p_remark: payload.remark,
+      p_created_at: payload.created_at,
+    });
+
+    if (error) {
+      throw new Error(`Error creating return: ${error.message}`);
+    }
+    return data;
+  },
+
+  async createAdjustmentInventory(payload: any) {
+    const { data, error } = await supabase.rpc("handle_adjustment_inventory", {
+      p_inventory_id: payload.inventory_id,
+      p_quantity: payload.quantity,
+      p_adjustment_type_id: payload.adjustment_type_id,
+      p_adjustment_category_id: payload.adjustment_category_id,
+      p_created_by: payload.created_by,
+      p_remark: payload.remark,
+      p_created_at: payload.created_at,
+    });
+
+    if (error) {
+      throw new Error(`Error creating adjustment: ${error.message}`);
+    }
+    return data;
+  },
+
+  async createTransferInventory(payload: any) {
+    const { data, error } = await supabase.rpc("handle_transfer_inventory", {
+      p_source_inventory_id: payload.inventory_id,
+      p_destination_store_id: payload.store_id,
+      p_quantity: payload.quantity,
+      p_transfer_reason: payload.transfer_reason,
+      p_employee_id: payload.employee_id,
+      p_created_by: payload.created_by,
+      p_remark: payload.remark,
+      p_created_at: payload.created_at,
+    });
+
+    if (error) {
+      throw new Error(`Error creating transfer: ${error.message}`);
+    }
+    return data;
+  },
+
   async getInventoryById(id: number) {
     const { data, error } = await supabase
       .from("e_inventory")
       .select(
-        "*, rack:rack_id(*), store:store_id(*), item_master:item_master_id(*, manu:manufacturer(*), type:type_id(*), category:category_id(*), unit:unit_id(*))"
+        "*, open_balance_date, rack:rack_id(*), store:store_id(*), item_master:item_master_id(*, manu:manufacturer(*), type:type_id(*), category:category_id(*), unit:unit_id(*))"
       )
       .eq("id", id)
       .single();
@@ -69,12 +151,15 @@ export const inventoryService = {
       description: data.item_master?.specification || "",
       store: data.store?.name || "",
       balance: data.open_balance || 0,
+      balanceDate: data.open_balance_date
+        ? formatDate(data.open_balance_date.split("T")[0])
+        : "",
+      currentBalance: data.current_balance || 0,
       minLevel: data.min_level || 0,
       maxLevel: data.max_level || 0,
       reorderLevel: data.reorder_table || 0,
       unitPrice: data.unit_price || 0,
       totalPrice: data.total_price || 0,
-      // @ts-ignore
       rackNo: data.rack?.name || "",
     };
 
@@ -116,76 +201,6 @@ export const inventoryService = {
     if (error) {
       throw new Error(`Error deleting inventory: ${error.message}`);
     }
-  },
-
-  async createReceiveInventory(payload: any) {
-    const { data, error } = await supabase
-      .from("e_inventory_receive")
-      .insert(payload)
-      .select()
-      .single();
-
-    if (error) {
-      throw new Error(`Error creating receive inventory: ${error.message}`);
-    }
-
-    return data;
-  },
-
-  async createIssueInventory(payload: any) {
-    const { data, error } = await supabase
-      .from("e_inventory_issue")
-      .insert(payload)
-      .select()
-      .single();
-
-    if (error) {
-      throw new Error(`Error creating issue inventory: ${error.message}`);
-    }
-
-    return data;
-  },
-
-  async createReturnInventory(payload: any) {
-    const { data, error } = await supabase
-      .from("e_inventory_return")
-      .insert(payload)
-      .select()
-      .single();
-
-    if (error) {
-      throw new Error(`Error creating return inventory: ${error.message}`);
-    }
-
-    return data;
-  },
-
-  async createTransferInventory(payload: any) {
-    const { data, error } = await supabase
-      .from("e_inventory_transfer")
-      .insert(payload)
-      .select()
-      .single();
-
-    if (error) {
-      throw new Error(`Error creating transfer inventory: ${error.message}`);
-    }
-
-    return data;
-  },
-
-  async createAdjustmentInventory(payload: any) {
-    const { data, error } = await supabase
-      .from("e_inventory_adjustment")
-      .insert(payload)
-      .select()
-      .single();
-
-    if (error) {
-      throw new Error(`Error creating adjust inventory: ${error.message}`);
-    }
-
-    return data;
   },
 
   async getSparePartsOptions() {
@@ -286,6 +301,29 @@ export const inventoryService = {
     return data || [];
   },
 
+  // Helper to fetch and map user profiles for created_by fields
+  async mapWithProfiles(data, mapFn) {
+    const userIds = [
+      ...new Set(data.map((item) => item.created_by).filter(Boolean)),
+    ];
+
+    let profileMap = {};
+    if (userIds.length > 0) {
+      const { data: profiles, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .in("id", userIds as string[]);
+      if (profileError) {
+        console.error("Error fetching profiles:", profileError);
+      }
+      profileMap = (profiles || []).reduce((acc, profile) => {
+        acc[profile.id] = profile;
+        return acc;
+      }, {});
+    }
+    return (data || []).map((item) => mapFn(item, profileMap));
+  },
+
   async getReceiveInventory() {
     const { data, error } = await supabase
       .from("e_inventory_receive")
@@ -297,24 +335,23 @@ export const inventoryService = {
       throw error;
     }
 
-    // Map the raw data to the desired shape
-    const mappedData = (data || []).map((item) => ({
+    return await this.mapWithProfiles(data, (item, profileMap) => ({
       id: item.id?.toString() || "",
-      receiveDate: formatDate(item.created_at?.split("T")[0]) || "",
+      receiveDate: item.created_at
+        ? formatDate(item.created_at.split("T")[0])
+        : "",
       po: item.po_receive_no || "",
       quantity: item.received_quantity || 0,
       totalPrice: item.total_price || 0,
-      receiveBy: item.created_by || "",
+      receiveBy: profileMap[item.created_by]?.full_name || "",
     }));
-
-    return mappedData;
   },
 
   async getIssueInventory() {
     const { data, error } = await supabase
       .from("e_inventory_issue")
       .select(
-        "id, issue_date, work_order_no, quantity, created_by, remark, inventory:inventory_id(unit_price, store:store_id(name))"
+        "id, issue_date, work_order:work_order_no(work_order_no), quantity, created_by, remark, inventory:inventory_id(unit_price, store:store_id(name))"
       )
       .order("id");
 
@@ -323,20 +360,19 @@ export const inventoryService = {
       throw error;
     }
 
-    // Map the raw data to the desired shape
-    const mappedData = (data || []).map((item) => ({
+    return await this.mapWithProfiles(data, (item, profileMap) => ({
       id: item.id?.toString() || "",
-      issueDate: formatDate(item.issue_date.split("T")[0]) || "",
-      workOrderNo: item.work_order_no || "",
+      issueDate: item.issue_date
+        ? formatDate(item.issue_date.split("T")[0])
+        : "",
+      workOrderNo: item.work_order.work_order_no || "",
       quantity: item.quantity || 0,
-      unitPrice: item.inventory.unit_price || 0,
-      total: item.quantity * item.inventory.unit_price || 0,
-      store: item.inventory.store.name || "",
-      issuanceName: item.created_by || "",
+      unitPrice: item.inventory?.unit_price || 0,
+      total: (item.quantity || 0) * (item.inventory?.unit_price || 0),
+      store: item.inventory?.store?.name || "",
+      issuanceName: profileMap[item.created_by]?.full_name || "",
       remarks: item.remark || "",
     }));
-
-    return mappedData;
   },
   async getReturnInventory() {
     const { data, error } = await supabase
@@ -351,19 +387,18 @@ export const inventoryService = {
       throw error;
     }
 
-    // Map the raw data to the desired shape
-    const mappedData = (data || []).map((item) => ({
+    return await this.mapWithProfiles(data, (item, profileMap) => ({
       id: item.id?.toString() || "",
-      returnDate: formatDate(item.return_date.split("T")[0]) || "",
-      workOrder: item.work_order.work_order_no || "",
+      returnDate: item.return_date
+        ? formatDate(item.return_date.split("T")[0])
+        : "",
+      workOrder: item.work_order?.work_order_no || "",
       quantity: item.quantity || 0,
-      price: item.inventory.unit_price || 0,
-      total: item.quantity * item.inventory.unit_price || 0,
-      returnName: item.created_by || "",
+      price: item.inventory?.unit_price || 0,
+      total: (item.quantity || 0) * (item.inventory?.unit_price || 0),
+      returnName: profileMap[item.created_by]?.full_name || "",
       remarks: item.remark || "",
     }));
-
-    return mappedData;
   },
   async getAdjustmentInventory() {
     const { data, error } = await supabase
@@ -378,19 +413,18 @@ export const inventoryService = {
       throw error;
     }
 
-    // Map the raw data to the desired shape
-    const mappedData = (data || []).map((item) => ({
+    return await this.mapWithProfiles(data, (item, profileMap) => ({
       id: item.id?.toString() || "",
-      adjustmentDate: formatDate(item.adjustment_date.split("T")[0]) || "",
+      adjustmentDate: item.adjustment_date
+        ? formatDate(item.adjustment_date.split("T")[0])
+        : "",
       quantity: item.quantity || 0,
-      totalQuantity: item.inventory.current_balance + item.quantity || 0,
-      price: item.inventory.unit_price || 0,
-      total: item.quantity * item.inventory.unit_price || 0,
-      authorizedEmployee: item.created_by || "",
+      totalQuantity: (item.inventory?.current_balance || 0),
+      price: item.inventory?.unit_price || 0,
+      total: (item.quantity || 0) * (item.inventory?.unit_price || 0),
+      authorizedEmployee: profileMap[item.created_by]?.full_name || "",
       remarks: item.remark || "",
     }));
-
-    return mappedData;
   },
   async getTransferInventory() {
     const { data, error } = await supabase
@@ -403,6 +437,9 @@ export const inventoryService = {
       remark,
       created_by,
       store_id (
+        name
+      ),
+      employee:employee_id (
         name
       ),
       inventory_id (
@@ -427,9 +464,11 @@ export const inventoryService = {
       toStore: item.store_id?.name || "",
       quantity: item.quantity || 0,
       price: item.inventory_id?.unit_price || 0,
-      employee: item.created_by || "",
+      employee: item.employee.name || "",
       remarks: item.remark || "",
-      transferDate: formatDate(item.transfer_date?.split("T")[0]) || "",
+      transferDate: item.transfer_date
+        ? formatDate(item.transfer_date.split("T")[0])
+        : "",
     }));
 
     return mappedData;
@@ -488,14 +527,46 @@ export const inventoryService = {
       if (adjustmentData.error) throw adjustmentData.error;
       if (transferData.error) throw transferData.error;
 
+      // Collect all unique created_by user IDs from all transaction types
+      const allUserIds = [
+        ...(receiveData.data || []),
+        ...(issueData.data || []),
+        ...(returnData.data || []),
+        ...(adjustmentData.data || []),
+        ...(transferData.data || []),
+      ]
+        .map((item) => item.created_by)
+        .filter(Boolean);
+
+      const uniqueUserIds = [...new Set(allUserIds)];
+
+      // Fetch user profiles and build profileMap
+      let profileMap: Record<string, any> = {};
+      if (uniqueUserIds.length > 0) {
+        const { data: profiles, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .in("id", uniqueUserIds as string[]);
+        if (profileError) {
+          console.error("Error fetching profiles:", profileError);
+        }
+        profileMap = (profiles || []).reduce((acc, profile) => {
+          acc[profile.id] = profile;
+          return acc;
+        }, {} as Record<string, any>);
+      }
+
       const transactions = [];
 
       // Map receive transactions
       (receiveData.data || []).forEach((item) => {
+        
         transactions.push({
           id: `RCV-${item.id}`,
           particulars: "Inventory Receive",
-          transactionDate: formatDate(item.created_at?.split("T")[0]) || "",
+          transactionDate: item.created_at
+            ? formatDate(item.created_at.split("T")[0])
+            : "",
           transactionNo: item.po_receive_no || "",
           quantity: item.received_quantity || 0,
           price:
@@ -504,7 +575,7 @@ export const inventoryService = {
               : 0,
           total: item.total_price || 0,
           store: item.inventory?.store?.name || "",
-          transactionUser: item.created_by || "",
+          transactionUser: profileMap[item.created_by]?.full_name || "",
           remarks: `PO: ${item.po_receive_no || ""}`,
           type: "RECEIVE",
         });
@@ -515,13 +586,15 @@ export const inventoryService = {
         transactions.push({
           id: `ISS-${item.id}`,
           particulars: "Inventory Issue",
-          transactionDate: formatDate(item.issue_date?.split("T")[0]) || "",
+          transactionDate: item.issue_date
+            ? formatDate(item.issue_date.split("T")[0])
+            : "",
           transactionNo: item.work_order_no || "",
           quantity: -(item.quantity || 0), // Negative for issues
           price: item.inventory?.unit_price || 0,
-          total: -(item.quantity * item.inventory?.unit_price || 0), // Negative total
+          total: -((item.quantity || 0) * (item.inventory?.unit_price || 0)), // Negative total
           store: item.inventory?.store?.name || "",
-          transactionUser: item.created_by || "",
+          transactionUser: profileMap[item.created_by]?.full_name || "",
           remarks: item.remark || `Work Order: ${item.work_order_no || ""}`,
           type: "ISSUE",
         });
@@ -532,13 +605,15 @@ export const inventoryService = {
         transactions.push({
           id: `RTN-${item.id}`,
           particulars: "Inventory Return",
-          transactionDate: formatDate(item.return_date?.split("T")[0]) || "",
+          transactionDate: item.return_date
+            ? formatDate(item.return_date.split("T")[0])
+            : "",
           transactionNo: item.work_order?.work_order_no || "",
           quantity: item.quantity || 0, // Positive for returns
           price: item.inventory?.unit_price || 0,
-          total: item.quantity * item.inventory?.unit_price || 0,
+          total: (item.quantity || 0) * (item.inventory?.unit_price || 0),
           store: item.inventory?.store?.name || "",
-          transactionUser: item.created_by || "",
+          transactionUser: profileMap[item.created_by]?.full_name || "",
           remarks:
             item.remark ||
             `Return from WO: ${item.work_order?.work_order_no || ""}`,
@@ -551,14 +626,15 @@ export const inventoryService = {
         transactions.push({
           id: `ADJ-${item.id}`,
           particulars: "Inventory Adjustment",
-          transactionDate:
-            formatDate(item.adjustment_date?.split("T")[0]) || "",
+          transactionDate: item.adjustment_date
+            ? formatDate(item.adjustment_date.split("T")[0])
+            : "",
           transactionNo: `ADJ-${item.id}`,
           quantity: item.quantity || 0, // Can be positive or negative
           price: item.inventory?.unit_price || 0,
-          total: item.quantity * item.inventory?.unit_price || 0,
+          total: (item.quantity || 0) * (item.inventory?.unit_price || 0),
           store: item.inventory?.store?.name || "",
-          transactionUser: item.created_by || "",
+          transactionUser: profileMap[item.created_by]?.full_name || "",
           remarks: item.remark || "Stock adjustment",
           type: "ADJUSTMENT",
         });
@@ -570,13 +646,15 @@ export const inventoryService = {
         transactions.push({
           id: `TRF-OUT-${item.id}`,
           particulars: "Inventory Transfer Out",
-          transactionDate: formatDate(item.transfer_date?.split("T")[0]) || "",
+          transactionDate: item.transfer_date
+            ? formatDate(item.transfer_date.split("T")[0])
+            : "",
           transactionNo: `TRF-${item.id}`,
           quantity: -(item.quantity || 0), // Negative for outgoing
           price: item.inventory?.unit_price || 0,
-          total: -(item.quantity * item.inventory?.unit_price || 0),
+          total: -((item.quantity || 0) * (item.inventory?.unit_price || 0)),
           store: item.inventory?.store?.name || "",
-          transactionUser: item.created_by || "",
+          transactionUser: profileMap[item.created_by]?.full_name || "",
           remarks: item.remark || `Transfer to ${item.to_store?.name || ""}`,
           type: "TRANSFER_OUT",
         });
@@ -585,13 +663,15 @@ export const inventoryService = {
         transactions.push({
           id: `TRF-IN-${item.id}`,
           particulars: "Inventory Transfer In",
-          transactionDate: formatDate(item.transfer_date?.split("T")[0]) || "",
+          transactionDate: item.transfer_date
+            ? formatDate(item.transfer_date.split("T")[0])
+            : "",
           transactionNo: `TRF-${item.id}`,
           quantity: item.quantity || 0, // Positive for incoming
           price: item.inventory?.unit_price || 0,
-          total: item.quantity * item.inventory?.unit_price || 0,
+          total: (item.quantity || 0) * (item.inventory?.unit_price || 0),
           store: item.to_store?.name || "",
-          transactionUser: item.created_by || "",
+          transactionUser: profileMap[item.created_by]?.full_name || "",
           remarks:
             item.remark || `Transfer from ${item.inventory?.store?.name || ""}`,
           type: "TRANSFER_IN",
