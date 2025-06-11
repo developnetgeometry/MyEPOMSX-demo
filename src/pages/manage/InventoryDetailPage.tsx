@@ -1,62 +1,333 @@
+import React, { useState, useMemo } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import PageHeader from "@/components/shared/PageHeader";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ArrowLeft, Package, Plus } from "lucide-react";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { toast } from "sonner";
+import { formatCurrency } from "@/utils/formatters";
+import TransactionModal, {
+  useTransactionModal,
+  createField,
+} from "@/components/ui/TransactionModal";
+import {
+  useInventoryDetail,
+  useReceiveInventory,
+  useIssueInventory,
+  useReturnInventory,
+  useAdjustmentInventory,
+  useTransferInventory,
+  useTransactionInventory,
+  useAddReceiveInventory,
+  useAddIssueInventory,
+  useAddReturnInventory,
+  useAddAdjustmentInventory,
+  useAddTransferInventory,
+  useWorkOrderOptions,
+  useAdjustmentCategoryOptions,
+  useAdjustmentTypeOptions,
+  useEmployeeOptions,
+  useStoreOptions,
+} from "@/hooks/queries/useInventory";
+import { useAuth } from "@/contexts/AuthContext";
 
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import PageHeader from '@/components/shared/PageHeader';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { ArrowLeft, Package, Plus } from 'lucide-react';
-import { inventory } from '@/data/sampleData';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
-import { toast } from 'sonner';
-import { formatCurrency } from '@/utils/formatters';
+interface FieldMapping {
+  [key: string]: string | ((data: any, user: any, inventoryItem: any) => any);
+}
+
+interface ModalConfig {
+  fields: FieldMapping;
+  hook: () => any;
+  table?: string;
+}
 
 const InventoryDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('inventory');
-  
-  // Find the inventory item in sample data
-  const inventoryItem = inventory.find(item => item.id === id);
-  
-  // Sample data for tabs (in a real app, this would come from the database)
-  const receiveData = [
-    { id: '1', date: '2025-04-15', po: 'PO-2025-001', quantity: 5, totalPrice: 500, receiveBy: 'John Smith' },
-    { id: '2', date: '2025-04-10', po: 'PO-2025-002', quantity: 3, totalPrice: 300, receiveBy: 'Jane Doe' },
-  ];
-  
-  const issueData = [
-    { id: '1', date: '2025-04-18', workOrderNo: 'WO-2025-001', quantity: 2, unitPrice: 100, total: 200, store: 'Main Store', issuanceName: 'Robert Johnson', remarks: 'Regular maintenance' },
-    { id: '2', date: '2025-04-20', workOrderNo: 'WO-2025-002', quantity: 1, unitPrice: 100, total: 100, store: 'Main Store', issuanceName: 'Alice Brown', remarks: 'Emergency repair' },
-  ];
-  
-  const returnData = [
-    { id: '1', date: '2025-04-22', workOrder: 'WO-2025-001', quantity: 1, price: 100, total: 100, returnName: 'Robert Johnson', remarks: 'Unused item' },
-  ];
-  
-  const adjustmentData = [
-    { id: '1', date: '2025-04-25', quantity: 3, totalQuantity: 8, price: 100, total: 300, authorizedEmployee: 'Sarah Wilson', remarks: 'Inventory count adjustment' },
-  ];
-  
-  const transferData = [
-    { id: '1', fromStore: 'Main Store', toStore: 'Secondary Store', quantity: 2, price: 100, employee: 'Michael Davis', remarks: 'Store rebalancing', transferDate: '2025-04-26' },
-  ];
-  
-  const transactionData = [
-    { id: '1', particulars: 'Initial Stock', transactionDate: '2025-04-01', transactionNo: 'TRX-2025-001', quantity: 10, price: 100, total: 1000, store: 'Main Store', transactionUser: 'Admin', remarks: 'Opening balance' },
-    { id: '2', particulars: 'Issue', transactionDate: '2025-04-18', transactionNo: 'TRX-2025-002', quantity: -2, price: 100, total: -200, store: 'Main Store', transactionUser: 'Robert Johnson', remarks: 'Regular maintenance' },
-    { id: '3', particulars: 'Return', transactionDate: '2025-04-22', transactionNo: 'TRX-2025-003', quantity: 1, price: 100, total: 100, store: 'Main Store', transactionUser: 'Robert Johnson', remarks: 'Unused item' },
-  ];
-  
+  const [activeTab, setActiveTab] = useState("inventory");
+  const { modalState, openModal, closeModal, setLoading } =
+    useTransactionModal();
+
+  const { data: inventoryItem, isLoading: isLoadingInventoryItem } =
+    useInventoryDetail(id);
+  const { data: receiveData = [], isLoading: isLoadingReceive } =
+    useReceiveInventory();
+  const { data: issueData = [], isLoading: isLoadingIssue } =
+    useIssueInventory();
+  const { data: returnData = [], isLoading: isLoadingReturn } =
+    useReturnInventory();
+  const { data: adjustmentData = [], isLoading: isLoadingAdjustment } =
+    useAdjustmentInventory();
+  const { data: transferData = [], isLoading: isLoadingTransfer } =
+    useTransferInventory();
+  const { data: transactionData = [], isLoading: isLoadingTransaction } =
+    useTransactionInventory();
+  const { data: workOrderOptions = [] } = useWorkOrderOptions();
+  const { data: adjustmentCategoryOptions = [] } = useAdjustmentCategoryOptions();
+  const { data: adjustmentTypeOptions = [] } = useAdjustmentTypeOptions();
+  const { data: employeeOptions = [] } = useEmployeeOptions();
+  const { data: storeOptions = [] } = useStoreOptions();
+console.log(transferData);
+
+  const receiveMutation = useAddReceiveInventory();
+  const issueMutation = useAddIssueInventory();
+  const returnMutation = useAddReturnInventory();
+  const adjustmentMutation = useAddAdjustmentInventory();
+  const transferMutation = useAddTransferInventory();
+
+  const submitMap = {
+    receive: (data: Record<string, any>, user: any, inventoryItem: any) => ({
+      po_receive_no: data.po,
+      received_quantity: data.quantity,
+      unit_price: data.unitPrice,
+      total_price: data.totalPrice,
+      created_by: user.id,
+      remark: data.remarks,
+      inventory_id: Number(inventoryItem.id),
+      created_at: new Date().toISOString(),
+    }),
+    issue: (data: Record<string, any>, user: any, inventoryItem: any) => ({
+      issue_date: data.issueDate,
+      quantity: data.quantity,
+      work_order_no: data.workOrderNo,
+      created_by: user.id,
+      remark: data.remarks,
+      inventory_id: Number(inventoryItem.id),
+      created_at: new Date().toISOString(),
+    }),
+    return: (data: Record<string, any>, user: any, inventoryItem: any) => ({
+      return_date: data.returnDate,
+      quantity: data.quantity,
+      return_reason: data.returnReason,
+      return_by: user.id,
+      created_by: user.id,
+      work_order_no: data.workOrderNo,
+      remark: data.remarks,
+      inventory_id: Number(inventoryItem.id),
+      created_at: new Date().toISOString(),
+    }),
+    adjustment: (data: Record<string, any>, user: any, inventoryItem: any) => ({
+      adjustment_date: data.adjustmentDate,
+      quantity: data.quantity,
+      inventory_id: Number(inventoryItem.id),
+      remark: data.remarks,
+      adjustment_type_id: data.adjustmentType,
+      adjustment_category_id: data.adjustmentCategory,
+      created_by: user.id,
+      created_at: new Date().toISOString(),
+    }),
+    transfer: (data: Record<string, any>, user: any, inventoryItem: any) => ({
+      inventory_id: Number(inventoryItem.id),
+      transfer_date: data.transferDate,
+      transfer_reason: data.transferReason,
+      store_id: data.destinationStore,
+      remark: data.remarks,
+      quantity: data.quantity,
+      employee_id: data.employee,
+      created_by: user.id,
+      created_at: new Date().toISOString(),
+    })
+  };
+
+  const mutationMap = {
+    receive: receiveMutation,
+    issue: issueMutation,
+    return: returnMutation,
+    adjustment: adjustmentMutation,
+    transfer: transferMutation
+  };
+
+  // Custom field configurations
+  const customFieldConfigs = useMemo(
+    () => ({
+      issue: [
+        createField("store", "Store", "select", {
+          required: true,
+          // Default to readonly if store value is provided
+          readonly: !!inventoryItem?.store,
+          disabled: !!inventoryItem?.store,
+        }),
+        createField("issueDate", "Issue Date", "date", { required: true }),
+        createField("quantity", "Quantity", "number", {
+          required: true,
+          min: 1,
+          placeholder: "1",
+        }),
+        createField("workOrderNo", "Work Order No", "select", {
+          required: true,
+          placeholder: "Select Work Order",
+          options: workOrderOptions.map((wo) => ({
+            value: String(wo.id),
+            label: wo.work_order_no,
+          })),
+        }),
+        createField("remarks", "Remarks", "textarea", {
+          placeholder: "Additional notes...",
+        }),
+      ],
+
+      // Other configs can be similarly customized
+      receive: [
+        createField("po", "PO Receive No.", "text", {
+          required: true,
+          placeholder: "e.g., PO-2025-001",
+        }),
+        createField("store", "Store", "text", {
+          required: true,
+          readonly: true,
+          disabled: true,
+        }),
+        createField("receiveDate", "Receive Date", "date", { required: true }),
+        createField("quantity", "Received Quantity", "number", {
+          required: true,
+          min: 1,
+          placeholder: "1",
+        }),
+        createField("unitPrice", "Unit Price", "currency", {
+          required: true,
+          min: 0,
+          placeholder: "0.00",
+        }),
+        createField("totalPrice", "Total Price", "currency", {
+          readonly: true,
+          disabled: true,
+          calculate: (data) => (data.quantity || 0) * (data.unitPrice || 0),
+        }),
+        createField("receiveBy", "Received By", "text", {
+          required: true,
+          readonly: true,
+          disabled: true,
+        }),
+        createField("remarks", "Remarks", "textarea", {
+          placeholder: "Delivery notes, condition, etc...",
+        }),
+      ],
+      return: [
+        createField("returnDate", "Return Date", "date", { required: true }),
+        createField("returnReason", "Return Reason", "text", {
+          required: true,
+          placeholder: "Item Return Reason",
+        }),
+        createField("returnedBy", "Returned By", "text", {
+          required: true,
+          readonly: true,
+          disabled: true,
+        }),
+        createField("workOrderNo", "Work Order No", "select", {
+          required: true,
+          placeholder: "Select Work Order",
+          options: workOrderOptions.map((wo) => ({
+            value: String(wo.id),
+            label: wo.work_order_no,
+          })),
+        }),
+        createField("store", "Store", "select", {
+          required: true,
+          // Default to readonly if store value is provided
+          readonly: !!inventoryItem?.store,
+          disabled: !!inventoryItem?.store,
+        }),
+        createField("quantity", "Returned Quantity", "number", {
+          required: true,
+        }),
+        createField("remarks", "Remarks", "textarea", {
+          placeholder: "Return notes, condition, etc...",
+        }),
+      ],
+      adjustment: [
+        createField("adjustmentType", "Adjustment Type", "radio", {
+          required: true,
+          options: adjustmentTypeOptions.map((type) => ({
+            value: String(type.id),
+            label: type.name,
+          })),
+        }),
+        createField("adjustmentCategory", "Adjustment Category", "radio", {
+          required: true,
+          options: adjustmentCategoryOptions.map((category) => ({
+            value: String(category.id),
+            label: category.name,
+          })),
+        }),
+        createField("adjustmentDate", "Adjustment Date", "date", {
+          required: true,
+        }),
+        createField("quantity", "Adjustment Quantity", "number", {
+          required: true,
+        }),
+        createField("remarks", "Adjustment Reason", "textarea", {
+          required: true,
+          placeholder: "Adjustment Reason",
+        }),
+      ],
+      transfer: [
+        createField("employee", "Employee", "select", {
+          required: true,
+          options: employeeOptions.map((emp) => ({
+            value: String(emp.id),
+            label: emp.name,
+          })),
+        }),
+        createField("transferDate", "Transfer Date", "date", {
+          required: true,
+        }),
+        createField("transferReason", "Transfer Reason", "text", {
+          required: true,
+          placeholder: "Transfer Reason",
+        }),
+        createField("sourceStore", "Source Store", "select", {
+          required: true,
+          readonly: !!inventoryItem?.store,
+          disabled: !!inventoryItem?.store,
+        }),
+        createField("destinationStore", "Destination Store", "select", {
+          required: true,
+          options: storeOptions.map((store) => ({
+            value: String(store.id),
+            label: store.name,
+          }))
+        }),
+        createField("quantity", "Transfer Quantity", "number", {
+          required: true,
+        }),
+        createField("remarks", "Transfer Notes", "textarea", {
+          placeholder: "Transfer notes, condition, etc...",
+        }),
+      ],
+    }),
+    [inventoryItem]
+  );
+
   if (!inventoryItem) {
     return (
       <div className="space-y-6">
-        <PageHeader 
-          title="Inventory Item Not Found" 
+        <PageHeader
+          title="Inventory Item Not Found"
           icon={<Package className="h-6 w-6" />}
         />
-        <Button variant="outline" onClick={() => navigate('/manage/inventory')} className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          onClick={() => navigate("/manage/inventory")}
+          className="flex items-center gap-2"
+        >
           <ArrowLeft className="h-4 w-4" /> Back to Inventory
         </Button>
       </div>
@@ -65,24 +336,233 @@ const InventoryDetailPage: React.FC = () => {
 
   // Function to handle adding new entries
   const handleAddNew = (tabName: string) => {
-    toast.info(`Add new ${tabName} entry - This would open a form modal in a real application`);
+    const modalConfigs = {
+      receive: {
+        title: "Add New Receive Record",
+        type: "receive",
+        initialData: { store: inventoryItem.store, receiveBy: user?.email },
+      },
+      issue: {
+        title: "Add New Issue Record",
+        type: "issue",
+        initialData: {
+          store: inventoryItem.store,
+          workOrderNo: workOrderOptions,
+        },
+      },
+      return: {
+        title: "Add New Return Record",
+        type: "return",
+        initialData: { store: inventoryItem.store, returnedBy: user?.email },
+      },
+      adjustment: {
+        title: "Add New Adjustment Record",
+        type: "adjustment",
+        initialData: {},
+      },
+      transfer: {
+        title: "Add New Transfer Record",
+        type: "transfer",
+        initialData: { sourceStore: inventoryItem.store, },
+      },
+      transaction: {
+        title: "Add New Transaction Record",
+        type: "transaction",
+        initialData: {},
+      },
+    };
+
+    const config = modalConfigs[tabName as keyof typeof modalConfigs];
+    if (config) {
+      openModal(config.type, config.title, config.initialData || {});
+    }
   };
-  
+
+  const handleModalSubmit = async (data: Record<string, any>) => {
+    setLoading(true);
+
+    try {
+      // Simulate API call
+      // await new Promise((resolve) => setTimeout(resolve, 1000));
+      const submitFunction =
+        submitMap[modalState.type as keyof typeof submitMap];
+
+      if (!submitFunction) {
+        throw new Error("Invalid modal type");
+      }
+
+      const transformedData = submitFunction(data, user, inventoryItem);
+
+      console.log(transformedData);
+
+      const mutation = mutationMap[modalState.type];
+      await mutation.mutateAsync(transformedData);
+
+      toast.success(`${modalState.title} saved successfully!`);
+      closeModal();
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast.error(
+        `Failed to save ${modalState.title.toLowerCase()}. Please try again.`
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const columnMapping = {
+    receive: [
+      { header: "Receive Date", key: "receiveDate" },
+      { header: "PO", key: "po" },
+      { header: "Quantity", key: "quantity" },
+      { header: "Total Price", key: "totalPrice", format: "currency" },
+      { header: "Receive By", key: "receiveBy" },
+    ],
+    issue: [
+      { header: "Date", key: "issueDate" },
+      { header: "Work Order No", key: "workOrderNo" },
+      { header: "Quantity", key: "quantity" },
+      { header: "Unit Price", key: "unitPrice", format: "currency" },
+      { header: "Total", key: "total", format: "currency" },
+      { header: "Store", key: "store" },
+      { header: "Issuance Name", key: "issuanceName" },
+      { header: "Remarks", key: "remarks" },
+    ],
+    return: [
+      { header: "Date", key: "returnDate" },
+      { header: "Work Order", key: "workOrder" },
+      { header: "Quantity", key: "quantity" },
+      { header: "Price", key: "price", format: "currency" },
+      { header: "Total", key: "total", format: "currency" },
+      { header: "Return Name", key: "returnName" },
+      { header: "Remarks", key: "remarks" },
+    ],
+    adjustment: [
+      { header: "Date", key: "adjustmentDate" },
+      { header: "Quantity", key: "quantity" },
+      { header: "Total Quantity", key: "totalQuantity" },
+      { header: "Price", key: "price", format: "currency" },
+      { header: "Total", key: "total", format: "currency" },
+      { header: "Authorized Employee", key: "authorizedEmployee" },
+      { header: "Adjustment Reason", key: "remarks" },
+    ],
+    transfer: [
+      { header: "From Store", key: "fromStore" },
+      { header: "To Store", key: "toStore" },
+      { header: "Quantity", key: "quantity" },
+      { header: "Price", key: "price", format: "currency" },
+      { header: "Employee", key: "employee" },
+      { header: "Remarks", key: "remarks" },
+      { header: "Transfer Date", key: "transferDate" },
+    ],
+    transaction: [
+      { header: "Particulars", key: "particulars" },
+      { header: "Transaction Date", key: "transactionDate" },
+      { header: "Transaction No", key: "transactionNo" },
+      { header: "Quantity", key: "quantity" },
+      { header: "Price", key: "price", format: "currency" },
+      { header: "Total", key: "total", format: "currency" },
+      { header: "Store", key: "store" },
+      { header: "Transaction User", key: "transactionUser" },
+      { header: "Remarks", key: "remarks" },
+    ],
+  };
+
+  const renderTabContent = (
+    data: any[],
+    columnMapping: any[],
+    tabName: string
+  ) => (
+    <>
+      {tabName !== "transaction" && (
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-lg font-medium">
+            {tabName.charAt(0).toUpperCase() + tabName.slice(1)} Records
+          </h3>
+          <Button
+            onClick={() => handleAddNew(tabName)}
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" /> Add New
+          </Button>
+        </div>
+      )}
+      <div className="rounded-md border overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {columnMapping.map((col) => (
+                <TableHead key={col.key}>{col.header}</TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.length === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={columnMapping.length}
+                  className="h-24 text-gray-500 text-center"
+                >
+                  No records found.
+                </TableCell>
+              </TableRow>
+            )}
+            {data.map((item) => (
+              <TableRow key={item.id}>
+                {columnMapping.map((col) => (
+                  <TableCell key={`${item.id}-${col.key}`}>
+                    {col.format === "currency"
+                      ? formatCurrency(item[col.key])
+                      : item[col.key]}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      <Pagination className="mt-4">
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious href="#" />
+          </PaginationItem>
+          <PaginationItem>
+            <PaginationLink href="#" isActive>
+              1
+            </PaginationLink>
+          </PaginationItem>
+          <PaginationItem>
+            <PaginationNext href="#" />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    </>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <PageHeader 
-          title={`Inventory Details: ${inventoryItem.itemName}`} 
+        <PageHeader
+          title={`Inventory Details: ${inventoryItem.itemName}`}
           icon={<Package className="h-6 w-6" />}
         />
-        <Button variant="outline" onClick={() => navigate('/manage/inventory')} className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          onClick={() => navigate("/manage/inventory")}
+          className="flex items-center gap-2"
+        >
           <ArrowLeft className="h-4 w-4" /> Back to Inventory
         </Button>
       </div>
-      
+
       <Card>
         <CardContent className="pt-6">
-          <Tabs defaultValue="inventory" onValueChange={setActiveTab} value={activeTab}>
+          <Tabs
+            defaultValue="inventory"
+            onValueChange={setActiveTab}
+            value={activeTab}
+          >
             <TabsList className="mb-6">
               <TabsTrigger value="inventory">Inventory</TabsTrigger>
               <TabsTrigger value="receive">Receive</TabsTrigger>
@@ -92,376 +572,142 @@ const InventoryDetailPage: React.FC = () => {
               <TabsTrigger value="transfer">Transfer</TabsTrigger>
               <TabsTrigger value="transaction">Transaction</TabsTrigger>
             </TabsList>
-            
+
             {/* Inventory Tab */}
             <TabsContent value="inventory">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Spare Part Name</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Spare Part Name
+                  </h3>
                   <p className="text-base">{inventoryItem.itemName}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Store</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Store
+                  </h3>
                   <p className="text-base">{inventoryItem.store}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Opening Balance Quantity</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Opening Balance Quantity
+                  </h3>
                   <p className="text-base">{inventoryItem.balance}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Opening Balance Date</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Opening Balance Date
+                  </h3>
                   <p className="text-base">2025-01-01</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Min Level</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Min Level
+                  </h3>
                   <p className="text-base">{inventoryItem.minLevel}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Max Level</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Max Level
+                  </h3>
                   <p className="text-base">{inventoryItem.maxLevel}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Reorder Level</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Reorder Level
+                  </h3>
                   <p className="text-base">{inventoryItem.reorderLevel}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Current Balance Quantity</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Current Balance Quantity
+                  </h3>
                   <p className="text-base">{inventoryItem.balance}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Unit Price</h3>
-                  <p className="text-base">{formatCurrency(inventoryItem.unitPrice)}</p>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Unit Price
+                  </h3>
+                  <p className="text-base">
+                    {formatCurrency(inventoryItem.unitPrice)}
+                  </p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Total Price</h3>
-                  <p className="text-base">{formatCurrency(inventoryItem.totalPrice)}</p>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Total Price
+                  </h3>
+                  <p className="text-base">
+                    {formatCurrency(inventoryItem.totalPrice)}
+                  </p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Rack No</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Rack No
+                  </h3>
                   <p className="text-base">{inventoryItem.rackNo}</p>
                 </div>
               </div>
             </TabsContent>
-            
+
             {/* Receive Tab */}
             <TabsContent value="receive">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-medium">Receive Records</h3>
-                <Button onClick={() => handleAddNew('receive')} size="sm" className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" /> Add New
-                </Button>
-              </div>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Receive Date</TableHead>
-                      <TableHead>PO</TableHead>
-                      <TableHead>Receiver Quantity</TableHead>
-                      <TableHead>Total Price</TableHead>
-                      <TableHead>Receive By</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {receiveData.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>{item.date}</TableCell>
-                        <TableCell>{item.po}</TableCell>
-                        <TableCell>{item.quantity}</TableCell>
-                        <TableCell>{formatCurrency(item.totalPrice)}</TableCell>
-                        <TableCell>{item.receiveBy}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-              <Pagination className="mt-4">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious href="#" />
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationLink href="#" isActive>1</PaginationLink>
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationNext href="#" />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
+              {renderTabContent(receiveData, columnMapping.receive, "receive")}
             </TabsContent>
-            
+
             {/* Issue Tab */}
             <TabsContent value="issue">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-medium">Issue Records</h3>
-                <Button onClick={() => handleAddNew('issue')} size="sm" className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" /> Add New
-                </Button>
-              </div>
-              <div className="rounded-md border overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Issue Date</TableHead>
-                      <TableHead>Work Order No</TableHead>
-                      <TableHead>Quantity</TableHead>
-                      <TableHead>Unit Price</TableHead>
-                      <TableHead>Total</TableHead>
-                      <TableHead>Store</TableHead>
-                      <TableHead>Issuance Name</TableHead>
-                      <TableHead>Remarks</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {issueData.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>{item.date}</TableCell>
-                        <TableCell>{item.workOrderNo}</TableCell>
-                        <TableCell>{item.quantity}</TableCell>
-                        <TableCell>{formatCurrency(item.unitPrice)}</TableCell>
-                        <TableCell>{formatCurrency(item.total)}</TableCell>
-                        <TableCell>{item.store}</TableCell>
-                        <TableCell>{item.issuanceName}</TableCell>
-                        <TableCell>{item.remarks}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-              <Pagination className="mt-4">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious href="#" />
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationLink href="#" isActive>1</PaginationLink>
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationNext href="#" />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
+              {renderTabContent(issueData, columnMapping.issue, "issue")}
             </TabsContent>
-            
+
             {/* Return Tab */}
             <TabsContent value="return">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-medium">Return Records</h3>
-                <Button onClick={() => handleAddNew('return')} size="sm" className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" /> Add New
-                </Button>
-              </div>
-              <div className="rounded-md border overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Work Order</TableHead>
-                      <TableHead>Quantity</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Total</TableHead>
-                      <TableHead>Return Name</TableHead>
-                      <TableHead>Remarks</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {returnData.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>{item.date}</TableCell>
-                        <TableCell>{item.workOrder}</TableCell>
-                        <TableCell>{item.quantity}</TableCell>
-                        <TableCell>{formatCurrency(item.price)}</TableCell>
-                        <TableCell>{formatCurrency(item.total)}</TableCell>
-                        <TableCell>{item.returnName}</TableCell>
-                        <TableCell>{item.remarks}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-              <Pagination className="mt-4">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious href="#" />
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationLink href="#" isActive>1</PaginationLink>
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationNext href="#" />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
+              {renderTabContent(returnData, columnMapping.return, "return")}
             </TabsContent>
-            
+
             {/* Adjustment Tab */}
             <TabsContent value="adjustment">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-medium">Adjustment Records</h3>
-                <Button onClick={() => handleAddNew('adjustment')} size="sm" className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" /> Add New
-                </Button>
-              </div>
-              <div className="rounded-md border overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Quantity</TableHead>
-                      <TableHead>Total Quantity</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Total</TableHead>
-                      <TableHead>Authorized Employee</TableHead>
-                      <TableHead>Remarks</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {adjustmentData.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>{item.date}</TableCell>
-                        <TableCell>{item.quantity}</TableCell>
-                        <TableCell>{item.totalQuantity}</TableCell>
-                        <TableCell>{formatCurrency(item.price)}</TableCell>
-                        <TableCell>{formatCurrency(item.total)}</TableCell>
-                        <TableCell>{item.authorizedEmployee}</TableCell>
-                        <TableCell>{item.remarks}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-              <Pagination className="mt-4">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious href="#" />
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationLink href="#" isActive>1</PaginationLink>
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationNext href="#" />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
+              {renderTabContent(
+                adjustmentData,
+                columnMapping.adjustment,
+                "adjustment"
+              )}
             </TabsContent>
-            
+
             {/* Transfer Tab */}
             <TabsContent value="transfer">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-medium">Transfer Records</h3>
-                <Button onClick={() => handleAddNew('transfer')} size="sm" className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" /> Add New
-                </Button>
-              </div>
-              <div className="rounded-md border overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>From Store</TableHead>
-                      <TableHead>To Store</TableHead>
-                      <TableHead>Quantity</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Employee</TableHead>
-                      <TableHead>Remarks</TableHead>
-                      <TableHead>Transfer Date</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {transferData.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>{item.fromStore}</TableCell>
-                        <TableCell>{item.toStore}</TableCell>
-                        <TableCell>{item.quantity}</TableCell>
-                        <TableCell>{formatCurrency(item.price)}</TableCell>
-                        <TableCell>{item.employee}</TableCell>
-                        <TableCell>{item.remarks}</TableCell>
-                        <TableCell>{item.transferDate}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-              <Pagination className="mt-4">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious href="#" />
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationLink href="#" isActive>1</PaginationLink>
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationNext href="#" />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
+              {renderTabContent(
+                transferData,
+                columnMapping.transfer,
+                "transfer"
+              )}
             </TabsContent>
-            
+
             {/* Transaction Tab */}
             <TabsContent value="transaction">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-medium">Transaction Records</h3>
-                <Button onClick={() => handleAddNew('transaction')} size="sm" className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" /> Add New
-                </Button>
-              </div>
-              <div className="rounded-md border overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Particulars</TableHead>
-                      <TableHead>Transaction Date</TableHead>
-                      <TableHead>Transaction No</TableHead>
-                      <TableHead>Quantity</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Total</TableHead>
-                      <TableHead>Store</TableHead>
-                      <TableHead>Transaction User</TableHead>
-                      <TableHead>Remarks</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {transactionData.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>{item.particulars}</TableCell>
-                        <TableCell>{item.transactionDate}</TableCell>
-                        <TableCell>{item.transactionNo}</TableCell>
-                        <TableCell>{item.quantity}</TableCell>
-                        <TableCell>{formatCurrency(item.price)}</TableCell>
-                        <TableCell>{formatCurrency(item.total)}</TableCell>
-                        <TableCell>{item.store}</TableCell>
-                        <TableCell>{item.transactionUser}</TableCell>
-                        <TableCell>{item.remarks}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-              <Pagination className="mt-4">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious href="#" />
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationLink href="#" isActive>1</PaginationLink>
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationNext href="#" />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
+              {renderTabContent(
+                transactionData,
+                columnMapping.transaction,
+                "transaction"
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
-      
-      <div className="flex justify-end pt-4 pb-6">
-        <Button 
-          variant="outline" 
-          onClick={() => navigate('/manage/inventory')}
-        >
-          Cancel
-        </Button>
-      </div>
+
+      <TransactionModal
+        isOpen={modalState.isOpen}
+        onClose={closeModal}
+        onSubmit={handleModalSubmit}
+        title={modalState.title}
+        fields={
+          customFieldConfigs[
+            modalState.type as keyof typeof customFieldConfigs
+          ] || []
+        }
+        initialData={modalState.initialData}
+        isLoading={modalState.isLoading}
+        size="lg"
+      />
     </div>
   );
 };
