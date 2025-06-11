@@ -288,13 +288,19 @@ const PMScheduleDialogForm: React.FC<PMScheduleDialogFormProps> = ({
                                 </SelectContent>
                             </Select>
                         </div>
-
                         {/* Asset Select */}
                         <div className="space-y-2">
                             <Label htmlFor="asset_id">Asset<span className="text-red-500 ml-1">*</span></Label>
-                            <SearchableSelect
-                                options={
-                                    apsf
+                            <Select
+                                value={formData.asset_id?.toString() || ""}
+                                onValueChange={(value) => handleSelectChange("asset_id", parseInt(value))}
+                                disabled={!formData.package_id} // Disable if no package is selected
+                            >
+                                <SelectTrigger id="asset_id" className="w-full">
+                                    <SelectValue placeholder="Select Asset" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {apsf
                                         ?.find((project) =>
                                             project.facilities.some((facility) =>
                                                 facility.systems.some((system) =>
@@ -311,16 +317,13 @@ const PMScheduleDialogForm: React.FC<PMScheduleDialogFormProps> = ({
                                             system.packages.some((packageData) => packageData.id === formData.package_id)
                                         )
                                         ?.packages.find((packageData) => packageData.id === formData.package_id)
-                                        ?.assets || []
-                                }
-                                value={formData.asset_id}
-                                onChange={(value) => handleSelectChange("asset_id", value)}
-                                placeholder="Select Asset"
-                                searchBy={(asset) => [asset.asset_name, asset.asset_no]} // Search by asset name and number
-                                getLabel={(asset) => asset.asset_name} // Display asset name
-                                getValue={(asset) => asset.id} // Use asset ID as the value
-                                disabled={!formData.package_id} // Disable if no package is selected
-                            />
+                                        ?.assets.map((asset) => (
+                                            <SelectItem key={asset.id} value={asset.id.toString()}>
+                                                {asset.asset_name}
+                                            </SelectItem>
+                                        ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
                     <div className="flex justify-end space-x-2">
