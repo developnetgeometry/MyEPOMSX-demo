@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -31,45 +31,87 @@ import {
   Plus,
   Trash2,
   Calendar as CalendarIcon,
+  Upload,
 } from "lucide-react";
 import { formatDate } from "@/utils/formatters";
+import * as XLSX from 'xlsx'
+import { useRMSUptime, type UptimeEntry } from "@/hooks/monitor/useRMSUptime";
+import { toast } from '@/hooks/use-toast';
 
-interface UptimeEntry {
-  id: string;
-  date: Date | string;
-  upTime: number;
-  unplannedShutdown: number;
-  plannedShutdown: number;
-  description: string;
-}
+// interface UptimeEntry {
+//   id: string;
+//   date: Date | string;
+//   upTime: number;
+//   unplannedShutdown: number;
+//   plannedShutdown: number;
+//   description: string;
+// }
+
+// interface UptimeEntryModalProps {
+//   open: boolean;
+//   onOpenChange: (open: boolean) => void;
+//   assetId: string;
+//   assetName: string;
+//   initialData?: UptimeEntry[];
+//   onSave: (assetId: string, entries: UptimeEntry[]) => void;
+// }
 
 interface UptimeEntryModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   assetId: string;
+  assetDetailId: number;
   assetName: string;
-  initialData?: UptimeEntry[];
-  onSave: (assetId: string, entries: UptimeEntry[]) => void;
+  onSave?: (assetId: string, entries: UptimeEntry[]) => void;
 }
 
 const UptimeEntryModal: React.FC<UptimeEntryModalProps> = ({
   open,
   onOpenChange,
   assetId,
+  assetDetailId,
   assetName,
-  initialData = [],
   onSave,
 }) => {
-  const [entries, setEntries] = useState<UptimeEntry[]>(initialData);
+  const [entries, setEntries] = useState<UptimeEntry[]>([]);
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const {
+    uptimeData,
+    saveUptimeEntries,
+    isSaving,
+    loading,
+    refetch
+  } = useRMSUptime(assetDetailId);
+
+  // Load existing data when modal opens
+  useEffect(() => {
+    if (open && uptimeData.length > 0) {
+      const convertedEntries: UptimeEntry[] = uptimeData.map((data, index) => ({
+        id: data.id?.toString() || `existing-${index}`,
+        date: new Date(data.date),
+        uptime: data.uptime,
+        unplanned_shutdown: data.unplanned_shutdown,
+        planned_shutdown: data.planned_shutdown,
+        asset_detail_id: data.asset_detail_id,
+        description: data.description || ""
+      }));
+
+      setEntries(convertedEntries);
+    } else if (open && uptimeData.length === 0) {
+      setEntries([]);
+    }
+  }, [open, uptimeData]);
 
   const handleAddRow = () => {
     const newEntry: UptimeEntry = {
       id: `new-${Date.now()}`,
       date: new Date(),
-      upTime: 24,
-      unplannedShutdown: 0,
-      plannedShutdown: 0,
+      uptime: 24,
+      unplanned_shutdown: 0,
+      planned_shutdown: 0,
+      asset_detail_id: assetDetailId,
       description: "",
     };
     setEntries([...entries, newEntry]);
@@ -105,167 +147,427 @@ const UptimeEntryModal: React.FC<UptimeEntryModalProps> = ({
     );
   };
 
-  const handleSave = () => {
-    onSave(assetId, entries);
+  // function to handle csv / excel load data
+  const handleDataLoad = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+
+        // Convert to JSON
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        const processedEntries = processImportedData(jsonData);
+
+        // Add processed entries to existing entries
+        setEntries(prev => [...prev, ...processedEntries]);
+
+        toast({
+          title: "Data loaded successfully.",
+          description: `Imported ${processedEntries.length} records from file.`,
+        });
+      } catch (error) {
+        console.error('Error processing file:', error);
+
+        toast({
+          title: "Import Error",
+          description: "Failed to process the upload file. Please check the file format.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    reader.readAsArrayBuffer(file);
+    
+    // Reset the input
+    event.target.value = '';
+  };
+
+  const processImportedData = (data: any[]): UptimeEntry[] => {
+    if (!data || data.length < 2) return [];
+
+      console.log('Raw Excel data:', data);
+
+    // Find header row
+    let headerRowIndex = -1;
+    let headers: string[] = [];
+
+    for (let i = 0; i < Math.min(5, data.length); i++) {
+      const row = data[i];
+      if (Array.isArray(row)) {
+        const rowStr = row.join('').toLowerCase();
+        if (rowStr.includes('equipment_date') || rowStr.includes('up_time') ||
+            rowStr.includes('uptime') || rowStr.includes('date')) {
+              headerRowIndex = i;
+              headers = row.map((h:any) => String(h).toLowerCase().trim());
+              break;
+        }
+      }
+    }
+
+    if (headerRowIndex === -1) {
+      // If no header found, assume first row is header
+      headerRowIndex = 0;
+      headers = data[0].map((h: any) => String(h).toLowerCase().trim());
+    }
+
+      console.log('Found headers:', headers);
+
+    // Find column indices
+    const dateColIndex = headers.findIndex(h =>
+      h.includes('date') || h.includes('equipment_date') || h.includes('historical_equipment_date')
+    );
+
+    const uptimeColIndex = headers.findIndex(h =>
+      h.includes('up_time') || h.includes('uptime')
+    );
+
+    const unplannedColIndex = headers.findIndex(h =>
+      h.includes('unplanned_shutdown')
+    );
+
+    const plannedColIndex = headers.findIndex(h =>
+      h.includes('planned_shutdown') && !h.includes('unplanned_shutdown')
+    );
+
+    if (dateColIndex === -1 || uptimeColIndex === -1) {
+      throw new Error('Required columns (date, uptime) not found in the file');
+    }
+
+    // Process data rows
+    const processedEntries: UptimeEntry[] =[];
+
+    for (let i = headerRowIndex + 1; i < data.length; i++) {
+      const row = data[i];
+      if (!Array.isArray(row) || row.length === 0) continue;
+
+      // SKip empty rows
+      if (row.every(cell => !cell || String(cell).trim() === '')) continue;
+
+      const dateValue = row[dateColIndex];
+      const uptimeValue = row[uptimeColIndex];
+
+      if (!dateValue || uptimeValue === undefined || uptimeValue === null) continue;
+
+      try {
+        // Parse date - handle various formats
+        let parsedDate: Date;
+
+        if (typeof dateValue === 'number') {
+          // Excel date serial number - convert to JS date
+          const excelEpoch = new Date(1900, 0, 1);
+          parsedDate = new Date(excelEpoch.getTime() + (dateValue - 2) * 24 * 60 * 60 * 1000);
+        } else {
+          // String date
+          parsedDate = new Date(dateValue);
+
+          if (isNaN(parsedDate.getTime())) {
+            const dateStr = String(dateValue).trim();
+
+            // MM/DD/YYYY format
+            const parts = dateStr.split('/');
+            if(parts.length === 3) {
+              parsedDate = new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]));
+            } else {
+              continue; // Skip invalid dates
+            }
+          }
+        }
+
+        if (isNaN(parsedDate.getTime())) continue;
+
+        const uptime = uptimeValue !== null && uptimeValue !== undefined ? 
+          (typeof uptimeValue === 'number' ? uptimeValue : parseFloat(String(uptimeValue))) : 0;
+
+        const unplannedShutdown = unplannedColIndex !== -1 && row[unplannedColIndex] !== null && row[unplannedColIndex] !== undefined ? 
+          (typeof row[unplannedColIndex] === 'number' ? row[unplannedColIndex] : parseFloat(String(row[unplannedColIndex]))) : 0;
+
+          const plannedShutdownRaw = plannedColIndex !== -1 ? row[plannedColIndex] : 0;
+
+        let plannedShutdown = 0;
+
+if (plannedColIndex !== -1 && plannedShutdownRaw !== null && plannedShutdownRaw !== undefined) {
+  if (typeof plannedShutdownRaw === 'number') {
+    plannedShutdown = plannedShutdownRaw;
+    
+    // Check if this might be a percentage (0.5 = 50%, so actual value should be 0.5 * 100 = 50, but you want 5.2)
+    // If the Excel cell was formatted as percentage, 5.2% would be stored as 0.052, but you're getting 0.5
+    // This suggests the value 0.5 is correct but maybe you're looking at the wrong cell
+    
+  } else {
+    const stringValue = String(plannedShutdownRaw).trim();
+    plannedShutdown = parseFloat(stringValue);
+  }
+  
+  // Debug log for the problematic row
+  if (i === headerRowIndex + 4) {
+    console.log(`Row ${i} planned shutdown details:`, {
+      raw: plannedShutdownRaw,
+      rawType: typeof plannedShutdownRaw,
+      stringValue: String(plannedShutdownRaw),
+      parsed: plannedShutdown,
+      columnIndex: plannedColIndex,
+      entireRow: row
+    });
+  }
+}
+
+        console.log(`Row ${i}:`, {
+          uptimeValue,
+          unplannedValue: unplannedColIndex !== -1 ? row[unplannedColIndex] : 'N/A',
+          plannedValue: plannedColIndex !== -1 ? row[plannedColIndex] : 'N/A',
+          parsed: { uptime, unplannedShutdown, plannedShutdown }
+        });
+
+        processedEntries.push({
+          id: `imported-${Date.now()}-${i}`,
+          date: parsedDate,
+          uptime: uptime,
+          unplanned_shutdown: unplannedShutdown,
+          planned_shutdown: plannedShutdown,
+          asset_detail_id: assetDetailId,
+          description: ""
+        });
+
+      } catch (error) {
+        console.warn(`Skipping row ${i} due to parsing error:`, error);
+        continue;
+      }
+    }
+
+    return processedEntries;
+  };
+
+  const handleSave = async () => {
+    try {
+      await saveUptimeEntries(entries);
+
+      if (onSave) {
+        onSave(assetId, entries);
+      }
+
+      // Refresh data and close modal
+      await refetch();
+      onOpenChange(false);
+
+      toast({
+        title: "Success",
+        description: "Uptime data saved successfully.",
+      });
+    } catch (error) {
+      console.error('Save error:', error);
+
+      toast({
+        title: "Save Error",
+        description: "Failed to save uptime data. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCancel = () => {
+    // Reset entries to original data
+    if (uptimeData.length > 0) {
+      const originalEntries: UptimeEntry[] = uptimeData.map((data, index) => ({
+        id: data.id?.toString() || `existing-${index}`,
+        date: new Date(data.date),
+        uptime: data.uptime,
+        unplanned_shutdown: data.unplanned_shutdown,
+        planned_shutdown: data.planned_shutdown,
+        asset_detail_id: data.asset_detail_id,
+        description: data.description || ""
+      }));
+
+      setEntries(originalEntries);
+    } else {
+      setEntries([]);
+    }
+    
     onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px]">
-        <DialogHeader>
-          <DialogTitle>Uptime Entry for {assetName}</DialogTitle>
-          <DialogDescription>
-            Manage uptime data for this asset. Add, edit or delete entries as
-            needed.
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[800px]">
+          <DialogHeader>
+            <DialogTitle>Uptime Entry for {assetName}</DialogTitle>
+            <DialogDescription>
+              Manage uptime data for this asset. Add, edit or delete entries as needed.
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="max-h-[500px] overflow-y-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Up Time (hrs)</TableHead>
-                <TableHead>Unplanned Shutdown (hrs)</TableHead>
-                <TableHead>Planned Shutdown (hrs)</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead className="w-10"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {entries.length === 0 ? (
+          <div className="max-h-[500px] overflow-y-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="text-center py-4 text-gray-500"
-                  >
-                    No entries yet. Add a new row to begin.
-                  </TableCell>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Up Time (hrs)</TableHead>
+                  <TableHead>Unplanned Shutdown (hrs)</TableHead>
+                  <TableHead>Planned Shutdown (hrs)</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead className="w-10"></TableHead>
                 </TableRow>
-              ) : (
-                entries.map((entry) => (
-                  <TableRow key={entry.id}>
-                    <TableCell>
-                      <Popover
-                        open={activePopoverId === entry.id}
-                        onOpenChange={(open) => {
-                          if (open) {
-                            setActivePopoverId(entry.id);
-                          } else {
-                            setActivePopoverId(null);
-                          }
-                        }}
-                      >
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !entry.date && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {entry.date ? (
-                              formatDate(entry.date)
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={
-                              entry.date instanceof Date
-                                ? entry.date
-                                : new Date(entry.date)
-                            }
-                            onSelect={(date) =>
-                              handleDateChange(date, entry.id)
-                            }
-                            initialFocus
-                            className="pointer-events-auto"
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
-                        max="24"
-                        step="0.1"
-                        value={entry.upTime}
-                        onChange={(e) =>
-                          handleInputChange(e, entry.id, "upTime")
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
-                        max="24"
-                        step="0.1"
-                        value={entry.unplannedShutdown}
-                        onChange={(e) =>
-                          handleInputChange(e, entry.id, "unplannedShutdown")
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
-                        max="24"
-                        step="0.1"
-                        value={entry.plannedShutdown}
-                        onChange={(e) =>
-                          handleInputChange(e, entry.id, "plannedShutdown")
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="text"
-                        value={entry.description}
-                        onChange={(e) =>
-                          handleInputChange(e, entry.id, "description")
-                        }
-                        placeholder="Description"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteRow(entry.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
+              </TableHeader>
+              <TableBody>
+                {entries.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={6}
+                      className="text-center py-4 text-gray-500"
+                    >
+                      {loading ? 'Loading uptime data...' : 'No entries yet. Add a new row to begin or load data from file.'}
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                ) : (
+                  entries.map((entry) => (
+                    <TableRow key={entry.id}>
+                      <TableCell>
+                        <Popover
+                          open={activePopoverId === entry.id}
+                          onOpenChange={(open) => {
+                            if (open) {
+                              setActivePopoverId(entry.id);
+                            } else {
+                              setActivePopoverId(null);
+                            }
+                          }}
+                        >
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !entry.date && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {entry.date ? (
+                                formatDate(entry.date)
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={
+                                entry.date instanceof Date
+                                  ? entry.date
+                                  : new Date(entry.date)
+                              }
+                              onSelect={(date) =>
+                                handleDateChange(date, entry.id)
+                              }
+                              initialFocus
+                              className="pointer-events-auto"
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          min="0"
+                          max="24"
+                          step="0.1"
+                          value={entry.uptime}
+                          onChange={(e) =>
+                            handleInputChange(e, entry.id, "uptime")
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          min="0"
+                          max="24"
+                          step="0.1"
+                          value={entry.unplanned_shutdown}
+                          onChange={(e) =>
+                            handleInputChange(e, entry.id, "unplanned_shutdown")
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          min="0"
+                          max="24"
+                          step="0.1"
+                          value={entry.planned_shutdown}
+                          onChange={(e) =>
+                            handleInputChange(e, entry.id, "planned_shutdown")
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="text"
+                          value={entry.description || ''}
+                          onChange={(e) =>
+                            handleInputChange(e, entry.id, "description")
+                          }
+                          placeholder="Description"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteRow(entry.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
 
-        <div className="mt-4 flex justify-between">
-          <Button variant="outline" size="sm" onClick={handleAddRow}>
-            <Plus className="h-4 w-4 mr-1" /> Add Row
-          </Button>
-        </div>
+          <div className="mt-4 flex justify-between">
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={handleAddRow}>
+                <Plus className="h-4 w-4 mr-1" /> Add Row
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleDataLoad}>
+                <Upload className="h-4 w-4 mr-1" /> Data Load
+              </Button>
+            </div>
+          </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave}>Save Changes</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancel}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={isSaving || loading}>
+                {isSaving ? "Saving..." : "Save Changes" }
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Hidden file input */}
+      <input 
+        ref={fileInputRef}
+        type="file"
+        accept=".xlsx,.xls,.csv"
+        onChange={handleFileUpload}
+        style={{ display: 'none' }}
+      />
+    </>
   );
 };
 
