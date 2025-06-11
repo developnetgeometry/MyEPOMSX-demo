@@ -22,9 +22,10 @@ import { X } from "lucide-react";
 
 interface AttachmentTabProps {
   workRequestId: number; // Passed as a prop to this page
+  cmStatusId: number;
 }
 
-const AttachmentTab: React.FC<AttachmentTabProps> = ({ workRequestId }) => {
+const AttachmentTab: React.FC<AttachmentTabProps> = ({ workRequestId, cmStatusId }) => {
   const { data: attachments, isLoading, refetch } = useNewWorkAttachmentData(workRequestId);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAttachment, setEditingAttachment] = useState<any | null>(null);
@@ -63,9 +64,7 @@ const AttachmentTab: React.FC<AttachmentTabProps> = ({ workRequestId }) => {
     try {
       if (editingAttachment) {
         await updateNewWorkAttachmentData(editingAttachment.id, {
-          file: formData.file,
           description: formData.description,
-          work_request_id: workRequestId,
         });
         toast({
           title: "Success",
@@ -105,7 +104,7 @@ const AttachmentTab: React.FC<AttachmentTabProps> = ({ workRequestId }) => {
     <div className="space-y-6 mt-6">
       <PageHeader
         title="Attachments"
-        onAddNew={handleAddNew}
+        onAddNew={cmStatusId == 3 ? null : handleAddNew}
         addNewLabel="New Attachment"
       />
 
@@ -115,8 +114,8 @@ const AttachmentTab: React.FC<AttachmentTabProps> = ({ workRequestId }) => {
         <DataTable
           columns={columns}
           data={attachments || []}
-          onEdit={handleEditAttachment}
-          onDelete={handleDeleteAttachment}
+          onEdit={cmStatusId == 3 ? null : handleEditAttachment}
+          onDelete={cmStatusId == 3 ? null : handleDeleteAttachment}
         />
       )}
 

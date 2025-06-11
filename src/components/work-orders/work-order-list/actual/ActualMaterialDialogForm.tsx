@@ -6,13 +6,13 @@ import Loading from "@/components/shared/Loading"; // Import the Loading compone
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useItemMasterData } from "@/hooks/lookup/lookup-item-master";
 
-interface CmActualMaterialDialogFormProps {
+interface ActualMaterialDialogFormProps {
   onSubmit: (formData: any) => Promise<void>; // Assuming onSubmit is async
   onCancel: () => void;
   initialData?: any; // Optional initial data for editing
 }
 
-const CmActualMaterialDialogForm: React.FC<CmActualMaterialDialogFormProps> = ({ onSubmit, onCancel, initialData }) => {
+const ActualMaterialDialogForm: React.FC<ActualMaterialDialogFormProps> = ({ onSubmit, onCancel, initialData }) => {
   const { data: items, isLoading: isItemLoading } = useItemMasterData();
 
   const [formData, setFormData] = useState({
@@ -93,4 +93,4 @@ const CmActualMaterialDialogForm: React.FC<CmActualMaterialDialogFormProps> = ({
   );
 };
 
-export default CmActualMaterialDialogForm;
+export default ActualMaterialDialogForm;

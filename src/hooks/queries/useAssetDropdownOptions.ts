@@ -19,7 +19,7 @@ export const useAssetTagOptions = () => {
       if (error) throw new Error(error.message);
       return (
         data?.map((row) => ({
-          value: row.id,
+          value: row.id.toString(),
           label: row.name,
           id: row.id,
         })) || []
@@ -45,7 +45,7 @@ export const useAssetGroupOptions = () => {
       if (error) throw new Error(error.message);
       return (
         data?.map((row) => ({
-          value: row.id,
+          value: row.id.toString(),
           label: row.name,
           id: row.id,
         })) || []
@@ -82,7 +82,7 @@ export const useAssetCategoryOptions = () => {
       if (error) throw new Error(error.message);
       return (
         data?.map((row) => ({
-          value: row.id,
+          value: row.id.toString(),
           label: row.name,
           id: row.id,
           asset_category_group_id: row.asset_category_group_id,
@@ -136,7 +136,7 @@ export const useAssetTypeOptions = () => {
       if (error) throw new Error(error.message);
       return (
         data?.map((row) => ({
-          value: row.id,
+          value: row.id.toString(),
           label: row.name,
           id: row.id,
           asset_type_group_id: row.asset_type_group_id,
@@ -186,7 +186,7 @@ export const useAssetClassOptions = () => {
       if (error) throw new Error(error.message);
       return (
         data?.map((row) => ({
-          value: row.id,
+          value: row.id.toString(),
           label: row.name,
           id: row.id,
         })) || []
@@ -212,7 +212,7 @@ export const useManufacturerOptions = () => {
       if (error) throw new Error(error.message);
       return (
         data?.map((row) => ({
-          value: row.id,
+          value: row.id.toString(),
           label: row.name,
           id: row.id,
         })) || []
@@ -238,7 +238,7 @@ export const useAssetAreaOptions = () => {
       if (error) throw new Error(error.message);
       return (
         data?.map((row) => ({
-          value: row.id,
+          value: row.id.toString(),
           label: row.name,
           id: row.id,
         })) || []
@@ -264,9 +264,67 @@ export const useAssetSensorOptions = () => {
       if (error) throw new Error(error.message);
       return (
         data?.map((row) => ({
-          value: row.id,
+          value: row.id.toString(),
           label: row.name,
           id: row.id,
+        })) || []
+      );
+    },
+  });
+};
+
+// Criticality options from e_criticality
+export interface CriticalityOption {
+  value: string;
+  label: string;
+  id: number;
+}
+
+export const useCriticalityOptions = () => {
+  return useQuery<CriticalityOption[]>({
+    queryKey: ["criticality-options"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("e_criticality")
+        .select("id, name")
+        .order("name", { ascending: true });
+      if (error) throw new Error(error.message);
+      return (
+        data?.map((row) => ({
+          value: row.id.toString(),
+          label: row.name,
+          id: row.id,
+        })) || []
+      );
+    },
+  });
+};
+
+// SCE Code options from e_asset_sce
+export interface SCEOption {
+  value: string;
+  label: string;
+  id: number;
+  sce_code: string;
+  group_name: string;
+}
+
+export const useSCEOptions = () => {
+  return useQuery<SCEOption[]>({
+    queryKey: ["sce-options"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("e_asset_sce")
+        .select("id, sce_code, group_name")
+        .order("sce_code", { ascending: true });
+      if (error) throw new Error(error.message);
+      return (
+        data?.map((row) => ({
+          value: row.id.toString(),
+          label: `${row.sce_code} - ${row.group_name || ""}`,
+          id: row.id,
+          sce_code: row.sce_code,
+          group_name: row.group_name,
         })) || []
       );
     },

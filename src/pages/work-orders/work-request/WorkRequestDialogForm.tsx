@@ -13,6 +13,8 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useCmSceData } from "@/hooks/lookup/lookup-cm-sce";
 import { useMaintenanceTypeCmData } from "@/hooks/lookup/lookup-maintenance-types";
 import { usePriorityData } from "@/hooks/lookup/lookup-priority";
+import { useAuth } from "@/contexts/AuthContext";
+import { useProfilesById } from "@/components/work-orders/work-order-list/hooks/use-profile-by-id";
 import { toast } from "@/hooks/use-toast";
 
 interface WorkRequestDialogFormProps {
@@ -22,6 +24,8 @@ interface WorkRequestDialogFormProps {
 }
 
 const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit, onCancel, initialData = null }) => {
+  const { profile, loading: isProfileLoading } = useAuth();
+  const { data: profiles, isLoading: isProfilesLoading } = useProfilesById(profile?.id || "");
   const { data: apsf } = useAssetData();
   const { data: cmStatus } = useCmStatusData();
   const { data: cmSce } = useCmSceData();
@@ -49,12 +53,11 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
       ? new Date(initialData.date_finding).toISOString().split("T")[0]
       : null,
     maintenance_type: initialData?.maintenance_type?.id || null,
-    requested_by: initialData?.requested_by || null,
+    requested_by: initialData?.requested_by?.id || profile?.id || "",
     priority_id: initialData?.priority_id?.id || null,
     finding_detail: initialData?.finding_detail || null,
     anomaly_report: initialData?.anomaly_report || null,
     quick_incident_report: initialData?.quick_incident_report || null,
-    work_request_prefix: initialData?.work_request_prefix || "",
     work_request_no: initialData?.work_request_no || "",
   });
 
@@ -76,30 +79,6 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
     }));
   };
 
-  useEffect(() => {
-    if (formData.facility_id && formData.work_request_date) {
-      const facility = apsf
-        ?.find((project) =>
-          project.facilities.some((facility) => facility.id === formData.facility_id)
-        )
-        ?.facilities.find((facility) => facility.id === formData.facility_id);
-
-      const locationAbbr = facility?.location_name
-        ?.split(" ")
-        .map((word) => word[0])
-        .join("")
-        .toUpperCase() || "XXX";
-
-      const yearSuffix = formData.work_request_date.slice(2, 4) || "YY";
-
-      const newPrefix = `WR-${locationAbbr}-CM-${yearSuffix}/`;
-
-      setFormData((prev) => ({
-        ...prev,
-        work_request_prefix: newPrefix,
-      }));
-    }
-  }, [formData.facility_id, formData.work_request_date, apsf]);
 
   const showValidationError = (description: string) => {
     toast({
@@ -134,6 +113,10 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
     }
   };
 
+  if (isProfileLoading || isProfilesLoading) {
+    return <Loading />;
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {isLoading ? ( // Show the Loading component if isLoading is true
@@ -142,30 +125,17 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* <pre>{JSON.stringify(initialData, null, 2)}</pre> */}
-            <div className={`space-y-2 ${initialData?.work_request_no ? 'hidden' : ''}`}>
-              <Label htmlFor="work_request_prefix">Work Request No</Label>
-              <Input
-                id="work_request_prefix"
-                name="work_request_prefix"
-                placeholder="...auto-generated..."
-                value={formData.work_request_prefix}
-                onChange={handleInputChange}
-                required
-                disabled
-              />
-            </div>
 
-            <div className={`space-y-2 ${!initialData?.work_request_no ? 'hidden' : ''}`}>
+            <div className="space-y-2">
               <Label htmlFor="work_request_no">Work Request No</Label>
               <Input
                 id="work_request_no"
                 name="work_request_no"
-                value={formData.work_request_no}
+                value={formData.work_request_no || "Auto Generated"} // Show "Auto Generated" if work_request_no is null or empty
                 onChange={handleInputChange}
                 disabled
               />
             </div>
-
 
             <div className="space-y-2">
               <Label htmlFor="cm_status_id">CM Status</Label>
@@ -382,13 +352,22 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="requested_by">Requested By<span className="text-red-500 ml-1">*</span></Label>
-              <Input
-                id="requested_by"
-                name="requested_by"
-                value={formData.requested_by || ""}
-                onChange={handleInputChange}
-              />
+              <Label htmlFor="requested_by">Requested By</Label>
+              <Select
+                value={formData.requested_by}
+                onValueChange={(value) => handleSelectChange("requested_by", value)}
+              >
+                <SelectTrigger id="requested_by" className="w-full">
+                  <SelectValue placeholder="Select Requested By" />
+                </SelectTrigger>
+                <SelectContent>
+                  {profiles?.map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      {user.full_name} ({user.email})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="priority_id">Priority<span className="text-red-500 ml-1">*</span></Label>

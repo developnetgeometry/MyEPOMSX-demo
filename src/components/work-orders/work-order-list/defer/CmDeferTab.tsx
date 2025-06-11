@@ -6,8 +6,8 @@ import {
   insertCmDeferData,
   updateCmDeferData,
   deleteCmDeferData,
-} from "../hooks/use-cm-defer-data";
-import CmDeferDialogForm from "./CmDeferDialogForm";
+} from "../hooks/cm/use-cm-defer-data";
+import DeferDialogForm from "./DeferDialogForm";
 import {
   Dialog,
   DialogContent,
@@ -94,6 +94,11 @@ const CmDeferTab: React.FC<CmDeferTabProps> = ({ cmGeneralId }) => {
     { id: "previous_due_date", header: "Previous Due Date", accessorKey: "previous_due_date", cell: (value: any) => formatDate(value) },
     { id: "new_due_date", header: "New Due Date", accessorKey: "new_due_date", cell: (value: any) => formatDate(value) },
     { id: "remarks", header: "Remarks", accessorKey: "remarks" },
+    {
+      id: "requested_by",
+      header: "Requested By",
+      accessorKey: "requested_by.full_name",
+    },
   ];
 
   return (
@@ -133,7 +138,7 @@ const CmDeferTab: React.FC<CmDeferTabProps> = ({ cmGeneralId }) => {
             </div>
           </DialogHeader>
 
-          <CmDeferDialogForm
+          <DeferDialogForm
             onSubmit={handleFormSubmit}
             onCancel={() => setIsDialogOpen(false)}
             initialData={editingDefer}

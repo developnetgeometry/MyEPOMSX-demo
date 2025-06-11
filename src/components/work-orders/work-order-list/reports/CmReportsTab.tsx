@@ -6,7 +6,7 @@ import {
   insertCmReportData,
   updateCmReportData,
   deleteCmReportData,
-} from "../hooks/use-cm-report-data";
+} from "../hooks/cm/use-cm-report-data";
 import ReportsDialogForm from "@/components/work-orders/work-request/reports/ReportsDialogForm";
 import {
   Dialog,
@@ -31,11 +31,11 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface CmReportsTabProps {
-  workRequestId: number; // Passed as a prop to this page
+  cmGeneralId: number; // Passed as a prop to this page
 }
 
-const CmReportsTab: React.FC<CmReportsTabProps> = ({ workRequestId }) => {
-  const { data: reports, isLoading, refetch } = useCmReportData(workRequestId);
+const CmReportsTab: React.FC<CmReportsTabProps> = ({ cmGeneralId }) => {
+  const { data: reports, isLoading, refetch } = useCmReportData(cmGeneralId);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingReport, setEditingReport] = useState<any | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -94,7 +94,7 @@ const CmReportsTab: React.FC<CmReportsTabProps> = ({ workRequestId }) => {
           variant: "default",
         });
       } else {
-        await insertCmReportData({ ...formData, work_request_id: workRequestId });
+        await insertCmReportData({ ...formData, cm_general_id: cmGeneralId });
         toast({
           title: "Success",
           description: "Report added successfully!",
@@ -115,11 +115,13 @@ const CmReportsTab: React.FC<CmReportsTabProps> = ({ workRequestId }) => {
 
   return (
     <div className="space-y-6 mt-6">
-      <PageHeader
-        title="Reports"
-        onAddNew={reports?.length >= 1 ? null : handleAddNew}
-        addNewLabel="New Report"
-      />
+      {(reports &&
+        <PageHeader
+          title="Reports"
+          onAddNew={reports?.length >= 1 ? null : handleAddNew}
+          addNewLabel="New Report"
+        />
+      )}
       {isLoading ? (
         <Loading />
       ) : (
@@ -132,73 +134,73 @@ const CmReportsTab: React.FC<CmReportsTabProps> = ({ workRequestId }) => {
                 key={report?.id}
                 className="border rounded-lg p-4 shadow-sm bg-white"
               >
-                  <div className="flex gap-6 flex-wrap md:flex-nowrap">
-                    {/* Environment Detail */}
-                    <div className="w-full md:w-1/2">
-                      <h5 className="text-md font-semibold mb-2 text-xl">Environment Detail</h5>
-                      <div className="grid grid-cols-2 gap-4 mt-4">
-                        <div className="font-medium text-gray-600">Weather Condition</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.weather_condition?.trim() || "-"}</div>
+                <div className="flex gap-6 flex-wrap md:flex-nowrap">
+                  {/* Environment Detail */}
+                  <div className="w-full md:w-1/2">
+                    <h5 className="text-md font-semibold mb-2 text-xl">Environment Detail</h5>
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div className="font-medium text-gray-600">Weather Condition</div>
+                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.weather_condition?.trim() || "-"}</div>
 
-                        <div className="font-medium text-gray-600">Visibility</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.visibility?.trim() || "-"}</div>
+                      <div className="font-medium text-gray-600">Visibility</div>
+                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.visibility?.trim() || "-"}</div>
 
-                        <div className="font-medium text-gray-600">Wind Speed & Direction</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.wind_speed_direction?.trim() || "-"}</div>
+                      <div className="font-medium text-gray-600">Wind Speed & Direction</div>
+                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.wind_speed_direction?.trim() || "-"}</div>
 
-                        <div className="font-medium text-gray-600">Sea Well</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.sea_well?.trim() || "-"}</div>
+                      <div className="font-medium text-gray-600">Sea Well</div>
+                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.sea_well?.trim() || "-"}</div>
 
-                        <div className="font-medium text-gray-600">Alarm Trigger</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.alarm_trigger?.trim() || "-"}</div>
+                      <div className="font-medium text-gray-600">Alarm Trigger</div>
+                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.alarm_trigger?.trim() || "-"}</div>
 
-                        <div className="font-medium text-gray-600">Time Failed</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.time_failed?.trim() || "-"}</div>
+                      <div className="font-medium text-gray-600">Time Failed</div>
+                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.time_failed?.trim() || "-"}</div>
 
-                        <div className="font-medium text-gray-600">Time Resume</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.time_resume?.trim() || "-"}</div>
+                      <div className="font-medium text-gray-600">Time Resume</div>
+                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.time_resume?.trim() || "-"}</div>
 
-                        <div className="font-medium text-gray-600">Shift</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.shift?.trim() || "-"}</div>
+                      <div className="font-medium text-gray-600">Shift</div>
+                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.shift?.trim() || "-"}</div>
 
-                        <div className="font-medium text-gray-600">Redundant</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.redundant?.trim() || "-"}</div>
+                      <div className="font-medium text-gray-600">Redundant</div>
+                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.redundant?.trim() || "-"}</div>
 
-                        <div className="font-medium text-gray-600">Other Detail</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.other_detail?.trim() || "-"}</div>
+                      <div className="font-medium text-gray-600">Other Detail</div>
+                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.other_detail?.trim() || "-"}</div>
 
-                        <div className="font-medium text-gray-600">Shutdown Type</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.shutdown_type_id?.name?.trim() || "-"}</div>
-                      </div>
-                    </div>
-
-                    {/* Operation Detail */}
-                    <div className="w-full md:w-1/2">
-                      <h5 className="text-md font-semibold mb-2 text-xl">Operation Detail</h5>
-                      <div className="grid grid-cols-2 gap-4 mt-4">
-                        <div className="font-medium text-gray-600">Service Asset</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.service_asset?.trim() || "-"}</div>
-
-                        <div className="font-medium text-gray-600">Pressure</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.pressure?.trim() || "-"}</div>
-
-                        <div className="font-medium text-gray-600">Temperature</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.temp?.trim() || "-"}</div>
-
-                        <div className="font-medium text-gray-600">Operating History</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.operating_history?.trim() || "-"}</div>
-
-                        <div className="font-medium text-gray-600">Time in Service (hr)</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.time_in_servicehr?.trim() || "-"}</div>
-
-                        <div className="font-medium text-gray-600">Material Class</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.material_class_id?.name?.trim() || "-"}</div>
-
-                        <div className="font-medium text-gray-600">Design Code</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.design_code?.trim() || "-"}</div>
-                      </div>
+                      <div className="font-medium text-gray-600">Shutdown Type</div>
+                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.shutdown_type_id?.name?.trim() || "-"}</div>
                     </div>
                   </div>
+
+                  {/* Operation Detail */}
+                  <div className="w-full md:w-1/2">
+                    <h5 className="text-md font-semibold mb-2 text-xl">Operation Detail</h5>
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div className="font-medium text-gray-600">Service Asset</div>
+                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.service_asset?.trim() || "-"}</div>
+
+                      <div className="font-medium text-gray-600">Pressure</div>
+                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.pressure?.trim() || "-"}</div>
+
+                      <div className="font-medium text-gray-600">Temperature</div>
+                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.temp?.trim() || "-"}</div>
+
+                      <div className="font-medium text-gray-600">Operating History</div>
+                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.operating_history?.trim() || "-"}</div>
+
+                      <div className="font-medium text-gray-600">Time in Service (hr)</div>
+                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.time_in_servicehr?.trim() || "-"}</div>
+
+                      <div className="font-medium text-gray-600">Material Class</div>
+                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.material_class_id?.name?.trim() || "-"}</div>
+
+                      <div className="font-medium text-gray-600">Design Code</div>
+                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.design_code?.trim() || "-"}</div>
+                    </div>
+                  </div>
+                </div>
 
                 <div className="flex justify-end space-x-2 mt-4">
                   <Button

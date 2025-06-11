@@ -8,7 +8,7 @@ export const useCmDeferData = (cmGeneralId: number) => {
       const { data, error } = await supabase
         .from("e_cm_defer")
         .select(
-          "id, cm_general_id, previous_due_date, requested_by, remarks, new_due_date"
+          "id, cm_general_id, previous_due_date, requested_by (id, email, full_name), remarks, new_due_date"
         )
         .eq("cm_general_id", cmGeneralId);
 

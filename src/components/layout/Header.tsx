@@ -33,7 +33,7 @@ const Header: React.FC<HeaderProps> = ({
   isSidebarOpen,
   toggleSidebar,
 }) => {
-  const { currentProject, setCurrentProject, projects } = useProject();
+  const { currentProject, setCurrentProject, projects, loading } = useProject();
 
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
@@ -117,7 +117,7 @@ const Header: React.FC<HeaderProps> = ({
             />
           </div>
 
-          <DropdownMenu>
+          {/* <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
@@ -145,9 +145,9 @@ const Header: React.FC<HeaderProps> = ({
                 View all notifications
               </DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu> */}
 
-          <DropdownMenu>
+          {/* <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
                 <Settings className="h-5 w-5" />
@@ -162,7 +162,7 @@ const Header: React.FC<HeaderProps> = ({
               <DropdownMenuSeparator />
               <DropdownMenuItem>Help Center</DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu> */}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -188,21 +188,33 @@ const Header: React.FC<HeaderProps> = ({
                 <span>Current Project</span>
               </DropdownMenuLabel>
               <div className="px-2 py-1.5">
-                <Select
-                  onValueChange={handleProjectChange}
-                  defaultValue={currentProject.id}
-                >
-                  <SelectTrigger className="w-full border focus-visible:ring-0">
-                    <SelectValue placeholder={currentProject.name} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {projects.map((project) => (
-                      <SelectItem key={project.id} value={project.id}>
-                        {project.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {loading ? (
+                  <div className="text-sm text-gray-500">
+                    Loading projects...
+                  </div>
+                ) : projects.length > 0 ? (
+                  <Select
+                    onValueChange={handleProjectChange}
+                    defaultValue={currentProject?.id}
+                  >
+                    <SelectTrigger className="w-full border focus-visible:ring-0">
+                      <SelectValue
+                        placeholder={currentProject?.name || "Select project"}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {projects.map((project) => (
+                        <SelectItem key={project.id} value={project.id}>
+                          {project.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="text-sm text-gray-500">
+                    No projects assigned
+                  </div>
+                )}
               </div>
 
               <DropdownMenuSeparator />

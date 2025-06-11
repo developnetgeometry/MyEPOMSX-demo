@@ -71,60 +71,16 @@ export const insertNewWorkAttachmentData = async (attachmentData: {
 export const updateNewWorkAttachmentData = async (
   id: number,
   updatedData: {
-    file?: File;
     description?: string;
-    work_request_id: number;
   }
 ) => {
   try {
-    const { file, description, work_request_id } = updatedData;
+    const { description } = updatedData;
 
-    // Fetch the existing record to get the old file path
-    const { data: existingData, error: fetchError } = await supabase
-      .from("e_new_work_attachment")
-      .select("file_path")
-      .eq("id", id)
-      .single();
-
-    if (fetchError) {
-      console.error("Error fetching existing attachment data:", fetchError);
-      throw fetchError;
-    }
-
-    // Delete the old file from storage if a new file is provided
-    if (file && existingData?.file_path) {
-      const oldStoragePath = existingData.file_path.replace(`/${BUCKET_NAME_ATTACHMENT}/`, "");
-      const { error: deleteError } = await supabase.storage
-        .from(BUCKET_NAME_ATTACHMENT)
-        .remove([oldStoragePath]);
-
-      if (deleteError) {
-        console.error("Error deleting old file from storage:", deleteError);
-        throw deleteError;
-      }
-    }
-
-    // Upload the new file to storage if provided
-    let newFilePath = existingData.file_path;
-    if (file) {
-      const fileName = `${work_request_id}_${Date.now()}_${file.name}`;
-      const storagePath = `${ATTACHMENT_TYPE}/${fileName}`;
-      newFilePath = `/${BUCKET_NAME_ATTACHMENT}/${storagePath}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from(BUCKET_NAME_ATTACHMENT)
-        .upload(storagePath, file);
-
-      if (uploadError) {
-        console.error("Error uploading new file to storage:", uploadError);
-        throw uploadError;
-      }
-    }
-
-    // Update the record in the database
+    // Update only the description in the database
     const { data, error } = await supabase
       .from("e_new_work_attachment")
-      .update({ file_path: newFilePath, description })
+      .update({ description })
       .eq("id", id);
 
     if (error) {
@@ -138,7 +94,6 @@ export const updateNewWorkAttachmentData = async (
     throw err;
   }
 };
-
 export const deleteNewWorkAttachmentData = async (id: number) => {
   try {
     // Fetch the existing record to get the file path

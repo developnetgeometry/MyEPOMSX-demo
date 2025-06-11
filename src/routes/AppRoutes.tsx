@@ -8,6 +8,7 @@ import Index from "@/pages/Index";
 import Overview from "@/pages/Overview";
 
 // Admin Pages
+import AdminDashboard from "@/pages/admin/Dashboard";
 import ClientPage from "@/pages/admin/setup/client/ClientPage";
 import ClientDetailPage from "@/pages/admin/setup/client/ClientDetailPage";
 // import CompanyPage from "@/pages/admin/setup/CompanyPage";
@@ -21,6 +22,7 @@ import SensorDetailPage from "@/pages/admin/setup/sensor/SensorDetailPage";
 import WorkCenterPage from "@/pages/admin/setup/work-center/WorkCenterPage";
 import WorkCenterDetailPage from "@/pages/admin/setup/work-center/WorkCenterDetailPage";
 import UserManagementPage from "@/pages/admin/setup/user-management";
+import LookupManagementPage from "@/pages/admin/setup/lookup-management";
 
 // Settings Pages
 import AssetClassPage from "@/pages/admin/settings/AssetClassPage";
@@ -71,8 +73,10 @@ import SystemDetailPage from "@/pages/manage/SystemDetailPage";
 import PMSchedulePage from "@/pages/maintain/pm-schedule/PMSchedulePage";
 import PMScheduleDetailPage from "@/pages/maintain/pm-schedule/PMScheduleDetailPage";
 import CreatePMSchedulePage from "@/pages/maintain/pm-schedule/CreatePMSchedulePage";
-import TaskLibraryPage from "@/pages/maintain/TaskLibraryPage";
-import TaskLibraryDetailPage from "@/pages/maintain/TaskLibraryDetailPage";
+import TaskLibraryPage from "@/pages/maintain/task-detail/TaskLibraryPage";
+import TaskLibraryDetailPage from "@/pages/maintain/task-detail/TaskLibraryDetailPage";
+
+// Work Orders Pages
 import WOHistoryPage from "@/pages/work-orders/work-order-history/WOHistoryPage";
 import WOHistoryDetailPage from "@/pages/work-orders/work-order-history/WOHistoryDetailPage";
 import WorkOrderDetailPage from "@/pages/work-orders/work-order-list/WorkOrderListDetailPage";
@@ -94,6 +98,9 @@ import CriticalAssetsPage from "@/pages/monitor/CriticalAssetsPage";
 import IMSDashboardPage from "@/pages/monitor/IMSDashboardPage";
 import InspectionDataPage from "@/pages/monitor/InspectionDataPage";
 import IntegrityPage from "@/pages/monitor/IntegrityPage";
+import NewPressureVesselPage from "@/pages/monitor/NewPressureVesselPage";
+import NewPipingPage from "@/pages/monitor/NewPipingPage";
+import FormulaTestingPage from "@/pages/monitor/FormulaTestingPage";
 import InventoryGroupsPage from "@/pages/monitor/InventoryGroupsPage";
 import RBIAssessmentPage from "@/pages/monitor/RBIAssessmentPage";
 import RBIAssessmentDetailPage from "@/pages/monitor/RBIAssessmentDetailPage";
@@ -118,12 +125,16 @@ import GoodsReceivePage from "@/pages/purchasing/GoodsReceivePage";
 import GoodsReceiveDetailPage from "@/pages/purchasing/GoodsReceiveDetailPage";
 import GoodsReceiveFormPage from "@/pages/purchasing/GoodsReceiveFormPage";
 import InventoryAddPage from "@/pages/manage/InventoryAddPage";
+import ItemMasterAddPage from "@/pages/manage/ItemMasterAddPage";
 
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
       {/* Public auth route */}
       <Route path="/auth" element={<AuthRoute />} />
+
+      {/* Redirect /login to /auth for compatibility */}
+      <Route path="/login" element={<AuthRoute />} />
 
       {/* Redirect root to auth for unauthenticated users */}
       <Route path="/" element={<AuthRoute />} />
@@ -153,6 +164,14 @@ const AppRoutes: React.FC = () => {
       />
 
       {/* Admin Routes */}
+      <Route
+        path="/admin/dashboard"
+        element={
+          <ProtectedRoute>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/admin/setup/client"
         element={
@@ -279,6 +298,16 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <Layout>
               <UserManagementPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/setup/lookup-management"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <LookupManagementPage />
             </Layout>
           </ProtectedRoute>
         }
@@ -598,6 +627,16 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route
+        path="/manage/items-master/add"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <ItemMasterAddPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/manage/items-master"
         element={
           <ProtectedRoute>
@@ -749,6 +788,7 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
+
       {/* Work Orders Routes */}
       <Route
         path="/work-orders/work-request"
@@ -760,7 +800,6 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/work-orders/work-request/:id"
         element={
@@ -771,7 +810,6 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/work-orders/work-order-list"
         element={
@@ -782,7 +820,6 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/work-orders/work-order-list/:id"
         element={
@@ -793,7 +830,6 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/work-orders/wo-history"
         element={
@@ -804,7 +840,6 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/work-orders/wo-history/:id"
         element={
@@ -925,6 +960,36 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <Layout>
               <IntegrityPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/monitor/integrity/new-pressure-vessel"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <NewPressureVesselPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/monitor/integrity/new-piping"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <NewPipingPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/monitor/formula-testing"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <FormulaTestingPage />
             </Layout>
           </ProtectedRoute>
         }

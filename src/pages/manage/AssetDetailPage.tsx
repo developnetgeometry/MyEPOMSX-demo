@@ -58,11 +58,15 @@ import {
   useAssetTypeOptions,
   useManufacturerOptions,
   useAssetAreaOptions,
+  useCriticalityOptions,
+  useSCEOptions,
 } from "@/hooks/queries/useAssetDropdownOptions";
 import { useAssetStatusOptions } from "@/hooks/queries/useAssetStatusOptions";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useQueryClient } from "@tanstack/react-query";
 import { assetKeys } from "@/hooks/queries/useAssets";
+import InstallationFormDialog from "@/components/manage/InstallationFormDialog";
+import InstallationDetailDialog from "@/components/manage/InstallationDetailDialog";
 
 // Dummy data for IoT Tab
 const iotData = [
@@ -137,12 +141,21 @@ const AssetDetailPage: React.FC = () => {
   const { data: typeOptions = [] as any[] } = useAssetTypeOptions();
   const { data: manufacturerOptions = [] as any[] } = useManufacturerOptions();
   const { data: areaOptions = [] as any[] } = useAssetAreaOptions();
+  const { data: criticalityOptions = [] as any[] } = useCriticalityOptions();
+  const { data: sceOptions = [] as any[] } = useSCEOptions();
 
   // For file upload
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileUploadError, setFileUploadError] = useState<string | null>(null);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const [isPrinting, setIsPrinting] = useState(false);
+
+  // Installation dialog states
+  const [isInstallationFormOpen, setIsInstallationFormOpen] = useState(false);
+  const [isInstallationDetailOpen, setIsInstallationDetailOpen] =
+    useState(false);
+  const [selectedInstallation, setSelectedInstallation] = useState<any>(null);
+  const [isEditingInstallation, setIsEditingInstallation] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -167,6 +180,11 @@ const AssetDetailPage: React.FC = () => {
     isReliability: false,
     isActive: true,
     iotSensorId: "",
+    // Criticality and SCE fields
+    isCriticality: false,
+    isSce: false,
+    criticalityId: "",
+    sceId: "",
     // Installation fields
     exClass: "",
     exCertificate: "",
@@ -192,6 +210,14 @@ const AssetDetailPage: React.FC = () => {
         is_reliability?: boolean;
         is_active?: boolean;
         iot_sensor_id?: number;
+        is_criticality?: boolean;
+        is_sce?: boolean;
+        criticality_id?: number;
+        sce_id?: number;
+        ex_class?: string;
+        ex_certificate?: string;
+        drawing_no?: string;
+        description?: string;
       };
 
       type Installation = {
@@ -230,14 +256,31 @@ const AssetDetailPage: React.FC = () => {
         isActive: assetDetail.is_active !== false, // Default to true if null
         iotSensorId: assetDetail.iot_sensor_id?.toString() || "",
 
+        // Criticality and SCE fields
+        isCriticality: assetDetail.is_criticality || false,
+        isSce: assetDetail.is_sce || false,
+        criticalityId: assetDetail.criticality_id?.toString() || "",
+        sceId: assetDetail.sce_id?.toString() || "",
+
         // Installation fields
-        exClass: installation.ex_class || "",
-        exCertificate: installation.ex_certificate || "",
-        drawingNo: installation.drawing_no || "",
-        description: installation.description || "",
+        exClass: assetDetail.ex_class || "",
+        exCertificate: assetDetail.ex_certificate || "",
+        drawingNo: assetDetail.drawing_no || "",
+        description: assetDetail.description || "",
       });
     }
   }, [asset]);
+
+  // Auto-clear success message after 3 seconds
+  useEffect(() => {
+    if (formSubmissionSuccess) {
+      const timer = setTimeout(() => {
+        setFormSubmissionSuccess(false);
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [formSubmissionSuccess]);
 
   const assetDetails = asset?.asset_detail;
   const bomID = assetDetails?.bom_id;
@@ -265,10 +308,27 @@ const AssetDetailPage: React.FC = () => {
       });
     }
 
-    setFormData({
-      ...formData,
-      [field]: value,
-    });
+    // Handle criticality and SCE checkbox logic
+    if (field === "isCriticality") {
+      // When Criticality checkbox is unchecked, reset the criticality dropdown value
+      setFormData({
+        ...formData,
+        [field]: value,
+        criticalityId: value ? formData.criticalityId : "",
+      });
+    } else if (field === "isSce") {
+      // When SCE checkbox is unchecked, reset the SCE dropdown value
+      setFormData({
+        ...formData,
+        [field]: value,
+        sceId: value ? formData.sceId : "",
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [field]: value,
+      });
+    }
 
     // Clear any general submission errors
     if (formSubmissionError) {
@@ -329,6 +389,10 @@ const AssetDetailPage: React.FC = () => {
           is_reliability?: boolean;
           is_active?: boolean;
           iot_sensor_id?: number;
+          is_criticality?: boolean;
+          is_sce?: boolean;
+          criticality_id?: number;
+          sce_id?: number;
         };
 
         type Installation = {
@@ -366,6 +430,12 @@ const AssetDetailPage: React.FC = () => {
           isReliability: assetDetail.is_reliability || false,
           isActive: assetDetail.is_active !== false,
           iotSensorId: assetDetail.iot_sensor_id?.toString() || "",
+
+          // Criticality and SCE fields
+          isCriticality: assetDetail.is_criticality || false,
+          isSce: assetDetail.is_sce || false,
+          criticalityId: assetDetail.criticality_id?.toString() || "",
+          sceId: assetDetail.sce_id?.toString() || "",
 
           // Installation fields
           exClass: installation.ex_class || "",
@@ -480,6 +550,16 @@ const AssetDetailPage: React.FC = () => {
             is_integrity: formData.isIntegrity,
             is_reliability: formData.isReliability,
             is_active: formData.isActive,
+            is_criticality: formData.isCriticality,
+            is_sce: formData.isSce,
+            criticality_id:
+              formData.criticalityId && formData.isCriticality
+                ? parseInt(formData.criticalityId)
+                : null,
+            sce_id:
+              formData.sceId && formData.isSce
+                ? parseInt(formData.sceId)
+                : null,
             iot_sensor_id: formData.iotSensorId
               ? parseInt(formData.iotSensorId)
               : null,
@@ -619,11 +699,61 @@ const AssetDetailPage: React.FC = () => {
   };
 
   const handleAddInstallation = () => {
-    toast({
-      title: "Success",
-      description: "Installation added successfully",
-      variant: "default",
-    });
+    setSelectedInstallation(null);
+    setIsEditingInstallation(false);
+    setIsInstallationFormOpen(true);
+  };
+
+  const handleViewInstallation = (installation: any) => {
+    setSelectedInstallation(installation);
+    setIsInstallationDetailOpen(true);
+  };
+
+  const handleEditInstallation = (installation: any) => {
+    setSelectedInstallation(installation);
+    setIsEditingInstallation(true);
+    setIsInstallationFormOpen(true);
+  };
+
+  const handleDeleteInstallation = async (installationId: number) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this installation record?"
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("e_asset_installation")
+        .delete()
+        .eq("id", installationId);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Success",
+        description: "Installation record deleted successfully",
+      });
+
+      // Refresh the asset data to update the installation list
+      refetch();
+    } catch (error: any) {
+      console.error("Error deleting installation:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete installation record",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleInstallationSuccess = () => {
+    // Refresh the asset data to show updated installations
+    refetch();
   };
 
   const handleAddChildAsset = () => {
@@ -901,8 +1031,16 @@ const AssetDetailPage: React.FC = () => {
                 }</span>
               </div>
               <div class="detail-item">
-                <span class="label">EC Class</span>
+                <span class="label">EX Class</span>
                 <span class="value">${formData.exClass || "-"}</span>
+              </div>
+              <div class="detail-item">
+                <span class="label">EX Certificate</span>
+                <span class="value">${formData.exCertificate || "-"}</span>
+              </div>
+              <div class="detail-item">
+                <span class="label">Drawing No</span>
+                <span class="value">${formData.drawingNo || "-"}</span>
               </div>
               <div class="detail-item">
                 <span class="label">Active</span>
@@ -1427,7 +1565,7 @@ const AssetDetailPage: React.FC = () => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium">EC Class</label>
+                <label className="text-sm font-medium">EX Class</label>
                 <Input
                   value={formData.exClass}
                   onChange={(e) => handleChange("exClass", e.target.value)}
@@ -1435,16 +1573,132 @@ const AssetDetailPage: React.FC = () => {
                 />
               </div>
 
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">EX Certificate</label>
+                <Input
+                  value={formData.exCertificate}
+                  onChange={(e) =>
+                    handleChange("exCertificate", e.target.value)
+                  }
+                  readOnly={!isEditing}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Drawing No</label>
+                <Input
+                  value={formData.drawingNo}
+                  onChange={(e) => handleChange("drawingNo", e.target.value)}
+                  readOnly={!isEditing}
+                />
+              </div>
+
               <div className="col-span-2 grid grid-cols-2 gap-4 pt-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="criticality"
-                    checked={true}
-                    disabled={!isEditing}
-                  />
-                  <label htmlFor="criticality" className="text-sm font-medium">
-                    Criticality
-                  </label>
+                {/* Criticality Section */}
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="criticality"
+                      checked={formData.isCriticality}
+                      onCheckedChange={(checked) =>
+                        handleChange("isCriticality", !!checked)
+                      }
+                      disabled={!isEditing}
+                    />
+                    <label
+                      htmlFor="criticality"
+                      className="text-sm font-medium"
+                    >
+                      Criticality
+                    </label>
+                  </div>
+
+                  {/* Show criticality dropdown if checkbox is checked */}
+                  {formData.isCriticality && (
+                    <div className="mt-2">
+                      {isEditing ? (
+                        <Select
+                          value={formData.criticalityId}
+                          onValueChange={(value) =>
+                            handleChange("criticalityId", value)
+                          }
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Criticality Level" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.isArray(criticalityOptions) &&
+                              criticalityOptions.map((option) => (
+                                <SelectItem
+                                  key={option.id}
+                                  value={String(option.value)}
+                                >
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <div className="text-sm text-gray-600">
+                          {criticalityOptions.find(
+                            (opt) => opt.value === formData.criticalityId
+                          )?.label || "Not selected"}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* SCE Section */}
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="sce"
+                      checked={formData.isSce}
+                      onCheckedChange={(checked) =>
+                        handleChange("isSce", !!checked)
+                      }
+                      disabled={!isEditing}
+                    />
+                    <label htmlFor="sce" className="text-sm font-medium">
+                      SCE Code
+                    </label>
+                  </div>
+
+                  {/* Show SCE dropdown if checkbox is checked */}
+                  {formData.isSce && (
+                    <div className="mt-2">
+                      {isEditing ? (
+                        <Select
+                          value={formData.sceId}
+                          onValueChange={(value) =>
+                            handleChange("sceId", value)
+                          }
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select SCE Code" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.isArray(sceOptions) &&
+                              sceOptions.map((option) => (
+                                <SelectItem
+                                  key={option.id}
+                                  value={String(option.value)}
+                                >
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <div className="text-sm text-gray-600">
+                          {sceOptions.find(
+                            (opt) => opt.value === formData.sceId
+                          )?.label || "Not selected"}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center space-x-2">
@@ -1695,7 +1949,7 @@ const AssetDetailPage: React.FC = () => {
                 <TabsTrigger value="bom">BOM</TabsTrigger>
                 <TabsTrigger value="workOrder">Work Order</TabsTrigger>
                 <TabsTrigger value="attachment">Attachment</TabsTrigger>
-                <TabsTrigger value="integrity">IoT</TabsTrigger>
+                {/* <TabsTrigger value="integrity">IoT</TabsTrigger> */}
               </TabsList>
 
               <TabsContent value="installation" className="pt-4">
@@ -1730,16 +1984,19 @@ const AssetDetailPage: React.FC = () => {
                     <TableHeader>
                       <TableRow className="bg-muted/50">
                         <TableHead className="text-left p-3 font-medium">
-                          Installation Type
-                        </TableHead>
-                        {/* <TableHead className="text-left p-3 font-medium">
-                          Installed Location
-                        </TableHead> */}
-                        <TableHead className="text-left p-3 font-medium">
                           Installation Date
                         </TableHead>
                         <TableHead className="text-left p-3 font-medium">
-                          Remarks
+                          Startup Date
+                        </TableHead>
+                        <TableHead className="text-left p-3 font-medium">
+                          Service Type
+                        </TableHead>
+                        <TableHead className="text-left p-3 font-medium">
+                          EX Certificate
+                        </TableHead>
+                        <TableHead className="text-left p-3 font-medium">
+                          Drawing No
                         </TableHead>
                         <TableHead className="text-left p-3 font-medium">
                           Actions
@@ -1747,27 +2004,71 @@ const AssetDetailPage: React.FC = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody className="divide-y">
-                      {assetInstallation.map((item) => (
-                        <TableRow key={item.id} className="hover:bg-muted/30">
-                          <TableCell className="p-3">
-                            {item.intermittent_service}
-                          </TableCell>
-                          {/* <TableCell className="p-3">
-                            {item.installedLocation}
-                          </TableCell> */}
-                          <TableCell className="p-3">
-                            {formatDate(item.actual_installation_date)}
-                          </TableCell>
-                          <TableCell className="p-3">
-                            {item.description}
-                          </TableCell>
-                          <TableCell className="p-3">
-                            <Button variant="ghost" size="sm">
-                              <Settings className="h-4 w-4" />
-                            </Button>
+                      {assetInstallation && assetInstallation.length > 0 ? (
+                        assetInstallation.map((item) => (
+                          <TableRow key={item.id} className="hover:bg-muted/30">
+                            <TableCell className="p-3">
+                              {item.actual_installation_date
+                                ? formatDate(item.actual_installation_date)
+                                : "-"}
+                            </TableCell>
+                            <TableCell className="p-3">
+                              {item.actual_startup_date
+                                ? formatDate(item.actual_startup_date)
+                                : "-"}
+                            </TableCell>
+                            <TableCell className="p-3">
+                              {item.intermittent_service || "-"}
+                            </TableCell>
+                            <TableCell className="p-3">
+                              {item.ex_certificate || "-"}
+                            </TableCell>
+                            <TableCell className="p-3">
+                              {item.drawing_no || "-"}
+                            </TableCell>
+                            <TableCell className="p-3">
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleViewInstallation(item)}
+                                  className="text-blue-600 hover:text-blue-800"
+                                >
+                                  View
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEditInstallation(item)}
+                                  className="text-green-600 hover:text-green-800"
+                                >
+                                  Edit
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleDeleteInstallation(item.id)
+                                  }
+                                  className="text-red-600 hover:text-red-800"
+                                >
+                                  Delete
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell
+                            colSpan={6}
+                            className="p-8 text-center text-muted-foreground"
+                          >
+                            No installation records found. Click the + button to
+                            add a new installation.
                           </TableCell>
                         </TableRow>
-                      ))}
+                      )}
                     </TableBody>
                   </Table>
                 </div>
@@ -2129,6 +2430,22 @@ const AssetDetailPage: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Installation Dialogs */}
+      <InstallationFormDialog
+        isOpen={isInstallationFormOpen}
+        onClose={() => setIsInstallationFormOpen(false)}
+        onSuccess={handleInstallationSuccess}
+        assetId={Number(id)}
+        installationData={selectedInstallation}
+        isEditMode={isEditingInstallation}
+      />
+
+      <InstallationDetailDialog
+        isOpen={isInstallationDetailOpen}
+        onClose={() => setIsInstallationDetailOpen(false)}
+        installationData={selectedInstallation}
+      />
     </div>
   );
 };

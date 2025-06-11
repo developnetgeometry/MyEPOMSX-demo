@@ -14,10 +14,10 @@ export const useWorkRequestData = () => {
                     package_id (id, package_no, package_tag, package_name), 
                     asset_id (id, asset_name), cm_sce_code (id, cm_group_name, cm_sce_code ), 
                     work_center_id (id, code, name), date_finding, 
-                    maintenance_type (id, code, name), requested_by, 
+                    maintenance_type (id, code, name), requested_by (id, email, full_name), 
                     priority_id (id, name), 
                     finding_detail, anomaly_report, quick_incident_report,
-                    work_request_no, work_request_prefix, is_work_order_created`
+                    work_request_no, is_work_order_created`
                 )
                 .order("id", { ascending: false });
 
@@ -38,7 +38,7 @@ export const useWorkRequestData = () => {
 };
 export const useWorkRequestDataById = (id: number) => {
     return useQuery({
-        queryKey: ["e-new-work-request-data", id],
+        queryKey: ["e-new-work-request-data-id", id],
         queryFn: async () => {
             try {
                 // Fetch data from e_new_work_request
@@ -51,10 +51,10 @@ export const useWorkRequestDataById = (id: number) => {
             package_id (id, package_no, package_tag, package_name), 
             asset_id (id, asset_name), cm_sce_code (id, cm_group_name, cm_sce_code ), 
             work_center_id (id, code, name), date_finding, 
-            maintenance_type (id, code, name), requested_by, 
+            maintenance_type (id, code, name), requested_by (id, email, full_name), 
             priority_id (id, name), 
             finding_detail, anomaly_report, quick_incident_report,
-            work_request_no, work_request_prefix, is_work_order_created`
+            work_request_no, is_work_order_created`
                     )
                     .eq("id", id)
                     .single();
@@ -114,7 +114,6 @@ export const insertWorkRequestData = async (workRequestData: {
     finding_detail?: string;
     anomaly_report?: boolean;
     quick_incident_report?: boolean;
-    work_request_prefix?: string;
 }) => {
     try {
         const { data, error } = await supabase
@@ -153,7 +152,6 @@ export const updateWorkRequestData = async (
         finding_detail?: string;
         anomaly_report?: boolean;
         quick_incident_report?: boolean;
-        work_request_prefix?: string;
         is_work_order_created?: boolean;
     }>
 ) => {
@@ -213,7 +211,6 @@ export const insertCmGeneral = async (cmGeneralData: {
     due_date?: string;
     downtime?: number;
     work_request_id: number;
-    work_order_no?: string;
 }) => {
     try {
         const { data, error } = await supabase

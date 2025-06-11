@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import Loading from "@/components/shared/Loading";
 
 interface AttachmentDialogFormProps {
-    onSubmit: (formData: { file: File; description?: string }) => Promise<void>;
+    onSubmit: (formData: { file: File | null; description?: string }) => Promise<void>;
     onCancel: () => void;
-    initialData?: { description?: string, file_path?: string };
+    initialData?: { description?: string; file_path?: string };
 }
 
 const AttachmentDialogForm: React.FC<AttachmentDialogFormProps> = ({
@@ -35,10 +35,6 @@ const AttachmentDialogForm: React.FC<AttachmentDialogFormProps> = ({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.file) {
-            alert("Please select a file to upload.");
-            return;
-        }
         setIsLoading(true);
         try {
             await onSubmit({ file: formData.file, description: formData.description });
@@ -54,9 +50,9 @@ const AttachmentDialogForm: React.FC<AttachmentDialogFormProps> = ({
             ) : (
                 <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2 md:col-span-2">
-                            <Label htmlFor="file">File</Label>
-                            {initialData?.file_path && (
+                        {initialData?.file_path ? (
+                            <div className="space-y-2 md:col-span-2">
+                                <Label htmlFor="file">File</Label>
                                 <div className="mb-2">
                                     <a
                                         href={initialData.file_path}
@@ -67,15 +63,19 @@ const AttachmentDialogForm: React.FC<AttachmentDialogFormProps> = ({
                                         View Current File
                                     </a>
                                 </div>
-                            )}
-                            <Input
-                                id="file"
-                                name="file"
-                                type="file"
-                                onChange={handleFileChange}
-                                required={!initialData?.file_path} // Make it required only if no file exists
-                            />
-                        </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-2 md:col-span-2">
+                                <Label htmlFor="file">File</Label>
+                                <Input
+                                    id="file"
+                                    name="file"
+                                    type="file"
+                                    onChange={handleFileChange}
+                                    required
+                                />
+                            </div>
+                        )}
                         <div className="space-y-2 md:col-span-2">
                             <Label htmlFor="description">Description</Label>
                             <Input

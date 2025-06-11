@@ -6,15 +6,15 @@ import {
   insertCmActualLabourData,
   updateCmActualLabourData,
   deleteCmActualLabourData,
-} from "../hooks/use-cm-actual-labour-data";
+} from "../hooks/cm/use-cm-actual-labour-data";
 import {
   useCmActualMaterialData,
   insertCmActualMaterialData,
   updateCmActualMaterialData,
   deleteCmActualMaterialData,
-} from "../hooks/use-cm-actual-material-data";
-import CmActualLabourDialogForm from "./CmActualLabourDialogForm";
-import CmActualMaterialDialogForm from "./CmActualMaterialDialogForm";
+} from "../hooks/cm/use-cm-actual-material-data";
+import ActualLabourDialogForm from "./ActualLabourDialogForm";
+import ActualMaterialDialogForm from "./ActualMaterialDialogForm";
 import {
   Dialog,
   DialogContent,
@@ -231,7 +231,7 @@ const CmActualTab: React.FC<CmActualTabProps> = ({ cmGeneralId, workCenterId }) 
             </div>
           </DialogHeader>
 
-          <CmActualLabourDialogForm
+          <ActualLabourDialogForm
             onSubmit={handleLabourFormSubmit}
             onCancel={() => setIsLabourDialogOpen(false)}
             initialData={editingLabour}
@@ -258,7 +258,7 @@ const CmActualTab: React.FC<CmActualTabProps> = ({ cmGeneralId, workCenterId }) 
             </div>
           </DialogHeader>
 
-          <CmActualMaterialDialogForm
+          <ActualMaterialDialogForm
             onSubmit={handleMaterialFormSubmit}
             onCancel={() => setIsMaterialDialogOpen(false)}
             initialData={editingMaterial}

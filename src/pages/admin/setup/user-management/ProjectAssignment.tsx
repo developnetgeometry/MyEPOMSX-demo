@@ -14,12 +14,27 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabaseClient";
 import { Check, Loader2, PlusCircle, X } from "lucide-react";
+import { User, UserProject } from "@/types/admin";
 import {
-  User,
   Project,
-  UserProject,
-  UserProjectWithRelations,
-} from "@/types/admin";
+  getAllProjects,
+  assignUserToProject,
+  removeUserFromProject,
+} from "@/utils/project-utils";
+
+// Define a custom type for user project relations using the updated Project type
+interface UserProjectWithRelations {
+  id: string;
+  user_id: string;
+  project_id: string;
+  user: User | null;
+  project:
+    | (Project & {
+        description?: string | null;
+        short_name?: string | null;
+      })
+    | null;
+}
 
 const ProjectAssignment: React.FC = () => {
   const { toast } = useToast();
@@ -33,12 +48,17 @@ const ProjectAssignment: React.FC = () => {
 
   // Form states
   const [selectedUserId, setSelectedUserId] = useState<string>("");
-  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
     null
   );
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [assignedProjects, setAssignedProjects] = useState<Project[]>([]);
+  const [selectedProject, setSelectedProject] = useState<
+    | (Project & { description?: string | null; short_name?: string | null })
+    | null
+  >(null);
+  const [assignedProjects, setAssignedProjects] = useState<
+    (Project & { description?: string | null; short_name?: string | null })[]
+  >([]);
   const [assignedUsers, setAssignedUsers] = useState<User[]>([]);
 
   useEffect(() => {
@@ -82,24 +102,34 @@ const ProjectAssignment: React.FC = () => {
 
   const fetchProjects = async () => {
     try {
+      // Use the getAllProjects utility function to get all projects
+      const allProjects = await getAllProjects();
+
+      // Get additional details like purpose and short_name
       const { data, error } = await supabase
-        .from("e_project") // Use the actual table name from the database
+        .from("e_project")
         .select("id, project_name, project_code, project_purpose, short_name")
         .order("project_name");
 
       if (error) throw error;
 
-      // Map to the Project interface, using project_name as name for UI compatibility
-      const projectsData = (data || []).map((p) => ({
-        id: p.id,
-        name: p.project_name || p.project_code, // Use project_name if available, fallback to code
-        description: p.project_purpose || null,
-        project_code: p.project_code,
-        project_name: p.project_name,
-        short_name: p.short_name,
+      // Create a mapping of id to extended project data
+      const projectDetailsMap = new Map();
+      (data || []).forEach((p) => {
+        projectDetailsMap.set(p.id.toString(), {
+          description: p.project_purpose || null,
+          short_name: p.short_name || null,
+        });
+      });
+
+      // Enhance the projects with additional details
+      const enhancedProjects = allProjects.map((p) => ({
+        ...p,
+        description: projectDetailsMap.get(p.id)?.description || null,
+        short_name: projectDetailsMap.get(p.id)?.short_name || null,
       }));
 
-      setProjects(projectsData as Project[]);
+      setProjects(enhancedProjects as any);
     } catch (error: any) {
       toast({
         title: "Error fetching projects",
@@ -126,18 +156,19 @@ const ProjectAssignment: React.FC = () => {
 
       // Transform the data to match our expected format with user and project objects
       const transformedData = (data || []).map((up) => {
-        // Ensure the types are explicitly converted as needed
+        // Ensure the types match our utility type
         return {
           id: up.id,
           user_id: up.user_id,
-          project_id: Number(up.project_id), // Ensure it's a number
+          project_id: up.project_id.toString(), // Convert to string to match our Project type
           user: up.profiles,
           project: {
-            id: Number(up.e_project.id), // Ensure it's a number
+            id: up.e_project.id.toString(), // Convert to string to match our Project type
             name: up.e_project.project_name || up.e_project.project_code,
-            description: up.e_project.project_purpose,
-            project_code: up.e_project.project_code,
+            project_code: up.e_project.project_code || "",
             project_name: up.e_project.project_name,
+            // Extended properties
+            description: up.e_project.project_purpose,
             short_name: up.e_project.short_name,
           },
         };
@@ -185,15 +216,16 @@ const ProjectAssignment: React.FC = () => {
             return {
               id: up.id,
               user_id: up.user_id,
-              project_id: Number(up.project_id),
+              project_id: up.project_id.toString(), // Convert to string to match our Project type
               user: user || null,
               project: project
                 ? {
-                    id: Number(project.id),
+                    id: project.id.toString(), // Convert to string to match our Project type
                     name: project.project_name || project.project_code,
-                    description: project.project_purpose,
-                    project_code: project.project_code,
+                    project_code: project.project_code || "",
                     project_name: project.project_name,
+                    // Extended properties
+                    description: project.project_purpose,
                     short_name: project.short_name,
                   }
                 : null,
@@ -269,49 +301,14 @@ const ProjectAssignment: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Our assign_user_to_project function already checks for duplicate assignments internally
-      // and handles all the type conversions properly
-      const { error } = await supabase.rpc("assign_user_to_project", {
-        p_user_id: selectedUserId,
-        p_project_id: selectedProjectId,
-      });
+      // Use our utility function to assign user to project
+      const { success, error } = await assignUserToProject(
+        selectedUserId,
+        selectedProjectId.toString() // Convert to string as our utility expects string IDs
+      );
 
-      // If the RPC function doesn't exist, try a direct query with correct types
-      if (error && error.message.includes("function does not exist")) {
-        // First check if assignment already exists to avoid duplicate entries
-        const { data: existingAssignment, error: checkError } = await supabase
-          .from("user_projects")
-          .select("id")
-          .match({
-            user_id: selectedUserId,
-            project_id: selectedProjectId,
-          })
-          .maybeSingle();
-
-        if (checkError) throw checkError;
-
-        if (existingAssignment) {
-          toast({
-            title: "Already assigned",
-            description: "This user is already assigned to this project.",
-            variant: "default",
-          });
-          setIsLoading(false);
-          return;
-        }
-
-        // Direct insert using the correct types
-        const { error: insertError } = await supabase
-          .from("user_projects")
-          .insert({
-            user_id: selectedUserId,
-            project_id: selectedProjectId, // This is now correctly typed as a number
-            created_at: new Date().toISOString(),
-          });
-
-        if (insertError) throw insertError;
-      } else if (error) {
-        throw error;
+      if (!success) {
+        throw new Error(error || "Failed to assign user to project");
       }
 
       toast({
@@ -333,29 +330,21 @@ const ProjectAssignment: React.FC = () => {
     }
   };
 
-  const handleRemoveAssignment = async (userId: string, projectId: number) => {
+  const handleRemoveAssignment = async (
+    userId: string,
+    projectId: string | number
+  ) => {
     setIsLoading(true);
 
     try {
-      // Call the RPC function if it exists
-      const { error } = await supabase.rpc("remove_user_from_project", {
-        p_user_id: userId,
-        p_project_id: projectId,
-      });
+      // Use our utility function to remove user from project
+      const { success, error } = await removeUserFromProject(
+        userId,
+        projectId.toString() // Convert to string as our utility expects string IDs
+      );
 
-      // Fallback to direct delete if the RPC doesn't exist
-      if (error && error.message.includes("function does not exist")) {
-        const { error: deleteError } = await supabase
-          .from("user_projects")
-          .delete()
-          .match({
-            user_id: userId,
-            project_id: projectId,
-          });
-
-        if (deleteError) throw deleteError;
-      } else if (error) {
-        throw error;
+      if (!success) {
+        throw new Error(error || "Failed to remove user from project");
       }
 
       toast({
@@ -431,32 +420,31 @@ const ProjectAssignment: React.FC = () => {
                 <div className="space-y-2">
                   <Label htmlFor="select-project">Assign Project</Label>
                   <div className="flex space-x-2">
-                    <Select
-                      value={
-                        selectedProjectId !== null
-                          ? String(selectedProjectId)
-                          : ""
-                      }
-                      onValueChange={(value) =>
-                        setSelectedProjectId(value ? Number(value) : null)
-                      }
-                      disabled={!selectedUserId || isLoading}
-                      className="flex-grow"
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a project" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {projects.map((project) => (
-                          <SelectItem
-                            key={project.id}
-                            value={String(project.id)}
-                          >
-                            {project.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="flex-grow">
+                      <Select
+                        value={
+                          selectedProjectId !== null ? selectedProjectId : ""
+                        }
+                        onValueChange={(value) =>
+                          setSelectedProjectId(value || null)
+                        }
+                        disabled={!selectedUserId || isLoading}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a project" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {projects.map((project) => (
+                            <SelectItem
+                              key={project.id}
+                              value={String(project.id)}
+                            >
+                              {project.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <Button
                       onClick={handleAssignProject}
                       disabled={
@@ -523,13 +511,9 @@ const ProjectAssignment: React.FC = () => {
                 <div className="space-y-2">
                   <Label htmlFor="select-project">Select Project</Label>
                   <Select
-                    value={
-                      selectedProjectId !== null
-                        ? String(selectedProjectId)
-                        : ""
-                    }
+                    value={selectedProjectId !== null ? selectedProjectId : ""}
                     onValueChange={(value) =>
-                      setSelectedProjectId(value ? Number(value) : null)
+                      setSelectedProjectId(value || null)
                     }
                   >
                     <SelectTrigger>
@@ -565,23 +549,24 @@ const ProjectAssignment: React.FC = () => {
                 <div className="space-y-2">
                   <Label htmlFor="select-user">Assign User</Label>
                   <div className="flex space-x-2">
-                    <Select
-                      value={selectedUserId}
-                      onValueChange={setSelectedUserId}
-                      disabled={!selectedProjectId || isLoading}
-                      className="flex-grow"
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a user" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {users.map((user) => (
-                          <SelectItem key={user.id} value={user.id}>
-                            {user.full_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="flex-grow">
+                      <Select
+                        value={selectedUserId}
+                        onValueChange={setSelectedUserId}
+                        disabled={!selectedProjectId || isLoading}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a user" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {users.map((user) => (
+                            <SelectItem key={user.id} value={user.id}>
+                              {user.full_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <Button
                       onClick={handleAssignProject}
                       disabled={

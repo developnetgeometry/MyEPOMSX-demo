@@ -62,10 +62,9 @@ const WorkRequestDetailPage: React.FC = () => {
             description: "Work request has been deleted successfully!",
             variant: "default",
           });
-          refetch();
           setIsConfirmationDialogOpen(false);
-          queryClient.invalidateQueries({ queryKey: ["e-new-work-request-data"] });
           navigate('/work-orders/work-request');
+          queryClient.invalidateQueries({ queryKey: ["e-new-work-request-data"] });
         } catch (error) {
           toast({
             title: "Error",
@@ -179,13 +178,15 @@ const WorkRequestDetailPage: React.FC = () => {
               system_id: workRequest.system_id?.id,
               package_id: workRequest.package_id?.id,
               asset_id: workRequest.asset_id?.id,
-              requested_by: workRequest.requested_by,
+              requested_by: workRequest.requested_by?.id,
               cm_sce_code: workRequest.cm_sce_code?.id,
               due_date: workRequest.target_due_date,
               work_request_id: workRequest.id,
             };
 
             await insertCmGeneral(cmGeneralData);
+            // Step 3: Trigger supabase on insert e_cm_general to copy table
+            // work_request to e_cm_general
 
             toast({
               title: "Success",
@@ -194,7 +195,8 @@ const WorkRequestDetailPage: React.FC = () => {
             });
 
             refetch();
-            queryClient.invalidateQueries({ queryKey: ["e-new-work-request-data",id] });
+            queryClient.invalidateQueries({ queryKey: ["e-new-work-request-data", id] });
+            queryClient.invalidateQueries({ queryKey: ["e-work-order-data"] });
           }
           setIsConfirmationDialogOpen(false);
         } catch (error) {
@@ -226,7 +228,6 @@ const WorkRequestDetailPage: React.FC = () => {
               work_order_type: 1,
               work_order_status_id: 1,
               description: workRequest.description,
-              work_order_no: workRequest.work_request_no,
               cm_work_order_id: workRequest.cm_work_order_id,
               asset_id: workRequest.asset_id?.id,
             };
@@ -261,7 +262,7 @@ const WorkRequestDetailPage: React.FC = () => {
 
       <div className="flex items-center justify-between">
         <PageHeader
-          title="Work Request Details"
+          title="Work Request Detail"
           icon={<ClipboardList className="h-6 w-6" />}
         />
         <Button
@@ -287,27 +288,29 @@ const WorkRequestDetailPage: React.FC = () => {
       {/* Tabs Section */}
       <Card>
         <CardContent className="pt-6">
-          <Tabs defaultValue="taskDetail">
-            <TabsList className="w-full border-b justify-start">
-              <TabsTrigger value="taskDetail">Task Detail</TabsTrigger>
-              <TabsTrigger value="reports">Reports</TabsTrigger>
-              <TabsTrigger value="failure">Failure</TabsTrigger>
-              <TabsTrigger value="attachment">Attachment</TabsTrigger>
-            </TabsList>
+          {!isLoading && workRequest && (
+            <Tabs defaultValue="taskDetail">
+              <TabsList className="w-full border-b justify-start">
+                <TabsTrigger value="taskDetail">Task Detail</TabsTrigger>
+                <TabsTrigger value="reports">Reports</TabsTrigger>
+                <TabsTrigger value="failure">Failure</TabsTrigger>
+                <TabsTrigger value="attachment">Attachment</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="taskDetail">
-              {id && <TaskDetailTab newWorkRequestId={Number(id)} />}
-            </TabsContent>
-            <TabsContent value="reports">
-              {id && <ReportsTab workRequestId={Number(id)} />}
-            </TabsContent>
-            <TabsContent value="failure">
-              {id && <FailureTab workRequestId={Number(id)} />}
-            </TabsContent>
-            <TabsContent value="attachment">
-              {id && <AttachmentTab workRequestId={Number(id)} />}
-            </TabsContent>
-          </Tabs>
+              <TabsContent value="taskDetail">
+                {id && workRequest && <TaskDetailTab newWorkRequestId={Number(id)} cmStatusId={workRequest.cm_status_id?.id} />}
+              </TabsContent>
+              <TabsContent value="reports">
+                {id && workRequest && <ReportsTab workRequestId={Number(id)} cmStatusId={workRequest.cm_status_id?.id} />}
+              </TabsContent>
+              <TabsContent value="failure">
+                {id && workRequest && <FailureTab workRequestId={Number(id)} cmStatusId={workRequest.cm_status_id?.id} />}
+              </TabsContent>
+              <TabsContent value="attachment">
+                {id && workRequest && <AttachmentTab workRequestId={Number(id)} cmStatusId={workRequest.cm_status_id?.id} />}
+              </TabsContent>
+            </Tabs>
+          )}
         </CardContent>
       </Card>
 

@@ -3,100 +3,15 @@ import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable, { Column } from "@/components/shared/DataTable";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/shared/StatusBadge";
-import { ShieldIcon } from "lucide-react";
-
-// Sample data for pressure vessels
-const pressureVesselData = [
-  {
-    id: "1",
-    assetCode: "PV-1001",
-    assetName: "Separator Vessel",
-    area: "Process Area A",
-    system: "Separation System",
-    status: "Active",
-  },
-  {
-    id: "2",
-    assetCode: "PV-1002",
-    assetName: "Flash Drum",
-    area: "Process Area B",
-    system: "Flash System",
-    status: "Active",
-  },
-  {
-    id: "3",
-    assetCode: "PV-1003",
-    assetName: "Storage Tank",
-    area: "Tank Farm",
-    system: "Storage System",
-    status: "Inactive",
-  },
-  {
-    id: "4",
-    assetCode: "PV-1004",
-    assetName: "Knockout Drum",
-    area: "Compressor Area",
-    system: "Gas Compression",
-    status: "Under Maintenance",
-  },
-  {
-    id: "5",
-    assetCode: "PV-1005",
-    assetName: "Pressure Vessel",
-    area: "Process Area C",
-    system: "High Pressure System",
-    status: "Active",
-  },
-];
-
-// Sample data for piping
-const pipingData = [
-  {
-    id: "1",
-    assetCode: "PP-2001",
-    assetName: "Main Process Line",
-    area: "Process Area A",
-    system: "Feed System",
-    status: "Active",
-  },
-  {
-    id: "2",
-    assetCode: "PP-2002",
-    assetName: "Product Transfer Line",
-    area: "Process Area B",
-    system: "Product System",
-    status: "Active",
-  },
-  {
-    id: "3",
-    assetCode: "PP-2003",
-    assetName: "Flare Header",
-    area: "Utility Area",
-    system: "Flare System",
-    status: "Under Inspection",
-  },
-  {
-    id: "4",
-    assetCode: "PP-2004",
-    assetName: "Cooling Water Line",
-    area: "Cooling Tower",
-    system: "Cooling System",
-    status: "Active",
-  },
-  {
-    id: "5",
-    assetCode: "PP-2005",
-    assetName: "Steam Header",
-    area: "Utility Area",
-    system: "Steam System",
-    status: "Active",
-  },
-];
+import { ShieldIcon, Plus } from "lucide-react";
 
 const IntegrityPage: React.FC = () => {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("pressureVessel");
+
   const columns: Column[] = [
     { id: "assetCode", header: "Asset Code", accessorKey: "assetCode" },
     { id: "assetName", header: "Asset Name", accessorKey: "assetName" },
@@ -112,12 +27,27 @@ const IntegrityPage: React.FC = () => {
 
   const handleRowClick = (row: any) => {
     // Navigate to the asset integrity detail page with the current tab type and row id
-    const currentTab = document
-      .querySelector('[data-state="active"][role="tab"]')
-      ?.getAttribute("data-value");
-    const assetType = currentTab === "piping" ? "piping" : "pressureVessel";
+    const assetType = activeTab === "piping" ? "piping" : "pressureVessel";
     navigate(`/monitor/integrity/${assetType}/${row.id}`);
   };
+
+  const handleNewAsset = () => {
+    if (activeTab === "pressureVessel") {
+      navigate("/monitor/integrity/new-pressure-vessel");
+    } else {
+      navigate("/monitor/integrity/new-piping");
+    }
+  };
+
+  const getNewButtonText = () => {
+    return activeTab === "pressureVessel"
+      ? "New Pressure Vessel"
+      : "New Piping";
+  };
+
+  // Empty data arrays - replace with actual data from your backend
+  const pressureVesselData: any[] = [];
+  const pipingData: any[] = [];
 
   return (
     <div className="space-y-6">
@@ -128,7 +58,11 @@ const IntegrityPage: React.FC = () => {
         onSearch={(query) => console.log("Search:", query)}
       />
 
-      <Tabs defaultValue="pressureVessel" className="w-full">
+      <Tabs
+        defaultValue="pressureVessel"
+        onValueChange={setActiveTab}
+        className="w-full"
+      >
         <TabsList className="grid w-full md:w-[400px] grid-cols-2">
           <TabsTrigger value="pressureVessel">Pressure Vessel</TabsTrigger>
           <TabsTrigger value="piping">Piping</TabsTrigger>
@@ -136,24 +70,78 @@ const IntegrityPage: React.FC = () => {
 
         <TabsContent value="pressureVessel" className="mt-6">
           <Card>
-            <CardContent className="p-6">
-              <DataTable
-                columns={columns}
-                data={pressureVesselData}
-                onRowClick={handleRowClick}
-              />
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">Pressure Vessels</h3>
+                <p className="text-sm text-muted-foreground">
+                  Manage pressure vessel assets and their integrity status
+                </p>
+              </div>
+              <Button onClick={handleNewAsset}>
+                <Plus className="h-4 w-4 mr-2" />
+                {getNewButtonText()}
+              </Button>
+            </CardHeader>
+            <CardContent className="p-6 pt-0">
+              {pressureVesselData.length > 0 ? (
+                <DataTable
+                  columns={columns}
+                  data={pressureVesselData}
+                  onRowClick={handleRowClick}
+                />
+              ) : (
+                <div className="text-center py-12">
+                  <ShieldIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">
+                    No Pressure Vessels
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Get started by creating your first pressure vessel asset.
+                  </p>
+                  <Button onClick={handleNewAsset}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create First Pressure Vessel
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="piping" className="mt-6">
           <Card>
-            <CardContent className="p-6">
-              <DataTable
-                columns={columns}
-                data={pipingData}
-                onRowClick={handleRowClick}
-              />
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">Piping Systems</h3>
+                <p className="text-sm text-muted-foreground">
+                  Manage piping assets and their integrity status
+                </p>
+              </div>
+              <Button onClick={handleNewAsset}>
+                <Plus className="h-4 w-4 mr-2" />
+                {getNewButtonText()}
+              </Button>
+            </CardHeader>
+            <CardContent className="p-6 pt-0">
+              {pipingData.length > 0 ? (
+                <DataTable
+                  columns={columns}
+                  data={pipingData}
+                  onRowClick={handleRowClick}
+                />
+              ) : (
+                <div className="text-center py-12">
+                  <ShieldIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No Piping Assets</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Get started by creating your first piping asset.
+                  </p>
+                  <Button onClick={handleNewAsset}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create First Piping Asset
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

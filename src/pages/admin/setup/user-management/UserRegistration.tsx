@@ -13,6 +13,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabaseClient";
 import { Loader2 } from "lucide-react";
+import { DatabaseVerification } from "@/utils/databaseVerification";
+import { createUserWithSessionPreservation } from "@/services/adminUserService";
 
 interface UserType {
   id: string;
@@ -24,6 +26,7 @@ const UserRegistration: React.FC = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [userTypes, setUserTypes] = useState<UserType[]>([]);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -88,58 +91,113 @@ const UserRegistration: React.FC = () => {
       return;
     }
 
+    if (formData.password.length < 6) {
+      toast({
+        title: "Password too short",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // 1. Create the user in Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // Check if user type exists
+      const { data: userTypeData, error: userTypeError } = await supabase
+        .from("user_type")
+        .select("id, name")
+        .eq("id", formData.userTypeId)
+        .single();
+
+      if (userTypeError) {
+        throw new Error(`Invalid user type selected: ${userTypeError.message}`);
+      }
+
+      // Use session-preserving user creation method
+      const result = await createUserWithSessionPreservation({
         email: formData.email,
         password: formData.password,
-        options: {
-          data: {
-            full_name: formData.fullName,
-          },
-        },
+        fullName: formData.fullName,
+        userTypeId: formData.userTypeId,
       });
 
-      if (authError) throw authError;
-
-      if (authData.user) {
-        // 2. Create profile record
-        const { error: profileError } = await supabase.from("profiles").upsert({
-          id: authData.user.id,
-          full_name: formData.fullName,
-          email: formData.email,
-          user_type_id: formData.userTypeId,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
-
-        if (profileError) throw profileError;
-
-        toast({
-          title: "User registered successfully",
-          description:
-            "User has been created and should check their email to verify.",
-        });
-
-        // Reset form
-        setFormData({
-          email: "",
-          password: "",
-          confirmPassword: "",
-          fullName: "",
-          userTypeId: "",
-        });
+      if (!result.success) {
+        throw new Error(result.error || "Failed to create user");
       }
+
+      // Verify current session is still intact
+      const { data: sessionCheck } = await supabase.auth.getSession();
+      if (!sessionCheck.session) {
+        console.warn(
+          "Session was lost during user creation, this should not happen"
+        );
+      }
+
+      toast({
+        title: "User registered successfully",
+        description: `User ${formData.fullName} has been created with ${userTypeData.name} role. They can sign in immediately.`,
+      });
+
+      // Reset form
+      setFormData({
+        email: "",
+        password: "",
+        confirmPassword: "",
+        fullName: "",
+        userTypeId: "",
+      });
     } catch (error: any) {
+      console.error("Registration error:", error);
+
+      let errorMessage = "An unexpected error occurred during registration.";
+
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      }
+
+      // Provide more specific error messages
+      if (errorMessage.includes("User already registered")) {
+        errorMessage = "A user with this email address already exists.";
+      } else if (errorMessage.includes("Database error saving new user")) {
+        errorMessage =
+          "Database configuration error. Please contact your system administrator.";
+      } else if (errorMessage.includes("Invalid user type")) {
+        errorMessage =
+          "The selected user type is invalid. Please refresh the page and try again.";
+      }
+
       toast({
         title: "Registration failed",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleVerifyDatabase = async () => {
+    setIsVerifying(true);
+    try {
+      await DatabaseVerification.quickVerification();
+      toast({
+        title: "Database verification complete",
+        description:
+          "Check the browser console for detailed results. If you see ✅ marks, your database is ready!",
+      });
+    } catch (error: any) {
+      console.error("Database verification failed:", error);
+      toast({
+        title: "Database verification failed",
+        description:
+          "Please run the setup_database.sql script in Supabase SQL Editor. Check console for details.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -244,6 +302,23 @@ const UserRegistration: React.FC = () => {
             </div>
           </div>
         </form>
+        <div className="mt-6">
+          <Button
+            variant="outline"
+            onClick={handleVerifyDatabase}
+            disabled={isVerifying}
+            className="w-full"
+          >
+            {isVerifying ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Verifying...
+              </>
+            ) : (
+              "Verify Database Setup"
+            )}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
