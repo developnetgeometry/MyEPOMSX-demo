@@ -4123,7 +4123,7 @@ export type Database = {
           package_id: number | null
           pm_description: string | null
           pm_group_id: number | null
-          pm_no: string
+          pm_no: string | null
           pm_sce_group_id: number | null
           priority_id: number | null
           system_id: number | null
@@ -4146,7 +4146,7 @@ export type Database = {
           package_id?: number | null
           pm_description?: string | null
           pm_group_id?: number | null
-          pm_no: string
+          pm_no?: string | null
           pm_sce_group_id?: number | null
           priority_id?: number | null
           system_id?: number | null
@@ -4169,7 +4169,7 @@ export type Database = {
           package_id?: number | null
           pm_description?: string | null
           pm_group_id?: number | null
-          pm_no?: string
+          pm_no?: string | null
           pm_sce_group_id?: number | null
           priority_id?: number | null
           system_id?: number | null
