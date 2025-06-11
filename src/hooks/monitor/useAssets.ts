@@ -32,9 +32,11 @@ export interface AssetData {
         model: string;
         serial_number: string;
         specification: string;
+        criticality_id: number;
         manufacturer?: { name: string };
         category?: { name: string };
         type?: { name: string };
+        criticality?: { name: string };
     };
     asset_sce?: {
         sce_code: string;
@@ -70,7 +72,8 @@ const fetchAssets = async (): Promise<AssetData[]> => {
                 *,
                 manufacturer:e_manufacturer(name),
                 category:e_asset_category(name),
-                type:e_asset_type(name)
+                type:e_asset_type(name),
+                criticality:e_criticality(name)
             ),
             asset_sce:e_asset_sce(
                 sce_code,
@@ -101,7 +104,8 @@ const fetchAssetById = async (id: number): Promise<AssetData> => {
                 *,
                 manufacturer:e_manufacturer(name),
                 category:e_asset_category(name),
-                type:e_asset_type(name)
+                type:e_asset_type(name),
+                criticality:e_criticality(name)
             ),
             asset_sce:e_asset_sce(
                 sce_code,
