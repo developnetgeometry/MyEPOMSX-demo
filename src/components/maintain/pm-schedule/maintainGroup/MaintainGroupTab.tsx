@@ -13,91 +13,100 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import {
-  usePmSchedAdditionalInfoData,
-  insertPmSchedAdditionalInfoData,
-  updatePmSchedAdditionalInfoData,
-  deletePmSchedAdditionalInfoData,
-} from "../hooks/use-pm-sched-additional-info-data";
-import PmAdditionalInfoDialogForm from "@/components/work-orders/work-order-list/additionalInfo/PmAdditionalInfoDialogForm";
+  usePmSchedMaintainableGroupData,
+  insertPmSchedMaintainableGroupData,
+  updatePmSchedMaintainableGroupData,
+  deletePmSchedMaintainableGroupData,
+} from "../hooks/use-pm-sched-maintanable-group-data";
+import MaintainGroupDialogForm from "./MaintainGroupDialogForm";
 
-interface AdditionalInfoTabProps {
+interface MaintainGroupTabProps {
   pmScheduleId: number; // Passed as a prop to this page
 }
 
-const AdditionalInfoTab: React.FC<AdditionalInfoTabProps> = ({ pmScheduleId }) => {
-  const { data: additionalInfo, isLoading, refetch } = usePmSchedAdditionalInfoData(pmScheduleId);
+const MaintainGroupTab: React.FC<MaintainGroupTabProps> = ({ pmScheduleId }) => {
+  const { data: maintainableGroups, isLoading, refetch } = usePmSchedMaintainableGroupData(pmScheduleId);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingInfo, setEditingInfo] = useState<any | null>(null);
+  const [editingGroup, setEditingGroup] = useState<any | null>(null);
   const { toast } = useToast();
 
   const handleAddNew = () => {
-    setEditingInfo(null);
+    setEditingGroup(null);
     setIsDialogOpen(true);
   };
 
-  const handleEditInfo = (info: any) => {
-    setEditingInfo(info);
+  const handleEditGroup = (group: any) => {
+    setEditingGroup(group);
     setIsDialogOpen(true);
   };
 
-  const handleDeleteInfo = async (info: any) => {
+  const handleDeleteGroup = async (group: any) => {
     try {
-      await deletePmSchedAdditionalInfoData(info.id);
+      await deletePmSchedMaintainableGroupData(group.id);
       toast({
         title: "Success",
-        description: "Additional info deleted successfully!",
+        description: "Maintainable group deleted successfully!",
         variant: "default",
       });
       refetch();
     } catch (error) {
-      console.error("Failed to delete additional info data:", error);
+      console.error("Failed to delete maintainable group data:", error);
       toast({
         title: "Error",
-        description: "Failed to delete additional info data.",
+        description: "Failed to delete maintainable group data.",
         variant: "destructive",
       });
     }
   };
 
-  const handleFormSubmit = async (formData: { description: string }) => {
+  const handleFormSubmit = async (formData: any) => {
     try {
-      if (editingInfo) {
-        await updatePmSchedAdditionalInfoData(editingInfo.id, formData);
+      if (editingGroup) {
+        await updatePmSchedMaintainableGroupData(editingGroup.id, formData);
         toast({
           title: "Success",
-          description: "Additional info updated successfully!",
+          description: "Maintainable group updated successfully!",
           variant: "default",
         });
       } else {
-        await insertPmSchedAdditionalInfoData({ ...formData, pm_schedule_id: pmScheduleId });
+        await insertPmSchedMaintainableGroupData({ ...formData, pm_schedule_id: pmScheduleId });
         toast({
           title: "Success",
-          description: "Additional info added successfully!",
+          description: "Maintainable group added successfully!",
           variant: "default",
         });
       }
       setIsDialogOpen(false);
       refetch();
     } catch (error: any) {
-      console.error("Failed to save additional info data:", error);
+      console.error("Failed to save maintainable group data:", error);
       toast({
         title: "Error",
-        description: "Failed to save additional info data.",
+        description: "Failed to save maintainable group data.",
         variant: "destructive",
       });
     }
   };
 
   const columns: Column[] = [
-    { id: "description", header: "Description", accessorKey: "description" },
+    {
+      id: "asset_id",
+      header: "Asset",
+      accessorKey: "asset_id.asset_name",
+    },
+    {
+      id: "group_id",
+      header: "Group",
+      accessorKey: "group_id.name",
+    },
   ];
 
   return (
     <div className="space-y-6 mt-6">
       <PageHeader
-        title="Additional Information"
+        title="Maintainable Groups"
         onAddNew={handleAddNew}
-        addNewLabel="New Info"
+        addNewLabel="New Group"
       />
 
       {isLoading ? (
@@ -105,9 +114,9 @@ const AdditionalInfoTab: React.FC<AdditionalInfoTabProps> = ({ pmScheduleId }) =
       ) : (
         <DataTable
           columns={columns}
-          data={additionalInfo || []}
-          onEdit={handleEditInfo}
-          onDelete={handleDeleteInfo}
+          data={maintainableGroups || []}
+          onEdit={handleEditGroup}
+          onDelete={handleDeleteGroup}
         />
       )}
 
@@ -117,12 +126,12 @@ const AdditionalInfoTab: React.FC<AdditionalInfoTabProps> = ({ pmScheduleId }) =
             <div className="flex items-start justify-between w-full">
               <div>
                 <DialogTitle>
-                  {editingInfo ? "Edit Additional Info" : "Add New Additional Info"}
+                  {editingGroup ? "Edit Maintainable Group" : "Add New Maintainable Group"}
                 </DialogTitle>
                 <DialogDescription>
-                  {editingInfo
-                    ? "Update the details of the additional info."
-                    : "Fill in the details to add new additional info."}
+                  {editingGroup
+                    ? "Update the details of the maintainable group."
+                    : "Fill in the details to add a new maintainable group."}
                 </DialogDescription>
               </div>
               <Button
@@ -135,10 +144,10 @@ const AdditionalInfoTab: React.FC<AdditionalInfoTabProps> = ({ pmScheduleId }) =
             </div>
           </DialogHeader>
 
-          <PmAdditionalInfoDialogForm
+          <MaintainGroupDialogForm
             onSubmit={handleFormSubmit}
             onCancel={() => setIsDialogOpen(false)}
-            initialData={editingInfo}
+            initialData={editingGroup}
           />
         </DialogContent>
       </Dialog>
@@ -146,4 +155,4 @@ const AdditionalInfoTab: React.FC<AdditionalInfoTabProps> = ({ pmScheduleId }) =
   );
 };
 
-export default AdditionalInfoTab;
+export default MaintainGroupTab;

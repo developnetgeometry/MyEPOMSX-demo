@@ -1,65 +1,176 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import StatusBadge from "@/components/shared/StatusBadge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Edit, Trash2 } from "lucide-react";
+import Loading from "@/components/shared/Loading";
 
 interface PmScheduleDetailsCardProps {
   pmScheduleDetail: any;
-  onCreateWorkOrder: () => void;
+  isLoading: boolean;
+  onEditClick?: () => void;
+  onDeleteClick?: () => void;
 }
 
 const PmScheduleDetailsCard: React.FC<PmScheduleDetailsCardProps> = ({
   pmScheduleDetail,
-  onCreateWorkOrder,
+  isLoading,
+  onEditClick,
+  onDeleteClick,
 }) => {
+  if (isLoading) {
+    return <Loading />;
+  }
+
+  if (!pmScheduleDetail) {
+    return null;
+  }
+
   return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-semibold text-blue-600 border-b pb-2">
-        General Information
-      </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div>
-          <h4 className="text-sm font-medium text-gray-500">PM No</h4>
-          <p className="text-base font-medium">{pmScheduleDetail?.pm_no}</p>
+    <Card>
+      <CardContent className="pt-6 space-y-4">
+        <div className="flex justify-end space-x-2">
+          <Button
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={onEditClick}
+          >
+            <Edit className="h-4 w-4" /> Edit
+          </Button>
+          <Button
+            variant="destructive"
+            className="flex items-center gap-2"
+            onClick={onDeleteClick}
+          >
+            <Trash2 className="h-4 w-4" /> Delete
+          </Button>
         </div>
-        <div>
-          <h4 className="text-sm font-medium text-gray-500">PM Description</h4>
-          <p className="text-base">{pmScheduleDetail?.pm_description}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label className="block text-sm font-medium text-gray-700">PM No</Label>
+            <Input
+              className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              value={pmScheduleDetail.pm_no ?? "N/A"}
+              readOnly
+            />
+          </div>
+          <div>
+            <Label className="block text-sm font-medium text-gray-700">PM Description</Label>
+            <Input
+              className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              value={pmScheduleDetail.pm_description ?? "N/A"}
+              readOnly
+            />
+          </div>
+          <div>
+            <Label className="block text-sm font-medium text-gray-700">Due Date</Label>
+            <Input
+              className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              value={
+                pmScheduleDetail.due_date
+                  ? new Date(pmScheduleDetail.due_date).toLocaleDateString("en-GB").replace(/\//g, "-")
+                  : "N/A"
+              }
+              readOnly
+            />
+          </div>
+          <div>
+            <Label className="block text-sm font-medium text-gray-700">Priority</Label>
+            <Input
+              className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              value={pmScheduleDetail.priority_id?.name ?? "N/A"}
+              readOnly
+            />
+          </div>
+          <div>
+            <Label className="block text-sm font-medium text-gray-700">Work Center</Label>
+            <Input
+              className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              value={pmScheduleDetail.work_center_id?.name ?? "N/A"}
+              readOnly
+            />
+          </div>
+          <div>
+            <Label className="block text-sm font-medium text-gray-700">Discipline</Label>
+            <Input
+              className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              value={pmScheduleDetail.discipline_id?.name ?? "N/A"}
+              readOnly
+            />
+          </div>
+          <div>
+            <Label className="block text-sm font-medium text-gray-700">Task</Label>
+            <Input
+              className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              value={pmScheduleDetail.task_id?.task_name ?? "N/A"}
+              readOnly
+            />
+          </div>
+          <div>
+            <Label className="block text-sm font-medium text-gray-700">Frequency</Label>
+            <Input
+              className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              value={pmScheduleDetail.frequency_id?.name ?? "N/A"}
+              readOnly
+            />
+          </div>
+          <div>
+            <Label className="block text-sm font-medium text-gray-700">Asset</Label>
+            <Input
+              className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              value={pmScheduleDetail.asset_id?.asset_name ?? "N/A"}
+              readOnly
+            />
+          </div>
+          <div>
+            <Label className="block text-sm font-medium text-gray-700">System</Label>
+            <Input
+              className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              value={pmScheduleDetail.system_id?.system_name ?? "N/A"}
+              readOnly
+            />
+          </div>
+          <div>
+            <Label className="block text-sm font-medium text-gray-700">Package</Label>
+            <Input
+              className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              value={pmScheduleDetail.package_id?.package_name ?? "N/A"}
+              readOnly
+            />
+          </div>
+          <div>
+            <Label className="block text-sm font-medium text-gray-700">PM Group</Label>
+            <Input
+              className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              value={pmScheduleDetail.pm_group_id?.asset_detail_id ?? "N/A"}
+              readOnly
+            />
+          </div>
+          <div>
+            <Label className="block text-sm font-medium text-gray-700">PM SCE Group</Label>
+            <Input
+              className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              value={
+                pmScheduleDetail.pm_sce_group_id
+                  ? `${pmScheduleDetail.pm_sce_group_id.sce_code} - ${pmScheduleDetail.pm_sce_group_id.group_name}`
+                  : "N/A"
+              }
+              readOnly
+            />
+          </div>
+          <div>
+            <Label className="block text-sm font-medium text-gray-700">Facility</Label>
+            <Input
+              className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              value={pmScheduleDetail.facility_id?.location_name ?? "N/A"}
+              readOnly
+            />
+          </div>
         </div>
-        <div>
-          <h4 className="text-sm font-medium text-gray-500">Package No</h4>
-          <p className="text-base">{pmScheduleDetail?.package?.package_no}</p>
-        </div>
-        <div>
-          <h4 className="text-sm font-medium text-gray-500">Asset</h4>
-          <p className="text-base">{pmScheduleDetail?.asset?.asset_name}</p>
-        </div>
-        <div>
-          <h4 className="text-sm font-medium text-gray-500">Tasks</h4>
-          <p className="text-base">{pmScheduleDetail?.task?.task_name}</p>
-        </div>
-        <div>
-          <h4 className="text-sm font-medium text-gray-500">Frequency</h4>
-          <p className="text-base">{pmScheduleDetail?.frequency?.name}</p>
-        </div>
-        <div>
-          <h4 className="text-sm font-medium text-gray-500">Work Center</h4>
-          <p className="text-base">{pmScheduleDetail?.work_center?.name}</p>
-        </div>
-        <div>
-          <h4 className="text-sm font-medium text-gray-500">Status</h4>
-          <StatusBadge
-            status={pmScheduleDetail?.is_active ? "Active" : "Inactive"}
-          />
-        </div>
-        <div>
-          <h4 className="text-sm font-medium text-gray-500">Due Date</h4>
-          <p className="text-base">{pmScheduleDetail?.due_date}</p>
-        </div>
-        <Button className="w-1/2" onClick={onCreateWorkOrder}>
-          Create Work Order
-        </Button>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

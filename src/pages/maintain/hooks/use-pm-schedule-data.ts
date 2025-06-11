@@ -17,8 +17,8 @@ export const usePmScheduleData = () => {
           asset_id (id, asset_name), 
           system_id (id, system_name), 
           package_id (id, package_no, package_name), 
-          pm_group_id (id, name), 
-          pm_sce_group_id (id, name), 
+          pm_group_id (id, asset_detail_id), 
+          pm_sce_group_id (id, sce_code, group_name), 
           facility_id (id, location_name)`
         )
         .order("id", { ascending: false });
@@ -55,8 +55,8 @@ export const usePmScheduleDataById = (id: number) => {
           asset_id (id, asset_name), 
           system_id (id, system_name), 
           package_id (id, package_no, package_name), 
-          pm_group_id (id, name), 
-          pm_sce_group_id (id, name), 
+          pm_group_id (id, asset_detail_id), 
+          pm_sce_group_id (id, sce_code, group_name), 
           facility_id (id, location_name)`
         )
         .eq("id", id)

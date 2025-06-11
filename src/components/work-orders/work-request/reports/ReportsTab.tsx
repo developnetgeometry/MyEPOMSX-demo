@@ -144,37 +144,37 @@ const ReportsTab: React.FC<ReportsTabProps> = ({ workRequestId, cmStatusId }) =>
                       <h5 className="text-md font-semibold mb-2 text-xl">Environment Detail</h5>
                       <div className="grid grid-cols-2 gap-4 mt-4">
                         <div className="font-medium text-gray-600">Weather Condition</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.weather_condition?.trim() || "-"}</div>
+                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.weather_condition ?? "-"}</div>
 
                         <div className="font-medium text-gray-600">Visibility</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.visibility?.trim() || "-"}</div>
+                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.visibility ?? "-"}</div>
 
                         <div className="font-medium text-gray-600">Wind Speed & Direction</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.wind_speed_direction?.trim() || "-"}</div>
+                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.wind_speed_direction ?? "-"}</div>
 
                         <div className="font-medium text-gray-600">Sea Well</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.sea_well?.trim() || "-"}</div>
+                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.sea_well ?? "-"}</div>
 
                         <div className="font-medium text-gray-600">Alarm Trigger</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.alarm_trigger?.trim() || "-"}</div>
+                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.alarm_trigger ?? "-"}</div>
 
                         <div className="font-medium text-gray-600">Time Failed</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.time_failed?.trim() || "-"}</div>
+                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.time_failed ?? "-"}</div>
 
                         <div className="font-medium text-gray-600">Time Resume</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.time_resume?.trim() || "-"}</div>
+                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.time_resume ?? "-"}</div>
 
                         <div className="font-medium text-gray-600">Shift</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.shift?.trim() || "-"}</div>
+                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.shift ?? "-"}</div>
 
                         <div className="font-medium text-gray-600">Redundant</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.redundant?.trim() || "-"}</div>
+                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.redundant ?? "-"}</div>
 
                         <div className="font-medium text-gray-600">Other Detail</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.other_detail?.trim() || "-"}</div>
+                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.other_detail ?? "-"}</div>
 
                         <div className="font-medium text-gray-600">Shutdown Type</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.shutdown_type_id?.name?.trim() || "-"}</div>
+                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.shutdown_type_id?.name ?? "-"}</div>
                       </div>
                     </div>
 
@@ -183,25 +183,25 @@ const ReportsTab: React.FC<ReportsTabProps> = ({ workRequestId, cmStatusId }) =>
                       <h5 className="text-md font-semibold mb-2 text-xl">Operation Detail</h5>
                       <div className="grid grid-cols-2 gap-4 mt-4">
                         <div className="font-medium text-gray-600">Service Asset</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.service_asset?.trim() || "-"}</div>
+                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.service_asset ?? "-"}</div>
 
                         <div className="font-medium text-gray-600">Pressure</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.pressure?.trim() || "-"}</div>
+                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.pressure ?? "-"}</div>
 
                         <div className="font-medium text-gray-600">Temperature</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.temp?.trim() || "-"}</div>
+                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.temp ?? "-"}</div>
 
                         <div className="font-medium text-gray-600">Operating History</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.operating_history?.trim() || "-"}</div>
+                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.operating_history ?? "-"}</div>
 
                         <div className="font-medium text-gray-600">Time in Service (hr)</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.time_in_servicehr?.trim() || "-"}</div>
+                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.time_in_servicehr ?? "-"}</div>
 
                         <div className="font-medium text-gray-600">Material Class</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.material_class_id?.name?.trim() || "-"}</div>
+                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.material_class_id?.name ?? "-"}</div>
 
                         <div className="font-medium text-gray-600">Design Code</div>
-                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.design_code?.trim() || "-"}</div>
+                        <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.design_code ?? "-"}</div>
                       </div>
                     </div>
                   </div>

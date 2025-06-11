@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import PageHeader from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, ClipboardList, X } from 'lucide-react';
+import { ArrowLeft, ListOrdered, X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -123,8 +123,8 @@ const WorkOrderListDetailPage: React.FC = () => {
 
       <div className="flex items-center justify-between">
         <PageHeader
-          title="Work Request Details"
-          icon={<ClipboardList className="h-6 w-6" />}
+          title="Work Order Detail"
+          icon={<ListOrdered className="h-6 w-6" />}
         />
         <Button
           variant="outline"

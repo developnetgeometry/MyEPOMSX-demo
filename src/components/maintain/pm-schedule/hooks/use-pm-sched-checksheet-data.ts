@@ -1,20 +1,20 @@
 import { BUCKET_NAME_ATTACHMENT, supabase, SUPABASE_BUCKET_URL } from "@/lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 
-const ATTACHMENT_TYPE = "pm-checksheet";
+const ATTACHMENT_TYPE = "pm-schedule-checksheet";
 
-export const usePmChecksheetData = (pmWoId: number) => {
+export const usePmSchedChecksheetData = (pmScheduleId: number) => {
   return useQuery({
-    queryKey: ["e-pm-checksheet", pmWoId],
+    queryKey: ["e-pm-schedule-checksheet", pmScheduleId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("e_pm_checksheet")
-        .select(`id, file_path, description, pm_wo_id`)
-        .eq("pm_wo_id", pmWoId)
+        .from("e_pm_schedule_checksheet")
+        .select(`id, file_path, description, pm_schedule_id`)
+        .eq("pm_schedule_id", pmScheduleId)
         .order("id", { ascending: true });
 
       if (error) {
-        console.error("Error fetching e_pm_checksheet data:", error);
+        console.error("Error fetching e_pm_schedule_checksheet data:", error);
         throw error;
       }
 
@@ -24,20 +24,20 @@ export const usePmChecksheetData = (pmWoId: number) => {
         file_path: `${SUPABASE_BUCKET_URL}${checksheet.file_path}`,
       }));
     },
-    enabled: !!pmWoId, // Only fetch if pmWoId is provided
+    enabled: !!pmScheduleId, // Only fetch if pmScheduleId is provided
   });
 };
 
-export const insertPmChecksheetData = async (checksheetData: {
-  pm_wo_id: number;
+export const insertPmSchedChecksheetData = async (checksheetData: {
+  pm_schedule_id: number;
   file: File;
   description?: string;
 }) => {
   try {
-    const { pm_wo_id, file, description } = checksheetData;
+    const { pm_schedule_id, file, description } = checksheetData;
 
     // Generate file path for storage and database
-    const fileName = `${pm_wo_id}_${Date.now()}_${file.name}`;
+    const fileName = `${pm_schedule_id}_${Date.now()}_${file.name}`;
     const storagePath = `${ATTACHMENT_TYPE}/${fileName}`;
     const dbFilePath = `/${BUCKET_NAME_ATTACHMENT}/${storagePath}`;
 
@@ -53,22 +53,22 @@ export const insertPmChecksheetData = async (checksheetData: {
 
     // Insert record into the database
     const { data, error } = await supabase
-      .from("e_pm_checksheet")
-      .insert([{ pm_wo_id, file_path: dbFilePath, description }]);
+      .from("e_pm_schedule_checksheet")
+      .insert([{ pm_schedule_id, file_path: dbFilePath, description }]);
 
     if (error) {
-      console.error("Error inserting e_pm_checksheet data:", error);
+      console.error("Error inserting e_pm_schedule_checksheet data:", error);
       throw error;
     }
 
     return data;
   } catch (err) {
-    console.error("Unexpected error inserting e_pm_checksheet data:", err);
+    console.error("Unexpected error inserting e_pm_schedule_checksheet data:", err);
     throw err;
   }
 };
 
-export const updatePmChecksheetData = async (
+export const updatePmSchedChecksheetData = async (
   id: number,
   updatedData: {
     description?: string;
@@ -79,28 +79,28 @@ export const updatePmChecksheetData = async (
 
     // Update only the description in the database
     const { data, error } = await supabase
-      .from("e_pm_checksheet")
+      .from("e_pm_schedule_checksheet")
       .update({ description })
       .eq("id", id);
 
     if (error) {
-      console.error("Error updating e_pm_checksheet data:", error);
+      console.error("Error updating e_pm_schedule_checksheet data:", error);
       throw error;
     }
 
     return data;
   } catch (err) {
-    console.error("Unexpected error updating e_pm_checksheet data:", err);
+    console.error("Unexpected error updating e_pm_schedule_checksheet data:", err);
     throw err;
   }
 };
 
-export const deletePmChecksheetData = async (id: number) => {
+export const deletePmSchedChecksheetData = async (id: number) => {
   try {
     // Fetch the existing record to get the file path
     const { data: existingData, error: fetchError } = await supabase
-      .from("e_pm_checksheet")
-      .select("file_path, is_from_pm_schedule")
+      .from("e_pm_schedule_checksheet")
+      .select("file_path")
       .eq("id", id)
       .single();
 
@@ -110,7 +110,7 @@ export const deletePmChecksheetData = async (id: number) => {
     }
 
     // Delete the file from storage
-    if (existingData?.is_from_pm_schedule !== true && existingData?.file_path) {
+    if (existingData?.file_path) {
       const storagePath = existingData.file_path.replace(`/${BUCKET_NAME_ATTACHMENT}/`, "");
       const { error: deleteError } = await supabase.storage
         .from(BUCKET_NAME_ATTACHMENT)
@@ -124,18 +124,18 @@ export const deletePmChecksheetData = async (id: number) => {
 
     // Delete the record from the database
     const { data, error } = await supabase
-      .from("e_pm_checksheet")
+      .from("e_pm_schedule_checksheet")
       .delete()
       .eq("id", id);
 
     if (error) {
-      console.error("Error deleting e_pm_checksheet data:", error);
+      console.error("Error deleting e_pm_schedule_checksheet data:", error);
       throw error;
     }
 
     return data;
   } catch (err) {
-    console.error("Unexpected error deleting e_pm_checksheet data:", err);
+    console.error("Unexpected error deleting e_pm_schedule_checksheet data:", err);
     throw err;
   }
 };
