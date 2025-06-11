@@ -42,6 +42,8 @@ import {
   useManufacturerOptions,
   useAssetAreaOptions,
   useAssetSensorOptions,
+  useCriticalityOptions,
+  useSCEOptions,
 } from "@/hooks/queries/useAssetDropdownOptions";
 import {
   validateImageFile,
@@ -115,6 +117,10 @@ const AssetAddPage: React.FC = () => {
     useAssetAreaOptions();
   const { data: assetSensorOptionsData = [], isLoading: isAssetSensorLoading } =
     useAssetSensorOptions();
+  const { data: criticalityOptionsData = [], isLoading: isCriticalityLoading } =
+    useCriticalityOptions();
+  const { data: sceOptionsData = [], isLoading: isSCELoading } =
+    useSCEOptions();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -146,6 +152,10 @@ const AssetAddPage: React.FC = () => {
     assetSensor: "",
     assetExClass: "",
     assetExCertificate: "",
+    assetCriticality: false,
+    assetSCECode: false,
+    criticalityId: "",
+    sceId: "",
   });
 
   const [assetImageFiles, setAssetImageFiles] = useState<File[]>([]);
@@ -225,6 +235,20 @@ const AssetAddPage: React.FC = () => {
           });
         }
       }
+    } else if (field === "assetCriticality") {
+      // When Criticality checkbox is unchecked, reset the criticality dropdown value
+      setFormData({
+        ...formData,
+        [field]: value,
+        criticalityId: value ? formData.criticalityId : "",
+      });
+    } else if (field === "assetSCECode") {
+      // When SCE Code checkbox is unchecked, reset the SCE dropdown value
+      setFormData({
+        ...formData,
+        [field]: value,
+        sceId: value ? formData.sceId : "",
+      });
     } else {
       setFormData({
         ...formData,
@@ -310,27 +334,39 @@ const AssetAddPage: React.FC = () => {
       const { data: assetDetailData, error: assetDetailError } = await supabase
         .from("e_asset_detail")
         .insert({
-          category_id: formData.assetCategory || null,
-          type_id: formData.assetType || null,
-          manufacturer_id: formData.assetManufacturer || null,
+          category_id: formData.assetCategory
+            ? parseInt(formData.assetCategory)
+            : null,
+          type_id: formData.assetType ? parseInt(formData.assetType) : null,
+          manufacturer_id: formData.assetManufacturer
+            ? parseInt(formData.assetManufacturer)
+            : null,
           maker_no: formData.assetMakerNo || null,
           model: formData.assetModel || null,
           hs_code: formData.assetHsCode || null,
           serial_number: formData.assetSerialNo || null,
-          area_id: formData.assetArea || null,
-          asset_class_id: formData.assetClass || null,
-          asset_sce_id: formData.assetClass || null,
+          area_id: formData.assetArea ? parseInt(formData.assetArea) : null,
+          asset_class_id: formData.assetClass
+            ? parseInt(formData.assetClass)
+            : null,
           specification: formData.assetSpecification || null,
           is_integrity: formData.assetIntegrity,
           is_reliability: formData.assetReliability,
           is_active: formData.assetActive,
-          iot_sensor_id: formData.assetSensor || null,
+          is_sce: formData.assetSCECode,
+          is_criticality: formData.assetCriticality,
+          iot_sensor_id: formData.assetSensor
+            ? parseInt(formData.assetSensor)
+            : null,
           drawing_no: formData.assetDrawingNo || null,
+          criticality_id: formData.criticalityId
+            ? parseInt(formData.criticalityId)
+            : null,
+          sce_id: formData.sceId ? parseInt(formData.sceId) : null,
           ex_class: formData.assetExClass || null,
           ex_certificate: formData.assetExCertificate || null,
           created_by: user.id, // Use the actual logged-in user ID
           created_at: new Date().toISOString(),
-          // We no longer store image paths in asset_detail
         })
         .select("id")
         .single();
@@ -356,14 +392,23 @@ const AssetAddPage: React.FC = () => {
       const { data: assetData, error: assetError } = await supabase
         .from("e_asset")
         .insert({
-          facility_id: formData.facilityLocations,
-          system_id: formData.systems,
-          package_id: formData.packages,
+          facility_id: formData.facilityLocations
+            ? parseInt(formData.facilityLocations)
+            : null,
+          system_id: formData.systems ? parseInt(formData.systems) : null,
+          package_id: formData.packages ? parseInt(formData.packages) : null,
           asset_no: formData.assetNo,
           asset_name: formData.assetName,
-          asset_tag_id: formData.assetTag,
-          status_id: statusId,
-          asset_group_id: formData.assetGroup || null,
+          asset_tag_id: formData.assetTag ? parseInt(formData.assetTag) : null,
+          asset_sce_id: formData.sceId ? parseInt(formData.sceId) : null,
+          status_id: statusId
+            ? typeof statusId === "string"
+              ? parseInt(statusId)
+              : statusId
+            : null,
+          asset_group_id: formData.assetGroup
+            ? parseInt(formData.assetGroup)
+            : null,
           commission_date: formData.commissionDate || null,
           asset_detail_id: assetDetailId,
           created_by: user.id, // Use the actual logged-in user ID
@@ -716,410 +761,576 @@ const AssetAddPage: React.FC = () => {
 
               {/* Asset Details Tab */}
               <TabsContent value="asset-details">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="assetCategory">Asset Category</Label>
-                      <Select
-                        value={formData.assetCategory}
-                        onValueChange={(value) =>
-                          handleChange("assetCategory", value)
-                        }
-                        disabled={
-                          isAssetCategoryLoading || isCategoryGroupLoading
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select asset category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {/* Group categories by their category group */}
-                          {Array.isArray(assetCategoryOptionsData) &&
-                            Object.entries(
-                              assetCategoryOptionsData.reduce(
-                                (groups, option) => {
-                                  const groupId =
-                                    option.asset_category_group_id;
-                                  if (!groups[groupId]) {
-                                    groups[groupId] = [];
-                                  }
-                                  groups[groupId].push(option);
-                                  return groups;
-                                },
-                                {} as Record<
-                                  number,
-                                  typeof assetCategoryOptionsData
+                <div className="space-y-8">
+                  {/* Basic Information Section */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4 text-gray-900 border-b pb-2">
+                      Basic Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="assetCategory">Asset Category</Label>
+                        <Select
+                          value={formData.assetCategory}
+                          onValueChange={(value) =>
+                            handleChange("assetCategory", value)
+                          }
+                          disabled={
+                            isAssetCategoryLoading || isCategoryGroupLoading
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select asset category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {/* Group categories by their category group */}
+                            {Array.isArray(assetCategoryOptionsData) &&
+                              Object.entries(
+                                assetCategoryOptionsData.reduce(
+                                  (groups, option) => {
+                                    const groupId =
+                                      option.asset_category_group_id;
+                                    if (!groups[groupId]) {
+                                      groups[groupId] = [];
+                                    }
+                                    groups[groupId].push(option);
+                                    return groups;
+                                  },
+                                  {} as Record<
+                                    number,
+                                    typeof assetCategoryOptionsData
+                                  >
+                                )
+                              ).map(([groupId, options]) => (
+                                <div key={groupId} className="px-2">
+                                  <div className="font-semibold text-xs text-muted-foreground py-2 border-b mb-1">
+                                    {categoryGroups[groupId] ||
+                                      `Group ${groupId}`}
+                                  </div>
+                                  {options.map((option) => (
+                                    <SelectItem
+                                      key={option.id}
+                                      value={String(option.value)}
+                                    >
+                                      {option.label}
+                                    </SelectItem>
+                                  ))}
+                                </div>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="assetType">Asset Type</Label>
+                        <Select
+                          value={formData.assetType}
+                          onValueChange={(value) =>
+                            handleChange("assetType", value)
+                          }
+                          disabled={isAssetTypeLoading || isTypeGroupLoading}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select asset type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {/* Group types by their type group */}
+                            {Array.isArray(assetTypeOptionsData) &&
+                              Object.entries(
+                                assetTypeOptionsData.reduce(
+                                  (groups, option) => {
+                                    const groupId = option.asset_type_group_id;
+                                    if (!groups[groupId]) {
+                                      groups[groupId] = [];
+                                    }
+                                    groups[groupId].push(option);
+                                    return groups;
+                                  },
+                                  {} as Record<
+                                    number,
+                                    typeof assetTypeOptionsData
+                                  >
+                                )
+                              ).map(([groupId, options]) => (
+                                <div key={groupId} className="px-2">
+                                  <div className="font-semibold text-xs text-muted-foreground py-2 border-b mb-1">
+                                    {typeGroups[groupId] || `Group ${groupId}`}
+                                  </div>
+                                  {options.map((option) => (
+                                    <SelectItem
+                                      key={option.id}
+                                      value={String(option.value)}
+                                    >
+                                      {option.label}
+                                    </SelectItem>
+                                  ))}
+                                </div>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="assetArea">Asset Area</Label>
+                        <Select
+                          value={formData.assetArea}
+                          onValueChange={(value) =>
+                            handleChange("assetArea", value)
+                          }
+                          disabled={isAssetAreaLoading}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select asset area" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.isArray(assetAreaOptionsData) &&
+                              assetAreaOptionsData.map((option) => (
+                                <SelectItem
+                                  key={option.id}
+                                  value={String(option.value)}
                                 >
-                              )
-                            ).map(([groupId, options]) => (
-                              <div key={groupId} className="px-2">
-                                <div className="font-semibold text-xs text-muted-foreground py-2 border-b mb-1">
-                                  {categoryGroups[groupId] ||
-                                    `Group ${groupId}`}
-                                </div>
-                                {options.map((option) => (
-                                  <SelectItem
-                                    key={option.id}
-                                    value={String(option.value)}
-                                  >
-                                    {option.label}
-                                  </SelectItem>
-                                ))}
-                              </div>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="assetType">Asset Type</Label>
-                      <Select
-                        value={formData.assetType}
-                        onValueChange={(value) =>
-                          handleChange("assetType", value)
-                        }
-                        disabled={isAssetTypeLoading || isTypeGroupLoading}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select asset type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {/* Group types by their type group */}
-                          {Array.isArray(assetTypeOptionsData) &&
-                            Object.entries(
-                              assetTypeOptionsData.reduce((groups, option) => {
-                                const groupId = option.asset_type_group_id;
-                                if (!groups[groupId]) {
-                                  groups[groupId] = [];
-                                }
-                                groups[groupId].push(option);
-                                return groups;
-                              }, {} as Record<number, typeof assetTypeOptionsData>)
-                            ).map(([groupId, options]) => (
-                              <div key={groupId} className="px-2">
-                                <div className="font-semibold text-xs text-muted-foreground py-2 border-b mb-1">
-                                  {typeGroups[groupId] || `Group ${groupId}`}
-                                </div>
-                                {options.map((option) => (
-                                  <SelectItem
-                                    key={option.id}
-                                    value={String(option.value)}
-                                  >
-                                    {option.label}
-                                  </SelectItem>
-                                ))}
-                              </div>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="assetClass">Asset Class</Label>
+                        <Select
+                          value={formData.assetClass}
+                          onValueChange={(value) =>
+                            handleChange("assetClass", value)
+                          }
+                          disabled={isAssetClassLoading}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select asset class" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.isArray(assetClassOptionsData) &&
+                              assetClassOptionsData.map((option) => (
+                                <SelectItem
+                                  key={option.id}
+                                  value={String(option.value)}
+                                >
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                    {/*                    <div className="space-y-2">
-                      <Label htmlFor="assetSubType">Asset Sub-Type</Label>
-                      <Input
-                        id="assetSubType"
-                        value={formData.assetSubType}
-                        onChange={(e) =>
-                          handleChange("assetSubType", e.target.value)
-                        }
-                        placeholder="Enter asset sub-type"
-                      />
-                    </div>*/}
-
-                    <div className="space-y-2">
-                      <Label htmlFor="assetManufacturer">
-                        Asset Manufacturer
-                      </Label>
-                      <Select
-                        value={formData.assetManufacturer}
-                        onValueChange={(value) =>
-                          handleChange("assetManufacturer", value)
-                        }
-                        disabled={isManufacturerLoading}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select manufacturer" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Array.isArray(manufacturerOptionsData) &&
-                            manufacturerOptionsData.map((option) => (
-                              <SelectItem
-                                key={option.id}
-                                value={String(option.value)}
-                              >
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="assetMakerNo">Asset Maker No</Label>
-                      <Input
-                        id="assetMakerNo"
-                        value={formData.assetMakerNo}
-                        onChange={(e) =>
-                          handleChange("assetMakerNo", e.target.value)
-                        }
-                        placeholder="Enter asset maker number"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="assetModel">Asset Model</Label>
-                      <Input
-                        id="assetModel"
-                        value={formData.assetModel}
-                        onChange={(e) =>
-                          handleChange("assetModel", e.target.value)
-                        }
-                        placeholder="Enter asset model"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="assetSpecification">
-                        Asset Specification
-                      </Label>
-                      <Textarea
-                        id="assetSpecification"
-                        value={formData.assetSpecification}
-                        onChange={(e) =>
-                          handleChange("assetSpecification", e.target.value)
-                        }
-                        placeholder="Enter asset specification"
-                      />
+                      <div className="space-y-2">
+                        <Label htmlFor="assetSensor">Asset Sensor</Label>
+                        <Select
+                          value={formData.assetSensor}
+                          onValueChange={(value) =>
+                            handleChange("assetSensor", value)
+                          }
+                          disabled={isAssetSensorLoading}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select asset sensor" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.isArray(assetSensorOptionsData) &&
+                              assetSensorOptionsData.map((option) => (
+                                <SelectItem
+                                  key={option.id}
+                                  value={String(option.value)}
+                                >
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="assetHsCode">Asset HS Code</Label>
-                      <Input
-                        id="assetHsCode"
-                        value={formData.assetHsCode}
-                        onChange={(e) =>
-                          handleChange("assetHsCode", e.target.value)
-                        }
-                        placeholder="Enter asset HS code"
-                      />
+                  {/* Manufacturing Details Section */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4 text-gray-900 border-b pb-2">
+                      Manufacturing Details
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="assetManufacturer">
+                          Asset Manufacturer
+                        </Label>
+                        <Select
+                          value={formData.assetManufacturer}
+                          onValueChange={(value) =>
+                            handleChange("assetManufacturer", value)
+                          }
+                          disabled={isManufacturerLoading}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select manufacturer" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.isArray(manufacturerOptionsData) &&
+                              manufacturerOptionsData.map((option) => (
+                                <SelectItem
+                                  key={option.id}
+                                  value={String(option.value)}
+                                >
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="assetModel">Asset Model</Label>
+                        <Input
+                          id="assetModel"
+                          value={formData.assetModel}
+                          onChange={(e) =>
+                            handleChange("assetModel", e.target.value)
+                          }
+                          placeholder="Enter asset model"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="assetMakerNo">Asset Maker No</Label>
+                        <Input
+                          id="assetMakerNo"
+                          value={formData.assetMakerNo}
+                          onChange={(e) =>
+                            handleChange("assetMakerNo", e.target.value)
+                          }
+                          placeholder="Enter asset maker number"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="assetSerialNo">Asset Serial No</Label>
+                        <Input
+                          id="assetSerialNo"
+                          value={formData.assetSerialNo}
+                          onChange={(e) =>
+                            handleChange("assetSerialNo", e.target.value)
+                          }
+                          placeholder="Enter asset serial number"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="assetHsCode">Asset HS Code</Label>
+                        <Input
+                          id="assetHsCode"
+                          value={formData.assetHsCode}
+                          onChange={(e) =>
+                            handleChange("assetHsCode", e.target.value)
+                          }
+                          placeholder="Enter asset HS code"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="assetDrawingNo">Asset Drawing No</Label>
+                        <Input
+                          id="assetDrawingNo"
+                          value={formData.assetDrawingNo}
+                          onChange={(e) =>
+                            handleChange("assetDrawingNo", e.target.value)
+                          }
+                          placeholder="Enter asset drawing number"
+                        />
+                      </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="assetSerialNo">Asset Serial No</Label>
-                      <Input
-                        id="assetSerialNo"
-                        value={formData.assetSerialNo}
-                        onChange={(e) =>
-                          handleChange("assetSerialNo", e.target.value)
-                        }
-                        placeholder="Enter asset serial number"
-                      />
+                    <div className="grid grid-cols-1 gap-6 mt-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="assetSpecification">
+                          Asset Specification
+                        </Label>
+                        <Textarea
+                          id="assetSpecification"
+                          value={formData.assetSpecification}
+                          onChange={(e) =>
+                            handleChange("assetSpecification", e.target.value)
+                          }
+                          placeholder="Enter asset specification"
+                          rows={3}
+                        />
+                      </div>
                     </div>
+                  </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="assetArea">Asset Area</Label>
-                      <Select
-                        value={formData.assetArea}
-                        onValueChange={(value) =>
-                          handleChange("assetArea", value)
-                        }
-                        disabled={isAssetAreaLoading}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select asset area" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Array.isArray(assetAreaOptionsData) &&
-                            assetAreaOptionsData.map((option) => (
-                              <SelectItem
-                                key={option.id}
-                                value={String(option.value)}
+                  {/* Asset Properties Section */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4 text-gray-900 border-b pb-2">
+                      Asset Properties
+                    </h3>
+                    <div className="space-y-6">
+                      {/* Basic Properties */}
+                      <div>
+                        <h4 className="text-sm font-medium mb-3 text-gray-700">
+                          Basic Properties
+                        </h4>
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="assetIntegrity"
+                              checked={formData.assetIntegrity}
+                              onCheckedChange={(checked) =>
+                                handleChange("assetIntegrity", checked)
+                              }
+                            />
+                            <Label htmlFor="assetIntegrity">Integrity</Label>
+                          </div>
+
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="assetReliability"
+                              checked={formData.assetReliability}
+                              onCheckedChange={(checked) =>
+                                handleChange("assetReliability", checked)
+                              }
+                            />
+                            <Label htmlFor="assetReliability">
+                              Reliability
+                            </Label>
+                          </div>
+
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="assetActive"
+                              checked={formData.assetActive}
+                              onCheckedChange={(checked) =>
+                                handleChange("assetActive", checked)
+                              }
+                            />
+                            <Label htmlFor="assetActive">Active</Label>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Criticality and SCE Properties */}
+                      <div>
+                        <h4 className="text-sm font-medium mb-3 text-gray-700">
+                          Risk Assessment
+                        </h4>
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="assetCriticality"
+                              checked={formData.assetCriticality}
+                              onCheckedChange={(checked) =>
+                                handleChange("assetCriticality", checked)
+                              }
+                            />
+                            <Label htmlFor="assetCriticality">
+                              Criticality
+                            </Label>
+                          </div>
+
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="assetSCECode"
+                              checked={formData.assetSCECode}
+                              onCheckedChange={(checked) =>
+                                handleChange("assetSCECode", checked)
+                              }
+                            />
+                            <Label htmlFor="assetSCECode">SCE Code</Label>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Conditional Criticality Dropdown */}
+                          {formData.assetCriticality && (
+                            <div className="space-y-2">
+                              <Label htmlFor="criticalityId">
+                                Criticality Level
+                              </Label>
+                              <Select
+                                value={formData.criticalityId}
+                                onValueChange={(value) =>
+                                  handleChange("criticalityId", value)
+                                }
+                                disabled={isCriticalityLoading}
                               >
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select Criticality Level" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Array.isArray(criticalityOptionsData) &&
+                                    criticalityOptionsData.map((option) => (
+                                      <SelectItem
+                                        key={option.id}
+                                        value={String(option.value)}
+                                      >
+                                        {option.label}
+                                      </SelectItem>
+                                    ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
 
-                    <div className="space-y-2">
-                      <Label htmlFor="assetClass">Asset Class</Label>
-                      <Select
-                        value={formData.assetClass}
-                        onValueChange={(value) =>
-                          handleChange("assetClass", value)
-                        }
-                        disabled={isAssetClassLoading}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select asset class" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Array.isArray(assetClassOptionsData) &&
-                            assetClassOptionsData.map((option) => (
-                              <SelectItem
-                                key={option.id}
-                                value={String(option.value)}
+                          {/* SCE Code Dropdown */}
+                          {formData.assetSCECode && (
+                            <div className="space-y-2">
+                              <Label htmlFor="sceId">SCE Code</Label>
+                              <Select
+                                value={formData.sceId}
+                                onValueChange={(value) =>
+                                  handleChange("sceId", value)
+                                }
+                                disabled={isSCELoading}
                               >
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="assetDrawingNo">Asset Drawing No</Label>
-                      <Input
-                        id="assetDrawingNo"
-                        value={formData.assetDrawingNo}
-                        onChange={(e) =>
-                          handleChange("assetDrawingNo", e.target.value)
-                        }
-                        placeholder="Enter asset drawing number"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="assetIntegrity"
-                          checked={formData.assetIntegrity}
-                          onCheckedChange={(checked) =>
-                            handleChange("assetIntegrity", checked)
-                          }
-                        />
-                        <Label htmlFor="assetIntegrity">Integrity</Label>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select SCE Code" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Array.isArray(sceOptionsData) &&
+                                    sceOptionsData.map((option) => (
+                                      <SelectItem
+                                        key={option.id}
+                                        value={String(option.value)}
+                                      >
+                                        {option.label}
+                                      </SelectItem>
+                                    ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
+                        </div>
                       </div>
 
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="assetReliability"
-                          checked={formData.assetReliability}
-                          onCheckedChange={(checked) =>
-                            handleChange("assetReliability", checked)
-                          }
-                        />
-                        <Label htmlFor="assetReliability">Reliability</Label>
-                      </div>
+                      {/* Ex Class and Ex Certificate */}
+                      <div>
+                        <h4 className="text-sm font-medium mb-3 text-gray-700">
+                          Explosion Protection
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <Label htmlFor="assetExClass">Ex Class</Label>
+                            <Input
+                              id="assetExClass"
+                              value={formData.assetExClass}
+                              onChange={(e) =>
+                                handleChange("assetExClass", e.target.value)
+                              }
+                              placeholder="Enter Ex Class"
+                            />
+                          </div>
 
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="assetActive"
-                          checked={formData.assetActive}
-                          onCheckedChange={(checked) =>
-                            handleChange("assetActive", checked)
-                          }
-                        />
-                        <Label htmlFor="assetActive">Active</Label>
+                          <div className="space-y-2">
+                            <Label htmlFor="assetExCertificate">
+                              Ex Certificate
+                            </Label>
+                            <Input
+                              id="assetExCertificate"
+                              value={formData.assetExCertificate}
+                              onChange={(e) =>
+                                handleChange(
+                                  "assetExCertificate",
+                                  e.target.value
+                                )
+                              }
+                              placeholder="Enter Ex Certificate"
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
+                  </div>
 
-                    <div className="flex items-center justify-between space-x-2 pt-4">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setActiveTab("asset-info")}
-                      >
-                        Back
-                      </Button>
-                      <Button
-                        type="button"
-                        onClick={() => setActiveTab("asset-images")}
-                      >
-                        Next
-                      </Button>
-                    </div>
+                  {/* Navigation */}
+                  <div className="flex items-center justify-between space-x-2 pt-6 border-t">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setActiveTab("asset-info")}
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => setActiveTab("asset-images")}
+                    >
+                      Next
+                    </Button>
                   </div>
                 </div>
               </TabsContent>
 
               {/* Asset Images Tab */}
               <TabsContent value="asset-images">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="assetSensor">Asset Sensor</Label>
-                      <Select
-                        value={formData.assetSensor}
-                        onValueChange={(value) =>
-                          handleChange("assetSensor", value)
-                        }
-                        disabled={isAssetSensorLoading}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select asset sensor" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Array.isArray(assetSensorOptionsData) &&
-                            assetSensorOptionsData.map((option) => (
-                              <SelectItem
-                                key={option.id}
-                                value={String(option.value)}
-                              >
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                <div className="max-w-4xl mx-auto">
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4 text-gray-900 border-b pb-2">
+                        Asset Images
+                      </h3>
+                      <div className="space-y-2">
+                        <Label htmlFor="assetImage">Upload Images</Label>
+                        <div className="border-2 border-dashed border-gray-300 rounded-md p-6 flex flex-col items-center justify-center relative">
+                          {assetImagePreviews.length > 0 ? (
+                            <div className="w-full">
+                              <div className="grid grid-cols-2 gap-4 mb-4">
+                                {assetImagePreviews.map((preview, index) => (
+                                  <div key={index} className="relative">
+                                    <img
+                                      src={preview}
+                                      alt={`Asset Preview ${index + 1}`}
+                                      className="h-[150px] w-full object-cover rounded-md"
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="destructive"
+                                      size="icon"
+                                      className="absolute top-2 right-2 h-6 w-6"
+                                      onClick={() => removeImage(index)}
+                                    >
+                                      ×
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
 
-                    {/* <div className="space-y-2">
-                      <Label htmlFor="assetExClass">Asset Ex Class</Label>
-                      <Input
-                        id="assetExClass"
-                        value={formData.assetExClass}
-                        onChange={(e) =>
-                          handleChange("assetExClass", e.target.value)
-                        }
-                        placeholder="Enter asset EX class"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="assetExCertificate">
-                        Asset Ex Certificate
-                      </Label>
-                      <Input
-                        id="assetExCertificate"
-                        value={formData.assetExCertificate}
-                        onChange={(e) =>
-                          handleChange("assetExCertificate", e.target.value)
-                        }
-                        placeholder="Enter asset EX certificate"
-                      />
-                    </div> */}
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="assetImage">Asset Images</Label>
-                      <div className="border-2 border-dashed border-gray-300 rounded-md p-6 flex flex-col items-center justify-center relative">
-                        {assetImagePreviews.length > 0 ? (
-                          <div className="w-full">
-                            <div className="grid grid-cols-2 gap-4 mb-4">
-                              {assetImagePreviews.map((preview, index) => (
-                                <div key={index} className="relative">
-                                  <img
-                                    src={preview}
-                                    alt={`Asset Preview ${index + 1}`}
-                                    className="h-[150px] w-full object-cover rounded-md"
+                              <div className="flex flex-col items-center mt-4">
+                                <div className="relative w-full h-12">
+                                  <input
+                                    id="assetImage"
+                                    type="file"
+                                    multiple
+                                    accept="image/*"
+                                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                                    onChange={handleFileChange}
                                   />
-                                  <Button
-                                    type="button"
-                                    variant="destructive"
-                                    size="icon"
-                                    className="absolute top-2 right-2 h-6 w-6"
-                                    onClick={() => removeImage(index)}
-                                  >
-                                    ×
-                                  </Button>
                                 </div>
-                              ))}
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="mt-2 z-20"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    document
+                                      .getElementById("assetImage")
+                                      ?.click();
+                                  }}
+                                >
+                                  Add More Images
+                                </Button>
+                              </div>
                             </div>
-
-                            <div className="flex flex-col items-center mt-4">
+                          ) : (
+                            <div className="flex flex-col items-center gap-2">
+                              <Upload className="h-10 w-10 text-gray-400" />
+                              <p className="text-sm text-gray-500">
+                                Click to upload or drag and drop
+                              </p>
                               <div className="relative w-full h-12">
                                 <input
                                   id="assetImage"
@@ -1142,44 +1353,15 @@ const AssetAddPage: React.FC = () => {
                                     ?.click();
                                 }}
                               >
-                                Add More Images
+                                Select Files
                               </Button>
                             </div>
-                          </div>
-                        ) : (
-                          <div className="flex flex-col items-center gap-2">
-                            <Upload className="h-10 w-10 text-gray-400" />
-                            <p className="text-sm text-gray-500">
-                              Click to upload or drag and drop
-                            </p>
-                            <div className="relative w-full h-12">
-                              <input
-                                id="assetImage"
-                                type="file"
-                                multiple
-                                accept="image/*"
-                                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
-                                onChange={handleFileChange}
-                              />
-                            </div>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="mt-2 z-20"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                document.getElementById("assetImage")?.click();
-                              }}
-                            >
-                              Select Files
-                            </Button>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between space-x-2 pt-14">
+                    <div className="flex items-center justify-between space-x-2 pt-6 border-t">
                       <Button
                         type="button"
                         variant="outline"

@@ -100,6 +100,7 @@ import InspectionDataPage from "@/pages/monitor/InspectionDataPage";
 import IntegrityPage from "@/pages/monitor/IntegrityPage";
 import NewPressureVesselPage from "@/pages/monitor/NewPressureVesselPage";
 import NewPipingPage from "@/pages/monitor/NewPipingPage";
+import FormulaTestingPage from "@/pages/monitor/FormulaTestingPage";
 import InventoryGroupsPage from "@/pages/monitor/InventoryGroupsPage";
 import RBIAssessmentPage from "@/pages/monitor/RBIAssessmentPage";
 import RBIAssessmentDetailPage from "@/pages/monitor/RBIAssessmentDetailPage";
@@ -968,6 +969,16 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <Layout>
               <NewPipingPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/monitor/formula-testing"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <FormulaTestingPage />
             </Layout>
           </ProtectedRoute>
         }
