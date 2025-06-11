@@ -73,8 +73,8 @@ import SystemDetailPage from "@/pages/manage/SystemDetailPage";
 import PMSchedulePage from "@/pages/maintain/pm-schedule/PMSchedulePage";
 import PMScheduleDetailPage from "@/pages/maintain/pm-schedule/PMScheduleDetailPage";
 import CreatePMSchedulePage from "@/pages/maintain/pm-schedule/CreatePMSchedulePage";
-import TaskLibraryPage from "@/pages/maintain/TaskLibraryPage";
-import TaskLibraryDetailPage from "@/pages/maintain/TaskLibraryDetailPage";
+import TaskLibraryPage from "@/pages/maintain/task-detail/TaskLibraryPage";
+import TaskLibraryDetailPage from "@/pages/maintain/task-detail/TaskLibraryDetailPage";
 
 // Work Orders Pages
 import WOHistoryPage from "@/pages/work-orders/work-order-history/WOHistoryPage";
@@ -124,6 +124,7 @@ import PurchaseOrderFormPage from "@/pages/purchasing/PurchaseOrderFormPage";
 import GoodsReceivePage from "@/pages/purchasing/GoodsReceivePage";
 import GoodsReceiveDetailPage from "@/pages/purchasing/GoodsReceiveDetailPage";
 import GoodsReceiveFormPage from "@/pages/purchasing/GoodsReceiveFormPage";
+import InventoryAddPage from "@/pages/manage/InventoryAddPage";
 import ItemMasterAddPage from "@/pages/manage/ItemMasterAddPage";
 
 const AppRoutes: React.FC = () => {
@@ -591,6 +592,16 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <Layout>
               <InventoryPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/manage/inventory/add"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <InventoryAddPage />
             </Layout>
           </ProtectedRoute>
         }

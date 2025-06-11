@@ -29,6 +29,20 @@ export const itemMasterService = {
     return data || [];
   },
 
+  async getItemMasterOptions() {
+    const { data, error } = await supabase
+      .from("e_item_master")
+      .select("id, item_no, item_name")
+      .order("item_no");
+
+    if (error) {
+      console.error("Error fetching item master options:", error);
+      throw error;
+    }
+
+    return data || [];
+  },
+
   async getItemMasterById(id: number): Promise<ItemMasterDetaiWithRelations> {
     const { data, error } = await supabase
       .from("e_item_master")

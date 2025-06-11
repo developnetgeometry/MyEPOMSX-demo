@@ -262,7 +262,7 @@ const WorkRequestDetailPage: React.FC = () => {
 
       <div className="flex items-center justify-between">
         <PageHeader
-          title="Work Request Details"
+          title="Work Request Detail"
           icon={<ClipboardList className="h-6 w-6" />}
         />
         <Button
@@ -288,27 +288,29 @@ const WorkRequestDetailPage: React.FC = () => {
       {/* Tabs Section */}
       <Card>
         <CardContent className="pt-6">
-          <Tabs defaultValue="taskDetail">
-            <TabsList className="w-full border-b justify-start">
-              <TabsTrigger value="taskDetail">Task Detail</TabsTrigger>
-              <TabsTrigger value="reports">Reports</TabsTrigger>
-              <TabsTrigger value="failure">Failure</TabsTrigger>
-              <TabsTrigger value="attachment">Attachment</TabsTrigger>
-            </TabsList>
+          {!isLoading && workRequest && (
+            <Tabs defaultValue="taskDetail">
+              <TabsList className="w-full border-b justify-start">
+                <TabsTrigger value="taskDetail">Task Detail</TabsTrigger>
+                <TabsTrigger value="reports">Reports</TabsTrigger>
+                <TabsTrigger value="failure">Failure</TabsTrigger>
+                <TabsTrigger value="attachment">Attachment</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="taskDetail">
-              {id && workRequest && <TaskDetailTab newWorkRequestId={Number(id)} cmStatusId={workRequest.cm_status_id?.id}/>}
-            </TabsContent>
-            <TabsContent value="reports">
-              {id && workRequest && <ReportsTab workRequestId={Number(id)} cmStatusId={workRequest.cm_status_id?.id} />}
-            </TabsContent>
-            <TabsContent value="failure">
-              {id && workRequest && <FailureTab workRequestId={Number(id)} cmStatusId={workRequest.cm_status_id?.id} />}
-            </TabsContent>
-            <TabsContent value="attachment">
-              {id && workRequest && <AttachmentTab workRequestId={Number(id)} cmStatusId={workRequest.cm_status_id?.id} />}
-            </TabsContent>
-          </Tabs>
+              <TabsContent value="taskDetail">
+                {id && workRequest && <TaskDetailTab newWorkRequestId={Number(id)} cmStatusId={workRequest.cm_status_id?.id} />}
+              </TabsContent>
+              <TabsContent value="reports">
+                {id && workRequest && <ReportsTab workRequestId={Number(id)} cmStatusId={workRequest.cm_status_id?.id} />}
+              </TabsContent>
+              <TabsContent value="failure">
+                {id && workRequest && <FailureTab workRequestId={Number(id)} cmStatusId={workRequest.cm_status_id?.id} />}
+              </TabsContent>
+              <TabsContent value="attachment">
+                {id && workRequest && <AttachmentTab workRequestId={Number(id)} cmStatusId={workRequest.cm_status_id?.id} />}
+              </TabsContent>
+            </Tabs>
+          )}
         </CardContent>
       </Card>
 

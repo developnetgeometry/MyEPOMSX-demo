@@ -15,6 +15,13 @@ export const useItemMaster = () => {
   });
 };
 
+export const useItemMasterOptions = () => {
+    return useQuery({
+        queryKey: ["itemMasterOptions"],
+        queryFn: () => itemMasterService.getItemMasterOptions(),
+    });
+}
+
 export const useItemMasterDetail = (id: number) => {
   return useQuery({
     queryKey: itemMasterKeys.detail(id),

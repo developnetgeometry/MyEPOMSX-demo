@@ -140,28 +140,28 @@ const FailureTab: React.FC<FailureTabProps> = ({ workRequestId, cmStatusId }) =>
                     <h5 className="text-md font-semibold mb-2 text-xl">Failure Details</h5>
                     <div className="grid grid-cols-2 gap-4 mt-4">
                       <div className="font-medium text-gray-600">Safety</div>
-                      <div className="text-gray-800">{failure?.safety?.trim() ? failure.safety : "-"}</div>
+                      <div className="text-gray-800">{failure?.safety ?? "-"}</div>
 
                       <div className="font-medium text-gray-600">Likelihood</div>
-                      <div className="text-gray-800">{failure?.like_hood?.trim() ? failure.like_hood : "-"}</div>
+                      <div className="text-gray-800">{failure?.like_hood ?? "-"}</div>
 
                       <div className="font-medium text-gray-600">Action Taken</div>
-                      <div className="text-gray-800">{failure?.action_taken?.trim() ? failure.action_taken : "-"}</div>
+                      <div className="text-gray-800">{failure?.action_taken ?? "-"}</div>
 
                       <div className="font-medium text-gray-600">Critical Rank</div>
-                      <div className="text-gray-800">{failure?.critical_rank?.trim() ? failure.critical_rank : "-"}</div>
+                      <div className="text-gray-800">{failure?.critical_rank ?? "-"}</div>
 
                       <div className="font-medium text-gray-600">Probability of Occurrence</div>
-                      <div className="text-gray-800">{failure?.provability_occurrance?.trim() ? failure.provability_occurrance : "-"}</div>
+                      <div className="text-gray-800">{failure?.provability_occurrance ??  "-"}</div>
 
                       <div className="font-medium text-gray-600">Environmental Consequences</div>
-                      <div className="text-gray-800">{failure?.environment_consequences?.trim() ? failure.environment_consequences : "-"}</div>
+                      <div className="text-gray-800">{failure?.environment_consequences ?? "-"}</div>
 
                       <div className="font-medium text-gray-600">Has Consequence</div>
-                      <div className="text-gray-800">{failure?.has_consequence?.trim() ? failure.has_consequence : "-"}</div>
+                      <div className="text-gray-800">{failure?.has_consequence ?? "-"}</div>
 
                       <div className="font-medium text-gray-600">Corrective Action</div>
-                      <div className="text-gray-800">{failure?.corrective_action?.trim() ? failure.corrective_action : "-"}</div>
+                      <div className="text-gray-800">{failure?.corrective_action ?? "-"}</div>
                     </div>
                   </div>
 
@@ -170,7 +170,7 @@ const FailureTab: React.FC<FailureTabProps> = ({ workRequestId, cmStatusId }) =>
                     <h5 className="text-md font-semibold mb-2 text-xl">Additional Details</h5>
                     <div className="grid grid-cols-2 gap-4 mt-4">
                       <div className="font-medium text-gray-600">Priority</div>
-                      <div className="text-gray-800">{failure?.failure_priority_id?.name?.trim() ? failure.failure_priority_id.name : "-"}</div>
+                      <div className="text-gray-800">{failure?.failure_priority_id?.name ?? "-"}</div>
 
                       <div className="font-medium text-gray-600">Lost Time Incident</div>
                       <div className="text-gray-800">{failure?.lost_time_incident ? "Yes" : "No"}</div>
@@ -179,7 +179,7 @@ const FailureTab: React.FC<FailureTabProps> = ({ workRequestId, cmStatusId }) =>
                       <div className="text-gray-800">{failure?.failure_shutdown ? "Yes" : "No"}</div>
 
                       <div className="font-medium text-gray-600">Failure Type</div>
-                      <div className="text-gray-800">{failure?.failure_type_id?.name?.trim() ? failure.failure_type_id.name : "-"}</div>
+                      <div className="text-gray-800">{failure?.failure_type_id?.name ?? "-"}</div>
                     </div>
                   </div>
 
