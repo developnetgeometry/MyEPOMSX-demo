@@ -74,7 +74,6 @@ export const usePmScheduleDataById = (id: number) => {
 };
 
 export const insertPmScheduleData = async (pmScheduleData: {
-  pm_no: string;
   pm_description?: string;
   due_date?: string; // Use ISO string format for timestamps
   is_active?: boolean;
@@ -110,7 +109,6 @@ export const insertPmScheduleData = async (pmScheduleData: {
 export const updatePmScheduleData = async (
   id: number,
   updatedData: Partial<{
-    pm_no?: string;
     pm_description?: string;
     due_date?: string; // Use ISO string format for timestamps
     is_active?: boolean;
