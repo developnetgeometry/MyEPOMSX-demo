@@ -20,8 +20,9 @@ export const usePmScheduleData = () => {
           pm_group_id (id, asset_detail_id), 
           pm_sce_group_id (id, sce_code, group_name), 
           facility_id (id, location_name),
-          is_pm_work_order_created`
+          is_deleted`
         )
+        .eq("is_deleted", false)
         .order("id", { ascending: false });
 
       if (error) {
@@ -59,7 +60,7 @@ export const usePmScheduleDataById = (id: number) => {
           pm_group_id (id, asset_detail_id), 
           pm_sce_group_id (id, sce_code, group_name), 
           facility_id (id, location_name),
-          is_pm_work_order_created`
+          is_deleted`
         )
         .eq("id", id)
         .single();
@@ -77,13 +78,13 @@ export const usePmScheduleDataById = (id: number) => {
 
 export const insertPmScheduleData = async (pmScheduleData: {
   pm_description?: string;
-  due_date?: string; // Use ISO string format for timestamps
+  due_date: string; // Use ISO string format for timestamps (required)
   is_active?: boolean;
   priority_id?: number;
   work_center_id?: number;
   discipline_id?: number;
   task_id?: number;
-  frequency_id?: number;
+  frequency_id: number; // required
   asset_id?: number;
   system_id?: number;
   package_id?: number;
@@ -125,7 +126,7 @@ export const updatePmScheduleData = async (
     pm_group_id?: number;
     pm_sce_group_id?: number;
     facility_id?: number;
-    is_pm_work_order_created?: boolean;
+    is_deleted?: boolean;
 
   }>
 ) => {
@@ -143,25 +144,6 @@ export const updatePmScheduleData = async (
     return data;
   } catch (err) {
     console.error("Unexpected error updating e_pm_schedule data:", err);
-    throw err;
-  }
-};
-
-export const deletePmScheduleData = async (id: number) => {
-  try {
-    const { data, error } = await supabase
-      .from("e_pm_schedule")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      console.error("Error deleting e_pm_schedule data:", error);
-      throw error;
-    }
-
-    return data;
-  } catch (err) {
-    console.error("Unexpected error deleting e_pm_schedule data:", err);
     throw err;
   }
 };

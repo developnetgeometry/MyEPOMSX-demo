@@ -12,7 +12,7 @@ interface PmScheduleDetailsCardProps {
   isLoading: boolean;
   onEditClick?: () => void;
   onDeleteClick?: () => void;
-  onSubmitToPmWo?: () => void;
+  onSubmitCreateWoIndi?: () => void;
 
 }
 
@@ -21,7 +21,7 @@ const PmScheduleDetailsCard: React.FC<PmScheduleDetailsCardProps> = ({
   isLoading,
   onEditClick,
   onDeleteClick,
-  onSubmitToPmWo,
+  onSubmitCreateWoIndi,
 }) => {
   if (isLoading) {
     return <Loading />;
@@ -42,13 +42,13 @@ const PmScheduleDetailsCard: React.FC<PmScheduleDetailsCardProps> = ({
           >
             <Edit className="h-4 w-4" /> Edit
           </Button>
-          {/* <Button
+          <Button
             variant="destructive"
             className="flex items-center gap-2"
             onClick={onDeleteClick}
           >
             <Trash2 className="h-4 w-4" /> Delete
-          </Button> */}
+          </Button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -175,20 +175,14 @@ const PmScheduleDetailsCard: React.FC<PmScheduleDetailsCardProps> = ({
 
         <div className="flex justify-end space-x-2">
           <TooltipProvider>
-
-            {((!pmScheduleDetail.is_pm_work_order_created) &&
-              <>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="outline" onClick={onSubmitToPmWo}>Submit</Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    Submit all data from Pm Schedule <br />
-                    to Pm Work Order
-                  </TooltipContent>
-                </Tooltip>
-              </>
-            )}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" onClick={onSubmitCreateWoIndi}>Create Work Order</Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                Create Work Order based on this PM Schedule
+              </TooltipContent>
+            </Tooltip>
           </TooltipProvider>
 
         </div>

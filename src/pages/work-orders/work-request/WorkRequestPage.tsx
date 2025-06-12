@@ -75,11 +75,6 @@ const WorkRequestPage: React.FC = () => {
   }, [workRequests, searchQuery]);
 
   const columns: Column[] = [
-    {
-      id: "index",
-      header: "No.",
-      accessorKey: "index",
-    },
     { id: "work_request_no", header: "Work Request No", accessorKey: "work_request_no" },
     { id: "description", header: "Description", accessorKey: "description" },
     {
@@ -113,6 +108,7 @@ const WorkRequestPage: React.FC = () => {
           columns={columns}
           data={filteredWorkRequests}
           onRowClick={handleRowClick}
+          onIndex={true}
         />
       )}
 
