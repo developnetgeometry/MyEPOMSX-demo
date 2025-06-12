@@ -350,14 +350,14 @@ const DataTable: React.FC<DataTableProps> = ({
               >
                 <FileText className="h-4 w-4 mr-1" /> Export
               </Button>
-              <Button
+              {/* <Button
                 variant="outline"
                 size="sm"
                 className="h-9 px-4 text-gray-700 border-gray-200 hover:bg-gray-50 hover:text-gray-500"
                 onClick={() => handleExport()}
               >
                 <Download className="h-4 w-4 mr-1" /> Download
-              </Button>
+              </Button> */}
             </div>
           </div>
         )}

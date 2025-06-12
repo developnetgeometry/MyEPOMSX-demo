@@ -31,7 +31,9 @@ interface ManageFormProps {
   fields: {
     name: string;
     label: string;
-    type: "text" | "number" | "select" | "date" | "textarea" | "checkbox";
+    type: "text" | "number" | "select" | "date" | "textarea" | "checkbox" | "readonly";
+    readonly?: boolean;
+    disabled?: boolean;
     options?: { value: string; label: string }[];
     required?: boolean;
     placeholder?: string;
@@ -104,7 +106,8 @@ const ManageForm = ({
                   className={field.width === "half" ? "" : "col-span-2"}
                 >
                   <FormLabel>
-                    {field.label}{" "}
+                    
+                    {field.type === "checkbox" ? "" : field.label}
                     {field.required && (
                       <span className="text-destructive">*</span>
                     )}
@@ -175,10 +178,28 @@ const ManageForm = ({
                         placeholder={field.placeholder}
                         className="min-h-[150px]"
                       />
+                    ) : field.type === "checkbox" ? (
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={field.name}
+                          checked={!!formField.value}
+                          onCheckedChange={(checked) =>
+                            formField.onChange(!!checked)
+                          }
+                          disabled={isSubmitting}
+                        />
+                        <label
+                          htmlFor={field.name}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          {field.label}
+                        </label>
+                      </div>
                     ) : (
                       <Input
                         {...formField}
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || field.readonly}
+                        readOnly={field.readonly}
                         placeholder={field.placeholder}
                       />
                     )}
