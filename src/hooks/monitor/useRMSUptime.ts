@@ -138,6 +138,14 @@ export const useRMSUptime = (assetDetailId: number) => {
     // Save uptime entries (handles both insert and update)
     const saveEntriesMutation = useMutation({
         mutationFn: async (entries: UptimeEntry[]) => {
+            // First, delete all existing entries for this asset_detail_id
+            const { error: deleteError } = await supabase
+                .from('r_rms_uptime')
+                .delete()
+                .eq('asset_detail_id', assetDetailId);
+
+            if (deleteError) throw deleteError;
+
             // Convert UptimeEntry format to RMSUptimeData format
             const records: Omit<RMSUptimeData, 'id' | 'created_at' | 'updated_at'>[] = entries.map(entry => ({
                 date: entry.date instanceof Date ? entry.date.toISOString().split('T')[0] : entry.date,
@@ -148,49 +156,8 @@ export const useRMSUptime = (assetDetailId: number) => {
                 description: entry.description
             }));
 
-            // CHeck if entries already exist for the same dates
-            const existingEntries = await supabase
-                .from('r_rms_uptime')
-                .select('id, date')
-                .eq('asset_detail_id', assetDetailId)
-                .in('date', records.map(r => r.date));
-
-            if (existingEntries.data && existingEntries.data.length > 0) {
-                // Handle updates and inserts separately
-                const existingDates = existingEntries.data.map(e => e.date);
-                const recordsToUpdate = records.filter(r => existingDates.includes(r.date));
-                const recordsToInsert = records.filter(r => !existingDates.includes(r.date));
-
-                // Update existing records
-                for (const record of recordsToUpdate) {
-                    const existingEntry = existingEntries.data.find(e => e.date === record.date);
-
-                    if (existingEntry) {
-                        await supabase
-                            .from('r_rms_uptime')
-                            .update({
-                                ...record,
-                                updated_at: new Date().toISOString()
-                            })
-                            .eq('id', existingEntry.id);
-                    }
-                }
-
-                // Insert new records
-                if (recordsToInsert.length > 0) {
-                    const { error } = await supabase
-                        .from('r_rms_uptime')
-                        .insert(recordsToInsert.map(record => ({
-                            ...record,
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                        })));
-
-                    if (error) throw error;
-                }
-
-            } else {
-                // Insert all records
+            // Insert all records
+            if (records.length > 0) {
                 const { error } = await supabase
                     .from('r_rms_uptime')
                     .insert(records.map(record => ({
@@ -199,16 +166,89 @@ export const useRMSUptime = (assetDetailId: number) => {
                         updated_at: new Date().toISOString()
                     })));
 
-                    if (error) throw error;
+                if (error) throw error;
             }
 
             return true;
-
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: uptimeKeys.list(assetDetailId) });
         }
     });
+
+    // const saveEntriesMutation = useMutation({
+    //     mutationFn: async (entries: UptimeEntry[]) => {
+    //         // Convert UptimeEntry format to RMSUptimeData format
+    //         const records: Omit<RMSUptimeData, 'id' | 'created_at' | 'updated_at'>[] = entries.map(entry => ({
+    //             date: entry.date instanceof Date ? entry.date.toISOString().split('T')[0] : entry.date,
+    //             uptime: entry.uptime,
+    //             unplanned_shutdown: entry.unplanned_shutdown,
+    //             planned_shutdown: entry.planned_shutdown,
+    //             asset_detail_id: entry.asset_detail_id,
+    //             description: entry.description
+    //         }));
+
+    //         // Check if entries already exist for the same dates
+    //         const existingEntries = await supabase
+    //             .from('r_rms_uptime')
+    //             .select('id, date')
+    //             .eq('asset_detail_id', assetDetailId)
+    //             .in('date', records.map(r => r.date));
+
+    //         if (existingEntries.data && existingEntries.data.length > 0) {
+    //             // Handle updates and inserts separately
+    //             const existingDates = existingEntries.data.map(e => e.date);
+    //             const recordsToUpdate = records.filter(r => existingDates.includes(r.date));
+    //             const recordsToInsert = records.filter(r => !existingDates.includes(r.date));
+
+    //             // Update existing records
+    //             for (const record of recordsToUpdate) {
+    //                 const existingEntry = existingEntries.data.find(e => e.date === record.date);
+
+    //                 if (existingEntry) {
+    //                     await supabase
+    //                         .from('r_rms_uptime')
+    //                         .update({
+    //                             ...record,
+    //                             updated_at: new Date().toISOString()
+    //                         })
+    //                         .eq('id', existingEntry.id);
+    //                 }
+    //             }
+
+    //             // Insert new records
+    //             if (recordsToInsert.length > 0) {
+    //                 const { error } = await supabase
+    //                     .from('r_rms_uptime')
+    //                     .insert(recordsToInsert.map(record => ({
+    //                         ...record,
+    //                         created_at: new Date().toISOString(),
+    //                         updated_at: new Date().toISOString()
+    //                     })));
+
+    //                 if (error) throw error;
+    //             }
+
+    //         } else {
+    //             // Insert all records
+    //             const { error } = await supabase
+    //                 .from('r_rms_uptime')
+    //                 .insert(records.map(record => ({
+    //                     ...record,
+    //                     created_at: new Date().toISOString(),
+    //                     updated_at: new Date().toISOString()
+    //                 })));
+
+    //                 if (error) throw error;
+    //         }
+
+    //         return true;
+
+    //     },
+    //     onSuccess: () => {
+    //         queryClient.invalidateQueries({ queryKey: uptimeKeys.list(assetDetailId) });
+    //     }
+    // });
 
     return {
         // Query data

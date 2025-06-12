@@ -118,7 +118,8 @@ const UptimeEntryModal: React.FC<UptimeEntryModalProps> = ({
   };
 
   const handleDeleteRow = (id: string) => {
-    setEntries(entries.filter((entry) => entry.id !== id));
+    // setEntries(entries.filter((entry) => entry.id !== id));
+    setEntries(prevEntries => prevEntries.filter((entry) => entry.id !== id));
   };
 
   const handleDateChange = (date: Date | undefined, id: string) => {
@@ -195,8 +196,6 @@ const UptimeEntryModal: React.FC<UptimeEntryModalProps> = ({
   const processImportedData = (data: any[]): UptimeEntry[] => {
     if (!data || data.length < 2) return [];
 
-      console.log('Raw Excel data:', data);
-
     // Find header row
     let headerRowIndex = -1;
     let headers: string[] = [];
@@ -220,8 +219,6 @@ const UptimeEntryModal: React.FC<UptimeEntryModalProps> = ({
       headers = data[0].map((h: any) => String(h).toLowerCase().trim());
     }
 
-      console.log('Found headers:', headers);
-
     // Find column indices
     const dateColIndex = headers.findIndex(h =>
       h.includes('date') || h.includes('equipment_date') || h.includes('historical_equipment_date')
@@ -244,7 +241,11 @@ const UptimeEntryModal: React.FC<UptimeEntryModalProps> = ({
     }
 
     // Process data rows
-    const processedEntries: UptimeEntry[] =[];
+    const processedEntries: UptimeEntry[] = [];
+    const existingDates = new Set(entries.map(entry => {
+        const entryDate = entry.date instanceof Date ? entry.date : new Date(entry.date);
+        return entryDate.toISOString().split('T')[0];
+    }));
 
     for (let i = headerRowIndex + 1; i < data.length; i++) {
       const row = data[i];
@@ -285,6 +286,14 @@ const UptimeEntryModal: React.FC<UptimeEntryModalProps> = ({
 
         if (isNaN(parsedDate.getTime())) continue;
 
+        const dateString = parsedDate.toISOString().split('T')[0];
+
+        // Skip if date already exists
+        if (existingDates.has(dateString)) {
+            console.warn(`Skipping duplicate date: ${dateString}`);
+            continue;
+        }
+
         const uptime = uptimeValue !== null && uptimeValue !== undefined ? 
           (typeof uptimeValue === 'number' ? uptimeValue : parseFloat(String(uptimeValue))) : 0;
 
@@ -295,38 +304,14 @@ const UptimeEntryModal: React.FC<UptimeEntryModalProps> = ({
 
         let plannedShutdown = 0;
 
-if (plannedColIndex !== -1 && plannedShutdownRaw !== null && plannedShutdownRaw !== undefined) {
-  if (typeof plannedShutdownRaw === 'number') {
-    plannedShutdown = plannedShutdownRaw;
-    
-    // Check if this might be a percentage (0.5 = 50%, so actual value should be 0.5 * 100 = 50, but you want 5.2)
-    // If the Excel cell was formatted as percentage, 5.2% would be stored as 0.052, but you're getting 0.5
-    // This suggests the value 0.5 is correct but maybe you're looking at the wrong cell
-    
-  } else {
-    const stringValue = String(plannedShutdownRaw).trim();
-    plannedShutdown = parseFloat(stringValue);
-  }
-  
-  // Debug log for the problematic row
-  if (i === headerRowIndex + 4) {
-    console.log(`Row ${i} planned shutdown details:`, {
-      raw: plannedShutdownRaw,
-      rawType: typeof plannedShutdownRaw,
-      stringValue: String(plannedShutdownRaw),
-      parsed: plannedShutdown,
-      columnIndex: plannedColIndex,
-      entireRow: row
-    });
-  }
-}
-
-        console.log(`Row ${i}:`, {
-          uptimeValue,
-          unplannedValue: unplannedColIndex !== -1 ? row[unplannedColIndex] : 'N/A',
-          plannedValue: plannedColIndex !== -1 ? row[plannedColIndex] : 'N/A',
-          parsed: { uptime, unplannedShutdown, plannedShutdown }
-        });
+        if (plannedColIndex !== -1 && plannedShutdownRaw !== null && plannedShutdownRaw !== undefined) {
+          if (typeof plannedShutdownRaw === 'number') {
+            plannedShutdown = plannedShutdownRaw;
+          } else {
+            const stringValue = String(plannedShutdownRaw).trim();
+            plannedShutdown = parseFloat(stringValue);
+          }
+        }
 
         processedEntries.push({
           id: `imported-${Date.now()}-${i}`,
@@ -338,6 +323,9 @@ if (plannedColIndex !== -1 && plannedShutdownRaw !== null && plannedShutdownRaw 
           description: ""
         });
 
+        // Add to existing dates set
+        existingDates.add(dateString);
+        
       } catch (error) {
         console.warn(`Skipping row ${i} due to parsing error:`, error);
         continue;
