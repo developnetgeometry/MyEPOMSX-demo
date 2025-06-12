@@ -47,6 +47,7 @@ import {
   useStoreOptions,
 } from "@/hooks/queries/useInventory";
 import { useAuth } from "@/contexts/AuthContext";
+import { MultiSelect } from "@/components/ui/multi-select";
 
 interface FieldMapping {
   [key: string]: string | ((data: any, user: any, inventoryItem: any) => any);
@@ -60,32 +61,61 @@ interface ModalConfig {
 
 const InventoryDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("inventory");
+  // const [selectedParticulars, setSelectedParticulars] = useState<string[]>([]);
   const { modalState, openModal, closeModal, setLoading } =
     useTransactionModal();
 
   const { data: inventoryItem, isLoading: isLoadingInventoryItem } =
     useInventoryDetail(id);
   const { data: receiveData = [], isLoading: isLoadingReceive } =
-    useReceiveInventory();
-  const { data: issueData = [], isLoading: isLoadingIssue } =
-    useIssueInventory();
+    useReceiveInventory({
+      enabled: activeTab === "receive",
+    });
+  const { data: issueData = [], isLoading: isLoadingIssue } = useIssueInventory({
+    enabled: activeTab === "issue",
+  });
   const { data: returnData = [], isLoading: isLoadingReturn } =
-    useReturnInventory();
+    useReturnInventory({
+      enabled: activeTab === "return",
+    });
   const { data: adjustmentData = [], isLoading: isLoadingAdjustment } =
-    useAdjustmentInventory();
+    useAdjustmentInventory({
+      enabled: activeTab === "adjustment",
+    });
   const { data: transferData = [], isLoading: isLoadingTransfer } =
-    useTransferInventory();
+    useTransferInventory({
+      enabled: activeTab === "transfer",
+    });
   const { data: transactionData = [], isLoading: isLoadingTransaction } =
-    useTransactionInventory();
+  useTransactionInventory({
+    enabled: activeTab === "transaction",
+  });
+
+  // State and logic for filtering by particulars (transaction tab only)
+  const [selectedParticulars, setSelectedParticulars] = useState<string>("");
+
+  // Only collect particulars from transactionData
+  const allParticulars = useMemo(() => {
+    const particularsSet = new Set<string>();
+    transactionData.forEach((item: any) => {
+      if (item.particulars) particularsSet.add(item.particulars);
+    });
+    return Array.from(particularsSet);
+  }, [transactionData]);
+
+  const filteredTransactionData = useMemo(() => {
+    if (!selectedParticulars) return transactionData;
+    return transactionData.filter((item) => item.particulars === selectedParticulars);
+  }, [transactionData, selectedParticulars]);
   const { data: workOrderOptions = [] } = useWorkOrderOptions();
-  const { data: adjustmentCategoryOptions = [] } = useAdjustmentCategoryOptions();
+  const { data: adjustmentCategoryOptions = [] } =
+    useAdjustmentCategoryOptions();
   const { data: adjustmentTypeOptions = [] } = useAdjustmentTypeOptions();
   const { data: employeeOptions = [] } = useEmployeeOptions();
   const { data: storeOptions = [] } = useStoreOptions();
-console.log(transferData);
 
   const receiveMutation = useAddReceiveInventory();
   const issueMutation = useAddIssueInventory();
@@ -95,19 +125,18 @@ console.log(transferData);
 
   const submitMap = {
     receive: (data: Record<string, any>, user: any, inventoryItem: any) => ({
-      po_receive_no: data.po,
+      inventory_id: Number(inventoryItem.id),
       received_quantity: data.quantity,
       unit_price: data.unitPrice,
-      total_price: data.totalPrice,
+      po_receive_no: data.po,
       created_by: user.id,
       remark: data.remarks,
-      inventory_id: Number(inventoryItem.id),
       created_at: new Date().toISOString(),
     }),
     issue: (data: Record<string, any>, user: any, inventoryItem: any) => ({
       issue_date: data.issueDate,
       quantity: data.quantity,
-      work_order_no: data.workOrderNo,
+      work_order_no: Number(data.workOrderNo),
       created_by: user.id,
       remark: data.remarks,
       inventory_id: Number(inventoryItem.id),
@@ -144,7 +173,7 @@ console.log(transferData);
       employee_id: data.employee,
       created_by: user.id,
       created_at: new Date().toISOString(),
-    })
+    }),
   };
 
   const mutationMap = {
@@ -152,7 +181,7 @@ console.log(transferData);
     issue: issueMutation,
     return: returnMutation,
     adjustment: adjustmentMutation,
-    transfer: transferMutation
+    transfer: transferMutation,
   };
 
   // Custom field configurations
@@ -270,7 +299,7 @@ console.log(transferData);
         createField("adjustmentDate", "Adjustment Date", "date", {
           required: true,
         }),
-        createField("quantity", "Adjustment Quantity", "number", {
+        createField("quantity", "Adjustment Quantity/Value", "number", {
           required: true,
         }),
         createField("remarks", "Adjustment Reason", "textarea", {
@@ -303,7 +332,7 @@ console.log(transferData);
           options: storeOptions.map((store) => ({
             value: String(store.id),
             label: store.name,
-          }))
+          })),
         }),
         createField("quantity", "Transfer Quantity", "number", {
           required: true,
@@ -313,7 +342,14 @@ console.log(transferData);
         }),
       ],
     }),
-    [inventoryItem]
+    [
+      inventoryItem,
+      workOrderOptions,
+      adjustmentCategoryOptions,
+      adjustmentTypeOptions,
+      employeeOptions,
+      storeOptions,
+    ]
   );
 
   if (!inventoryItem) {
@@ -340,7 +376,7 @@ console.log(transferData);
       receive: {
         title: "Add New Receive Record",
         type: "receive",
-        initialData: { store: inventoryItem.store, receiveBy: user?.email },
+        initialData: { store: inventoryItem.store, receiveBy: profile?.full_name },
       },
       issue: {
         title: "Add New Issue Record",
@@ -353,7 +389,7 @@ console.log(transferData);
       return: {
         title: "Add New Return Record",
         type: "return",
-        initialData: { store: inventoryItem.store, returnedBy: user?.email },
+        initialData: { store: inventoryItem.store, returnedBy: profile?.full_name },
       },
       adjustment: {
         title: "Add New Adjustment Record",
@@ -363,7 +399,7 @@ console.log(transferData);
       transfer: {
         title: "Add New Transfer Record",
         type: "transfer",
-        initialData: { sourceStore: inventoryItem.store, },
+        initialData: { sourceStore: inventoryItem.store },
       },
       transaction: {
         title: "Add New Transaction Record",
@@ -474,6 +510,24 @@ console.log(transferData);
     tabName: string
   ) => (
     <>
+      {tabName === "transaction" && (
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-2">
+          <div className="flex items-center gap-2">
+            <label htmlFor="particulars-select" className="text-sm font-medium">Filter by Particulars:</label>
+            <select
+              id="particulars-select"
+              className="border rounded px-2 py-1 text-sm"
+              value={selectedParticulars}
+              onChange={(e) => setSelectedParticulars(e.target.value)}
+            >
+              <option value="">All</option>
+              {allParticulars.map((p) => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
       {tabName !== "transaction" && (
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-medium">
@@ -598,7 +652,7 @@ console.log(transferData);
                   <h3 className="text-sm font-medium text-muted-foreground">
                     Opening Balance Date
                   </h3>
-                  <p className="text-base">2025-01-01</p>
+                  <p className="text-base">{inventoryItem.balanceDate}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">
@@ -622,7 +676,7 @@ console.log(transferData);
                   <h3 className="text-sm font-medium text-muted-foreground">
                     Current Balance Quantity
                   </h3>
-                  <p className="text-base">{inventoryItem.balance}</p>
+                  <p className="text-base">{inventoryItem.currentBalance}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">
@@ -685,7 +739,7 @@ console.log(transferData);
             {/* Transaction Tab */}
             <TabsContent value="transaction">
               {renderTabContent(
-                transactionData,
+                filteredTransactionData,
                 columnMapping.transaction,
                 "transaction"
               )}

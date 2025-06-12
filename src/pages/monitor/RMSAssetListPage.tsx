@@ -9,9 +9,8 @@ import StatusBadge from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { formatDateTime } from '@/utils/formatters';
 import { useAssets, useDeleteAsset } from '@/hooks/monitor/useAssets';
-import { toast } from '@/hooks/use-toast'; // Adjust path as needed
+import { toast } from '@/hooks/use-toast';
 
-// Transform AssetData to match the display format
 interface DisplayAsset {
   id: string;
   assetNo: string;
@@ -53,7 +52,7 @@ const RMSAssetListPage: React.FC = () => {
         model: asset.asset_detail?.model || '',
         status: asset.status?.name || '',
         sceCode: asset.asset_sce?.sce_code || '',
-        criticalityCode: asset.asset_sce?.group_name || '',
+        criticalityCode: asset.asset_detail?.criticality?.name || '',
         healthStatus: 'Good',
         lastSync: formatDateTime(new Date().toISOString()),
         asset_detail_id: asset.asset_detail_id
@@ -125,7 +124,7 @@ const RMSAssetListPage: React.FC = () => {
 
   const handleExport = () => {
     // Mock export functionality
-    alert("Export functionality will be implemented here");
+    alert("Export functionality will be implemented");
   };
 
   const columns: Column[] = [
@@ -193,7 +192,7 @@ const RMSAssetListPage: React.FC = () => {
       <TableFilters 
         onSearch={handleSearch}
         onAddNew={handleAddNew}
-        addNewLabel="+ Add Asset"
+        addNewLabel="Add Asset"
         placeholder="Search assets..."
       />
 

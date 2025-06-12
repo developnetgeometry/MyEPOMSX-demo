@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -21,84 +21,86 @@ import { cn } from "@/lib/utils";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { formatDate } from "@/utils/formatters";
 import UptimeEntryModal from "./UptimeEntryModal";
+import { useAssetsWithUptimeDate, useUptimeDataForAsset } from "@/hooks/monitor/useCriticalAssetSummary";
+
 
 // Sample data
-const uptimeData = [
-  {
-    id: "1",
-    assetId: "RMS-A001",
-    assetName: "Compressor Station Alpha",
-    data: [
-      {
-        id: "1-1",
-        date: "2025-05-11",
-        upTime: 23.5,
-        sumRunningHour: 23.5,
-        standby: 0.0,
-        unplannedShutdown: 0.5,
-        plannedShutdown: 0.0,
-        description: "Brief power fluctuation",
-      },
-      {
-        id: "1-2",
-        date: "2025-05-10",
-        upTime: 24.0,
-        sumRunningHour: 24.0,
-        standby: 0.0,
-        unplannedShutdown: 0.0,
-        plannedShutdown: 0.0,
-        description: "Normal operation",
-      },
-      {
-        id: "1-3",
-        date: "2025-05-09",
-        upTime: 18.5,
-        sumRunningHour: 18.5,
-        standby: 0.0,
-        unplannedShutdown: 0.0,
-        plannedShutdown: 5.5,
-        description: "Scheduled maintenance",
-      },
-    ],
-  },
-  {
-    id: "5",
-    assetId: "RMS-A005",
-    assetName: "Pump Motor Temperature Sensor",
-    data: [
-      {
-        id: "5-1",
-        date: "2025-05-11",
-        upTime: 20.0,
-        sumRunningHour: 20.0,
-        standby: 0.0,
-        unplannedShutdown: 4.0,
-        plannedShutdown: 0.0,
-        description: "Sensor calibration failure",
-      },
-      {
-        id: "5-2",
-        date: "2025-05-10",
-        upTime: 15.5,
-        sumRunningHour: 15.5,
-        standby: 0.0,
-        unplannedShutdown: 8.5,
-        plannedShutdown: 0.0,
-        description: "Overheating event",
-      },
-      {
-        id: "5-3",
-        date: "2025-05-09",
-        upTime: 24.0,
-        sumRunningHour: 24.0,
-        standby: 0.0,
-        unplannedShutdown: 0.0,
-        plannedShutdown: 0.0,
-        description: "Normal operation",
-      },
-    ],
-  },
-];
+// const uptimeData = [
+//   {
+//     id: "1",
+//     assetId: "RMS-A001",
+//     assetName: "Compressor Station Alpha",
+//     data: [
+//       {
+//         id: "1-1",
+//         date: "2025-05-11",
+//         upTime: 23.5,
+//         sumRunningHour: 23.5,
+//         standby: 0.0,
+//         unplannedShutdown: 0.5,
+//         plannedShutdown: 0.0,
+//         description: "Brief power fluctuation",
+//       },
+//       {
+//         id: "1-2",
+//         date: "2025-05-10",
+//         upTime: 24.0,
+//         sumRunningHour: 24.0,
+//         standby: 0.0,
+//         unplannedShutdown: 0.0,
+//         plannedShutdown: 0.0,
+//         description: "Normal operation",
+//       },
+//       {
+//         id: "1-3",
+//         date: "2025-05-09",
+//         upTime: 18.5,
+//         sumRunningHour: 18.5,
+//         standby: 0.0,
+//         unplannedShutdown: 0.0,
+//         plannedShutdown: 5.5,
+//         description: "Scheduled maintenance",
+//       },
+//     ],
+//   },
+//   {
+//     id: "5",
+//     assetId: "RMS-A005",
+//     assetName: "Pump Motor Temperature Sensor",
+//     data: [
+//       {
+//         id: "5-1",
+//         date: "2025-05-11",
+//         upTime: 20.0,
+//         sumRunningHour: 20.0,
+//         standby: 0.0,
+//         unplannedShutdown: 4.0,
+//         plannedShutdown: 0.0,
+//         description: "Sensor calibration failure",
+//       },
+//       {
+//         id: "5-2",
+//         date: "2025-05-10",
+//         upTime: 15.5,
+//         sumRunningHour: 15.5,
+//         standby: 0.0,
+//         unplannedShutdown: 8.5,
+//         plannedShutdown: 0.0,
+//         description: "Overheating event",
+//       },
+//       {
+//         id: "5-3",
+//         date: "2025-05-09",
+//         upTime: 24.0,
+//         sumRunningHour: 24.0,
+//         standby: 0.0,
+//         unplannedShutdown: 0.0,
+//         plannedShutdown: 0.0,
+//         description: "Normal operation",
+//       },
+//     ],
+//   },
+// ];
 
 interface CriticalAssetSummaryProps {
   className?: string;
@@ -107,21 +109,71 @@ interface CriticalAssetSummaryProps {
 const CriticalAssetSummary: React.FC<CriticalAssetSummaryProps> = ({
   className,
 }) => {
-  const [selectedAsset, setSelectedAsset] = useState<string>("1");
+  const [selectedAssetDetailId, setSelectedAssetDetailId] = useState<number>(0);
   const [startDate, setStartDate] = useState<Date | undefined>(
-    new Date("2025-05-09")
+    new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000) // 7 days ago
   );
-  const [endDate, setEndDate] = useState<Date | undefined>(
-    new Date("2025-05-11")
-  );
+  const [endDate, setEndDate] = useState<Date | undefined>(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const asset = uptimeData.find((a) => a.id === selectedAsset);
+  // Fetch assets that have uptime data
+  const { data: assetsWithUptime = [], isLoading: assetsLoading, error: assetsError } = useAssetsWithUptimeDate();
+  // Fetch uptime data for selected asset
+  const { data: uptimeData = [], isLoading: uptimeLoading, error: uptimeError, refetch: refetchUptimeData } = useUptimeDataForAsset(selectedAssetDetailId, startDate, endDate);
+
+  // Set default selected asset when data loads
+  useEffect(() => {
+    if (assetsWithUptime.length > 0 && selectedAssetDetailId === 0) {
+      setSelectedAssetDetailId(assetsWithUptime[0].asset_detail_id);
+    }
+  }, [assetsWithUptime, selectedAssetDetailId]);
+
+  const selectedAsset = assetsWithUptime.find(
+    asset => asset.asset_detail_id === selectedAssetDetailId
+  );
 
   const handleSaveUptimeData = (assetId: string, entries: any[]) => {
-    // In a real application, this would save to a database
     console.log("Saving uptime data for asset:", assetId, entries);
+    // Refetch uptime data after saving
+    refetchUptimeData();
   };
+
+  const isLoading = assetsLoading || uptimeLoading;
+  const error = assetsError || uptimeError;
+
+  if (isLoading) {
+    return (
+      <div className={className}>
+        <Card>
+          <CardHeader>
+            <CardTitle>Critical Asset Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex justify-center items-center h-32">
+              <div className="text-lg">Loading assets...</div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={className}>
+        <Card>
+          <CardHeader>
+            <CardTitle>Critical Asset Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex justify-center items-center h-32">
+              <div className="text-lg text-red-500">Error loading data: {error.message}</div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className={className}>
@@ -129,9 +181,11 @@ const CriticalAssetSummary: React.FC<CriticalAssetSummaryProps> = ({
         <CardHeader className="pb-3">
           <div className="flex justify-between items-center">
             <CardTitle>Critical Asset Summary</CardTitle>
-            <Button onClick={() => setIsModalOpen(true)}>
-              Edit Uptime Data
-            </Button>
+            {selectedAsset && (
+              <Button onClick={() => setIsModalOpen(true)}>
+                Edit Uptime Data
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -142,11 +196,12 @@ const CriticalAssetSummary: React.FC<CriticalAssetSummaryProps> = ({
               </label>
               <select
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={selectedAsset}
-                onChange={(e) => setSelectedAsset(e.target.value)}
+                value={selectedAssetDetailId}
+                onChange={(e) => setSelectedAssetDetailId(parseInt(e.target.value))}
               >
-                {uptimeData.map((asset) => (
-                  <option key={asset.id} value={asset.id}>
+                <option value={0}>Select an asset...</option>
+                {assetsWithUptime.map((asset) => (
+                  <option key={asset.id} value={asset.asset_detail_id}>
                     {asset.assetName}
                   </option>
                 ))}
@@ -236,19 +291,19 @@ const CriticalAssetSummary: React.FC<CriticalAssetSummaryProps> = ({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {!asset || asset.data.length === 0 ? (
+                {!selectedAsset || uptimeData.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={8}
                       className="text-center py-6 text-gray-500"
                     >
-                      No data available for selected asset and date range
+                      {!selectedAsset ? "Please select an asset" : "No uptime data available for selected asset and date range"}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  asset.data.map((entry) => (
+                  uptimeData.map((entry) => (
                     <TableRow key={entry.id}>
-                      <TableCell>{asset.assetName}</TableCell>
+                      <TableCell>{selectedAsset.assetName}</TableCell>
                       <TableCell>{formatDate(entry.date)}</TableCell>
                       <TableCell>{entry.upTime}</TableCell>
                       <TableCell>{entry.sumRunningHour}</TableCell>
@@ -275,20 +330,13 @@ const CriticalAssetSummary: React.FC<CriticalAssetSummaryProps> = ({
         </CardContent>
       </Card>
 
-      {asset && (
+      {selectedAsset && (
         <UptimeEntryModal
           open={isModalOpen}
           onOpenChange={setIsModalOpen}
-          assetId={asset.id}
-          assetName={asset.assetName}
-          initialData={asset.data.map((d) => ({
-            id: d.id,
-            date: d.date,
-            upTime: d.upTime,
-            unplannedShutdown: d.unplannedShutdown,
-            plannedShutdown: d.plannedShutdown,
-            description: d.description,
-          }))}
+          assetId={selectedAsset.id.toString()}
+          assetDetailId={selectedAsset.asset_detail_id}
+          assetName={selectedAsset.assetName}
           onSave={handleSaveUptimeData}
         />
       )}
