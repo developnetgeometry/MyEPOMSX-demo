@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +11,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Search, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -22,109 +36,37 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { formatDate } from "@/utils/formatters";
+import { formatDateTime } from "@/utils/formatters";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { useAssets } from "@/hooks/monitor/useAssets";
+import { useAssetsWithUptimeDate, useUptimeDataForAsset } from "@/hooks/monitor/useCriticalAssetSummary";
+import { string } from "zod";
 
-// Sample data for critical assets
-const criticalAssetsData = [
-  {
-    id: "1",
-    assetName: "Compressor Station Alpha",
-    assetNo: "RMS-A001",
-    metric1Name: "Temperature",
-    metric1Value: 92.5,
-    metric1Threshold: 90.0,
-    metric1Unit: "°C",
-    metric2Name: "Vibration",
-    metric2Value: 2.8,
-    metric2Threshold: 3.0,
-    metric2Unit: "mm/s",
-    thresholdExceeded: true,
-    alertLevel: "Warning",
-    lastUpdated: "2025-05-12 09:15:22",
-  },
-  {
-    id: "2",
-    assetName: "Flow Control Valve FCV-201",
-    assetNo: "RMS-A002",
-    metric1Name: "Pressure",
-    metric1Value: 13.8,
-    metric1Threshold: 13.5,
-    metric1Unit: "MPa",
-    metric2Name: "Flow Rate",
-    metric2Value: 120.5,
-    metric2Threshold: 125.0,
-    metric2Unit: "m³/h",
-    thresholdExceeded: true,
-    alertLevel: "Warning",
-    lastUpdated: "2025-05-12 08:45:30",
-  },
-  {
-    id: "3",
-    assetName: "Pressure Transmitter PT-305",
-    assetNo: "RMS-A003",
-    metric1Name: "Accuracy",
-    metric1Value: 1.8,
-    metric1Threshold: 1.5,
-    metric1Unit: "%",
-    metric2Name: "Power Consumption",
-    metric2Value: 0.65,
-    metric2Threshold: 0.5,
-    metric2Unit: "W",
-    thresholdExceeded: true,
-    alertLevel: "Warning",
-    lastUpdated: "2025-05-11 23:10:45",
-  },
-  {
-    id: "4",
-    assetName: "Storage Tank Level Sensor",
-    assetNo: "RMS-A004",
-    metric1Name: "Battery Level",
-    metric1Value: 72,
-    metric1Threshold: 20,
-    metric1Unit: "%",
-    metric2Name: "Signal Strength",
-    metric2Value: 85,
-    metric2Threshold: 60,
-    metric2Unit: "%",
-    thresholdExceeded: false,
-    alertLevel: "Normal",
-    lastUpdated: "2025-05-12 10:30:15",
-  },
-  {
-    id: "5",
-    assetName: "Pump Motor Temperature Sensor",
-    assetNo: "RMS-A005",
-    metric1Name: "Temperature",
-    metric1Value: 110.5,
-    metric1Threshold: 95.0,
-    metric1Unit: "°C",
-    metric2Name: "Current",
-    metric2Value: 42.3,
-    metric2Threshold: 40.0,
-    metric2Unit: "A",
-    thresholdExceeded: true,
-    alertLevel: "Critical",
-    lastUpdated: "2025-05-12 07:50:38",
-  },
-  {
-    id: "6",
-    assetName: "Cooling Tower Fan Motor",
-    assetNo: "RMS-A006",
-    metric1Name: "RPM",
-    metric1Value: 1450,
-    metric1Threshold: 1500,
-    metric1Unit: "rpm",
-    metric2Name: "Vibration",
-    metric2Value: 2.2,
-    metric2Threshold: 3.5,
-    metric2Unit: "mm/s",
-    thresholdExceeded: false,
-    alertLevel: "Normal",
-    lastUpdated: "2025-05-12 11:22:05",
-  },
-];
+interface CriticalAssetDisplay {
+  id: string;
+  assetName: string;
+  assetNo: string;
+  code: string;
+  date: string;
+  upTime: number;
+  sumRunningHour: number;
+  standBy: number;
+  unplannedShutdown: number;
+  plannedShutdown: number;
+  description: string;
+  asset_detail_id: number;
+  lastUpdated: string;
+}
+
+interface SummaryData {
+  totalUpTime: number;
+  totalStandBy: number;
+  totalRunningHour: number;
+  assetUtilization: number;
+  assetAvailability: number;
+  assetReliability: number;
+}
 
 const CriticalAssetsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -132,33 +74,163 @@ const CriticalAssetsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [selectedAssetDetailId, setSelectedAssetDetailId] = useState<number | undefined>(undefined);
 
-  // Filter assets based on search, date range, and active tab
+  // Fetch assets data
+  const { data: assets = [], isLoading: assetsLoading } = useAssets();
+  const { data: assetsWithUptime = [], isLoading: uptimeAssetsLoading } = useAssetsWithUptimeDate();
+  
+  // Fetch uptime data for selected asset
+  const { data: uptimeData = [], isLoading: uptimeLoading } = useUptimeDataForAsset(
+    selectedAssetDetailId || 0, 
+    startDate, 
+    endDate
+  );
+
+  // Set default asset if none selected
+  useEffect(() => {
+    if (!selectedAssetDetailId && assetsWithUptime && assetsWithUptime.length > 0) {
+      setSelectedAssetDetailId(assetsWithUptime[0].asset_detail_id);
+    }
+  }, [assetsWithUptime, selectedAssetDetailId]);
+
+  // Transform data for display
+  const criticalAssetsData: CriticalAssetDisplay[] = React.useMemo(() => {
+    if (!selectedAssetDetailId || uptimeData.length === 0) return [];
+
+    const selectedAsset = assets.find(asset => asset.asset_detail_id === selectedAssetDetailId);
+    
+    return uptimeData.map((uptime, index) => ({
+      id: uptime.id || index.toString(),
+      assetName: selectedAsset?.asset_name || 'Unknown Asset',
+      assetNo: selectedAsset?.asset_no || 'Unknown',
+      code: '',
+      date: uptime.date,
+      upTime: uptime.upTime || 0,
+      sumRunningHour: uptime.sumRunningHour || 0,
+      standBy: uptime.standby || 0,
+      unplannedShutdown: uptime.unplannedShutdown || 0,
+      plannedShutdown: uptime.plannedShutdown || 0,
+      description: uptime.description || '',
+      asset_detail_id: selectedAssetDetailId,
+      lastUpdated: formatDateTime(new Date().toISOString()),
+    }));
+  }, [selectedAssetDetailId, uptimeData, assets]);
+
+  // Filter by date range only
   const filteredAssets = criticalAssetsData.filter((asset) => {
-    // Filter by search term
-    const matchesSearch =
-      asset.assetName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      asset.assetNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      asset.metric1Name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      asset.metric2Name.toLowerCase().includes(searchTerm.toLowerCase());
+    let matchesDateRange = true;
+    if (startDate || endDate) {
+      const assetDate = new Date(asset.date);
+      if (startDate && assetDate < startDate) matchesDateRange = false;
+      if (endDate && assetDate > endDate) matchesDateRange = false;
+    }
 
-    // Filter by alert level
-    const matchesTab =
-      activeTab === "all" ||
-      (activeTab === "normal" && asset.alertLevel === "Normal") ||
-      (activeTab === "warning" && asset.alertLevel === "Warning") ||
-      (activeTab === "critical" && asset.alertLevel === "Critical");
-
-    // Filter by date range (simplified - would need proper date parsing in real app)
-    // For the demo, we'll just return true for the date filter
-    const matchesDateRange = true;
-
-    return matchesSearch && matchesTab && matchesDateRange;
+    return matchesDateRange;
   });
 
   const handleRowClick = (assetId: string) => {
-    navigate(`/monitor/rms-asset-detail/${assetId}`);
+    const selectedAsset = assets.find(asset => asset.asset_detail_id === selectedAssetDetailId);
+    if (selectedAsset) {
+      navigate(`/monitor/rms-asset-detail/${selectedAsset.id}`);
+    }
   };
+
+  const AssetSelectorSimple = () => (
+    <div className="flex items-center">
+      <Label htmlFor="asset-select">Select Asset:</Label>
+      <Select 
+        value={selectedAssetDetailId?.toString() || ""} 
+        onValueChange={(value) => setSelectedAssetDetailId(Number(value))}
+      >
+        <SelectTrigger className="ml-2 w-[400px]">
+          <SelectValue placeholder="Select an asset..." />
+        </SelectTrigger>
+        <SelectContent>
+          {assetsWithUptime && assetsWithUptime.length > 0 ? (
+            assetsWithUptime.map((asset) => (
+              <SelectItem 
+                key={asset.asset_detail_id} 
+                value={asset.asset_detail_id.toString()}
+              >
+                <div className="flex flex-col">
+                  <span className="font-medium">{asset.assetName || 'Unknown Asset'}</span>
+                </div>
+              </SelectItem>
+            ))
+          ) : (
+            <SelectItem value="" disabled>No assets available</SelectItem>
+          )}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
+  const summaryData: SummaryData = React.useMemo(() => {
+    if (filteredAssets.length === 0) {
+      return {
+        totalUpTime: 0,
+        totalStandBy: 0,
+        totalRunningHour: 0,
+        assetUtilization: 0,
+        assetAvailability: 0,
+        assetReliability: 0,
+      };
+    }
+
+    // Calculate totals
+    const totalUpTime = filteredAssets.reduce((sum, asset) => sum + asset.upTime, 0);
+    const totalRunningHour = filteredAssets.reduce((sum, asset) => sum + asset.sumRunningHour, 0);
+    const totalUnplannedShutdown = filteredAssets.reduce((sum, asset) => sum + asset.unplannedShutdown, 0);
+    const totalPlannedShutdown = filteredAssets.reduce((sum, asset) => sum + asset.plannedShutdown, 0);
+    
+    // Calculate standby for each asset: 24 - (Uptime + USD + PSD)
+    const totalStandBy = filteredAssets.reduce((sum, asset) => {
+      const standby = 24 - (asset.upTime + asset.unplannedShutdown + asset.plannedShutdown);
+      return sum + Math.max(0, standby); // Ensure standby is not negative
+    }, 0);
+
+    // Get total days (number of records represents days)
+    const totalDays = filteredAssets.length;
+    const totalHoursInPeriod = totalDays * 24;
+
+    // Calculate metrics
+    const assetUtilization = totalHoursInPeriod > 0 
+      ? (totalRunningHour / totalHoursInPeriod) * 100 
+      : 0;
+
+    const assetAvailability = totalHoursInPeriod > 0 
+      ? ((totalRunningHour + totalStandBy) / totalHoursInPeriod) * 100 
+      : 0;
+
+    const assetReliability = (totalHoursInPeriod - totalPlannedShutdown) > 0 
+      ? (((totalHoursInPeriod - totalUnplannedShutdown - totalPlannedShutdown) / (totalHoursInPeriod - totalPlannedShutdown)) * 100)
+      : 0;
+
+    return {
+      totalUpTime,
+      totalStandBy,
+      totalRunningHour,
+      assetUtilization,
+      assetAvailability,
+      assetReliability,
+    };
+  }, [filteredAssets]);
+
+  if (assetsLoading || uptimeAssetsLoading) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Critical Assets Tracking"
+          subtitle="Monitor status of critical assets and thresholds"
+          icon={<AlertTriangle className="h-6 w-6" />}
+        />
+        <div className="flex justify-center items-center h-64">
+          <div className="text-lg">Loading assets...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -168,22 +240,8 @@ const CriticalAssetsPage: React.FC = () => {
         icon={<AlertTriangle className="h-6 w-6" />}
       />
 
-      <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
-        <div className="flex-1">
-          <div className="relative">
-            <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-              size={18}
-            />
-            <Input
-              placeholder="Search assets..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </div>
-
+      <div className="flex flex-col md:flex-row md:items-center gap-2 mb-6">
+        <AssetSelectorSimple />
         <div className="flex flex-col md:flex-row gap-2 md:items-center">
           <div className="flex items-center gap-2">
             <Label htmlFor="start-date" className="whitespace-nowrap">
@@ -278,77 +336,90 @@ const CriticalAssetsPage: React.FC = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="normal">Normal</TabsTrigger>
-          <TabsTrigger value="warning">Warning</TabsTrigger>
-          <TabsTrigger value="critical">Critical</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="all" className="mt-6">
-          <Card>
-            <CardContent className="p-6">
-              <AssetTable assets={filteredAssets} onRowClick={handleRowClick} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="normal" className="mt-6">
-          <Card>
-            <CardContent className="p-6">
-              <AssetTable assets={filteredAssets} onRowClick={handleRowClick} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="warning" className="mt-6">
-          <Card>
-            <CardContent className="p-6">
-              <AssetTable assets={filteredAssets} onRowClick={handleRowClick} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="critical" className="mt-6">
-          <Card>
-            <CardContent className="p-6">
-              <AssetTable assets={filteredAssets} onRowClick={handleRowClick} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <Card>
+        <CardContent className="p-6">
+          <AssetTable 
+            assets={filteredAssets} 
+            onRowClick={handleRowClick}
+            loading={uptimeLoading}
+          />
+          <SummarySection summaryData={summaryData} />
+        </CardContent>
+      </Card>
     </div>
   );
 };
 
+const SummarySection: React.FC<{ summaryData: SummaryData }> = ({ summaryData }) => (
+  <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg">
+    <div className="bg-blue-500 text-white px-4 py-2 rounded-t-lg">
+      <h3 className="font-medium">Summary</h3>
+    </div>
+    <div className="p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="flex flex-col">
+        <span className="text-sm text-gray-600">Total Up Time</span>
+        <span className="font-semibold text-lg">{summaryData.totalUpTime.toFixed(1)}</span>
+      </div>
+      <div className="flex flex-col">
+        <span className="text-sm text-gray-600">Total Stand by</span>
+        <span className="font-semibold text-lg">{summaryData.totalStandBy.toFixed(1)}</span>
+      </div>
+      <div className="flex flex-col">
+        <span className="text-sm text-gray-600">Total Running Hour</span>
+        <span className="font-semibold text-lg">{summaryData.totalRunningHour.toFixed(1)}</span>
+      </div>
+      <div className="flex flex-col">
+        <span className="text-sm text-gray-600">Asset Utilization</span>
+        <span className="font-semibold text-lg">{summaryData.assetUtilization.toFixed(2)}%</span>
+      </div>
+      <div className="flex flex-col">
+        <span className="text-sm text-gray-600">Asset Availability %</span>
+        <span className="font-semibold text-lg">{summaryData.assetAvailability.toFixed(2)}%</span>
+      </div>
+      <div className="flex flex-col">
+        <span className="text-sm text-gray-600">Asset Reliability %</span>
+        <span className="font-semibold text-lg">{summaryData.assetReliability.toFixed(2)}%</span>
+      </div>
+    </div>
+  </div>
+);
+
 interface AssetTableProps {
-  assets: typeof criticalAssetsData;
+  assets: CriticalAssetDisplay[];
   onRowClick: (assetId: string) => void;
+  loading?: boolean;
 }
 
-const AssetTable: React.FC<AssetTableProps> = ({ assets, onRowClick }) => {
+const AssetTable: React.FC<AssetTableProps> = ({ assets, onRowClick, loading = false }) => {
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-32">
+        <div className="text-lg">Loading uptime data...</div>
+      </div>
+    );
+  }
+  
   return (
     <div className="relative overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Asset Name</TableHead>
-            <TableHead>Metric 1</TableHead>
-            <TableHead>Metric 1 Value</TableHead>
-            <TableHead>Metric 1 Threshold</TableHead>
-            <TableHead>Metric 2</TableHead>
-            <TableHead>Metric 2 Value</TableHead>
-            <TableHead>Metric 2 Threshold</TableHead>
-            <TableHead>Threshold Exceeded</TableHead>
-            <TableHead>Alert Level</TableHead>
+            <TableHead>Asset</TableHead>
+            <TableHead>Code</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead>Up Time</TableHead>
+            <TableHead>Sum Running Hour</TableHead>
+            <TableHead>Stand By</TableHead>
+            <TableHead>Unplanned Shutdown</TableHead>
+            <TableHead>Planned Shutdown</TableHead>
+            <TableHead>Description</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {assets.length === 0 ? (
             <TableRow>
               <TableCell colSpan={9} className="text-center py-6">
-                No critical assets found matching the criteria
+                {loading ? "Loading data..." : "No uptime data found for the selected criteria"}
               </TableCell>
             </TableRow>
           ) : (
@@ -359,54 +430,20 @@ const AssetTable: React.FC<AssetTableProps> = ({ assets, onRowClick }) => {
                 onClick={() => onRowClick(asset.id)}
               >
                 <TableCell className="font-medium">{asset.assetName}</TableCell>
-                <TableCell>{asset.metric1Name}</TableCell>
-                <TableCell
-                  className={
-                    asset.metric1Value > asset.metric1Threshold
-                      ? "text-red-500 font-bold"
-                      : ""
-                  }
-                >
-                  {asset.metric1Value} {asset.metric1Unit}
-                </TableCell>
+                <TableCell className="font-medium">{asset.code || '-'}</TableCell>
                 <TableCell>
-                  {asset.metric1Threshold} {asset.metric1Unit}
+                  {new Date(asset.date).toLocaleDateString('en-GB', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                  })}
                 </TableCell>
-                <TableCell>{asset.metric2Name}</TableCell>
-                <TableCell
-                  className={
-                    asset.metric2Value > asset.metric2Threshold
-                      ? "text-red-500 font-bold"
-                      : ""
-                  }
-                >
-                  {asset.metric2Value} {asset.metric2Unit}
-                </TableCell>
-                <TableCell>
-                  {asset.metric2Threshold} {asset.metric2Unit}
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    className={
-                      asset.thresholdExceeded ? "bg-red-500" : "bg-green-500"
-                    }
-                  >
-                    {asset.thresholdExceeded ? "Yes" : "No"}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    className={
-                      asset.alertLevel === "Critical"
-                        ? "bg-red-500"
-                        : asset.alertLevel === "Warning"
-                        ? "bg-amber-500"
-                        : "bg-green-500"
-                    }
-                  >
-                    {asset.alertLevel}
-                  </Badge>
-                </TableCell>
+                <TableCell>{asset.upTime.toFixed(2)}</TableCell>
+                <TableCell>{asset.sumRunningHour.toFixed(2)}</TableCell>
+                <TableCell>{asset.standBy.toFixed(2)}</TableCell>
+                <TableCell>{asset.unplannedShutdown.toFixed(2)}</TableCell>
+                <TableCell>{asset.plannedShutdown.toFixed(2)}</TableCell>
+                <TableCell>{asset.description || '-'}</TableCell>
               </TableRow>
             ))
           )}

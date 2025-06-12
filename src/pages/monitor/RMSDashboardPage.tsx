@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { format } from 'date-fns';
 import PageHeader from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,150 +16,44 @@ import {
   ReferenceLine
 } from 'recharts';
 import KpiCard from '@/components/shared/KpiCard';
-import { Calendar, Database, Activity, AlertTriangle, Gauge } from 'lucide-react';
+import { Calendar, Database, Activity, AlertTriangle, Gauge, Settings } from 'lucide-react';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import Breadcrumbs from '@/components/shared/Breadcrumbs';
 import { cn } from '@/lib/utils';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { addDays, subDays } from 'date-fns';
 import { formatPercentage } from '@/utils/formatters';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { useAssets } from '@/hooks/monitor/useAssets';
+import { useAssetsWithUptimeDate } from '@/hooks/monitor/useCriticalAssetSummary';
+import { useRMSUptimeData } from '@/hooks/monitor/useRMSDashboardData';
 
-// Sample data for utilization, availability & reliability asset wise
-const assetPerformanceData = [
-  {
-    name: 'Diesel Engine Generator',
-    utilization: 79.14,
-    availability: 97.14,
-    reliability: 97.56,
-    mttrAvailability: 100.00,
-    mttrReliability: 100.00,
-    target: 95
-  },
-  {
-    name: 'Turbine Gen',
-    utilization: 79.99,
-    availability: 99.99,
-    reliability: 99.99,
-    mttrAvailability: 100.00,
-    mttrReliability: 100.00,
-    target: 95
-  },
-  {
-    name: 'Gas Comp',
-    utilization: 86.68,
-    availability: 99.68,
-    reliability: 99.76,
-    mttrAvailability: 99.94,
-    mttrReliability: 99.94,
-    target: 95
-  },
-  {
-    name: 'Air Compressor',
-    utilization: 90.00,
-    availability: 100.00,
-    reliability: 100.00,
-    mttrAvailability: 100.00,
-    mttrReliability: 100.00,
-    target: 95
-  },
-  {
-    name: 'MOL Pump',
-    utilization: 99.91,
-    availability: 99.91,
-    reliability: 99.76,
-    mttrAvailability: 100.00,
-    mttrReliability: 100.00,
-    target: 95
-  },
-  {
-    name: 'Crane',
-    utilization: 97.77,
-    availability: 97.77,
-    reliability: 98.54,
-    mttrAvailability: 100.00,
-    mttrReliability: 100.00,
-    target: 95
-  },
-  {
-    name: 'SWIP',
-    utilization: 100.00,
-    availability: 100.00,
-    reliability: 100.00,
-    mttrAvailability: 100.00,
-    mttrReliability: 100.00,
-    target: 95
-  },
-  {
-    name: 'BWIP',
-    utilization: 100.00,
-    availability: 100.00,
-    reliability: 100.00,
-    mttrAvailability: 100.00,
-    mttrReliability: 100.00,
-    target: 95
-  },
-  {
-    name: 'Cooling Water Pump',
-    utilization: 100.00,
-    availability: 100.00,
-    reliability: 100.00,
-    mttrAvailability: 100.00,
-    mttrReliability: 100.00,
-    target: 95
-  },
-  {
-    name: 'Vacuum Pump',
-    utilization: 100.00,
-    availability: 100.00,
-    reliability: 100.00,
-    mttrAvailability: 100.00,
-    mttrReliability: 100.00,
-    target: 95
-  },
-  {
-    name: 'Water Injection to Well',
-    utilization: 100.00,
-    availability: 100.00,
-    reliability: 100.00,
-    mttrAvailability: 100.00,
-    mttrReliability: 100.00,
-    target: 95
-  }
-];
+interface AssetPerformanceData {
+  name: string;
+  utilization: number;
+  availability: number;
+  reliability: number;
+  mttrAvailability: number;
+  mttrReliability: number;
+  target: number;
+  systemId?: number;
+  assetCount?: number;
+}
 
-// Sample data for average metrics
-const averageMetricsData = [
-  {
-    name: 'Critical Assets',
-    utilization: 79,
-    availability: 92,
-    reliability: 86,
-  },
-];
+interface AverageMetricsData {
+  name: string;
+  utilization: number;
+  availability: number;
+  reliability: number;
+}
 
-// Sample data for system reliability & availability
-const systemReliabilityData = [
-  {
-    name: 'System 1',
-    availability: 94,
-    reliability: 90,
-  },
-  {
-    name: 'System 2',
-    availability: 92,
-    reliability: 87,
-  },
-  {
-    name: 'System 3',
-    availability: 96,
-    reliability: 91,
-  },
-  {
-    name: 'System 4',
-    availability: 90,
-    reliability: 84,
-  },
-];
+interface SystemReliabilityData {
+  name: string;
+  availability: number;
+  reliability: number;
+}
 
 // Fix the type error with the tooltip
 const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
@@ -184,6 +77,190 @@ const RMSDashboardPage = () => {
     from: subDays(new Date(), 30),
     to: new Date(),
   });
+  const [reliabilityTarget, setReliabilityTarget] = useState(95);
+
+  // Fetch data
+  const { data: assets = [], isLoading: assetsLoading } = useAssets();
+  const { data: assetsWithUptime = [], isLoading: uptimeAssetsLoading } = useAssetsWithUptimeDate();
+  const { data: uptimeData = [], isLoading: uptimeDataLoading } = useRMSUptimeData(dateRange.from, dateRange.to);
+
+  // Calculate performance metrics
+  const { assetPerformanceData, averageMetricsData, systemReliabilityData, connectedAssets, activeAlerts } = useMemo(() => {
+    if (!assets.length || !uptimeData.length) {
+      return {
+        assetPerformanceData: [],
+        averageMetricsData: [],
+        systemReliabilityData: [],
+        connectedAssets: { connected: 0, total: 0 },
+        activeAlerts: 0
+      };
+    }
+
+    // Calculate total days in the period
+    const startDate = dateRange.from;
+    const endDate = dateRange.to;
+    const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+    // Group uptime data by asset_detail_id
+    const uptimeByAsset = uptimeData.reduce((acc, record) => {
+      if (!acc[record.asset_detail_id]) {
+        acc[record.asset_detail_id] = [];
+      }
+      acc[record.asset_detail_id].push(record);
+      return acc;
+    }, {} as Record<number, typeof uptimeData>);
+
+    // Calculate metrics for each asset
+    const assetMetrics: AssetPerformanceData[] = [];
+    const systemMetrics = new Map<number, { 
+      name: string; 
+      assets: { availability: number; reliability: number }[] 
+    }>();
+
+    Object.entries(uptimeByAsset).forEach(([assetDetailId, records]) => {
+      const asset = assets.find(a => a.asset_detail_id === parseInt(assetDetailId));
+      if (!asset) return;
+
+      // Calculate totals for this asset
+      const totalUptime = records.reduce((sum, r) => sum + (r.uptime || 0), 0);
+      const totalUnplannedShutdown = records.reduce((sum, r) => sum + (r.unplanned_shutdown || 0), 0);
+      const totalPlannedShutdown = records.reduce((sum, r) => sum + (r.planned_shutdown || 0), 0);
+      
+      // Calculate standby for each record: 24 - (Uptime + USD + PSD)
+      const totalStandby = records.reduce((sum, r) => {
+        const standby = 24 - ((r.uptime || 0) + (r.unplanned_shutdown || 0) + (r.planned_shutdown || 0));
+        return sum + Math.max(0, standby);
+      }, 0);
+
+      const totalHoursInPeriod = totalDays * 24;
+
+      // Apply RMS calculation formulas
+      const utilization = totalHoursInPeriod > 0 
+        ? (totalUptime / totalHoursInPeriod) * 100 
+        : 0;
+
+      const availability = totalHoursInPeriod > 0 
+        ? ((totalUptime + totalStandby) / totalHoursInPeriod) * 100 
+        : 0;
+
+      const reliability = (totalHoursInPeriod - totalPlannedShutdown) > 0 
+        ? (((totalHoursInPeriod - totalUnplannedShutdown - totalPlannedShutdown) / (totalHoursInPeriod - totalPlannedShutdown)) * 100)
+        : 0;
+
+      const assetMetric: AssetPerformanceData = {
+        name: asset.asset_name || asset.asset_no,
+        utilization: Math.max(0, Math.min(100, utilization)),
+        availability: Math.max(0, Math.min(100, availability)),
+        reliability: Math.max(0, Math.min(100, reliability)),
+        mttrAvailability: 100.00, // Placeholder - would need MTTR data
+        mttrReliability: 100.00, // Placeholder - would need MTTR data
+        target: reliabilityTarget,
+        systemId: asset.system_id,
+        assetCount: 1
+      };
+
+      assetMetrics.push(assetMetric);
+
+      // Group by system for system-level calculations
+      if (asset.system_id && asset.system?.system_name) {
+        if (!systemMetrics.has(asset.system_id)) {
+          systemMetrics.set(asset.system_id, {
+            name: asset.system.system_name,
+            assets: []
+          });
+        }
+        systemMetrics.get(asset.system_id)!.assets.push({
+          availability: availability,
+          reliability: reliability
+        });
+      }
+    });
+
+    // Calculate system-level metrics
+    const systemReliabilityData: SystemReliabilityData[] = Array.from(systemMetrics.entries()).map(([systemId, data]) => {
+      const assets = data.assets;
+      const assetCount = assets.length;
+
+      // Calculate system availability and reliability based on asset count
+      let systemAvailability: number;
+      let systemReliability: number;
+
+      if (assetCount === 1) {
+        systemAvailability = assets[0].availability;
+        systemReliability = assets[0].reliability;
+      } else {
+        // For multiple assets: (1-((1-(Asset1/100))*(1-(Asset2/100))*...))*100
+        const availabilityProduct = assets.reduce((product, asset) => 
+          product * (1 - (asset.availability / 100)), 1);
+        systemAvailability = (1 - availabilityProduct) * 100;
+
+        const reliabilityProduct = assets.reduce((product, asset) => 
+          product * (1 - (asset.reliability / 100)), 1);
+        systemReliability = (1 - reliabilityProduct) * 100;
+      }
+
+      return {
+        name: data.name,
+        availability: Math.max(0, Math.min(100, systemAvailability)),
+        reliability: Math.max(0, Math.min(100, systemReliability))
+      };
+    });
+
+    // Calculate average metrics
+    const totalAssets = assetMetrics.length;
+    const avgUtilization = totalAssets > 0 
+      ? assetMetrics.reduce((sum, asset) => sum + asset.utilization, 0) / totalAssets 
+      : 0;
+    const avgAvailability = totalAssets > 0 
+      ? assetMetrics.reduce((sum, asset) => sum + asset.availability, 0) / totalAssets 
+      : 0;
+    const avgReliability = totalAssets > 0 
+      ? assetMetrics.reduce((sum, asset) => sum + asset.reliability, 0) / totalAssets 
+      : 0;
+
+    const averageMetricsData: AverageMetricsData[] = [{
+      name: 'Critical Assets',
+      utilization: avgUtilization,
+      availability: avgAvailability,
+      reliability: avgReliability,
+    }];
+
+    // Calculate connected assets and alerts
+    const connectedAssets = {
+      connected: assetsWithUptime.length,
+      total: assets.length
+    };
+
+    // Mock active alerts - you might want to implement a real alert system
+    const activeAlerts = assetMetrics.filter(asset => 
+      asset.availability < reliabilityTarget || asset.reliability < reliabilityTarget
+    ).length;
+
+    return {
+      assetPerformanceData: assetMetrics,
+      averageMetricsData,
+      systemReliabilityData,
+      connectedAssets,
+      activeAlerts
+    };
+  }, [assets, uptimeData, dateRange, reliabilityTarget]);
+
+  const isLoading = assetsLoading || uptimeAssetsLoading || uptimeDataLoading;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <PageHeader 
+          title="RMS Dashboard" 
+          subtitle="Real-time monitoring system overview"
+          icon={<Database className="h-6 w-6" />}
+        />
+        <div className="flex justify-center items-center h-64">
+          <div className="text-lg">Loading dashboard data...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -202,41 +279,49 @@ const RMSDashboardPage = () => {
             setDateRange={setDateRange}
           />
         </div>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="reliability-target">Reliability Target (%):</Label>
+          <Input
+            id="reliability-target"
+            type="number"
+            min="0"
+            max="100"
+            value={reliabilityTarget}
+            onChange={(e) => setReliabilityTarget(Number(e.target.value))}
+            className="w-20"
+          />
+          <Button
+            onClick={() => setReliabilityTarget(95)}
+            variant="ghost"
+            size="sm"
+          >
+            Reset
+          </Button>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <KpiCard 
           title="Connected Assets" 
-          value="24/26" 
+          value={`${connectedAssets.connected}/${connectedAssets.total}`}
           icon={<Database className="h-6 w-6" />} 
-          changeLabel="2 offline"
+          changeLabel={`${connectedAssets.total - connectedAssets.connected} offline`}
         />
         <KpiCard 
           title="Active Alerts" 
-          value="7" 
+          value={activeAlerts.toString()}
           icon={<AlertTriangle className="h-6 w-6" />} 
-          change={2}
-          changeDirection="down"
-          positiveChange="down"
-          changeLabel="vs yesterday"
+          changeLabel="below target"
         />
         <KpiCard 
-          title="Data Transmission" 
-          value="98.5%" 
+          title="Avg Availability" 
+          value={`${averageMetricsData[0]?.availability.toFixed(1) || 0}%`}
           icon={<Activity className="h-6 w-6" />} 
-          change={0.3}
-          changeDirection="up"
-          positiveChange="up"
-          changeLabel="vs yesterday"
         />
         <KpiCard 
-          title="System Health" 
-          value="92%" 
+          title="Avg Reliability" 
+          value={`${averageMetricsData[0]?.reliability.toFixed(1) || 0}%`}
           icon={<Gauge className="h-6 w-6" />} 
-          change={1.5}
-          changeDirection="up"
-          positiveChange="up"
-          changeLabel="vs last week"
         />
       </div>
       
@@ -276,7 +361,7 @@ const RMSDashboardPage = () => {
                   <Bar dataKey="mttrAvailability" name="MTTR Availability" fill="#4caf50" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="reliability" name="Reliability" fill="#03a9f4" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="mttrReliability" name="MTTR Reliability" fill="#2196f3" radius={[4, 4, 0, 0]} />
-                  <ReferenceLine y={95} stroke="red" strokeWidth={2} />
+                  <ReferenceLine y={reliabilityTarget} stroke="red" strokeWidth={2} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -362,15 +447,15 @@ const RMSDashboardPage = () => {
                 <TableBody>
                   <TableRow>
                     <TableCell className="font-medium">Average Utilization</TableCell>
-                    <TableCell>{formatPercentage(averageMetricsData[0].utilization)}</TableCell>
+                    <TableCell>{formatPercentage(averageMetricsData[0]?.utilization || 0)}</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell className="font-medium">Average Availability</TableCell>
-                    <TableCell>{formatPercentage(averageMetricsData[0].availability)}</TableCell>
+                    <TableCell>{formatPercentage(averageMetricsData[0]?.availability || 0)}</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell className="font-medium">Average Reliability</TableCell>
-                    <TableCell>{formatPercentage(averageMetricsData[0].reliability)}</TableCell>
+                    <TableCell>{formatPercentage(averageMetricsData[0]?.reliability || 0)}</TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
