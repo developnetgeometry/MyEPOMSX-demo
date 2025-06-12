@@ -45,10 +45,10 @@ export const useInventoryDetail = (id: string) => {
   });
 };
 
-export const useReceiveInventory = (options?: { enabled?: boolean }) => {
+export const useReceiveInventory = (inventoryId: number, options?: { enabled?: boolean }) => {
   return useQuery({
-    queryKey: inventoryKeys.receiveInventory(),
-    queryFn: () => inventoryService.getReceiveInventory(),
+    queryKey: [...inventoryKeys.receiveInventory(), inventoryId],
+    queryFn: () => inventoryService.getReceiveInventoryByInventoryId(inventoryId),
     ...options,
   });
 };
@@ -159,42 +159,42 @@ export const useAddTransferInventory = () => {
   });
 };
 
-export const useIssueInventory = (options?: { enabled?: boolean }) => {
+export const useIssueInventory = (inventoryId: number, options?: { enabled?: boolean }) => {
   return useQuery({
-    queryKey: inventoryKeys.issueInventory(),
-    queryFn: () => inventoryService.getIssueInventory(),
+    queryKey: [...inventoryKeys.issueInventory(), inventoryId],
+    queryFn: () => inventoryService.getIssueInventoryByInventoryId(inventoryId),
     ...options,
   });
 };
 
-export const useReturnInventory = (options?: { enabled?: boolean }) => {
+export const useReturnInventory = (inventoryId: number, options?: { enabled?: boolean }) => {
   return useQuery({
-    queryKey: inventoryKeys.returnInventory(),
-    queryFn: () => inventoryService.getReturnInventory(),
+    queryKey: [...inventoryKeys.returnInventory(), inventoryId],
+    queryFn: () => inventoryService.getReturnInventoryByInventoryId(inventoryId),
     ...options,
   });
 };
 
-export const useTransferInventory = (options?: { enabled?: boolean }) => {
+export const useTransferInventory = (inventoryId: number, options?: { enabled?: boolean }) => {
   return useQuery({
-    queryKey: inventoryKeys.transferInventory(),
-    queryFn: () => inventoryService.getTransferInventory(),
+    queryKey: [...inventoryKeys.transferInventory(), inventoryId],
+    queryFn: () => inventoryService.getTransferInventoryByInventoryId(inventoryId),
     ...options,
   });
 };
 
-export const useTransactionInventory = (options?: { enabled?: boolean }) => {
+export const useTransactionInventory = (inventoryId: number, options?: { enabled?: boolean }) => {
   return useQuery({
-    queryKey: inventoryKeys.transactionInventory(),
-    queryFn: () => inventoryService.getTransactionInventory(),
+    queryKey: [...inventoryKeys.transactionInventory(), inventoryId],
+    queryFn: () => inventoryService.getTransactionInventoryByInventoryId(inventoryId),
     ...options,
   });
 };
 
-export const useAdjustmentInventory = (options?: { enabled?: boolean }) => {
+export const useAdjustmentInventory = (inventoryId: number, options?: { enabled?: boolean }) => {
   return useQuery({
-    queryKey: inventoryKeys.adjustmentInventory(),
-    queryFn: () => inventoryService.getAdjustmentInventory(),
+    queryKey: [...inventoryKeys.adjustmentInventory(), inventoryId],
+    queryFn: () => inventoryService.getAdjustmentInventoryByInventoryId(inventoryId),
     ...options,
   });
 };
@@ -204,7 +204,7 @@ export const useAddInventory = () => {
   return useMutation({
     mutationFn: inventoryService.createInventory,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: inventoryKeys.list() });
+      queryClient.invalidateQueries({ queryKey: ["inventories"] });
     },
   });
 };
