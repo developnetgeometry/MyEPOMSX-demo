@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable, { Column } from "@/components/shared/DataTable";
@@ -18,8 +18,8 @@ import { Loader2, X } from "lucide-react";
 import { System } from "@/types/manage";
 import {
   useCreateSystem,
-  useDeleteSystem,
   useSystems,
+  useDeleteSystem,
   useUpdateSystem,
 } from "@/hooks/queries/useSystems";
 import { useLoadingState } from "@/hooks/use-loading-state";
@@ -49,7 +49,7 @@ type SystemFormValues = {
   system_code: string;
   system_name: string;
   is_active: boolean;
-}
+};
 
 const SystemPage: React.FC = () => {
   const { data: facilities } = useFacilityOptions();
@@ -106,19 +106,24 @@ const SystemPage: React.FC = () => {
   useEffect(() => {
     if (!systems) return;
 
-    if (!searchTerm.trim()) {
-      setFilteredSystems(systems);
-      return;
+    let filtered = systems;
+    if (searchTerm.trim()) {
+      filtered = systems.filter(
+        (item) =>
+          item.system_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.system_code.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
 
-    const filtered = systems.filter(
-      (item) =>
-        item.system_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        false ||
-        item.system_code.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    setFilteredSystems(filtered);
+    setFilteredSystems((prev) => {
+      if (
+        prev.length === filtered.length &&
+        prev.every((v, i) => v.id === filtered[i].id)
+      ) {
+        return prev;
+      }
+      return filtered;
+    });
 
     if (filtered.length === 0 && searchTerm.trim() !== "") {
       toast({
@@ -131,9 +136,22 @@ const SystemPage: React.FC = () => {
 
   useEffect(() => {
     if (!isDialogOpen) {
-      form.reset();
+      form.reset({
+        facility_id: null as unknown as number,
+        system_code: "",
+        system_name: "",
+        is_active: true,
+      });
     }
-  }, [isDialogOpen]);
+    return () => {
+      form.reset({
+        facility_id: null as unknown as number,
+        system_code: "",
+        system_name: "",
+        is_active: true,
+      });
+    };
+  }, [isDialogOpen, form]);
 
   // Initialize form in edit mode
   useEffect(() => {
@@ -150,6 +168,13 @@ const SystemPage: React.FC = () => {
   const handleAddNew = () => {
     setIsEditMode(false);
     setCurrentItem(null);
+    // Reset form to blank/default values before opening
+    form.reset({
+      facility_id: null as unknown as number,
+      system_code: "",
+      system_name: "",
+      is_active: true,
+    });
     setIsDialogOpen(true);
   };
   const handleEdit = (item: System) => {
@@ -165,28 +190,10 @@ const SystemPage: React.FC = () => {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = async (item: System) => {
-    withLoading(async () => {
-      try {
-        await deleteSystemMutation.mutateAsync(item.id);
-        toast({
-          title: "System deleted successfully",
-          variant: "default",
-        });
-      } catch (error: any) {
-        toast({
-          title: "Error deleting system",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
-    });
-  };
-
   // Handle search function
-  const handleSearch = (query: string) => {
+  const handleSearch = useCallback((query: string) => {
     setSearchTerm(query);
-  };
+  }, []);
 
   const handleSubmit = async (values: SystemFormValues) => {
     withLoading(async () => {
@@ -218,32 +225,49 @@ const SystemPage: React.FC = () => {
     });
   };
 
-  const columns: Column[] = [
-    {
-      id: "system_code",
-      header: "System ID",
-      accessorKey: "system_code",
-    },
-    {
-      id: "system_name",
-      header: "Name",
-      accessorKey: "system_name",
-    },
-    {
-      id: "system_no",
-      header: "System Number",
-      accessorKey: "system_no",
-    },
-    {
-      id: "facility.location_name",
-      header: "Location",
-      accessorKey: "facility.location_name",
-    },
-  ];
+  const handleDelete = async (item: System) => {
+    if (!window.confirm("Are you sure you want to delete this system?")) return;
 
-  const handleRowClick = (row: System) => {
-    navigate(`/manage/system/${row.id}`);
+    withLoading(async () => {
+      try {
+        await deleteSystemMutation.mutateAsync(item.id);
+        toast({ title: "System deleted successfully" });
+        queryClient.invalidateQueries({ queryKey: ["systems"] });
+      } catch (error: any) {
+        toast({
+          title: "Error deleting system",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    });
   };
+
+  const columns: Column[] = React.useMemo(
+    () => [
+      {
+        id: "system_code",
+        header: "System ID",
+        accessorKey: "system_code",
+      },
+      {
+        id: "system_name",
+        header: "Name",
+        accessorKey: "system_name",
+      },
+      {
+        id: "system_no",
+        header: "System Number",
+        accessorKey: "system_no",
+      },
+      {
+        id: "facility.location_name",
+        header: "Location",
+        accessorKey: "facility.location_name",
+      },
+    ],
+    []
+  );
 
   return (
     <div className="space-y-6">
@@ -258,7 +282,6 @@ const SystemPage: React.FC = () => {
       <DataTable
         columns={columns}
         data={filteredSystems}
-        onRowClick={handleRowClick}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
@@ -291,7 +314,9 @@ const SystemPage: React.FC = () => {
           >
             {/* Facility Selection */}
             <div>
-              <Label htmlFor="facility_id">Location <span className="text-red-500">*</span></Label>
+              <Label htmlFor="facility_id">
+                Location <span className="text-red-500">*</span>
+              </Label>
               <Controller
                 name="facility_id"
                 control={form.control}
@@ -325,11 +350,15 @@ const SystemPage: React.FC = () => {
 
             {/* System Code */}
             <div>
-              <Label htmlFor="system_code">System Code <span className="text-red-500">*</span></Label>
+              <Label htmlFor="system_code">
+                System Code <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="system_code"
                 {...form.register("system_code")}
                 placeholder="Enter system code"
+                disabled={isEditMode}
+                readOnly={isEditMode}
               />
               {form.formState.errors.system_code && (
                 <p className="text-red-500 text-sm mt-1">
@@ -340,18 +369,23 @@ const SystemPage: React.FC = () => {
 
             {/* Computed System Number */}
             <div>
-              <Label htmlFor="system_no">System Number <span className="text-red-500">*</span></Label>
+              <Label htmlFor="system_no">
+                System Number <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="system_no"
                 value={systemNumber}
                 readOnly
+                disabled
                 placeholder="Will be generated automatically"
               />
             </div>
 
             {/* System Name */}
             <div>
-              <Label htmlFor="system_name">System Name <span className="text-red-500">*</span></Label>
+              <Label htmlFor="system_name">
+                System Name <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="system_name"
                 {...form.register("system_name")}

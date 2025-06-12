@@ -71,26 +71,26 @@ const InventoryDetailPage: React.FC = () => {
   const { data: inventoryItem, isLoading: isLoadingInventoryItem } =
     useInventoryDetail(id);
   const { data: receiveData = [], isLoading: isLoadingReceive } =
-    useReceiveInventory({
+    useReceiveInventory(Number(id), {
       enabled: activeTab === "receive",
     });
-  const { data: issueData = [], isLoading: isLoadingIssue } = useIssueInventory({
+  const { data: issueData = [], isLoading: isLoadingIssue } = useIssueInventory(Number(id), {
     enabled: activeTab === "issue",
   });
   const { data: returnData = [], isLoading: isLoadingReturn } =
-    useReturnInventory({
+    useReturnInventory(Number(id), {
       enabled: activeTab === "return",
     });
   const { data: adjustmentData = [], isLoading: isLoadingAdjustment } =
-    useAdjustmentInventory({
+    useAdjustmentInventory(Number(id), {
       enabled: activeTab === "adjustment",
     });
   const { data: transferData = [], isLoading: isLoadingTransfer } =
-    useTransferInventory({
+    useTransferInventory(Number(id), {
       enabled: activeTab === "transfer",
     });
   const { data: transactionData = [], isLoading: isLoadingTransaction } =
-  useTransactionInventory({
+  useTransactionInventory(Number(id), {
     enabled: activeTab === "transaction",
   });
 
