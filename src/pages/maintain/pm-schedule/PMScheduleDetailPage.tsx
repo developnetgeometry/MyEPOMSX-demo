@@ -9,7 +9,7 @@ import { X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import PmScheduleDetailsCard from "@/components/maintain/pm-schedule/workOrder/PmScheduleDetailsCard";
-import { usePmScheduleDataById, updatePmScheduleData, deletePmScheduleData } from "../hooks/use-pm-schedule-data";
+import { usePmScheduleDataById, updatePmScheduleData, deletePmScheduleData, insertPmWorkOrderData } from "../hooks/use-pm-schedule-data";
 import TaskDetailTab from "@/components/maintain/pm-schedule/task-detail/TaskDetailTab";
 import MinAcceptCriteriaTab from "@/components/maintain/pm-schedule/minAcceptCriteria/MinAcceptCriteriaTab";
 import ChecksheetTab from "@/components/maintain/pm-schedule/checksheet/ChecksheetTab";
@@ -18,6 +18,7 @@ import MaintainGroupTab from "@/components/maintain/pm-schedule/maintainGroup/Ma
 import PlanTab from "@/components/maintain/pm-schedule/plan/PlanTab";
 import RelatedWoTab from "@/components/work-orders/work-order-list/relatedWo/RelatedWoTab";
 import PMScheduleDialogForm from "./PMScheduleDialogForm";
+import { ConfirmationDialog, ConfirmVariant } from '@/components/ui/confirmation-dialog';
 
 const PMScheduleDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -25,10 +26,19 @@ const PMScheduleDetailPage: React.FC = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { data: pmSchedule, isLoading, refetch } = usePmScheduleDataById(Number(id));
-
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false);
-
+  const [confirmationDialogData, setConfirmationDialogData] = useState<{
+    title: string;
+    description: string;
+    confirmVariant: ConfirmVariant;
+    onConfirm: () => void;
+  }>({
+    title: "",
+    description: "",
+    confirmVariant: "default",
+    onConfirm: () => { },
+  });
   const handleEditClick = () => {
     setIsDialogOpen(true);
   };
@@ -78,8 +88,66 @@ const PMScheduleDetailPage: React.FC = () => {
     }
   };
 
+  const handleSubmitToPmWo = () => {
+    setConfirmationDialogData({
+      title: "Submit Task Schedule",
+      description: "Are you sure you want to submit to PM Work Order?",
+      confirmVariant: "default", // Set the button variant dynamically
+      onConfirm: async () => {
+        try {
+          if (pmSchedule) {
+            // Step 1: Update the cm_status_id to 3 in e_new_work_request
+            await updatePmScheduleData(pmSchedule.id, { is_pm_work_order_created: true, is_active: true });
+
+            // // Step 2: Insert data into e_pm_work_order
+            const pmWorkOrderData = {
+              due_date: pmSchedule.due_date,
+              is_active: true,
+              priority_id: pmSchedule.priority_id?.id,
+              work_center_id: pmSchedule.work_center_id?.id,
+              task_id: pmSchedule.task_id?.id,
+              frequency_id: pmSchedule.frequency_id?.id,
+              asset_id: pmSchedule.asset_id?.id,
+              system_id: pmSchedule.system_id?.id,
+              package_id: pmSchedule.package_id?.id,
+              pm_group_id: pmSchedule.pm_group_id?.id,
+              asset_sce_code_id: pmSchedule.pm_sce_group_id?.id,
+              pm_description: pmSchedule.pm_description,
+              pm_schedule_id: pmSchedule.id,
+              facility_id: pmSchedule.facility_id?.id,
+            };
+
+            await insertPmWorkOrderData(pmWorkOrderData);
+            // Step 3: Trigger supabase on insert e_cm_general to copy table
+            // work_request to e_cm_general
+
+            toast({
+              title: "Success",
+              description: "PM Work Order submitted successfully!",
+              variant: "default",
+            });
+
+            refetch();
+            queryClient.invalidateQueries({ queryKey: ["e-pm-schedule-data"] });
+          }
+          setIsConfirmationDialogOpen(false);
+        } catch (error) {
+          console.error("Failed to submit PM Work Order:", error);
+          toast({
+            title: "Error",
+            description: "Failed to submit PM Work Order",
+            variant: "destructive",
+          });
+        }
+      },
+    });
+    setIsConfirmationDialogOpen(true);
+  };
+
   return (
     <div className="space-y-6">
+      {/* <pre>{JSON.stringify(pmSchedule, null, 2)}</pre> */}
+
       <div className="flex items-center justify-between">
         <PageHeader title="PM Schedule Detail" />
         <Button variant="outline" onClick={() => navigate("/maintain/pm-schedule")}>
@@ -92,6 +160,7 @@ const PMScheduleDetailPage: React.FC = () => {
         isLoading={isLoading}
         onEditClick={handleEditClick}
         onDeleteClick={handleDeleteClick}
+        onSubmitToPmWo={handleSubmitToPmWo}
       />
 
       <Card>
@@ -155,6 +224,18 @@ const PMScheduleDetailPage: React.FC = () => {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        open={isConfirmationDialogOpen}
+        onOpenChange={setIsConfirmationDialogOpen}
+        title={confirmationDialogData.title}
+        description={confirmationDialogData.description}
+        confirmText="Confirm"
+        cancelText="Cancel"
+        confirmVariant={confirmationDialogData.confirmVariant}
+        onConfirm={confirmationDialogData.onConfirm}
+      />
     </div>
   );
 };

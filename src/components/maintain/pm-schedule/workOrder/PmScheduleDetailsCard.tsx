@@ -12,6 +12,8 @@ interface PmScheduleDetailsCardProps {
   isLoading: boolean;
   onEditClick?: () => void;
   onDeleteClick?: () => void;
+  onSubmitToPmWo?: () => void;
+
 }
 
 const PmScheduleDetailsCard: React.FC<PmScheduleDetailsCardProps> = ({
@@ -19,6 +21,7 @@ const PmScheduleDetailsCard: React.FC<PmScheduleDetailsCardProps> = ({
   isLoading,
   onEditClick,
   onDeleteClick,
+  onSubmitToPmWo,
 }) => {
   if (isLoading) {
     return <Loading />;
@@ -168,6 +171,26 @@ const PmScheduleDetailsCard: React.FC<PmScheduleDetailsCardProps> = ({
               readOnly
             />
           </div>
+        </div>
+
+        <div className="flex justify-end space-x-2">
+          <TooltipProvider>
+
+            {((!pmScheduleDetail.is_pm_work_order_created) &&
+              <>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" onClick={onSubmitToPmWo}>Submit</Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Submit all data from Pm Schedule <br />
+                    to Pm Work Order
+                  </TooltipContent>
+                </Tooltip>
+              </>
+            )}
+          </TooltipProvider>
+
         </div>
       </CardContent>
     </Card>

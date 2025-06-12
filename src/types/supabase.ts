@@ -4119,6 +4119,7 @@ export type Database = {
           frequency_id: number | null
           id: number
           is_active: boolean | null
+          is_pm_work_order_created: boolean | null
           maintenance_id: number | null
           package_id: number | null
           pm_description: string | null
@@ -4142,6 +4143,7 @@ export type Database = {
           frequency_id?: number | null
           id?: number
           is_active?: boolean | null
+          is_pm_work_order_created?: boolean | null
           maintenance_id?: number | null
           package_id?: number | null
           pm_description?: string | null
@@ -4165,6 +4167,7 @@ export type Database = {
           frequency_id?: number | null
           id?: number
           is_active?: boolean | null
+          is_pm_work_order_created?: boolean | null
           maintenance_id?: number | null
           package_id?: number | null
           pm_description?: string | null
@@ -5671,6 +5674,66 @@ export type Database = {
           },
         ]
       }
+      i_corrective_action: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: number
+          name: string | null
+          updated_at: string | null
+          updated_by: string | null
+          value: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          name?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          name?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: number | null
+        }
+        Relationships: []
+      }
+      i_cyclic_load_type: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: number
+          name: string | null
+          updated_at: string | null
+          updated_by: string | null
+          value: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          name?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: number
+          name?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: number | null
+        }
+        Relationships: []
+      }
       i_data_confidence: {
         Row: {
           created_at: string | null
@@ -5909,7 +5972,7 @@ export type Database = {
           corrective_action: number | null
           created_at: string | null
           created_by: string | null
-          cyclic_load_type: number | null
+          cyclic_load_type_id: number | null
           data_confidence_id: number | null
           dmfatfb: number | null
           id: number
@@ -5918,7 +5981,7 @@ export type Database = {
           pipe_complexity: number | null
           pipe_condition: number | null
           previous_failure_id: number | null
-          shaking_frequency: number | null
+          shaking_frequency_id: number | null
           updated_at: string | null
           updated_by: string | null
           visible_audible_shaking_id: number | null
@@ -5928,7 +5991,7 @@ export type Database = {
           corrective_action?: number | null
           created_at?: string | null
           created_by?: string | null
-          cyclic_load_type?: number | null
+          cyclic_load_type_id?: number | null
           data_confidence_id?: number | null
           dmfatfb?: number | null
           id?: number
@@ -5937,7 +6000,7 @@ export type Database = {
           pipe_complexity?: number | null
           pipe_condition?: number | null
           previous_failure_id?: number | null
-          shaking_frequency?: number | null
+          shaking_frequency_id?: number | null
           updated_at?: string | null
           updated_by?: string | null
           visible_audible_shaking_id?: number | null
@@ -5947,7 +6010,7 @@ export type Database = {
           corrective_action?: number | null
           created_at?: string | null
           created_by?: string | null
-          cyclic_load_type?: number | null
+          cyclic_load_type_id?: number | null
           data_confidence_id?: number | null
           dmfatfb?: number | null
           id?: number
@@ -5956,12 +6019,19 @@ export type Database = {
           pipe_complexity?: number | null
           pipe_condition?: number | null
           previous_failure_id?: number | null
-          shaking_frequency?: number | null
+          shaking_frequency_id?: number | null
           updated_at?: string | null
           updated_by?: string | null
           visible_audible_shaking_id?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "i_df_mfat_i_cyclic_load_type_fk"
+            columns: ["cyclic_load_type_id"]
+            isOneToOne: false
+            referencedRelation: "i_cyclic_load_type"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "i_df_mfat_i_data_confidence_fk"
             columns: ["data_confidence_id"]
@@ -5974,6 +6044,13 @@ export type Database = {
             columns: ["previous_failure_id"]
             isOneToOne: false
             referencedRelation: "i_previous_failure"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_df_mfat_i_shaking_frequency_fk"
+            columns: ["shaking_frequency_id"]
+            isOneToOne: false
+            referencedRelation: "i_shaking_frequency"
             referencedColumns: ["id"]
           },
           {
@@ -7432,7 +7509,6 @@ export type Database = {
       }
       profiles: {
         Row: {
-<<<<<<< Updated upstream
           avatar_url: string | null
           created_at: string
           description: string | null
@@ -7467,39 +7543,6 @@ export type Database = {
           is_deleted?: boolean | null
           updated_at?: string
           user_type_id?: string
-=======
-          asset_detail_id: number | null
-          code: string | null
-          date: string | null
-          id: number
-          planned_shutdown: number | null
-          sum_running_hour: number | null
-          unplanned_shutdown: number | null
-          uptime: number | null
-          description: string | null
-        }
-        Insert: {
-          asset_detail_id?: number | null
-          code?: string | null
-          date?: string | null
-          id?: number
-          planned_shutdown?: number | null
-          sum_running_hour?: number | null
-          unplanned_shutdown?: number | null
-          uptime?: number | null
-          description?: string | null
-        }
-        Update: {
-          asset_detail_id?: number | null
-          code?: string | null
-          date?: string | null
-          id?: number
-          planned_shutdown?: number | null
-          sum_running_hour?: number | null
-          unplanned_shutdown?: number | null
-          uptime?: number | null
-          description?: string | null
->>>>>>> Stashed changes
         }
         Relationships: [
           {
@@ -7765,6 +7808,70 @@ export type Database = {
           updated_at: string
           avatar_url: string
         }[]
+      }
+      handle_adjustment_inventory: {
+        Args: {
+          inventory_id: number
+          quantity: number
+          adjustment_type_id: number
+          adjustment_category_id: number
+          created_by: string
+          remark: string
+        }
+        Returns: Json
+      }
+      handle_issue_inventory: {
+        Args: {
+          inventory_id: number
+          quantity: number
+          work_order_no: string
+          created_by: string
+          remark: string
+        }
+        Returns: Json
+      }
+      handle_receive_inventory: {
+        Args:
+          | {
+              p_inventory_id: number
+              p_received_quantity: number
+              p_unit_price: number
+              p_po_receive_no: string
+              p_created_by: string
+              p_created_at: string
+              p_remark: string
+            }
+          | {
+              p_inventory_id: number
+              p_received_quantity: number
+              p_unit_price: number
+              p_po_receive_no: string
+              p_created_by: string
+              p_remark: string
+            }
+        Returns: Json
+      }
+      handle_return_inventory: {
+        Args: {
+          inventory_id: number
+          quantity: number
+          work_order_no: string
+          created_by: string
+          remark: string
+        }
+        Returns: Json
+      }
+      handle_transfer_inventory: {
+        Args: {
+          source_inventory_id: number
+          destination_store_id: number
+          quantity: number
+          transfer_reason: string
+          employee_id: number
+          created_by: string
+          remark: string
+        }
+        Returns: Json
       }
       is_admin: {
         Args: Record<PropertyKey, never>

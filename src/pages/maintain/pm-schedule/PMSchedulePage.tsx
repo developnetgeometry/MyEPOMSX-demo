@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Filter, Plus, X } from "lucide-react";
 import PMScheduleDialogForm from "./PMScheduleDialogForm";
 import { Input } from "@/components/ui/input";
+import { useProject } from "@/contexts/ProjectContext";
 
 const PMSchedulePage: React.FC = () => {
   const navigate = useNavigate();
@@ -33,6 +34,8 @@ const PMSchedulePage: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<any | null>(null);
   const { toast } = useToast();
+  // const { currentProject, loading : projectLoading } = useProject();
+
 
   const handleRowClick = (row: any) => {
     navigate(`/maintain/pm-schedule/${row.id}`);
@@ -69,8 +72,9 @@ const PMSchedulePage: React.FC = () => {
     }
   };
 
-  const filteredSchedules = useMemo(() => {
-    if (!pmSchedules) return [];
+  const { filteredSchedules, readyToGenerateCount } = useMemo(() => {
+    if (!pmSchedules) return { filteredSchedules: [], readyToGenerateCount: 0 };
+
     let filtered = pmSchedules;
 
     // Filter by search query
@@ -104,7 +108,12 @@ const PMSchedulePage: React.FC = () => {
       });
     }
 
-    return filtered;
+    // Count PM Schedules ready to be generated
+    const readyToGenerateCount = filtered.filter(
+      (schedule: any) => schedule.is_active && schedule.is_pm_work_order_created
+    ).length;
+
+    return { filteredSchedules: filtered, readyToGenerateCount };
   }, [pmSchedules, searchQuery, start_date, end_date]);
 
   const columns: Column[] = [
@@ -171,34 +180,26 @@ const PMSchedulePage: React.FC = () => {
               />
             </div>
           </div>
-
         </div>
 
         <div className="space-y-2">
           {(end_date || start_date) && (
             <div>
               <Button
-                variant="ghost"
+                variant="destructive"
                 size="sm"
                 onClick={() => {
                   setStartDate(null);
                   setEndDate(null);
                 }}
               >
-                <X className="h-4 w-4 mr-1" />
+                <X className="h-4 w-4 mr-1 text-white" />
                 Clear Dates
               </Button>
             </div>
           )}
         </div>
         <div className="flex gap-2">
-          {/* <Button
-            className="flex items-center gap-2"
-          >
-              <>
-                <Filter className="h-4 w-4" /> Search
-              </>
-          </Button> */}
 
           <Button
             variant="outline"
@@ -207,6 +208,10 @@ const PMSchedulePage: React.FC = () => {
           >
             <Plus className="h-4 w-4" /> Create Work Order
           </Button>
+        </div>
+
+        <div className="text-sm font-medium text-gray-700">
+          PM Schedules ready to be generated: {readyToGenerateCount}
         </div>
       </div>
 
