@@ -2,18 +2,6 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable, { Column } from "@/components/shared/DataTable";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileCodeIcon } from "lucide-react";
 
@@ -78,67 +66,9 @@ const initialCorrosionStudies = [
 const CorrosionStudiesPage: React.FC = () => {
   const navigate = useNavigate();
   const [studies, setStudies] = useState(initialCorrosionStudies);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [formData, setFormData] = useState({
-    id: "",
-    studyId: "",
-    system: "",
-    asset: "",
-    studyName: "",
-    dateConducted: "",
-    corrosionRate: 0,
-    notes: "",
-  });
 
   const handleAddNew = () => {
-    setIsEditMode(false);
-    setFormData({
-      id: `${studies.length + 1}`,
-      studyId: `CS-${String(studies.length + 1).padStart(3, "0")}`,
-      system: "",
-      asset: "",
-      studyName: "",
-      dateConducted: "",
-      corrosionRate: 0,
-      notes: "",
-    });
-    setIsDialogOpen(true);
-  };
-
-  const handleEdit = (row: any) => {
-    setIsEditMode(true);
-    setFormData({
-      ...row,
-    });
-    setIsDialogOpen(true);
-  };
-
-  const handleInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
-    const { name, value } = e.target;
-    if (name === "corrosionRate") {
-      setFormData((prev) => ({ ...prev, [name]: parseFloat(value) }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (isEditMode) {
-      setStudies((prev) =>
-        prev.map((item) => (item.id === formData.id ? formData : item))
-      );
-    } else {
-      setStudies((prev) => [...prev, formData]);
-    }
-
-    setIsDialogOpen(false);
+    navigate("/monitor/corrosion-studies/new");
   };
 
   // Function to handle row click and navigate to the detail page
@@ -201,121 +131,10 @@ const CorrosionStudiesPage: React.FC = () => {
           <DataTable
             columns={columns}
             data={studies}
-            onEdit={handleEdit}
             onRowClick={handleRowClick}
           />
         </CardContent>
       </Card>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>
-              {isEditMode ? "Edit Corrosion Study" : "Add New Corrosion Study"}
-            </DialogTitle>
-            <DialogDescription>
-              Fill in the study details. Click save when you're done.
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="studyId">Study ID</Label>
-                <Input
-                  id="studyId"
-                  name="studyId"
-                  value={formData.studyId}
-                  onChange={handleInputChange}
-                  readOnly={isEditMode}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="system">System</Label>
-                <Input
-                  id="system"
-                  name="system"
-                  value={formData.system}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="asset">Asset</Label>
-                <Input
-                  id="asset"
-                  name="asset"
-                  value={formData.asset}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="studyName">Study Name</Label>
-                <Input
-                  id="studyName"
-                  name="studyName"
-                  value={formData.studyName}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="dateConducted">Date Conducted</Label>
-                <Input
-                  id="dateConducted"
-                  name="dateConducted"
-                  type="date"
-                  value={formData.dateConducted}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="corrosionRate">Corrosion Rate (mm/year)</Label>
-                <Input
-                  id="corrosionRate"
-                  name="corrosionRate"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.corrosionRate}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-
-              <div className="md:col-span-2 space-y-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleInputChange}
-                  rows={3}
-                />
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit">Save</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
