@@ -680,16 +680,6 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route
-        path="/manage/package/:id"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <PackageDetailPage />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path="/manage/parts-inventory"
         element={
           <ProtectedRoute>

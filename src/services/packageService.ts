@@ -8,7 +8,7 @@ export const packageService = {
       .select(
         `
             *,
-            package_type:package_type_id (name)
+            package_type:package_type_id (id, name)
           `
       )
       .order("package_no");
