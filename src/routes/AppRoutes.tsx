@@ -577,16 +577,6 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route
-        path="/manage/facilities/:id"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <FacilityDetailPage />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path="/manage/inventory"
         element={
           <ProtectedRoute>
@@ -722,16 +712,6 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <Layout>
               <SystemPage />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/manage/system/:id"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <SystemDetailPage />
             </Layout>
           </ProtectedRoute>
         }
