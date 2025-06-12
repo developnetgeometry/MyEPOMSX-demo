@@ -324,14 +324,15 @@ export const inventoryService = {
     return (data || []).map((item) => mapFn(item, profileMap));
   },
 
-  async getReceiveInventory() {
+  async getReceiveInventoryByInventoryId(inventoryId: number) {
     const { data, error } = await supabase
       .from("e_inventory_receive")
       .select("*")
-      .order("id");
+      .eq("inventory_id", inventoryId)
+      .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Error fetching receive inventory:", error);
+      console.error("Error fetching receive inventory by project ID:", error);
       throw error;
     }
 
@@ -347,16 +348,17 @@ export const inventoryService = {
     }));
   },
 
-  async getIssueInventory() {
+  async getIssueInventoryByInventoryId(inventoryId: number) {
     const { data, error } = await supabase
       .from("e_inventory_issue")
       .select(
         "id, issue_date, work_order:work_order_no(work_order_no), quantity, created_by, remark, inventory:inventory_id(unit_price, store:store_id(name))"
       )
+      .eq("inventory_id", inventoryId)
       .order("id");
 
     if (error) {
-      console.error("Error fetching issue inventory:", error);
+      console.error("Error fetching issue inventory by inventory ID:", error);
       throw error;
     }
 
@@ -365,7 +367,7 @@ export const inventoryService = {
       issueDate: item.issue_date
         ? formatDate(item.issue_date.split("T")[0])
         : "",
-      workOrderNo: item.work_order.work_order_no || "",
+      workOrderNo: item.work_order?.work_order_no || "",
       quantity: item.quantity || 0,
       unitPrice: item.inventory?.unit_price || 0,
       total: (item.quantity || 0) * (item.inventory?.unit_price || 0),
@@ -374,16 +376,17 @@ export const inventoryService = {
       remarks: item.remark || "",
     }));
   },
-  async getReturnInventory() {
+  async getReturnInventoryByInventoryId(inventoryId: number) {
     const { data, error } = await supabase
       .from("e_inventory_return")
       .select(
         "id, return_date, work_order:work_order_no(work_order_no), quantity, inventory:inventory_id(unit_price), created_by, remark"
       )
+      .eq("inventory_id", inventoryId)
       .order("id");
 
     if (error) {
-      console.error("Error fetching return inventory:", error);
+      console.error("Error fetching return inventory by inventory ID:", error);
       throw error;
     }
 
@@ -400,16 +403,17 @@ export const inventoryService = {
       remarks: item.remark || "",
     }));
   },
-  async getAdjustmentInventory() {
+  async getAdjustmentInventoryByInventoryId(inventoryId: number) {
     const { data, error } = await supabase
       .from("e_inventory_adjustment")
       .select(
         "id, adjustment_date, quantity, inventory:inventory_id(unit_price, current_balance), created_by, remark"
       )
+      .eq("inventory_id", inventoryId)
       .order("id");
 
     if (error) {
-      console.error("Error fetching adjustment inventory:", error);
+      console.error("Error fetching adjustment inventory by inventory ID:", error);
       throw error;
     }
 
@@ -426,7 +430,7 @@ export const inventoryService = {
       remarks: item.remark || "",
     }));
   },
-  async getTransferInventory() {
+  async getTransferInventoryByInventoryId(inventoryId: number) {
     const { data, error } = await supabase
       .from("e_inventory_transfer")
       .select(
@@ -450,10 +454,11 @@ export const inventoryService = {
       )
     `
       )
+      .eq("inventory_id", inventoryId)
       .order("id");
 
     if (error) {
-      console.error("Error fetching transfer inventory:", error);
+      console.error("Error fetching transfer inventory by inventory ID:", error);
       throw error;
     }
 
@@ -464,7 +469,7 @@ export const inventoryService = {
       toStore: item.store_id?.name || "",
       quantity: item.quantity || 0,
       price: item.inventory_id?.unit_price || 0,
-      employee: item.employee.name || "",
+      employee: item.employee?.name || "",
       remarks: item.remark || "",
       transferDate: item.transfer_date
         ? formatDate(item.transfer_date.split("T")[0])
@@ -474,7 +479,7 @@ export const inventoryService = {
     return mappedData;
   },
 
-  async getTransactionInventory() {
+  async getTransactionInventoryByInventoryId(inventoryId: number) {
     try {
       // Fetch all transaction types in parallel
       const [receiveData, issueData, returnData, adjustmentData, transferData] =
@@ -485,6 +490,7 @@ export const inventoryService = {
             .select(
               "id, created_at, po_receive_no, received_quantity, total_price, created_by, inventory:inventory_id(store:store_id(name))"
             )
+            .eq("inventory_id", inventoryId)
             .order("created_at"),
 
           // Issue transactions
@@ -493,6 +499,7 @@ export const inventoryService = {
             .select(
               "id, issue_date, work_order_no, quantity, created_by, remark, inventory:inventory_id(unit_price, store:store_id(name))"
             )
+            .eq("inventory_id", inventoryId)
             .order("issue_date"),
 
           // Return transactions
@@ -501,6 +508,7 @@ export const inventoryService = {
             .select(
               "id, return_date, work_order:work_order_no(work_order_no), quantity, inventory:inventory_id(unit_price, store:store_id(name)), created_by, remark"
             )
+            .eq("inventory_id", inventoryId)
             .order("return_date"),
 
           // Adjustment transactions
@@ -509,6 +517,7 @@ export const inventoryService = {
             .select(
               "id, adjustment_date, quantity, inventory:inventory_id(unit_price, store:store_id(name)), created_by, remark"
             )
+            .eq("inventory_id", inventoryId)
             .order("adjustment_date"),
 
           // Transfer transactions
@@ -517,6 +526,7 @@ export const inventoryService = {
             .select(
               "id, transfer_date, quantity, inventory:inventory_id(unit_price, store:store_id(name)), created_by, remark, to_store:store_id(name)"
             )
+            .eq("inventory_id", inventoryId)
             .order("transfer_date"),
         ]);
 
