@@ -54,6 +54,10 @@ export const useAddFacility = () => {
         .insert(newFacility)
         .select()
         .single();
+
+      if (error.code === '23505') {
+        throw new Error('Facility with this code already exists');
+      }
         
       if (error) throw error;
       return data as Facility;

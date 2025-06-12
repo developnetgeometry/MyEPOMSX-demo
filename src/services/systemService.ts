@@ -78,6 +78,10 @@ export const systemService = {
       .insert(system)
       .select()
       .single();
+
+    if(error.code === '23505') {
+      throw new Error(`System with system number ${system.system_no} already exists`);
+    }
     
     if (error) {
       throw new Error(`Error creating system: ${error.message}`);
