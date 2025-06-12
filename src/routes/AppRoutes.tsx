@@ -94,9 +94,12 @@ import WorkAnalyticsPage from "@/pages/measure/WorkAnalyticsPage";
 import AssetIntegrityDetailPage from "@/pages/monitor/AssetIntegrityDetailPage";
 import CorrosionStudiesPage from "@/pages/monitor/CorrosionStudiesPage";
 import CorrosionStudiesDetailPage from "@/pages/monitor/CorrosionStudiesDetailPage";
+import CorrosionStudiesFormPage from "@/pages/monitor/CorrosionStudiesFormPage";
 import CriticalAssetsPage from "@/pages/monitor/CriticalAssetsPage";
 import IMSDashboardPage from "@/pages/monitor/IMSDashboardPage";
 import InspectionDataPage from "@/pages/monitor/InspectionDataPage";
+import InspectionDataFormPage from "@/pages/monitor/InspectionDataFormPage";
+import InspectionDataDetailPage from "@/pages/monitor/InspectionDataDetailPage";
 import IntegrityPage from "@/pages/monitor/IntegrityPage";
 import NewPressureVesselPage from "@/pages/monitor/NewPressureVesselPage";
 import NewPipingPage from "@/pages/monitor/NewPipingPage";
@@ -925,6 +928,16 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route
+        path="/monitor/corrosion-studies/new"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <CorrosionStudiesFormPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/monitor/critical-assets"
         element={
           <ProtectedRoute>
@@ -950,6 +963,26 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <Layout>
               <InspectionDataPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/monitor/inspection-data/new"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <InspectionDataFormPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/monitor/inspection-data/:id"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <InspectionDataDetailPage />
             </Layout>
           </ProtectedRoute>
         }
