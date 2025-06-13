@@ -330,3 +330,68 @@ export const useSCEOptions = () => {
     },
   });
 };
+
+// Asset options with component type information for IMS forms
+export interface AssetWithComponentTypeOption {
+  value: string;
+  label: string;
+  id: number;
+  asset_detail_id: number;
+  component_type?: string;
+  area?: string;
+  system?: string;
+  equipment_tag?: string;
+}
+
+export const useAssetWithComponentTypeOptions = () => {
+  return useQuery<AssetWithComponentTypeOption[]>({
+    queryKey: ["asset-with-component-type-options"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("e_asset")
+        .select(
+          `
+          id,
+          asset_no,
+          asset_name,
+          asset_detail_id,
+          system_id,
+          asset_detail:e_asset_detail(
+            id,
+            type_id,
+            area_id,
+            type:e_asset_type(
+              id,
+              name
+            ),
+            area:e_asset_area(
+              id,
+              name
+            )
+          ),
+          system:e_system(
+            id,
+            system_name
+          )
+        `
+        )
+        .not("asset_detail_id", "is", null)
+        .order("asset_no");
+
+      if (error) throw new Error(error.message);
+
+      return (
+        data?.map((row) => ({
+          value: row.id.toString(),
+          label: `${row.asset_no} - ${row.asset_name}`,
+          id: row.id,
+          asset_detail_id: row.asset_detail_id,
+          component_type: row.asset_detail?.type?.name || "",
+          area: row.asset_detail?.area?.name || "",
+          system: row.system?.system_name || "",
+          equipment_tag: row.asset_no || "",
+        })) || []
+      );
+    },
+  });
+};

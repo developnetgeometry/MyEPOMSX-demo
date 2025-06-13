@@ -80,15 +80,15 @@ const InspectionDataFormPage: React.FC = () => {
 
       // Here you would typically make an API call to save the data
       console.log("Saving inspection data:", formData);
-      
+
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       toast({
         title: "Success",
         description: "Inspection data has been created successfully.",
       });
-      
+
       navigate("/monitor/inspection-data");
     } catch (error) {
       toast({
@@ -142,11 +142,21 @@ const InspectionDataFormPage: React.FC = () => {
                     {/* Fallback dummy data if no API data */}
                     {assetTagOptions.length === 0 && (
                       <>
-                        <SelectItem value="PV-1001">PV-1001 - Pressure Vessel Main Reactor</SelectItem>
-                        <SelectItem value="PP-2003">PP-2003 - Process Piping Feed Line</SelectItem>
-                        <SelectItem value="HX-1002">HX-1002 - Heat Exchanger Shell & Tube</SelectItem>
-                        <SelectItem value="TK-3001">TK-3001 - Storage Tank Crude Oil</SelectItem>
-                        <SelectItem value="CD-4001">CD-4001 - Condenser Overhead System</SelectItem>
+                        <SelectItem value="PV-1001">
+                          PV-1001 - Pressure Vessel Main Reactor
+                        </SelectItem>
+                        <SelectItem value="PP-2003">
+                          PP-2003 - Process Piping Feed Line
+                        </SelectItem>
+                        <SelectItem value="HX-1002">
+                          HX-1002 - Heat Exchanger Shell & Tube
+                        </SelectItem>
+                        <SelectItem value="TK-3001">
+                          TK-3001 - Storage Tank Crude Oil
+                        </SelectItem>
+                        <SelectItem value="CD-4001">
+                          CD-4001 - Condenser Overhead System
+                        </SelectItem>
                       </>
                     )}
                   </SelectContent>
@@ -155,7 +165,8 @@ const InspectionDataFormPage: React.FC = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="ltcr">
-                  Long Term Corrosion Rate (LTCR) <span className="text-red-500">*</span>
+                  Long Term Corrosion Rate (LTCR){" "}
+                  <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="ltcr"
@@ -172,7 +183,8 @@ const InspectionDataFormPage: React.FC = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="stcr">
-                  Short Term Corrosion Rate (STCR) <span className="text-red-500">*</span>
+                  Short Term Corrosion Rate (STCR){" "}
+                  <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="stcr"
@@ -219,9 +231,7 @@ const InspectionDataFormPage: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="inspectionRequest">
-                  Inspection Request
-                </Label>
+                <Label htmlFor="inspectionRequest">Inspection Request</Label>
                 <Input
                   id="inspectionRequest"
                   name="inspectionRequest"

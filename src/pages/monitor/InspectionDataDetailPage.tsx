@@ -36,14 +36,14 @@ const getInspectionDataById = (id: string) => {
       lastUpdated: "2024-06-08",
     },
   };
-  
+
   return sampleData[id as keyof typeof sampleData] || null;
 };
 
 const InspectionDataDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  
+
   const inspectionData = getInspectionDataById(id || "");
 
   if (!inspectionData) {
@@ -57,9 +57,10 @@ const InspectionDataDetailPage: React.FC = () => {
         <Card>
           <CardContent className="p-6 text-center">
             <p className="text-gray-500">
-              The inspection data you're looking for doesn't exist or has been removed.
+              The inspection data you're looking for doesn't exist or has been
+              removed.
             </p>
-            <Button 
+            <Button
               onClick={() => navigate("/monitor/inspection-data")}
               className="mt-4"
             >
@@ -120,23 +121,33 @@ const InspectionDataDetailPage: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-gray-600">Asset Number</label>
+              <label className="text-sm font-medium text-gray-600">
+                Asset Number
+              </label>
               <p className="text-lg font-semibold">{inspectionData.assetNo}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-600">Asset Name</label>
+              <label className="text-sm font-medium text-gray-600">
+                Asset Name
+              </label>
               <p className="text-lg">{inspectionData.assetName}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-600">Status</label>
+              <label className="text-sm font-medium text-gray-600">
+                Status
+              </label>
               <div className="mt-1">
-                <Badge variant={inspectionData.isActive ? "default" : "secondary"}>
+                <Badge
+                  variant={inspectionData.isActive ? "default" : "secondary"}
+                >
                   {inspectionData.isActive ? "Active" : "Inactive"}
                 </Badge>
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-600">Inspection Strategy</label>
+              <label className="text-sm font-medium text-gray-600">
+                Inspection Strategy
+              </label>
               <p className="text-lg">{inspectionData.inspectionStrategy}</p>
             </div>
           </CardContent>
@@ -149,21 +160,37 @@ const InspectionDataDetailPage: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-gray-600">Long Term Corrosion Rate (LTCR)</label>
-              <p className={`text-lg font-semibold ${getCorrosionRateColor(inspectionData.ltcr)}`}>
+              <label className="text-sm font-medium text-gray-600">
+                Long Term Corrosion Rate (LTCR)
+              </label>
+              <p
+                className={`text-lg font-semibold ${getCorrosionRateColor(
+                  inspectionData.ltcr
+                )}`}
+              >
                 {inspectionData.ltcr.toFixed(2)} mm/year
               </p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-600">Short Term Corrosion Rate (STCR)</label>
-              <p className={`text-lg font-semibold ${getCorrosionRateColor(inspectionData.stcr)}`}>
+              <label className="text-sm font-medium text-gray-600">
+                Short Term Corrosion Rate (STCR)
+              </label>
+              <p
+                className={`text-lg font-semibold ${getCorrosionRateColor(
+                  inspectionData.stcr
+                )}`}
+              >
                 {inspectionData.stcr.toFixed(2)} mm/year
               </p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-600">Remaining Life</label>
+              <label className="text-sm font-medium text-gray-600">
+                Remaining Life
+              </label>
               <div className="mt-1">
-                <Badge variant={getRemainingLifeColor(inspectionData.remainingLife)}>
+                <Badge
+                  variant={getRemainingLifeColor(inspectionData.remainingLife)}
+                >
                   {inspectionData.remainingLife.toFixed(1)} years
                 </Badge>
               </div>
@@ -178,7 +205,8 @@ const InspectionDataDetailPage: React.FC = () => {
           </CardHeader>
           <CardContent>
             <p className="text-gray-700">
-              {inspectionData.inspectionRequest || "No inspection request details provided."}
+              {inspectionData.inspectionRequest ||
+                "No inspection request details provided."}
             </p>
           </CardContent>
         </Card>
@@ -191,12 +219,20 @@ const InspectionDataDetailPage: React.FC = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-600">Created Date</label>
-                <p className="text-lg">{new Date(inspectionData.createdAt).toLocaleDateString()}</p>
+                <label className="text-sm font-medium text-gray-600">
+                  Created Date
+                </label>
+                <p className="text-lg">
+                  {new Date(inspectionData.createdAt).toLocaleDateString()}
+                </p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-600">Last Updated</label>
-                <p className="text-lg">{new Date(inspectionData.lastUpdated).toLocaleDateString()}</p>
+                <label className="text-sm font-medium text-gray-600">
+                  Last Updated
+                </label>
+                <p className="text-lg">
+                  {new Date(inspectionData.lastUpdated).toLocaleDateString()}
+                </p>
               </div>
             </div>
           </CardContent>
