@@ -143,6 +143,7 @@ const WorkCenterPage: React.FC = () => {
           onRowClick={handleRowClick}
           onEdit={handleEditWorkCenter}
           onDelete={handleDeleteWorkCenter}
+          onIndex={true}
         />
       )}
 

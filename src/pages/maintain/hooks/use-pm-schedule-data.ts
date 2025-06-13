@@ -19,8 +19,10 @@ export const usePmScheduleData = () => {
           package_id (id, package_no, package_name), 
           pm_group_id (id, asset_detail_id), 
           pm_sce_group_id (id, sce_code, group_name), 
-          facility_id (id, location_name)`
+          facility_id (id, location_name),
+          is_deleted`
         )
+        .eq("is_deleted", false)
         .order("id", { ascending: false });
 
       if (error) {
@@ -57,7 +59,8 @@ export const usePmScheduleDataById = (id: number) => {
           package_id (id, package_no, package_name), 
           pm_group_id (id, asset_detail_id), 
           pm_sce_group_id (id, sce_code, group_name), 
-          facility_id (id, location_name)`
+          facility_id (id, location_name),
+          is_deleted`
         )
         .eq("id", id)
         .single();
@@ -75,13 +78,13 @@ export const usePmScheduleDataById = (id: number) => {
 
 export const insertPmScheduleData = async (pmScheduleData: {
   pm_description?: string;
-  due_date?: string; // Use ISO string format for timestamps
+  due_date: string; // Use ISO string format for timestamps (required)
   is_active?: boolean;
   priority_id?: number;
   work_center_id?: number;
   discipline_id?: number;
   task_id?: number;
-  frequency_id?: number;
+  frequency_id: number; // required
   asset_id?: number;
   system_id?: number;
   package_id?: number;
@@ -123,6 +126,8 @@ export const updatePmScheduleData = async (
     pm_group_id?: number;
     pm_sce_group_id?: number;
     facility_id?: number;
+    is_deleted?: boolean;
+
   }>
 ) => {
   try {
@@ -143,21 +148,37 @@ export const updatePmScheduleData = async (
   }
 };
 
-export const deletePmScheduleData = async (id: number) => {
+export const insertPmWorkOrderData = async (pmWorkOrderData: {
+  due_date?: string; // Use ISO string format for timestamps
+  maintenance_id?: number;
+  is_active?: boolean;
+  priority_id?: number;
+  work_center_id?: number;
+  discipline_id?: number;
+  task_id?: number;
+  frequency_id?: number;
+  asset_id?: number;
+  system_id?: number;
+  package_id?: number;
+  pm_group_id?: number;
+  asset_sce_code_id?: number;
+  pm_description?: string;
+  pm_schedule_id?: number;
+  facility_id?: number;
+}) => {
   try {
     const { data, error } = await supabase
-      .from("e_pm_schedule")
-      .delete()
-      .eq("id", id);
+      .from("e_pm_work_order")
+      .insert([pmWorkOrderData]);
 
     if (error) {
-      console.error("Error deleting e_pm_schedule data:", error);
+      console.error("Error inserting e_pm_work_order data:", error);
       throw error;
     }
 
     return data;
   } catch (err) {
-    console.error("Unexpected error deleting e_pm_schedule data:", err);
+    console.error("Unexpected error inserting e_pm_work_order data:", err);
     throw err;
   }
 };

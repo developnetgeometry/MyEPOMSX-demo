@@ -2,11 +2,10 @@ import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable, { Column } from "@/components/shared/DataTable";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   usePmScheduleData,
-  insertPmScheduleData,
-  updatePmScheduleData,
-  deletePmScheduleData,
+  insertPmScheduleData
 } from "../hooks/use-pm-schedule-data";
 import {
   Dialog,
@@ -20,19 +19,24 @@ import { useToast } from "@/hooks/use-toast";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { formatDate } from "@/utils/formatters";
 import { Button } from "@/components/ui/button";
-import { Calendar, Filter, Plus, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import PMScheduleDialogForm from "./PMScheduleDialogForm";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/AuthContext";
+import { createWorkOrderMany } from "../hooks/use-pm-work-generate";
 
 const PMSchedulePage: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: pmSchedules, isLoading, refetch } = usePmScheduleData();
+  const { user, loading: authLoading } = useAuth();
   const [start_date, setStartDate] = useState<string | null>(null);
   const [end_date, setEndDate] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<any | null>(null);
   const { toast } = useToast();
+
 
   const handleRowClick = (row: any) => {
     navigate(`/maintain/pm-schedule/${row.id}`);
@@ -69,43 +73,107 @@ const PMSchedulePage: React.FC = () => {
     }
   };
 
-  const filteredSchedules = useMemo(() => {
-    if (!pmSchedules) return [];
-    let filtered = pmSchedules;
+const { filteredSchedules, readyToGenerateCount } = useMemo(() => {
+  if (!pmSchedules) return { filteredSchedules: [], readyToGenerateCount: 0 };
 
-    // Filter by search query
-    if (searchQuery) {
-      const lower = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (schedule: any) =>
-          schedule.pm_no?.toLowerCase().includes(lower) ||
-          schedule.pm_description?.toLowerCase().includes(lower) ||
-          schedule.asset_id?.asset_name?.toLowerCase().includes(lower) ||
-          schedule.work_center_id?.name?.toLowerCase().includes(lower) ||
-          schedule.frequency_id?.name?.toLowerCase().includes(lower)
-      );
+  let filtered = pmSchedules;
+
+  // Filter by search query
+  if (searchQuery) {
+    const lower = searchQuery.toLowerCase();
+    filtered = filtered.filter(
+      (schedule: any) =>
+        schedule.pm_no?.toLowerCase().includes(lower) ||
+        schedule.pm_description?.toLowerCase().includes(lower) ||
+        schedule.asset_id?.asset_name?.toLowerCase().includes(lower) ||
+        schedule.work_center_id?.name?.toLowerCase().includes(lower) ||
+        schedule.frequency_id?.name?.toLowerCase().includes(lower)
+    );
+  }
+
+  // Filter by start_date, end_date, and is_active = true
+  if (start_date || end_date) {
+    filtered = filtered.filter((schedule: any) => {
+      const dueDate = new Date(schedule.due_date).getTime();
+      const startDate = start_date ? new Date(start_date).getTime() : null;
+      const endDate = end_date ? new Date(end_date).getTime() : null;
+
+      const isWithinDateRange =
+        (startDate && endDate && dueDate >= startDate && dueDate <= endDate) ||
+        (startDate && dueDate >= startDate) ||
+        (endDate && dueDate <= endDate);
+
+      return schedule.is_active && isWithinDateRange; // Ensure is_active is true
+    });
+  }
+
+  // Count PM Schedules ready to be generated
+  const readyToGenerateCount = filtered.filter(
+    (schedule: any) => schedule.is_active && !schedule.is_deleted
+  ).length;
+
+  return { filteredSchedules: filtered, readyToGenerateCount };
+}, [pmSchedules, searchQuery, start_date, end_date]);
+
+  const handleCreateWoMany = async () => {
+    if (!start_date || !end_date) {
+      toast({
+        title: "Error",
+        description: "Please enter both Start Date and End Date.",
+        variant: "destructive",
+      });
+      return;
     }
 
-    // Filter by start_date and end_date
-    if (start_date || end_date) {
-      filtered = filtered.filter((schedule: any) => {
-        const dueDate = new Date(schedule.due_date).getTime();
-        const startDate = start_date ? new Date(start_date).getTime() : null;
-        const endDate = end_date ? new Date(end_date).getTime() : null;
+    try {
+      const pm_schedule_ids = filteredSchedules
+        .map((schedule: any) => schedule.id)
+        .filter((id: number | null) => id !== null); // Filter out null values
 
-        if (startDate && endDate) {
-          return dueDate >= startDate && dueDate <= endDate;
-        } else if (startDate) {
-          return dueDate >= startDate;
-        } else if (endDate) {
-          return dueDate <= endDate;
-        }
-        return true;
+      const frequency_ids = filteredSchedules
+        .map((schedule: any) => schedule.frequency_id?.id)
+        .filter((id: number | null) => id !== null); // Filter out null values
+
+      const due_dates = filteredSchedules
+        .map((schedule: any) => schedule.due_date)
+        .filter((due_date: string | null) => due_date !== null); // Filter out null values
+
+      if (pm_schedule_ids.length === 0) {
+        toast({
+          title: "Error",
+          description: "No valid PM Schedules found to create work orders.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await createWorkOrderMany({
+        start_date,
+        end_date,
+        created_by: user.id, // Use the logged-in user's ID
+        pm_schedule_ids,
+        frequency_ids,
+        due_dates, // Include due_dates in the payload
+      });
+
+      toast({
+        title: "Success",
+        description: "Work orders created successfully!",
+        variant: "default",
+      });
+
+      refetch(); // Refresh the PM Schedules data
+      queryClient.invalidateQueries({ queryKey: ["e-work-order-data"] });
+      queryClient.invalidateQueries({ queryKey: ["e-pm-schedule-data"] });
+    } catch (error) {
+      console.error("Failed to create work orders:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create work orders.",
+        variant: "destructive",
       });
     }
-
-    return filtered;
-  }, [pmSchedules, searchQuery, start_date, end_date]);
+  };
 
   const columns: Column[] = [
     { id: "pm_no", header: "PM No", accessorKey: "pm_no" },
@@ -171,44 +239,41 @@ const PMSchedulePage: React.FC = () => {
               />
             </div>
           </div>
-
         </div>
 
         <div className="space-y-2">
           {(end_date || start_date) && (
             <div>
               <Button
-                variant="ghost"
+                variant="destructive"
                 size="sm"
                 onClick={() => {
                   setStartDate(null);
                   setEndDate(null);
                 }}
               >
-                <X className="h-4 w-4 mr-1" />
+                <X className="h-4 w-4 mr-1 text-white" />
                 Clear Dates
               </Button>
             </div>
           )}
         </div>
         <div className="flex gap-2">
-          {/* <Button
-            className="flex items-center gap-2"
-          >
-              <>
-                <Filter className="h-4 w-4" /> Search
-              </>
-          </Button> */}
 
           <Button
             variant="outline"
             className="flex items-center gap-2"
-          // onClick={() => navigate("/maintain/pm-schedule/create")}
+            onClick={handleCreateWoMany}
           >
             <Plus className="h-4 w-4" /> Create Work Order
           </Button>
         </div>
+
+        <div className="text-sm font-medium text-gray-700">
+          PM Schedules ready to be generated: {readyToGenerateCount}
+        </div>
       </div>
+      {/* <pre>{JSON.stringify(filteredSchedules, null, 2)}</pre> */}
 
 
       <PageHeader
@@ -218,13 +283,14 @@ const PMSchedulePage: React.FC = () => {
         onSearch={handleSearch}
       />
 
-      {isLoading ? (
+      {(isLoading || authLoading) ? (
         <Loading />
       ) : (
         <DataTable
           columns={columns}
           data={filteredSchedules}
           onRowClick={handleRowClick}
+          onIndex={true}
         />
       )}
 

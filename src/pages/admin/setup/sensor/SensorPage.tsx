@@ -135,6 +135,7 @@ const SensorPage: React.FC = () => {
           onRowClick={handleRowClick}
           onEdit={handleEditSensor}
           onDelete={handleDeleteSensor}
+          onIndex={true}
         />
       )}
 

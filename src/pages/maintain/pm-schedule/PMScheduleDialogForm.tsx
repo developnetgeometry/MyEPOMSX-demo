@@ -85,6 +85,7 @@ const PMScheduleDialogForm: React.FC<PMScheduleDialogFormProps> = ({
         if (!formData.system_id) return showValidationError("System is required");
         if (!formData.package_id) return showValidationError("Package is required");
         if (!formData.asset_id) return showValidationError("Asset is required");
+        if (!formData.frequency_id) return showValidationError("Frequency is required");
         setIsLoading(true);
         try {
             await onSubmit(formData);
@@ -192,7 +193,7 @@ const PMScheduleDialogForm: React.FC<PMScheduleDialogFormProps> = ({
                             </Select>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="frequency_id">Frequency</Label>
+                            <Label htmlFor="frequency_id">Frequency<span className="text-red-500 ml-1">*</span></Label>
                             <Select
                                 value={formData.frequency_id?.toString() || ""}
                                 onValueChange={(value) => handleSelectChange("frequency_id", parseInt(value))}
