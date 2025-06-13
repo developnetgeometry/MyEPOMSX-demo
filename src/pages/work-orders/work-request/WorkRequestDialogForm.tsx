@@ -38,10 +38,10 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
     cm_status_id: initialData?.cm_status_id?.id || 1,
     description: initialData?.description || null,
     work_request_date: initialData?.work_request_date
-      ? new Date(initialData.work_request_date).toISOString().split("T")[0]
-      : null,
+      ? new Date(initialData.work_request_date).toLocaleDateString("en-CA") // Convert to YYYY-MM-DD format in local timezone
+      : new Date(Date.now()).toISOString().split("T")[0],
     target_due_date: initialData?.target_due_date
-      ? new Date(initialData.target_due_date).toISOString().split("T")[0]
+      ? new Date(initialData.target_due_date).toLocaleDateString("en-CA")
       : null,
     facility_id: initialData?.facility_id?.id || null,
     system_id: initialData?.system_id?.id || null,
@@ -50,7 +50,7 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
     cm_sce_code: initialData?.cm_sce_code?.id || null,
     work_center_id: initialData?.work_center_id?.id || null,
     date_finding: initialData?.date_finding
-      ? new Date(initialData.date_finding).toISOString().split("T")[0]
+      ? new Date(initialData.date_finding).toLocaleDateString("en-CA")
       : null,
     maintenance_type: initialData?.maintenance_type?.id || null,
     requested_by: initialData?.requested_by?.id || profile?.id || "",
@@ -70,15 +70,52 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
   };
 
   const handleSelectChange = (name: string, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-      ...(name === "facility_id" && { system_id: null, package_id: null, asset_id: null }),
-      ...(name === "system_id" && { package_id: null, asset_id: null }),
-      ...(name === "package_id" && { asset_id: null }),
-    }));
-  };
+    let updatedFormData = { ...formData, [name]: value };
 
+    if (name === "asset_id") {
+      const selectedAsset = apsf.assets.find((asset) => asset.id === value);
+      const selectedPackage = apsf.packages.find((pkg) => pkg.id === selectedAsset?.package_id);
+      const selectedSystem = apsf.systems.find((sys) => sys.id === selectedPackage?.system_id);
+      const selectedFacility = apsf.facilities.find((fac) => fac.id === selectedSystem?.facility_id);
+
+      updatedFormData = {
+        ...updatedFormData,
+        facility_id: selectedFacility?.id || null,
+        system_id: selectedSystem?.id || null,
+        package_id: selectedPackage?.id || null,
+      };
+    } else if (name === "package_id") {
+      const selectedPackage = apsf.packages.find((pkg) => pkg.id === value);
+      const selectedSystem = apsf.systems.find((sys) => sys.id === selectedPackage?.system_id);
+      const selectedFacility = apsf.facilities.find((fac) => fac.id === selectedSystem?.facility_id);
+
+      updatedFormData = {
+        ...updatedFormData,
+        facility_id: selectedFacility?.id || null,
+        system_id: selectedSystem?.id || null,
+        asset_id: null,
+      };
+    } else if (name === "system_id") {
+      const selectedSystem = apsf.systems.find((sys) => sys.id === value);
+      const selectedFacility = apsf.facilities.find((fac) => fac.id === selectedSystem?.facility_id);
+
+      updatedFormData = {
+        ...updatedFormData,
+        facility_id: selectedFacility?.id || null,
+        package_id: null,
+        asset_id: null,
+      };
+    } else if (name === "facility_id") {
+      updatedFormData = {
+        ...updatedFormData,
+        system_id: null,
+        package_id: null,
+        asset_id: null,
+      };
+    }
+
+    setFormData(updatedFormData);
+  };
 
   const showValidationError = (description: string) => {
     toast({
@@ -103,7 +140,9 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
     if (!formData.maintenance_type) return showValidationError("Maintenance Type is required");
     // if (!formData.requested_by) return showValidationError("Requested By is required");
     if (!formData.priority_id) return showValidationError("Priority is required");
-
+    if (!formData.anomaly_report && !formData.quick_incident_report) {
+      return showValidationError("Either Anomaly Report or Quick Incident Report must be selected");
+    }
 
     setIsLoading(true); // Set loading to true
     try {
@@ -124,7 +163,6 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* <pre>{JSON.stringify(initialData, null, 2)}</pre> */}
 
             <div className="space-y-2">
               <Label htmlFor="work_request_no">Work Request No</Label>
@@ -185,125 +223,87 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
                 onChange={handleInputChange}
               />
             </div>
+
             {/* Facility Select */}
             <div className="space-y-2">
-              <Label htmlFor="facility_id">Facility<span className="text-red-500 ml-1">*</span></Label>
+              <Label htmlFor="facility_id">Facility</Label>
               <Select
                 value={formData.facility_id?.toString() || ""}
                 onValueChange={(value) => handleSelectChange("facility_id", parseInt(value))}
-                required
               >
                 <SelectTrigger id="facility_id" className="w-full">
                   <SelectValue placeholder="Select Facility" />
                 </SelectTrigger>
                 <SelectContent>
-                  {apsf?.map((project) =>
-                    project.facilities.map((facility) => (
-                      <SelectItem key={facility.id} value={facility.id.toString()}>
-                        {facility.location_code} - {facility.location_name}
-                      </SelectItem>
-                    ))
-                  )}
+                  {apsf?.facilities?.map((facility) => (
+                    <SelectItem key={facility.id} value={facility.id.toString()}>
+                      {facility.location_code} - {facility.location_name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
             {/* System Select */}
             <div className="space-y-2">
-              <Label htmlFor="system_id">System<span className="text-red-500 ml-1">*</span></Label>
+              <Label htmlFor="system_id">System</Label>
               <Select
                 value={formData.system_id?.toString() || ""}
                 onValueChange={(value) => handleSelectChange("system_id", parseInt(value))}
-                disabled={!formData.facility_id} // Disable if no facility is selected
               >
                 <SelectTrigger id="system_id" className="w-full">
                   <SelectValue placeholder="Select System" />
                 </SelectTrigger>
                 <SelectContent>
-                  {apsf
-                    ?.find((project) =>
-                      project.facilities.some((facility) => facility.id === formData.facility_id)
-                    )
-                    ?.facilities.find((facility) => facility.id === formData.facility_id)
-                    ?.systems.map((system) => (
-                      <SelectItem key={system.id} value={system.id.toString()}>
-                        {system.system_name}
-                      </SelectItem>
-                    ))}
+                  {apsf?.systems?.map((system) => (
+                    <SelectItem key={system.id} value={system.id.toString()}>
+                      {system.system_name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
             {/* Package Select */}
             <div className="space-y-2">
-              <Label htmlFor="package_id">Package<span className="text-red-500 ml-1">*</span></Label>
+              <Label htmlFor="package_id">Package</Label>
               <Select
                 value={formData.package_id?.toString() || ""}
                 onValueChange={(value) => handleSelectChange("package_id", parseInt(value))}
-                disabled={!formData.system_id} // Disable if no system is selected
               >
                 <SelectTrigger id="package_id" className="w-full">
                   <SelectValue placeholder="Select Package" />
                 </SelectTrigger>
                 <SelectContent>
-                  {apsf
-                    ?.find((project) =>
-                      project.facilities.some((facility) =>
-                        facility.systems.some((system) => system.id === formData.system_id)
-                      )
-                    )
-                    ?.facilities.find((facility) =>
-                      facility.systems.some((system) => system.id === formData.system_id)
-                    )
-                    ?.systems.find((system) => system.id === formData.system_id)
-                    ?.packages.map((packageData) => (
-                      <SelectItem key={packageData.id} value={packageData.id.toString()}>
-                        {packageData.package_name}
-                      </SelectItem>
-                    ))}
+                  {apsf?.packages?.map((pkg) => (
+                    <SelectItem key={pkg.id} value={pkg.id.toString()}>
+                      {pkg.package_name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
             {/* Asset Select */}
             <div className="space-y-2">
-              <Label htmlFor="asset_id">
-                Asset<span className="text-red-500 ml-1">*</span>
-              </Label>
+              <Label htmlFor="asset_id">Asset</Label>
               <Select
                 value={formData.asset_id?.toString() || ""}
                 onValueChange={(value) => handleSelectChange("asset_id", parseInt(value))}
-                disabled={!formData.package_id} // Disable if no package is selected
               >
                 <SelectTrigger id="asset_id" className="w-full">
                   <SelectValue placeholder="Select Asset" />
                 </SelectTrigger>
                 <SelectContent>
-                  {apsf
-                    ?.find((project) =>
-                      project.facilities.some((facility) =>
-                        facility.systems.some((system) =>
-                          system.packages.some((packageData) => packageData.id === formData.package_id)
-                        )
-                      )
-                    )
-                    ?.facilities.find((facility) =>
-                      facility.systems.some((system) =>
-                        system.packages.some((packageData) => packageData.id === formData.package_id)
-                      )
-                    )
-                    ?.systems.find((system) =>
-                      system.packages.some((packageData) => packageData.id === formData.package_id)
-                    )
-                    ?.packages.find((packageData) => packageData.id === formData.package_id)
-                    ?.assets.map((asset) => (
-                      <SelectItem key={asset.id} value={asset.id.toString()}>
-                        {asset.asset_name}
-                      </SelectItem>
-                    ))}
+                  {apsf?.assets?.map((asset) => (
+                    <SelectItem key={asset.id} value={asset.id.toString()}>
+                      {asset.asset_name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="cm_sce_code">CM SCE Code</Label>
               <Select
@@ -427,6 +427,7 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
                     setFormData((prev) => ({
                       ...prev,
                       anomaly_report: checked === true, // Ensure the value is a boolean
+                      quick_incident_report: checked === false, // Opposite value for the other checkbox
                     }))
                   }
                 />
@@ -440,6 +441,7 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({ onSubmit,
                     setFormData((prev) => ({
                       ...prev,
                       quick_incident_report: checked === true, // Ensure the value is a boolean
+                      anomaly_report: checked === false, // Opposite value for the other checkbox
                     }))
                   }
                 />

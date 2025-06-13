@@ -185,9 +185,11 @@ const PMScheduleDetailPage: React.FC = () => {
               <TabsContent value="checksheet">
                 {id && <ChecksheetTab pmScheduleId={Number(pmSchedule.id)} />}
               </TabsContent>
-              <TabsContent value="workOrder">
-                {id && <RelatedWoTab assetId={Number(pmSchedule.asset_id.id)} />}
-              </TabsContent>
+              {id && pmSchedule.asset_id?.id ? (
+                <RelatedWoTab assetId={Number(pmSchedule.asset_id.id)} />
+              ) : (
+                <div>No related work orders available for this asset.</div>
+              )}
               <TabsContent value="additionalInfo">
                 {id && <AdditionalInfoTab pmScheduleId={Number(pmSchedule.id)} />}
               </TabsContent>
