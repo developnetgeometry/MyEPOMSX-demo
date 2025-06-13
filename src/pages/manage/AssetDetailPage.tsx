@@ -1969,13 +1969,15 @@ const AssetDetailPage: React.FC = () => {
                         <SelectItem value="delete">Delete Selected</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button
-                      size="icon"
-                      className="ml-2"
-                      onClick={handleAddInstallation}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
+                    {!assetInstallation || assetInstallation.length === 0 ? (
+                      <Button
+                        size="icon"
+                        className="ml-2"
+                        onClick={handleAddInstallation}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    ) : null}
                   </div>
                 </div>
 

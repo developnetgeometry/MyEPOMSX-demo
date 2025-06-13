@@ -50,6 +50,7 @@ import {
   MAX_FILE_SIZE,
   ALLOWED_FILE_TYPES,
 } from "@/services/assetImageService";
+import { useQueryClient } from "@tanstack/react-query";
 
 const AssetAddPage: React.FC = () => {
   const navigate = useNavigate();
@@ -67,6 +68,7 @@ const AssetAddPage: React.FC = () => {
     inProgress: false,
   });
   const [fileErrors, setFileErrors] = useState<string[]>([]);
+  const queryClient = useQueryClient();
 
   // State for tracking selected values in cascading dropdowns
   // Facility > System > Package relationship
@@ -479,12 +481,16 @@ const AssetAddPage: React.FC = () => {
         }
       }
 
+      
       // Show success message
       toast({
         title: "Success",
         description: "Asset created successfully",
         variant: "default",
       });
+      
+      // Invalidate queries to refresh asset data
+      await queryClient.invalidateQueries({ queryKey: ["assets"]} );
 
       // Navigate back to asset list
       navigate("/manage/assets");
