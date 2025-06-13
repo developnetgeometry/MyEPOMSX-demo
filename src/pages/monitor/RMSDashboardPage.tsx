@@ -35,8 +35,6 @@ interface AssetPerformanceData {
   utilization: number;
   availability: number;
   reliability: number;
-  mttrAvailability: number;
-  mttrReliability: number;
   target: number;
   systemId?: number;
   assetCount?: number;
@@ -152,8 +150,6 @@ const RMSDashboardPage = () => {
         utilization: Math.max(0, Math.min(100, utilization)),
         availability: Math.max(0, Math.min(100, availability)),
         reliability: Math.max(0, Math.min(100, reliability)),
-        mttrAvailability: 100.00, // Placeholder - would need MTTR data
-        mttrReliability: 100.00, // Placeholder - would need MTTR data
         target: reliabilityTarget,
         systemId: asset.system_id,
         assetCount: 1
@@ -357,10 +353,9 @@ const RMSDashboardPage = () => {
                   />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend verticalAlign="top" height={36} />
+                  <Bar dataKey="utilization" name="Utilization" fill="#ff9800" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="availability" name="Availability" fill="#8bc34a" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="mttrAvailability" name="MTTR Availability" fill="#4caf50" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="reliability" name="Reliability" fill="#03a9f4" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="mttrReliability" name="MTTR Reliability" fill="#2196f3" radius={[4, 4, 0, 0]} />
                   <ReferenceLine y={reliabilityTarget} stroke="red" strokeWidth={2} />
                 </BarChart>
               </ResponsiveContainer>
@@ -383,29 +378,23 @@ const RMSDashboardPage = () => {
                     ))}
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-medium">MTTR Availability %</TableCell>
-                    {assetPerformanceData.map((asset) => (
-                      <TableCell key={`${asset.name}-mttr-avail`}>{formatPercentage(asset.mttrAvailability)}</TableCell>
-                    ))}
-                  </TableRow>
-                  <TableRow>
                     <TableCell className="font-medium">Reliability %</TableCell>
                     {assetPerformanceData.map((asset) => (
                       <TableCell key={`${asset.name}-rel`}>{formatPercentage(asset.reliability)}</TableCell>
                     ))}
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-medium">MTTR Reliability %</TableCell>
+                    <TableCell className="font-medium">Utilization %</TableCell>
                     {assetPerformanceData.map((asset) => (
-                      <TableCell key={`${asset.name}-mttr-rel`}>{formatPercentage(asset.mttrReliability)}</TableCell>
+                      <TableCell key={`${asset.name}-util`}>{formatPercentage(asset.utilization)}</TableCell>
                     ))}
                   </TableRow>
-                  <TableRow>
+                  {/* <TableRow>
                     <TableCell className="font-medium">Reliability Target (CC) %</TableCell>
                     {assetPerformanceData.map((asset) => (
                       <TableCell key={`${asset.name}-target`}>{formatPercentage(asset.target)}</TableCell>
                     ))}
-                  </TableRow>
+                  </TableRow> */}
                 </TableBody>
               </Table>
             </div>
