@@ -55,6 +55,7 @@ interface DataTableProps {
   onExport?: () => void;
   onViewDetails?: (row: any) => void;
   isLoading?: boolean;
+  onIndex?: boolean; // Add this prop to enable index column
 }
 
 const DataTable: React.FC<DataTableProps> = ({
@@ -67,6 +68,7 @@ const DataTable: React.FC<DataTableProps> = ({
   onExport,
   onViewDetails,
   isLoading,
+  onIndex = false, // Default to false
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -185,6 +187,11 @@ const DataTable: React.FC<DataTableProps> = ({
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-50 border-b border-gray-100">
+                {onIndex && (
+                  <TableHead className="py-3 px-6 text-sm font-semibold text-gray-900">
+                    No.
+                  </TableHead>
+                )}
                 {columns.map((column) => (
                   <TableHead
                     key={column.id}
@@ -232,19 +239,22 @@ const DataTable: React.FC<DataTableProps> = ({
                 currentData.map((row, rowIndex) => (
                   <TableRow
                     key={rowIndex}
-                    className={`border-t border-gray-100 ${
-                      rowIndex % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    } ${
-                      onRowClick
+                    className={`border-t border-gray-100 ${rowIndex % 2 === 0 ? "bg-white" : "bg-gray-50"
+                      } ${onRowClick
                         ? "cursor-pointer hover:bg-blue-50 transition-colors duration-150"
                         : ""
-                    }`}
+                      }`}
                     onClick={
                       onRowClick && !isLoading
                         ? () => handleRowClickEvent(row)
                         : undefined
                     }
                   >
+                    {onIndex && (
+                      <TableCell className="py-4 px-6 text-sm text-gray-900">
+                        {startIndex + rowIndex + 1}
+                      </TableCell>
+                    )}
                     {columns.map((column) => (
                       <TableCell
                         key={`${rowIndex}-${column.id}`}
@@ -399,11 +409,10 @@ const DataTable: React.FC<DataTableProps> = ({
                           key={page}
                           variant={currentPage === page ? "default" : "outline"}
                           size="sm"
-                          className={`h-9 w-9 p-0 ${
-                            currentPage === page
-                              ? "bg-blue-600"
-                              : "border-gray-200"
-                          }`}
+                          className={`h-9 w-9 p-0 ${currentPage === page
+                            ? "bg-blue-600"
+                            : "border-gray-200"
+                            }`}
                           onClick={() => handlePageChange(page)}
                         >
                           {page}
@@ -416,9 +425,8 @@ const DataTable: React.FC<DataTableProps> = ({
                       key={page}
                       variant={currentPage === page ? "default" : "outline"}
                       size="sm"
-                      className={`h-9 w-9 p-0 ${
-                        currentPage === page ? "bg-blue-600" : "border-gray-200"
-                      }`}
+                      className={`h-9 w-9 p-0 ${currentPage === page ? "bg-blue-600" : "border-gray-200"
+                        }`}
                       onClick={() => handlePageChange(page)}
                     >
                       {page}
