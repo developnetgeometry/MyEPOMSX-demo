@@ -1,3 +1,51 @@
+/**
+ * NEW PRESSURE VESSEL PAGE - INTEGRITY MANAGEMENT SYSTEM
+ *
+ * DATABASE MAPPING IMPLEMENTATION:
+ * ================================
+ *
+ * PRIMARY TABLE: i_ims_general
+ * - Stores main pressure vessel data from General, Design, Protection, Service, and Risk tabs
+ * - Key field mappings:
+ *   • asset_detail_id (from e_asset selection)
+ *   • year_in_service (yyyy-mm-dd format)
+ *   • material_construction_id (from material selection)
+ *   • nominal_bore_diameter (mapped from nominalThickness input)
+ *   • ims_asset_type_id = 1 (auto-set for Pressure Vessel)
+ *   • Boolean fields: insulation, line_h2s, internal_lining, pwht, cladding
+ *
+ * FILE UPLOAD SYSTEM:
+ * ==================
+ *
+ * BUCKET STRUCTURE: integrity/pressure-vessel/{id}/
+ * - Reports: integrity/pressure-vessel/{id}/reports/
+ * - Attachments: integrity/pressure-vessel/{id}/attachments/
+ *
+ * INSPECTION REPORTS TABLE: i_inspection_attachment
+ * - asset_detail_id (links to i_ims_general.id)
+ * - file_path, file_name, file_size, uploaded_at
+ *
+ * GENERAL ATTACHMENTS TABLE: i_ims_attachment
+ * - asset_detail_id (links to i_ims_general.id)
+ * - file_path, file_name, file_size, uploaded_at
+ *
+ * IMPLEMENTATION STATUS:
+ * =====================
+ * ✅ Form structure cleaned and mapped to i_ims_general table
+ * ✅ HandleSubmit function updated with proper field mappings
+ * ✅ File upload system designed with correct bucket structure
+ * ✅ Database insertion logic prepared (commented TODOs)
+ * 🔄 Pending: Replace TODO comments with actual Supabase integration
+ * 🔄 Pending: Risk tab enhancement with proper calculations
+ *
+ * NOTES:
+ * ======
+ * - nominalThickness field maps to nominal_bore_diameter in database
+ * - Radio button "yes/no" values converted to boolean for database
+ * - File paths stored in database (not full URLs)
+ * - Equipment Tag, Area, System are reference-only fields from related tables
+ */
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -35,6 +83,12 @@ import {
   AlignRight,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  useAssetTagOptions,
+  useAssetWithComponentTypeOptions,
+} from "@/hooks/queries/useAssetDropdownOptions";
+import { useMaterialConstructionOptions } from "@/hooks/queries/useCorrosionDropdownOptions";
+import { supabase } from "@/lib/supabaseClient";
 
 const NewPressureVesselPage: React.FC = () => {
   const navigate = useNavigate();
@@ -43,29 +97,37 @@ const NewPressureVesselPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("general");
   const [activeInspectionTab, setActiveInspectionTab] = useState("plan");
 
-  // Comprehensive form data structure for all tabs
+  // Dropdown options hooks
+  const { data: assetTagOptions = [] } = useAssetTagOptions();
+  const { data: assetWithComponentTypeOptions = [] } =
+    useAssetWithComponentTypeOptions();
+  const { data: materialConstructionOptions = [] } =
+    useMaterialConstructionOptions();
+
+  // Form data structure mapped to i_ims_general table
   const [formData, setFormData] = useState({
-    // General Tab - Based on e_asset and e_asset_detail
-    asset: "", // from e_asset where e_asset_detail.is_integrity = true
-    yearInService: "", // calendar component
-    materialConstruction: "", // from i_material_construction
-    area: "", // from e_asset and e_asset_detail
-    system: "", // from e_asset and e_asset_detail
-    equipmentTag: "", // from e_asset and e_asset_detail
-    equipmentType: "", // from e_asset and e_asset_detail (disabled)
-    componentType: "", // from e_asset and e_asset_detail
-    cladThickness: "", // input form (mm)
-    tmin: "", // disabled form
-    nominalThickness: "", // input form (mm)
-    description: "", // input form
-    cladding: "", // Yes or No
-    pwht: "", // Yes or No (Post Weld Heat Treatment)
-    insulation: "", // Yes or No
-    h2s: "", // Yes or No
-    internalLining: "", // Yes or No
+    // General Tab - Maps directly to i_ims_general table columns
+    asset: "", // asset_detail_id - from e_asset table, store the id
+    equipmentTag: "", // reference only (from e_asset_detail)
+    equipmentType: "Pressure Vessel", // fixed value for display
+    componentType: "", // reference only (from e_asset_detail)
+    area: "", // reference only (from e_asset)
+    system: "", // reference only (from e_asset)
+    yearInService: "", // year_in_service - store as yyyy-mm-dd format
+    materialConstruction: "", // material_construction_id - from selecting Material Construction, store the id
+    tmin: "", // tmin - from input Tmin (mm) under general tab
+    description: "", // description - from input Description under general tab
+    nominalThickness: "", // nominal_bore_diameter - from input Nominal Thickness (mm) under general tab
+    insulation: "", // insulation - from radio button Insulation value (yes/no)
+    h2s: "", // line_h2s - from radio button H2S value (yes/no)
+    internalLining: "", // internal_lining - from radio button Internal Lining value (yes/no)
+    pwht: "", // pwht - from radio button PWHT value (yes/no)
+    cladding: "", // cladding - from radio button Cladding value (yes/no)
+    innerDiameter: "", // inner_diameter - from input Inner Diameter (mm) under general tab
+    cladThickness: "", // clad_thickness - from input Clad Thickness (mm) under general tab
+    // ims_asset_type_id - automatically set to 1 for Pressure Vessel, 2 for Piping
 
     // Design Tab
-    innerDiameter: "", // mm (moved from General)
     outerDiameter: "", // mm
     length: "", // mm
     weldJoinEfficiency: "", // unitless
@@ -128,11 +190,88 @@ const NewPressureVesselPage: React.FC = () => {
     notes: "",
   });
 
+  // Tmin calculation function
+  const calculateTmin = (data: typeof formData) => {
+    const designPressure = parseFloat(data.designPressure) || 0;
+    const innerDiameter = parseFloat(data.innerDiameter) || 0;
+    const allowableStress = parseFloat(data.allowableStress) || 0;
+    const weldJoinEfficiency = parseFloat(data.weldJoinEfficiency) || 0;
+    const componentType = data.componentType;
+
+    // Check if all required values are available for calculation
+    if (
+      designPressure === 0 ||
+      innerDiameter === 0 ||
+      allowableStress === 0 ||
+      weldJoinEfficiency === 0
+    ) {
+      return "";
+    }
+
+    try {
+      // First part of the formula: (Design Pressure * Inner Diameter) / ((2 * Allowable Stress * Weld Join Efficiency) - (0.6 * Design Pressure))
+      const denominator =
+        2 * allowableStress * weldJoinEfficiency - 0.6 * designPressure;
+
+      if (denominator <= 0) {
+        return ""; // Avoid division by zero or negative denominator
+      }
+
+      const calculatedValue = (designPressure * innerDiameter) / denominator;
+
+      // Second part: Component type based value
+      const componentTypeValue = componentType === "HEXTUBE" ? 0.889 : 3.175;
+
+      // MAX function - return the larger of the two values
+      const tminValue = Math.max(calculatedValue, componentTypeValue);
+
+      return tminValue.toFixed(3); // Return with 3 decimal places
+    } catch (error) {
+      console.error("Error calculating Tmin:", error);
+      return "";
+    }
+  };
+
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    // Fields that affect Tmin calculation
+    const tminCalculationFields = [
+      "designPressure",
+      "innerDiameter",
+      "allowableStress",
+      "weldJoinEfficiency",
+      "componentType",
+    ];
+
+    setFormData((prev) => {
+      const updatedData = {
+        ...prev,
+        [field]: value,
+      };
+
+      // Auto-populate fields when asset is selected
+      if (field === "asset") {
+        const selectedAsset = assetWithComponentTypeOptions.find(
+          (asset) => asset.value === value
+        );
+
+        if (selectedAsset) {
+          updatedData.componentType = selectedAsset.component_type || "";
+          updatedData.area = selectedAsset.area || "";
+          updatedData.system = selectedAsset.system || "";
+          updatedData.equipmentTag = selectedAsset.equipment_tag || "";
+        }
+      }
+
+      // Calculate Tmin if any relevant field changed
+      if (tminCalculationFields.includes(field) || field === "asset") {
+        const calculatedTmin = calculateTmin(updatedData);
+        if (calculatedTmin !== "") {
+          updatedData.tmin = calculatedTmin;
+        }
+      }
+
+      return updatedData;
+    });
   };
 
   const handleFileUpload = (files: FileList | null) => {
@@ -191,29 +330,35 @@ const NewPressureVesselPage: React.FC = () => {
 
       console.log("=== Starting Pressure Vessel Save Process ===");
 
-      // Prepare main pressure vessel data for database insertion
-      const pressureVesselData = {
-        // General Tab Data
-        asset_id: formData.asset,
-        equipment_tag: formData.equipmentTag,
-        equipment_type: "Pressure Vessel", // Fixed value
-        component_type: formData.componentType,
-        year_in_service: formData.yearInService,
-        material_construction: formData.materialConstruction,
-        area: formData.area,
-        system: formData.system,
-        clad_thickness: parseFloat(formData.cladThickness) || null,
-        tmin: parseFloat(formData.tmin) || null,
-        nominal_thickness: parseFloat(formData.nominalThickness) || null,
-        description: formData.description,
-        cladding: formData.cladding === "yes",
-        pwht: formData.pwht === "yes",
-        insulation: formData.insulation === "yes",
-        h2s: formData.h2s === "yes",
-        internal_lining: formData.internalLining === "yes",
+      // Get asset_detail_id from selected asset
+      const selectedAsset = assetWithComponentTypeOptions.find(
+        (asset) => asset.value === formData.asset
+      );
 
-        // Design Tab Data
+      if (!selectedAsset) {
+        throw new Error("Selected asset not found");
+      }
+
+      // Prepare main pressure vessel data for i_ims_general table insertion
+      const imsGeneralData = {
+        // Core required fields
+        asset_detail_id: selectedAsset.asset_detail_id, // Use asset_detail_id from the selected asset
+        year_in_service: formData.yearInService, // yyyy-mm-dd format
+        tmin: formData.tmin || null, // Store as string as expected by database
+        material_construction_id:
+          parseInt(formData.materialConstruction) || null,
+        description: formData.description,
+        nominal_bore_diameter: parseFloat(formData.nominalThickness) || null, // Note: mapping nominalThickness to nominal_bore_diameter
+        insulation: formData.insulation === "yes",
+        line_h2s: formData.h2s === "yes",
+        internal_lining: formData.internalLining === "yes",
+        pwht: formData.pwht === "yes",
+        cladding: formData.cladding === "yes",
+        ims_asset_type_id: 1, // Automatically set to 1 for Pressure Vessel
         inner_diameter: parseFloat(formData.innerDiameter) || null,
+        clad_thickness: parseFloat(formData.cladThickness) || null,
+
+        // Additional fields from other tabs (if they exist in i_ims_general table)
         outer_diameter: parseFloat(formData.outerDiameter) || null,
         length: parseFloat(formData.length) || null,
         weld_join_efficiency: parseFloat(formData.weldJoinEfficiency) || null,
@@ -272,23 +417,20 @@ const NewPressureVesselPage: React.FC = () => {
         updated_at: new Date().toISOString(),
       };
 
-      console.log("Prepared pressure vessel data:", pressureVesselData);
+      console.log("Prepared i_ims_general data:", imsGeneralData);
 
-      // TODO: Insert main pressure vessel record into Supabase
-      // Example: const { data: savedPressureVessel, error: insertError } = await supabase
-      //   .from('YOUR_PRESSURE_VESSEL_TABLE_NAME')
-      //   .insert(pressureVesselData)
-      //   .select()
-      //   .single();
+      // Insert main record into i_ims_general table
+      const { data: savedRecord, error: insertError } = await supabase
+        .from("i_ims_general")
+        .insert(imsGeneralData)
+        .select()
+        .single();
 
-      // if (insertError) throw insertError;
-      // const pressureVesselId = savedPressureVessel.id;
+      if (insertError) throw insertError;
+      const recordId = savedRecord.id;
 
-      // PLACEHOLDER: Replace with actual Supabase insert
-      const pressureVesselId = `pv_${Date.now()}`; // Temporary ID for demo
-
-      // Handle Inspection Reports File Upload
-      let inspectionReportUrls: string[] = [];
+      // Handle Inspection Reports File Upload with proper bucket structure
+      let inspectionReportPaths: string[] = [];
       if (formData.inspectionReports.length > 0) {
         console.log(
           `Uploading ${formData.inspectionReports.length} inspection report files...`
@@ -296,37 +438,44 @@ const NewPressureVesselPage: React.FC = () => {
 
         for (const file of formData.inspectionReports) {
           try {
-            // Generate unique file name
-            const fileExtension = file.name.split(".").pop();
-            const uniqueFileName = `inspection_reports/${pressureVesselId}/${Date.now()}_${
+            // Create bucket structure: integrity/pressure-vessel/{id}/reports/
+            const bucketPath = `integrity/pressure-vessel/${recordId}/reports/${Date.now()}_${
               file.name
             }`;
 
             console.log(
-              `Uploading inspection report: ${file.name} as ${uniqueFileName}`
+              `Uploading inspection report: ${file.name} to ${bucketPath}`
+            );
+            console.log(
+              `Uploading inspection report: ${file.name} to ${bucketPath}`
             );
 
-            // TODO: Upload to Supabase Storage
-            // Example: const { data: uploadData, error: uploadError } = await supabase.storage
-            //   .from('YOUR_INSPECTION_REPORTS_BUCKET')
-            //   .upload(uniqueFileName, file, {
-            //     cacheControl: '3600',
-            //     upsert: false
-            //   });
+            // Upload to Supabase Storage
+            const { data: uploadData, error: uploadError } =
+              await supabase.storage
+                .from("integrity-files")
+                .upload(bucketPath, file, {
+                  cacheControl: "3600",
+                  upsert: false,
+                });
 
-            // if (uploadError) throw uploadError;
+            if (uploadError) throw uploadError;
 
-            // Get public URL
-            // const { data: urlData } = supabase.storage
-            //   .from('YOUR_INSPECTION_REPORTS_BUCKET')
-            //   .getPublicUrl(uniqueFileName);
+            // Store file path (not full URL) for database
+            inspectionReportPaths.push(bucketPath);
 
-            // inspectionReportUrls.push(urlData.publicUrl);
+            // Insert into i_inspection_attachment table
+            const { error: attachmentError } = await supabase
+              .from("i_ims_inspection_attachment")
+              .insert({
+                asset_detail_id: recordId, // links to i_ims_general.id
+                file_path: bucketPath,
+                file_name: file.name,
+                file_size: file.size,
+                uploaded_at: new Date().toISOString(),
+              });
 
-            // PLACEHOLDER: Add temporary URL for demo
-            inspectionReportUrls.push(
-              `https://placeholder-storage.com/inspection_reports/${uniqueFileName}`
-            );
+            if (attachmentError) throw attachmentError;
           } catch (fileError) {
             console.error(
               `Error uploading inspection report ${file.name}:`,
@@ -337,8 +486,8 @@ const NewPressureVesselPage: React.FC = () => {
         }
       }
 
-      // Handle General Attachments File Upload
-      let attachmentUrls: string[] = [];
+      // Handle General Attachments File Upload with proper bucket structure
+      let attachmentPaths: string[] = [];
       if (formData.attachments.length > 0) {
         console.log(
           `Uploading ${formData.attachments.length} attachment files...`
@@ -346,37 +495,39 @@ const NewPressureVesselPage: React.FC = () => {
 
         for (const file of formData.attachments) {
           try {
-            // Generate unique file name
-            const fileExtension = file.name.split(".").pop();
-            const uniqueFileName = `attachments/${pressureVesselId}/${Date.now()}_${
+            // Create bucket structure: integrity/pressure-vessel/{id}/attachments/
+            const bucketPath = `integrity/pressure-vessel/${recordId}/attachments/${Date.now()}_${
               file.name
             }`;
 
-            console.log(
-              `Uploading attachment: ${file.name} as ${uniqueFileName}`
-            );
+            console.log(`Uploading attachment: ${file.name} to ${bucketPath}`);
 
-            // TODO: Upload to Supabase Storage
-            // Example: const { data: uploadData, error: uploadError } = await supabase.storage
-            //   .from('YOUR_ATTACHMENTS_BUCKET')
-            //   .upload(uniqueFileName, file, {
-            //     cacheControl: '3600',
-            //     upsert: false
-            //   });
+            // Upload to Supabase Storage
+            const { data: uploadData, error: uploadError } =
+              await supabase.storage
+                .from("integrity-files")
+                .upload(bucketPath, file, {
+                  cacheControl: "3600",
+                  upsert: false,
+                });
 
-            // if (uploadError) throw uploadError;
+            if (uploadError) throw uploadError;
 
-            // Get public URL
-            // const { data: urlData } = supabase.storage
-            //   .from('YOUR_ATTACHMENTS_BUCKET')
-            //   .getPublicUrl(uniqueFileName);
+            // Store file path (not full URL) for database
+            attachmentPaths.push(bucketPath);
 
-            // attachmentUrls.push(urlData.publicUrl);
+            // Insert into i_ims_attachment table
+            const { error: attachmentError } = await supabase
+              .from("i_ims_attachment")
+              .insert({
+                asset_detail_id: recordId, // links to i_ims_general.id
+                file_path: bucketPath,
+                file_name: file.name,
+                file_size: file.size,
+                uploaded_at: new Date().toISOString(),
+              });
 
-            // PLACEHOLDER: Add temporary URL for demo
-            attachmentUrls.push(
-              `https://placeholder-storage.com/attachments/${uniqueFileName}`
-            );
+            if (attachmentError) throw attachmentError;
           } catch (fileError) {
             console.error(
               `Error uploading attachment ${file.name}:`,
@@ -387,29 +538,25 @@ const NewPressureVesselPage: React.FC = () => {
         }
       }
 
-      // TODO: Update pressure vessel record with file URLs
-      // Example: const { error: updateError } = await supabase
-      //   .from('YOUR_PRESSURE_VESSEL_TABLE_NAME')
-      //   .update({
-      //     inspection_report_urls: inspectionReportUrls,
-      //     attachment_urls: attachmentUrls,
-      //     updated_at: new Date().toISOString()
-      //   })
-      //   .eq('id', pressureVesselId);
-
-      // if (updateError) throw updateError;
-
       // Log summary for debugging
       console.log("=== Save Summary ===");
-      console.log("Pressure Vessel ID:", pressureVesselId);
-      console.log("Inspection Reports Uploaded:", inspectionReportUrls.length);
-      console.log("Attachments Uploaded:", attachmentUrls.length);
-      console.log("Form Data Saved Successfully");
+      console.log("i_ims_general Record ID:", recordId);
+      console.log("Inspection Reports Uploaded:", inspectionReportPaths.length);
+      console.log("Attachments Uploaded:", attachmentPaths.length);
+      console.log("Data Structure:");
+      console.log("- Main record saved to: i_ims_general table");
+      console.log(
+        "- Inspection reports saved to: i_inspection_attachment table"
+      );
+      console.log("- General attachments saved to: i_ims_attachment table");
+      console.log(
+        "- File bucket structure: integrity/pressure-vessel/{id}/reports/ and /attachments/"
+      );
 
       // Success notification
       toast({
         title: "Success!",
-        description: `Pressure vessel ${formData.equipmentTag} has been created successfully with ${inspectionReportUrls.length} inspection reports and ${attachmentUrls.length} attachments.`,
+        description: `Pressure vessel ${formData.equipmentTag} has been created successfully with ${inspectionReportPaths.length} inspection reports and ${attachmentPaths.length} attachments.`,
       });
 
       // Navigate back to integrity page
@@ -512,6 +659,7 @@ const NewPressureVesselPage: React.FC = () => {
                       <div className="space-y-2">
                         <Label htmlFor="asset">Asset*</Label>
                         <Select
+                          value={formData.asset}
                           onValueChange={(value) =>
                             handleInputChange("asset", value)
                           }
@@ -520,24 +668,11 @@ const NewPressureVesselPage: React.FC = () => {
                             <SelectValue placeholder="Select asset" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="pv-001">
-                              PV-001 - High Pressure Separator
-                            </SelectItem>
-                            <SelectItem value="pv-002">
-                              PV-002 - Flash Drum
-                            </SelectItem>
-                            <SelectItem value="pv-003">
-                              PV-003 - Surge Vessel
-                            </SelectItem>
-                            <SelectItem value="pv-004">
-                              PV-004 - Knock Out Drum
-                            </SelectItem>
-                            <SelectItem value="pv-005">
-                              PV-005 - Accumulator
-                            </SelectItem>
-                            <SelectItem value="pv-006">
-                              PV-006 - Storage Tank
-                            </SelectItem>
+                            {assetWithComponentTypeOptions.map((asset) => (
+                              <SelectItem key={asset.id} value={asset.value}>
+                                {asset.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -547,12 +682,13 @@ const NewPressureVesselPage: React.FC = () => {
                         <Input
                           id="equipmentTag"
                           value={formData.equipmentTag}
-                          onChange={(e) =>
-                            handleInputChange("equipmentTag", e.target.value)
-                          }
-                          placeholder="e.g., V-101A"
-                          className="font-mono"
+                          placeholder="Auto-populated from selected asset"
+                          disabled
+                          className="bg-gray-50 font-mono"
                         />
+                        <p className="text-xs text-muted-foreground">
+                          Auto-populated from selected asset (read-only)
+                        </p>
                       </div>
 
                       <div className="space-y-2">
@@ -571,23 +707,17 @@ const NewPressureVesselPage: React.FC = () => {
 
                       <div className="space-y-2">
                         <Label htmlFor="componentType">Component Type*</Label>
-                        <Select
-                          onValueChange={(value) =>
-                            handleInputChange("componentType", value)
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select component type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="shell">Shell</SelectItem>
-                            <SelectItem value="head">Head</SelectItem>
-                            <SelectItem value="nozzle">Nozzle</SelectItem>
-                            <SelectItem value="manway">Manway</SelectItem>
-                            <SelectItem value="support">Support</SelectItem>
-                            <SelectItem value="internals">Internals</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <Input
+                          id="componentType"
+                          value={formData.componentType}
+                          placeholder="Auto-populated from selected asset"
+                          disabled
+                          className="bg-gray-50"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Component type is automatically populated based on the
+                          selected asset
+                        </p>
                       </div>
 
                       <div className="space-y-2">
@@ -612,69 +742,24 @@ const NewPressureVesselPage: React.FC = () => {
 
                       <div className="space-y-2">
                         <Label htmlFor="area">Area*</Label>
-                        <Select
-                          onValueChange={(value) =>
-                            handleInputChange("area", value)
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select area" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="process-area-100">
-                              Process Area 100
-                            </SelectItem>
-                            <SelectItem value="process-area-200">
-                              Process Area 200
-                            </SelectItem>
-                            <SelectItem value="process-area-300">
-                              Process Area 300
-                            </SelectItem>
-                            <SelectItem value="tank-farm">Tank Farm</SelectItem>
-                            <SelectItem value="compressor-station">
-                              Compressor Station
-                            </SelectItem>
-                            <SelectItem value="utility-area">
-                              Utility Area
-                            </SelectItem>
-                            <SelectItem value="flare-area">
-                              Flare Area
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <Input
+                          id="area"
+                          value={formData.area}
+                          placeholder="Auto-populated from selected asset"
+                          disabled
+                          className="bg-gray-50"
+                        />
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="system">System*</Label>
-                        <Select
-                          onValueChange={(value) =>
-                            handleInputChange("system", value)
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select system" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="oil-separation">
-                              Oil Separation System
-                            </SelectItem>
-                            <SelectItem value="gas-treatment">
-                              Gas Treatment System
-                            </SelectItem>
-                            <SelectItem value="water-injection">
-                              Water Injection System
-                            </SelectItem>
-                            <SelectItem value="production-manifold">
-                              Production Manifold
-                            </SelectItem>
-                            <SelectItem value="export-system">
-                              Export System
-                            </SelectItem>
-                            <SelectItem value="utility-system">
-                              Utility System
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <Input
+                          id="system"
+                          value={formData.system}
+                          placeholder="Auto-populated from selected asset"
+                          disabled
+                          className="bg-gray-50"
+                        />
                       </div>
 
                       <div className="space-y-2">
@@ -682,6 +767,7 @@ const NewPressureVesselPage: React.FC = () => {
                           Material Construction*
                         </Label>
                         <Select
+                          value={formData.materialConstruction}
                           onValueChange={(value) =>
                             handleInputChange("materialConstruction", value)
                           }
@@ -760,15 +846,18 @@ const NewPressureVesselPage: React.FC = () => {
                         <Input
                           id="tmin"
                           type="number"
-                          step="0.1"
+                          step="0.001"
                           value={formData.tmin}
-                          onChange={(e) =>
-                            handleInputChange("tmin", e.target.value)
-                          }
                           placeholder="Calculated automatically"
                           disabled
                           className="bg-gray-50"
                         />
+                        <p className="text-xs text-muted-foreground">
+                          Auto-calculated using: MAX((Design Pressure × Inner
+                          Diameter) ÷ ((2 × Allowable Stress × Weld Join
+                          Efficiency) - (0.6 × Design Pressure)), Component Type
+                          Value)
+                        </p>
                       </div>
 
                       <div className="space-y-2">
@@ -1117,6 +1206,7 @@ const NewPressureVesselPage: React.FC = () => {
                       <div className="space-y-2">
                         <Label htmlFor="extEnv">Ext Env</Label>
                         <Select
+                          value={formData.extEnv}
                           onValueChange={(value) =>
                             handleInputChange("extEnv", value)
                           }
@@ -1141,6 +1231,7 @@ const NewPressureVesselPage: React.FC = () => {
                       <div className="space-y-2">
                         <Label htmlFor="geometry">Geometry</Label>
                         <Select
+                          value={formData.geometry}
                           onValueChange={(value) =>
                             handleInputChange("geometry", value)
                           }
@@ -1274,6 +1365,7 @@ const NewPressureVesselPage: React.FC = () => {
                       <div className="space-y-2">
                         <Label htmlFor="coatingQuality">Coating Quality*</Label>
                         <Select
+                          value={formData.coatingQuality}
                           onValueChange={(value) =>
                             handleInputChange("coatingQuality", value)
                           }
@@ -1295,6 +1387,7 @@ const NewPressureVesselPage: React.FC = () => {
                       <div className="space-y-2">
                         <Label htmlFor="insulationType">Insulation Type*</Label>
                         <Select
+                          value={formData.insulationType}
                           onValueChange={(value) =>
                             handleInputChange("insulationType", value)
                           }
@@ -1327,6 +1420,7 @@ const NewPressureVesselPage: React.FC = () => {
                           Insulation Complexity*
                         </Label>
                         <Select
+                          value={formData.insulationComplexity}
                           onValueChange={(value) =>
                             handleInputChange("insulationComplexity", value)
                           }
@@ -1372,6 +1466,7 @@ const NewPressureVesselPage: React.FC = () => {
                           Design Fabrication*
                         </Label>
                         <Select
+                          value={formData.designFabrication}
                           onValueChange={(value) =>
                             handleInputChange("designFabrication", value)
                           }
@@ -1395,6 +1490,7 @@ const NewPressureVesselPage: React.FC = () => {
                       <div className="space-y-2">
                         <Label htmlFor="interface">Interface*</Label>
                         <Select
+                          value={formData.interface}
                           onValueChange={(value) =>
                             handleInputChange("interface", value)
                           }
@@ -1477,6 +1573,7 @@ const NewPressureVesselPage: React.FC = () => {
                       <div className="space-y-2">
                         <Label htmlFor="onlineMonitor">Online Monitor*</Label>
                         <Select
+                          value={formData.onlineMonitor}
                           onValueChange={(value) =>
                             handleInputChange("onlineMonitor", value)
                           }
@@ -1549,6 +1646,7 @@ const NewPressureVesselPage: React.FC = () => {
                           Fluid Representative*
                         </Label>
                         <Select
+                          value={formData.fluidRepresentative}
                           onValueChange={(value) =>
                             handleInputChange("fluidRepresentative", value)
                           }
@@ -1584,6 +1682,7 @@ const NewPressureVesselPage: React.FC = () => {
                       <div className="space-y-2">
                         <Label htmlFor="toxicity">Toxicity*</Label>
                         <Select
+                          value={formData.toxicity}
                           onValueChange={(value) =>
                             handleInputChange("toxicity", value)
                           }
@@ -1620,6 +1719,7 @@ const NewPressureVesselPage: React.FC = () => {
                       <div className="space-y-2">
                         <Label htmlFor="fluidPhase">Fluid Phase*</Label>
                         <Select
+                          value={formData.fluidPhase}
                           onValueChange={(value) =>
                             handleInputChange("fluidPhase", value)
                           }
