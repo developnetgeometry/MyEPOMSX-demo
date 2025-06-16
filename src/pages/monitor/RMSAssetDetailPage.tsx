@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/shared/StatusBadge';
 import { formatDateTime } from '@/utils/formatters';
 import UptimeEntryModal from '@/components/monitor/UptimeEntryModal';
-import CriticalAssetSummary from '@/components/monitor/CriticalAssetSummary';
+import { userWorkOrderDataByAsset } from '../work-orders/hooks/use-work-order-data';
 import { useAsset } from '@/hooks/monitor/useAssets';
 
 // Sample telemetry data generator (keep this until you have real telemetry)
@@ -121,6 +121,12 @@ const RMSAssetDetailPage: React.FC = () => {
     error
   } = useAsset(parseInt(id || '0'));
 
+  const {
+    data: workOrders = [],
+    isLoading: workOrdersLoading,
+    error: workOrdersError
+  } = userWorkOrderDataByAsset(parseInt(id || '0'));
+
   // Generate sample telemetry and alert data when asset loads
   useEffect(() => {
     if (asset) {
@@ -193,12 +199,12 @@ const RMSAssetDetailPage: React.FC = () => {
       />
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full md:w-[500px] grid-cols-4">
+        {/* <TabsList className="grid w-full md:w-[500px] grid-cols-4">
           <TabsTrigger value="basic">Basic Info</TabsTrigger>
           <TabsTrigger value="telemetry">Live Telemetry</TabsTrigger>
           <TabsTrigger value="health">Health Status</TabsTrigger>
           <TabsTrigger value="alerts">Alert Analysis</TabsTrigger>
-        </TabsList>
+        </TabsList> */}
         
         <TabsContent value="basic" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -307,7 +313,58 @@ const RMSAssetDetailPage: React.FC = () => {
               </CardContent>
             </Card>
             
-            <CriticalAssetSummary className="col-span-1 md:col-span-3" />
+            <Card className="col-span-1 md:col-span-3">
+              <CardHeader>
+                <CardTitle>Work Orders</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Work Order No</TableHead>
+                      <TableHead>Work Order Date</TableHead>
+                      <TableHead>Note</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Downtime</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {workOrdersLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className='text-center py-6'>
+                          Loading work orders...
+                        </TableCell>
+                      </TableRow>
+                    ) : workOrders.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className='text-center py-6'>
+                          No work orders found for this asset
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      workOrders.map((workOrder) => (
+                        <TableRow key={workOrder.id}>
+                          <TableCell>{workOrder.work_order_no || 'N/A'}</TableCell>
+                          <TableCell>{formatDateTime(workOrder.created_at)}</TableCell>
+                          <TableCell>{workOrder.description || 'N/A'}</TableCell>
+                          <TableCell>
+                            <Badge className={
+                              workOrder.work_order_type?.id === 1 ? 'bg-red-500' : ' bg-blue-500'
+                            }>
+                              {workOrder.work_order_type?.id === 1 ? 'CM' :
+                                workOrder.work_order_type?.id === 2 ? 'PM' : 'N/A'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {workOrder.cm_work_order_id?.downtime ? `${workOrder.cm_work_order_id.downtime}` : 'N/A' }
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
         

@@ -148,7 +148,8 @@ export const useRMSUptime = (assetDetailId: number) => {
 
             // Convert UptimeEntry format to RMSUptimeData format
             const records: Omit<RMSUptimeData, 'id' | 'created_at' | 'updated_at'>[] = entries.map(entry => ({
-                date: entry.date instanceof Date ? entry.date.toISOString().split('T')[0] : entry.date,
+                // date: entry.date instanceof Date ? entry.date.toISOString().split('T')[0] : entry.date,
+                date: entry.date instanceof Date ? entry.date.toLocaleDateString('en-CA') : entry.date,
                 uptime: entry.uptime,
                 unplanned_shutdown: entry.unplanned_shutdown,
                 planned_shutdown: entry.planned_shutdown,
