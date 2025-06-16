@@ -301,8 +301,49 @@ const AssetAddPage: React.FC = () => {
     setFileErrors([]);
   };
 
+  const showValidationError = (description: string) => {
+    toast({
+      title: "Form Incomplete",
+      description,
+      variant: "destructive",
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Ensure all required fields are filled
+    if (!formData.facilityLocations) {
+      setActiveTab("asset-info"); // Navigate to the "Asset Information" tab
+      return showValidationError("Facility Location is required");
+    }
+    if (!formData.systems) {
+      setActiveTab("asset-info"); // Navigate to the "Asset Information" tab
+      return showValidationError("System is required");
+    }
+    if (!formData.packages) {
+      setActiveTab("asset-info"); // Navigate to the "Asset Information" tab
+      return showValidationError("Package is required");
+    }
+    if (!formData.assetNo) {
+      setActiveTab("asset-info"); // Navigate to the "Asset Information" tab
+      return showValidationError("Asset No is required");
+    }
+    if (!formData.assetName) {
+      setActiveTab("asset-info"); // Navigate to the "Asset Information" tab
+      return showValidationError("Asset Name is required");
+    }
+    if (!formData.assetTag) {
+      setActiveTab("asset-info"); // Navigate to the "Asset Information" tab
+      return showValidationError("Asset Tag is required");
+    }
+    if (!formData.assetStatus) {
+      setActiveTab("asset-info"); // Navigate to the "Asset Information" tab
+      return showValidationError("Asset Status is required");
+    }
+
+
+
 
     // Prevent multiple submissions
     if (isSubmitting) return;
@@ -383,8 +424,8 @@ const AssetAddPage: React.FC = () => {
       // Find the selected status option to get its id
       const selectedStatusOption = Array.isArray(statusOptionsData)
         ? statusOptionsData.find(
-            (option) => String(option.value) === String(formData.assetStatus)
-          )
+          (option) => String(option.value) === String(formData.assetStatus)
+        )
         : undefined;
 
       const statusId = selectedStatusOption?.id || formData.assetStatus || null;

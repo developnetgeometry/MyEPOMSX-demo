@@ -85,6 +85,8 @@ const WorkRequestPage: React.FC = () => {
     },
     { id: "requested_by", header: "Requested By", accessorKey: "requested_by.full_name" },
     { id: "work_center", header: "Work Center", accessorKey: "work_center_id.name" }, // Accessing `name` in `work_center_id`
+    { id: "work_order_no", header: "Work Order No", accessorKey: "wo_id.work_order_no" },
+    { id: "work_order_status", header: "WO Status", accessorKey: "wo_id.work_order_status_id.name" },
     { id: "asset", header: "Asset", accessorKey: "asset_id.asset_name" }, // Accessing `asset_name` in `asset_id`
     { id: "request_date", header: "Request Date", accessorKey: "work_request_date", cell: (value: any) => formatDate(value) },
     { id: "maintenance_type", header: "Maintenance Type", accessorKey: "maintenance_type.name" }, // Accessing `name` in `maintenance_type`
