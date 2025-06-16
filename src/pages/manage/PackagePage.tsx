@@ -37,6 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2, X } from "lucide-react";
+import { supabase } from "@/lib/supabaseClient";
 
 // Define form schema with Zod
 const formSchema = z.object({
@@ -82,9 +83,56 @@ const PackagePage: React.FC = () => {
   const tag = form.watch("tag");
   const packageTypeId = form.watch("type");
 
+  // State to store facility code
+  const [facilityCode, setFacilityCode] = useState<string>("");
+
+  // Fetch facility code when system changes
+  useEffect(() => {
+    if (!systemId || !systems) {
+      setFacilityCode("");
+      return;
+    }
+
+    const selectedSystem = systems.find((s) => s.id.toString() === systemId);
+    if (!selectedSystem || !selectedSystem.facility_id) {
+      setFacilityCode("");
+      return;
+    }
+
+    // Fetch facility code asynchronously
+    const fetchFacilityCode = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("e_facility")
+          .select("location_code")
+          .eq("id", selectedSystem.facility_id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching facility code:", error);
+          setFacilityCode("");
+        } else {
+          setFacilityCode(data?.location_code || "");
+        }
+      } catch (error) {
+        console.error("Error fetching facility code:", error);
+        setFacilityCode("");
+      }
+    };
+
+    fetchFacilityCode();
+  }, [systemId, systems]);
+
   // Compute package number
   const computedPackageNo = useMemo(() => {
-    if (!systemId || !tag || !packageTypeId || !systems || !packageTypes) {
+    if (
+      !systemId ||
+      !tag ||
+      !packageTypeId ||
+      !systems ||
+      !packageTypes ||
+      !facilityCode
+    ) {
       return "";
     }
 
@@ -93,11 +141,6 @@ const PackagePage: React.FC = () => {
     if (!selectedSystem) {
       return "";
     }
-
-    // Remove the facility requirement - just check if system exists
-    // if (!selectedSystem || !selectedSystem.facility) {
-    //   return "";
-    // }
 
     // Find selected package type
     const selectedPackageType = packageTypes.find(
@@ -117,8 +160,8 @@ const PackagePage: React.FC = () => {
       typeAbbreviation = selectedPackageType.name.substring(0, 3).toUpperCase();
     }
 
-    return `${selectedSystem.system_code}-${tag}-${typeAbbreviation}`;
-  }, [systemId, tag, packageTypeId, systems, packageTypes]);
+    return `${facilityCode}-${tag}-${typeAbbreviation}`;
+  }, [systemId, tag, packageTypeId, systems, packageTypes, facilityCode]);
 
   // Convert systems data to options format for the dropdown
   const systemOptions = useMemo(() => {
@@ -236,7 +279,7 @@ const PackagePage: React.FC = () => {
   const columns: Column[] = [
     {
       id: "packageNo",
-      header: "Package No",
+      header: "Package Code",
       accessorKey: "package_no",
     },
     {
