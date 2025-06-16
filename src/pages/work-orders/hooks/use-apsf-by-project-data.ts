@@ -54,7 +54,7 @@
 //         .in(
 //           "system_id",
 //           systems.map((system) => system.id)
-//         ); // Filter by system IDs
+//         ); // Filter by system Codes
 
 //       if (packageError) {
 //         console.error("Error fetching e_package data:", packageError);
@@ -154,7 +154,7 @@ export const useAssetData = () => {
         .in(
           "system_id",
           systems.map((system) => system.id)
-        ); // Filter by system IDs
+        ); // Filter by system Codes
 
       if (packageError) {
         console.error("Error fetching e_package data:", packageError);
@@ -164,7 +164,9 @@ export const useAssetData = () => {
       // Fetch asset data
       const { data: assets, error: assetError } = await supabase
         .from("e_asset")
-        .select("id, asset_name, asset_no, asset_sce_id (id, sce_code), package_id")
+        .select(
+          "id, asset_name, asset_no, asset_sce_id (id, sce_code), package_id"
+        )
         .in(
           "package_id",
           packages.map((pkg) => pkg.id)
