@@ -190,6 +190,24 @@ const NewPressureVesselPage: React.FC = () => {
     notes: "",
   });
 
+  // Allowable stress calculation function based on material construction
+  const calculateAllowableStress = (materialConstruction: string): string => {
+    const materialStressMapping: { [key: string]: number } = {
+      "carbon-steel-a516-gr70": 138.0, // MPa
+      "stainless-steel-304l": 137.9, // MPa
+      "stainless-steel-316l": 137.9, // MPa
+      "duplex-2205": 207.0, // MPa
+      "super-duplex-2507": 276.0, // MPa
+      "inconel-625": 241.0, // MPa
+      "hastelloy-c276": 172.0, // MPa
+    };
+
+    if (materialConstruction && materialStressMapping[materialConstruction]) {
+      return materialStressMapping[materialConstruction].toFixed(1);
+    }
+    return "";
+  };
+
   // Tmin calculation function
   const calculateTmin = (data: typeof formData) => {
     const designPressure = parseFloat(data.designPressure) || 0;
@@ -262,8 +280,20 @@ const NewPressureVesselPage: React.FC = () => {
         }
       }
 
+      // Calculate allowable stress when material construction changes
+      if (field === "materialConstruction") {
+        const calculatedStress = calculateAllowableStress(value);
+        if (calculatedStress !== "") {
+          updatedData.allowableStress = calculatedStress;
+        }
+      }
+
       // Calculate Tmin if any relevant field changed
-      if (tminCalculationFields.includes(field) || field === "asset") {
+      if (
+        tminCalculationFields.includes(field) ||
+        field === "asset" ||
+        field === "materialConstruction"
+      ) {
         const calculatedTmin = calculateTmin(updatedData);
         if (calculatedTmin !== "") {
           updatedData.tmin = calculatedTmin;
@@ -612,7 +642,7 @@ const NewPressureVesselPage: React.FC = () => {
               className="w-full"
             >
               <div className="border-b">
-                <TabsList className="grid w-full grid-cols-7 h-auto p-1">
+                <TabsList className="grid w-full grid-cols-6 h-auto p-1">
                   <TabsTrigger value="general" className="py-3">
                     General
                   </TabsTrigger>
@@ -624,9 +654,6 @@ const NewPressureVesselPage: React.FC = () => {
                   </TabsTrigger>
                   <TabsTrigger value="service" className="py-3">
                     Service
-                  </TabsTrigger>
-                  <TabsTrigger value="risk" className="py-3">
-                    Risk
                   </TabsTrigger>
                   <TabsTrigger value="inspection" className="py-3">
                     Inspection
@@ -1189,11 +1216,14 @@ const NewPressureVesselPage: React.FC = () => {
                           type="number"
                           step="0.1"
                           value={formData.allowableStress}
-                          onChange={(e) =>
-                            handleInputChange("allowableStress", e.target.value)
-                          }
-                          placeholder="e.g., 138"
+                          placeholder="Calculated from material construction"
+                          disabled
+                          className="bg-gray-50"
                         />
+                        <p className="text-xs text-muted-foreground">
+                          Auto-calculated based on selected material
+                          construction
+                        </p>
                       </div>
                     </div>
 
@@ -1767,183 +1797,6 @@ const NewPressureVesselPage: React.FC = () => {
                   </div>
                 </TabsContent>
 
-                {/* Risk Tab */}
-                <TabsContent value="risk" className="mt-0 space-y-6">
-                  <div className="border-b pb-4">
-                    <h2 className="text-xl font-semibold">Risk Assessment</h2>
-                    <p className="text-sm text-muted-foreground">
-                      Risk-based inspection and assessment information
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Column 1 - Risk Summary */}
-                    <div className="space-y-4">
-                      <div className="bg-blue-50 p-4 rounded-lg">
-                        <h3 className="text-lg font-medium text-blue-800 mb-4">
-                          Risk Summary
-                        </h3>
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="riskRanking">Risk Ranking</Label>
-                            <Input
-                              id="riskRanking"
-                              value={formData.riskRanking}
-                              placeholder="Calculated automatically"
-                              disabled
-                              className="bg-gray-100"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="riskLevel">Risk Level</Label>
-                            <Input
-                              id="riskLevel"
-                              value={formData.riskLevel}
-                              placeholder="Calculated automatically"
-                              disabled
-                              className="bg-gray-100"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Column 2 - PoF Summary */}
-                    <div className="space-y-4">
-                      <div className="bg-green-50 p-4 rounded-lg">
-                        <h3 className="text-lg font-medium text-green-800 mb-4">
-                          PoF Summary
-                        </h3>
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="dthin">Dthin</Label>
-                            <Input
-                              id="dthin"
-                              value={formData.dthin}
-                              placeholder="Calculated automatically"
-                              disabled
-                              className="bg-gray-100"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="dscc">DSCC</Label>
-                            <Input
-                              id="dscc"
-                              value={formData.dscc}
-                              placeholder="Calculated automatically"
-                              disabled
-                              className="bg-gray-100"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="dbrit">Dbrit</Label>
-                            <Input
-                              id="dbrit"
-                              value={formData.dbrit}
-                              placeholder="Calculated automatically"
-                              disabled
-                              className="bg-gray-100"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="pof">PoF</Label>
-                            <Input
-                              id="pof"
-                              value={formData.pof}
-                              placeholder="Calculated automatically"
-                              disabled
-                              className="bg-gray-100"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="dextd">DextD</Label>
-                            <Input
-                              id="dextd"
-                              value={formData.dextd}
-                              placeholder="Calculated automatically"
-                              disabled
-                              className="bg-gray-100"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="dhtha">Dhtha</Label>
-                            <Input
-                              id="dhtha"
-                              value={formData.dhtha}
-                              placeholder="Calculated automatically"
-                              disabled
-                              className="bg-gray-100"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="dmfat">Dmfat</Label>
-                            <Input
-                              id="dmfat"
-                              value={formData.dmfat}
-                              placeholder="Calculated automatically"
-                              disabled
-                              className="bg-gray-100"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="f1">F1</Label>
-                            <Input
-                              id="f1"
-                              value={formData.f1}
-                              onChange={(e) =>
-                                handleInputChange("f1", e.target.value)
-                              }
-                              placeholder="Enter F1 value"
-                              type="number"
-                              step="0.01"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Column 3 - CoF Summary */}
-                    <div className="space-y-4">
-                      <div className="bg-orange-50 p-4 rounded-lg">
-                        <h3 className="text-lg font-medium text-orange-800 mb-4">
-                          CoF Summary
-                        </h3>
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="cofDollar">CoF$</Label>
-                            <Input
-                              id="cofDollar"
-                              value={formData.cofDollar}
-                              placeholder="Calculated automatically"
-                              disabled
-                              className="bg-gray-100"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="cofM2">CoF M2</Label>
-                            <Input
-                              id="cofM2"
-                              value={formData.cofM2}
-                              placeholder="Calculated automatically"
-                              disabled
-                              className="bg-gray-100"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </TabsContent>
-
                 {/* Inspection Tab */}
                 <TabsContent value="inspection" className="mt-0 space-y-6">
                   <div className="border-b pb-4">
@@ -1951,7 +1804,7 @@ const NewPressureVesselPage: React.FC = () => {
                       Inspection Management
                     </h2>
                     <p className="text-sm text-muted-foreground">
-                      Inspection planning and documentation
+                      Comprehensive inspection planning and reporting
                     </p>
                   </div>
 
