@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./collapsible";
 import { Button } from "./button";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { Box, Building, ChevronDown, ChevronRight, Cpu, Network } from "lucide-react";
 
 type HierarchyNodeProps = {
   node: any;
@@ -24,10 +24,10 @@ const HierarchyNode: React.FC<HierarchyNodeProps> = ({ node, level = 0, onSelect
   
   const getNodeIcon = (type: string) => {
     switch(type) {
-      case 'facility': return <span className="h-4 w-4 text-blue-500">🏢</span>;
-      case 'system': return <span className="h-4 w-4 text-green-500">⚙️</span>;
-      case 'package': return <span className="h-4 w-4 text-orange-500">📦</span>;
-      case 'asset': return <span className="h-4 w-4 text-purple-500">🔧</span>;
+      case 'facility': return <span className="h-4 w-4 text-blue-500"><Building className="h-4 w-4 mr-2" /></span>;
+      case 'system': return <span className="h-4 w-4 text-green-500"><Network className="h-4 w-4 mr-2" /></span>;
+      case 'package': return <span className="h-4 w-4 text-orange-500"><Box className="h-4 w-4 mr-2" /></span>;
+      case 'asset': return <span className="h-4 w-4 text-purple-500"><Cpu className="h-4 w-4 mr-2" /></span>;
       default: return <span className="h-4 w-4">•</span>;
     }
   };
