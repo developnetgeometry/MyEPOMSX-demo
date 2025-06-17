@@ -25,7 +25,13 @@ import {
 } from "@/hooks/queries/useAssets";
 import HierarchyNode from "@/components/ui/hierarchy";
 import { Loader2 } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import WorkRequestDialogForm from "../work-orders/work-request/WorkRequestDialogForm";
 
 const AssetsPage: React.FC = () => {
@@ -37,7 +43,9 @@ const AssetsPage: React.FC = () => {
     null
   );
   const navigate = useNavigate();
-
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(
+    new Set()
+  );
   const { data: assets, isLoading, isError, error } = useAssetsWithRelations();
   const {
     data: assetHierarchy,
@@ -68,13 +76,24 @@ const AssetsPage: React.FC = () => {
   };
 
   const handleExpandAll = () => {
-    // In a real application, you would implement logic to expand all nodes
-    console.log("Expand all nodes");
+  const collectIds = (nodes: any[]): string[] => {
+    let ids: string[] = [];
+    nodes.forEach((node) => {
+      ids.push(String(node.id)); // Ensure string
+      if (node.children && node.children.length > 0) {
+        ids = ids.concat(collectIds(node.children));
+      }
+    });
+    return ids;
   };
+  if (assetHierarchy && assetHierarchy.facilities) {
+    const allIds = collectIds(assetHierarchy.facilities);
+    setExpandedNodes(new Set(allIds));
+  }
+};
 
   const handleCollapseAll = () => {
-    // In a real application, you would implement logic to collapse all nodes
-    console.log("Collapse all nodes");
+    setExpandedNodes(new Set());
   };
 
   const handleAddNew = () => {
@@ -91,7 +110,6 @@ const AssetsPage: React.FC = () => {
 
   const handleCreateWorkRequest = () => {
     if (selectedNode && selectedNode.type === "asset" && nodeDetails) {
-      
       setWorkRequestData({
         facility_id: nodeDetails.facility_id,
         system_id: nodeDetails.system_id,
@@ -120,7 +138,7 @@ const AssetsPage: React.FC = () => {
       id: "package",
       header: "Package",
       accessorKey: "package",
-      cell: (value) => value.package_name || "-",
+      cell: (value) => value?.package_name || "-",
     },
     {
       id: "system",
@@ -215,6 +233,8 @@ const AssetsPage: React.FC = () => {
                           key={facility.id}
                           node={facility}
                           onSelect={handleNodeSelect}
+                          expandedNodes={expandedNodes}
+                          setExpandedNodes={setExpandedNodes}
                         />
                       ))
                     )}
@@ -1092,12 +1112,13 @@ const AssetsPage: React.FC = () => {
         </DrawerContent>
       </Drawer>
 
-      <Dialog 
-        open={isWorkRequestDialogOpen} 
+      <Dialog
+        open={isWorkRequestDialogOpen}
         onOpenChange={(open) => {
           setIsWorkRequestDialogOpen(open);
           if (!open) setWorkRequestData(null);
-        }}>
+        }}
+      >
         <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-start justify-between w-full">

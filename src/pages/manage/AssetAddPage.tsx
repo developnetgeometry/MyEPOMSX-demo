@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import PageHeader from "@/components/shared/PageHeader";
 import {
@@ -69,6 +69,9 @@ const AssetAddPage: React.FC = () => {
   });
   const [fileErrors, setFileErrors] = useState<string[]>([]);
   const queryClient = useQueryClient();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const parentAssetId = queryParams.get("parentAssetId");
 
   // State for tracking selected values in cascading dropdowns
   // Facility > System > Package relationship
@@ -129,6 +132,7 @@ const AssetAddPage: React.FC = () => {
     facilityLocations: "",
     systems: "",
     packages: "",
+    parentAssetId: "",
     assetNo: "",
     assetName: "",
     assetTag: "",
@@ -351,6 +355,7 @@ const AssetAddPage: React.FC = () => {
           asset_class_id: formData.assetClass
             ? parseInt(formData.assetClass)
             : null,
+          parent_asset_id: formData.parentAssetId ? parseInt(formData.parentAssetId) : null,
           specification: formData.assetSpecification || null,
           is_integrity: formData.assetIntegrity,
           is_reliability: formData.assetReliability,
@@ -495,13 +500,27 @@ const AssetAddPage: React.FC = () => {
       // Navigate back to asset list
       navigate("/manage/assets");
     } catch (error) {
-      console.error("Error submitting form:", error);
-      toast({
-        title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to create asset",
-        variant: "destructive",
-      });
+      const errorMessage =
+        typeof error?.message === "string" ? error.message : "";
+      if (
+        error.code === "23505" ||
+        errorMessage.includes('duplicate key value violates unique constraint "e_asset_unique"')
+      ) {
+        toast({
+          title: "Duplicate Entry",
+          description:
+            "Asset No. already exists. Please enter a different Asset No.",
+          variant: "destructive",
+        });
+      } else {
+        console.error("Error submitting form:", error);
+        toast({
+          title: "Error",
+          description:
+            error instanceof Error ? error.message : "Failed to create asset",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -517,6 +536,16 @@ const AssetAddPage: React.FC = () => {
       assetImagePreviews.forEach((url) => URL.revokeObjectURL(url));
     };
   }, []);
+
+  useEffect(() => {
+    if (parentAssetId) {
+      setFormData((prev) => ({
+        ...prev,
+        parentAssetId,
+      }));
+    }
+  }, [parentAssetId]);
+  
 
   return (
     <div className="space-y-6">
