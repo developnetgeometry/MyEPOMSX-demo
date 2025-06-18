@@ -442,7 +442,7 @@ const RBIAssessmentPage: React.FC = () => {
           subtitle="Risk-Based Inspection assessment management"
           icon={<ShieldAlertIcon className="h-6 w-6" />}
           onAddNew={handleAddNew}
-          addNewLabel="+ New Assessment"
+          addNewLabel="New Assessment"
           onSearch={(query) => console.log("Search:", query)}
         />
 

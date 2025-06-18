@@ -383,6 +383,7 @@ export type Database = {
           maker_no: string | null
           manufacturer_id: number | null
           model: string | null
+          parent_asset_id: number | null
           sce_id: number | null
           serial_number: string | null
           specification: string | null
@@ -413,6 +414,7 @@ export type Database = {
           maker_no?: string | null
           manufacturer_id?: number | null
           model?: string | null
+          parent_asset_id?: number | null
           sce_id?: number | null
           serial_number?: string | null
           specification?: string | null
@@ -443,6 +445,7 @@ export type Database = {
           maker_no?: string | null
           manufacturer_id?: number | null
           model?: string | null
+          parent_asset_id?: number | null
           sce_id?: number | null
           serial_number?: string | null
           specification?: string | null
@@ -512,6 +515,13 @@ export type Database = {
             columns: ["manufacturer_id"]
             isOneToOne: false
             referencedRelation: "e_manufacturer"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "e_asset_detail_parent_asset_id_fkey"
+            columns: ["parent_asset_id"]
+            isOneToOne: true
+            referencedRelation: "e_asset"
             referencedColumns: ["id"]
           },
         ]
@@ -7379,6 +7389,7 @@ export type Database = {
       }
       i_ims_rbi_risk_irp: {
         Row: {
+          asset_id: number | null
           cof_area: number | null
           cof_financial: number | null
           created_at: string | null
@@ -7398,6 +7409,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          asset_id?: number | null
           cof_area?: number | null
           cof_financial?: number | null
           created_at?: string | null
@@ -7417,6 +7429,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          asset_id?: number | null
           cof_area?: number | null
           cof_financial?: number | null
           created_at?: string | null
@@ -7435,7 +7448,15 @@ export type Database = {
           updated_at?: string | null
           updated_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "i_ims_rbi_risk_irp_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "e_asset"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       i_ims_risk_irp: {
         Row: {
