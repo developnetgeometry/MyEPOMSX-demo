@@ -49,10 +49,10 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({
     cm_status_id: initialData?.cm_status_id?.id || 1,
     description: initialData?.description || null,
     work_request_date: initialData?.work_request_date
-      ? new Date(initialData.work_request_date).toISOString().split("T")[0]
-      : null,
+      ? new Date(initialData.work_request_date).toLocaleDateString("en-CA") // Convert to YYYY-MM-DD format in local timezone
+      : new Date(Date.now()).toISOString().split("T")[0],
     target_due_date: initialData?.target_due_date
-      ? new Date(initialData.target_due_date).toISOString().split("T")[0]
+      ? new Date(initialData.target_due_date).toLocaleDateString("en-CA")
       : null,
     facility_id: initialData?.facility_id?.id || initialData?.facility_id || "",
     system_id: initialData?.system_id?.id || initialData?.system_id || "",
@@ -61,7 +61,7 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({
     cm_sce_code: initialData?.cm_sce_code?.id || "",
     work_center_id: initialData?.work_center_id?.id || "",
     date_finding: initialData?.date_finding
-      ? new Date(initialData.date_finding).toISOString().split("T")[0]
+      ? new Date(initialData.date_finding).toLocaleDateString("en-CA")
       : null,
     maintenance_type: initialData?.maintenance_type?.id || "",
     requested_by: initialData?.requested_by?.id || profile?.id || "",
@@ -119,19 +119,52 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({
   };
 
   const handleSelectChange = (name: string, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-      ...(name === "facility_id" && {
+    let updatedFormData = { ...formData, [name]: value };
+
+    if (name === "asset_id") {
+      const selectedAsset = apsf.assets.find((asset) => asset.id === value);
+      const selectedPackage = apsf.packages.find((pkg) => pkg.id === selectedAsset?.package_id);
+      const selectedSystem = apsf.systems.find((sys) => sys.id === selectedPackage?.system_id);
+      const selectedFacility = apsf.facilities.find((fac) => fac.id === selectedSystem?.facility_id);
+
+      updatedFormData = {
+        ...updatedFormData,
+        facility_id: selectedFacility?.id || null,
+        system_id: selectedSystem?.id || null,
+        package_id: selectedPackage?.id || null,
+      };
+    } else if (name === "package_id") {
+      const selectedPackage = apsf.packages.find((pkg) => pkg.id === value);
+      const selectedSystem = apsf.systems.find((sys) => sys.id === selectedPackage?.system_id);
+      const selectedFacility = apsf.facilities.find((fac) => fac.id === selectedSystem?.facility_id);
+
+      updatedFormData = {
+        ...updatedFormData,
+        facility_id: selectedFacility?.id || null,
+        system_id: selectedSystem?.id || null,
+        asset_id: null,
+      };
+    } else if (name === "system_id") {
+      const selectedSystem = apsf.systems.find((sys) => sys.id === value);
+      const selectedFacility = apsf.facilities.find((fac) => fac.id === selectedSystem?.facility_id);
+
+      updatedFormData = {
+        ...updatedFormData,
+        facility_id: selectedFacility?.id || null,
+        package_id: null,
+        asset_id: null,
+      };
+    } else if (name === "facility_id") {
+      updatedFormData = {
+        ...updatedFormData,
         system_id: null,
         package_id: null,
         asset_id: null,
-      }),
-      ...(name === "system_id" && { package_id: null, asset_id: null }),
-      ...(name === "package_id" && { asset_id: null }),
-    }));
-  };
+      };
+    }
 
+    setFormData(updatedFormData);
+  };
   const showValidationError = (description: string) => {
     toast({
       title: "Form Incomplete",
@@ -160,8 +193,10 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({
     if (!formData.maintenance_type)
       return showValidationError("Maintenance Type is required");
     // if (!formData.requested_by) return showValidationError("Requested By is required");
-    if (!formData.priority_id)
-      return showValidationError("Priority is required");
+    if (!formData.priority_id) return showValidationError("Priority is required");
+    if (!formData.anomaly_report && !formData.quick_incident_report) {
+      return showValidationError("Either Anomaly Report or Quick Incident Report must be selected");
+    }
 
     setIsLoading(true); // Set loading to true
     try {
@@ -182,7 +217,6 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* <pre>{JSON.stringify(initialData, null, 2)}</pre> */}
 
             <div className="space-y-2">
               <Label htmlFor="work_request_no">Work Request No</Label>
@@ -251,6 +285,7 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({
                 onChange={handleInputChange}
               />
             </div>
+
             {/* Facility Select */}
             <div className="space-y-2">
               <Label htmlFor="facility_id">
@@ -325,7 +360,7 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({
                 onValueChange={(value) =>
                   handleSelectChange("package_id", parseInt(value))
                 }
-                disabled={!formData.system_id} // Disable if no system is selected
+                disabled={!formData.system_id}
               >
                 <SelectTrigger id="package_id" className="w-full">
                   <SelectValue placeholder="Select Package" />
@@ -359,15 +394,13 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({
 
             {/* Asset Select */}
             <div className="space-y-2">
-              <Label htmlFor="asset_id">
-                Asset<span className="text-red-500 ml-1">*</span>
-              </Label>
+              <Label htmlFor="asset_id">Asset</Label>
               <Select
                 value={formData.asset_id?.toString() || ""}
                 onValueChange={(value) =>
                   handleSelectChange("asset_id", parseInt(value))
                 }
-                disabled={!formData.package_id} // Disable if no package is selected
+                disabled={!formData.package_id}
               >
                 <SelectTrigger id="asset_id" className="w-full">
                   <SelectValue placeholder="Select Asset" />
@@ -408,6 +441,7 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({
                 </SelectContent>
               </Select>
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="cm_sce_code">CM SCE Code</Label>
               <Select
@@ -546,6 +580,7 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({
                     setFormData((prev) => ({
                       ...prev,
                       anomaly_report: checked === true, // Ensure the value is a boolean
+                      quick_incident_report: checked === false, // Opposite value for the other checkbox
                     }))
                   }
                 />
@@ -561,6 +596,7 @@ const WorkRequestDialogForm: React.FC<WorkRequestDialogFormProps> = ({
                     setFormData((prev) => ({
                       ...prev,
                       quick_incident_report: checked === true, // Ensure the value is a boolean
+                      anomaly_report: checked === false, // Opposite value for the other checkbox
                     }))
                   }
                 />

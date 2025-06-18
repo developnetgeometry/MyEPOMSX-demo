@@ -61,13 +61,51 @@ const PMScheduleDialogForm: React.FC<PMScheduleDialogFormProps> = ({
     };
 
     const handleSelectChange = (name: string, value: any) => {
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-            ...(name === "facility_id" && { system_id: null, package_id: null, asset_id: null }),
-            ...(name === "system_id" && { package_id: null, asset_id: null }),
-            ...(name === "package_id" && { asset_id: null }),
-        }));
+        let updatedFormData = { ...formData, [name]: value };
+
+        if (name === "asset_id") {
+            const selectedAsset = apsf.assets.find((asset) => asset.id === value);
+            const selectedPackage = apsf.packages.find((pkg) => pkg.id === selectedAsset?.package_id);
+            const selectedSystem = apsf.systems.find((sys) => sys.id === selectedPackage?.system_id);
+            const selectedFacility = apsf.facilities.find((fac) => fac.id === selectedSystem?.facility_id);
+
+            updatedFormData = {
+                ...updatedFormData,
+                facility_id: selectedFacility?.id || null,
+                system_id: selectedSystem?.id || null,
+                package_id: selectedPackage?.id || null,
+            };
+        } else if (name === "package_id") {
+            const selectedPackage = apsf.packages.find((pkg) => pkg.id === value);
+            const selectedSystem = apsf.systems.find((sys) => sys.id === selectedPackage?.system_id);
+            const selectedFacility = apsf.facilities.find((fac) => fac.id === selectedSystem?.facility_id);
+
+            updatedFormData = {
+                ...updatedFormData,
+                facility_id: selectedFacility?.id || null,
+                system_id: selectedSystem?.id || null,
+                asset_id: null,
+            };
+        } else if (name === "system_id") {
+            const selectedSystem = apsf.systems.find((sys) => sys.id === value);
+            const selectedFacility = apsf.facilities.find((fac) => fac.id === selectedSystem?.facility_id);
+
+            updatedFormData = {
+                ...updatedFormData,
+                facility_id: selectedFacility?.id || null,
+                package_id: null,
+                asset_id: null,
+            };
+        } else if (name === "facility_id") {
+            updatedFormData = {
+                ...updatedFormData,
+                system_id: null,
+                package_id: null,
+                asset_id: null,
+            };
+        }
+
+        setFormData(updatedFormData);
     };
 
     const showValidationError = (description: string) => {
@@ -81,10 +119,15 @@ const PMScheduleDialogForm: React.FC<PMScheduleDialogFormProps> = ({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!formData.due_date) return showValidationError("Due Date is required");
+        if (!formData.priority_id) return showValidationError("Priority is required");
+        if (!formData.work_center_id) return showValidationError("Work Center is required");
+        if (!formData.discipline_id) return showValidationError("Discipline is required");
+        if (!formData.task_id) return showValidationError("Task is required");
+        if (!formData.frequency_id) return showValidationError("Frequency is required");
         if (!formData.facility_id) return showValidationError("Facility is required");
         if (!formData.system_id) return showValidationError("System is required");
         if (!formData.package_id) return showValidationError("Package is required");
-        if (!formData.asset_id) return showValidationError("Asset is required");
         setIsLoading(true);
         try {
             await onSubmit(formData);
@@ -110,7 +153,7 @@ const PMScheduleDialogForm: React.FC<PMScheduleDialogFormProps> = ({
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="due_date">Due Date</Label>
+                            <Label htmlFor="due_date">Due Date<span className="text-red-500 ml-1">*</span></Label>
                             <Input
                                 id="due_date"
                                 name="due_date"
@@ -120,7 +163,7 @@ const PMScheduleDialogForm: React.FC<PMScheduleDialogFormProps> = ({
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="priority_id">Priority</Label>
+                            <Label htmlFor="priority_id">Priority<span className="text-red-500 ml-1">*</span></Label>
                             <Select
                                 value={formData.priority_id?.toString() || ""}
                                 onValueChange={(value) => handleSelectChange("priority_id", parseInt(value))}
@@ -138,7 +181,7 @@ const PMScheduleDialogForm: React.FC<PMScheduleDialogFormProps> = ({
                             </Select>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="work_center_id">Work Center</Label>
+                            <Label htmlFor="work_center_id">Work Center<span className="text-red-500 ml-1">*</span></Label>
                             <Select
                                 value={formData.work_center_id?.toString() || ""}
                                 onValueChange={(value) => handleSelectChange("work_center_id", parseInt(value))}
@@ -156,7 +199,7 @@ const PMScheduleDialogForm: React.FC<PMScheduleDialogFormProps> = ({
                             </Select>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="discipline_id">Discipline</Label>
+                            <Label htmlFor="discipline_id">Discipline<span className="text-red-500 ml-1">*</span></Label>
                             <Select
                                 value={formData.discipline_id?.toString() || ""}
                                 onValueChange={(value) => handleSelectChange("discipline_id", parseInt(value))}
@@ -174,7 +217,7 @@ const PMScheduleDialogForm: React.FC<PMScheduleDialogFormProps> = ({
                             </Select>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="task_id">Task</Label>
+                            <Label htmlFor="task_id">Task<span className="text-red-500 ml-1">*</span></Label>
                             <Select
                                 value={formData.task_id?.toString() || ""}
                                 onValueChange={(value) => handleSelectChange("task_id", parseInt(value))}
@@ -192,7 +235,7 @@ const PMScheduleDialogForm: React.FC<PMScheduleDialogFormProps> = ({
                             </Select>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="frequency_id">Frequency</Label>
+                            <Label htmlFor="frequency_id">Frequency<span className="text-red-500 ml-1">*</span></Label>
                             <Select
                                 value={formData.frequency_id?.toString() || ""}
                                 onValueChange={(value) => handleSelectChange("frequency_id", parseInt(value))}
@@ -209,25 +252,23 @@ const PMScheduleDialogForm: React.FC<PMScheduleDialogFormProps> = ({
                                 </SelectContent>
                             </Select>
                         </div>
+
                         {/* Facility Select */}
                         <div className="space-y-2">
                             <Label htmlFor="facility_id">Facility<span className="text-red-500 ml-1">*</span></Label>
                             <Select
                                 value={formData.facility_id?.toString() || ""}
                                 onValueChange={(value) => handleSelectChange("facility_id", parseInt(value))}
-                                required
                             >
                                 <SelectTrigger id="facility_id" className="w-full">
                                     <SelectValue placeholder="Select Facility" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {apsf?.map((project) =>
-                                        project.facilities.map((facility) => (
-                                            <SelectItem key={facility.id} value={facility.id.toString()}>
-                                                {facility.location_code} - {facility.location_name}
-                                            </SelectItem>
-                                        ))
-                                    )}
+                                    {apsf?.facilities?.map((facility) => (
+                                        <SelectItem key={facility.id} value={facility.id.toString()}>
+                                            {facility.location_code} - {facility.location_name}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -238,22 +279,16 @@ const PMScheduleDialogForm: React.FC<PMScheduleDialogFormProps> = ({
                             <Select
                                 value={formData.system_id?.toString() || ""}
                                 onValueChange={(value) => handleSelectChange("system_id", parseInt(value))}
-                                disabled={!formData.facility_id} // Disable if no facility is selected
                             >
                                 <SelectTrigger id="system_id" className="w-full">
                                     <SelectValue placeholder="Select System" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {apsf
-                                        ?.find((project) =>
-                                            project.facilities.some((facility) => facility.id === formData.facility_id)
-                                        )
-                                        ?.facilities.find((facility) => facility.id === formData.facility_id)
-                                        ?.systems.map((system) => (
-                                            <SelectItem key={system.id} value={system.id.toString()}>
-                                                {system.system_name}
-                                            </SelectItem>
-                                        ))}
+                                    {apsf?.systems?.map((system) => (
+                                        <SelectItem key={system.id} value={system.id.toString()}>
+                                            {system.system_name}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -264,67 +299,40 @@ const PMScheduleDialogForm: React.FC<PMScheduleDialogFormProps> = ({
                             <Select
                                 value={formData.package_id?.toString() || ""}
                                 onValueChange={(value) => handleSelectChange("package_id", parseInt(value))}
-                                disabled={!formData.system_id} // Disable if no system is selected
                             >
                                 <SelectTrigger id="package_id" className="w-full">
                                     <SelectValue placeholder="Select Package" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {apsf
-                                        ?.find((project) =>
-                                            project.facilities.some((facility) =>
-                                                facility.systems.some((system) => system.id === formData.system_id)
-                                            )
-                                        )
-                                        ?.facilities.find((facility) =>
-                                            facility.systems.some((system) => system.id === formData.system_id)
-                                        )
-                                        ?.systems.find((system) => system.id === formData.system_id)
-                                        ?.packages.map((packageData) => (
-                                            <SelectItem key={packageData.id} value={packageData.id.toString()}>
-                                                {packageData.package_name}
-                                            </SelectItem>
-                                        ))}
+                                    {apsf?.packages?.map((pkg) => (
+                                        <SelectItem key={pkg.id} value={pkg.id.toString()}>
+                                            {pkg.package_name}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
+
                         {/* Asset Select */}
                         <div className="space-y-2">
-                            <Label htmlFor="asset_id">Asset<span className="text-red-500 ml-1">*</span></Label>
+                            <Label htmlFor="asset_id">Asset</Label>
                             <Select
                                 value={formData.asset_id?.toString() || ""}
                                 onValueChange={(value) => handleSelectChange("asset_id", parseInt(value))}
-                                disabled={!formData.package_id} // Disable if no package is selected
                             >
                                 <SelectTrigger id="asset_id" className="w-full">
                                     <SelectValue placeholder="Select Asset" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {apsf
-                                        ?.find((project) =>
-                                            project.facilities.some((facility) =>
-                                                facility.systems.some((system) =>
-                                                    system.packages.some((packageData) => packageData.id === formData.package_id)
-                                                )
-                                            )
-                                        )
-                                        ?.facilities.find((facility) =>
-                                            facility.systems.some((system) =>
-                                                system.packages.some((packageData) => packageData.id === formData.package_id)
-                                            )
-                                        )
-                                        ?.systems.find((system) =>
-                                            system.packages.some((packageData) => packageData.id === formData.package_id)
-                                        )
-                                        ?.packages.find((packageData) => packageData.id === formData.package_id)
-                                        ?.assets.map((asset) => (
-                                            <SelectItem key={asset.id} value={asset.id.toString()}>
-                                                {asset.asset_name}
-                                            </SelectItem>
-                                        ))}
+                                    {apsf?.assets?.map((asset) => (
+                                        <SelectItem key={asset.id} value={asset.id.toString()}>
+                                            {asset.asset_name}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
+
                     </div>
                     <div className="flex justify-end space-x-2">
                         <Button type="button" variant="outline" onClick={onCancel}>

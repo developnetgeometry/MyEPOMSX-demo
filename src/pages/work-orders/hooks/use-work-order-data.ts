@@ -10,7 +10,7 @@ export const useWorkOrderData = () => {
         .from("e_work_order")
         .select(
           `id, work_order_type (id, name), pm_work_order_id, work_order_status_id (id, name),
-          description, work_order_no, cm_work_order_id, created_at, completed_at, created_by, 
+          description, work_order_no, cm_work_order_id, created_at, completed_at, created_by (id, email, full_name), 
           updated_by, updated_at, asset_id (asset_no, asset_name),
           task_id (id, task_code, task_name), due_date`
         )
@@ -152,7 +152,7 @@ export const userWorkOrderDataByAsset = (assetId: number) => {
         .from("e_work_order")
         .select(
           `id, work_order_type (id, name), pm_work_order_id, work_order_status_id (id, name),
-          description, work_order_no, cm_work_order_id, created_at, completed_at, created_by, 
+          description, work_order_no, cm_work_order_id (id, downtime), created_at, completed_at, created_by, 
           updated_by, updated_at, asset_id (asset_no, asset_name),
           task_id (id, task_code, task_name), due_date`
         )

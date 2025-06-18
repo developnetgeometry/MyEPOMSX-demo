@@ -246,9 +246,9 @@ const SystemPage: React.FC = () => {
   const columns: Column[] = React.useMemo(
     () => [
       {
-        id: "system_code",
-        header: "System ID",
-        accessorKey: "system_code",
+        id: "system_no",
+        header: "System Code",
+        accessorKey: "system_no",
       },
       {
         id: "system_name",
@@ -256,9 +256,9 @@ const SystemPage: React.FC = () => {
         accessorKey: "system_name",
       },
       {
-        id: "system_no",
+        id: "system_code",
         header: "System Number",
-        accessorKey: "system_no",
+        accessorKey: "system_code",
       },
       {
         id: "facility.location_name",

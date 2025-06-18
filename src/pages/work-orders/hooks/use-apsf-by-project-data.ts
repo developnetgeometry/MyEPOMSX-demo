@@ -54,7 +54,7 @@
 //         .in(
 //           "system_id",
 //           systems.map((system) => system.id)
-//         ); // Filter by system IDs
+//         ); // Filter by system Codes
 
 //       if (packageError) {
 //         console.error("Error fetching e_package data:", packageError);
@@ -154,7 +154,7 @@ export const useAssetData = () => {
         .in(
           "system_id",
           systems.map((system) => system.id)
-        ); // Filter by system IDs
+        ); // Filter by system Codes
 
       if (packageError) {
         console.error("Error fetching e_package data:", packageError);
@@ -164,7 +164,9 @@ export const useAssetData = () => {
       // Fetch asset data
       const { data: assets, error: assetError } = await supabase
         .from("e_asset")
-        .select("id, asset_name, asset_no, asset_sce_id (id, sce_code), package_id")
+        .select(
+          "id, asset_name, asset_no, asset_sce_id (id, sce_code), package_id"
+        )
         .in(
           "package_id",
           packages.map((pkg) => pkg.id)
@@ -175,40 +177,13 @@ export const useAssetData = () => {
         throw assetError;
       }
 
-      // Map the data into the desired structure
-      const transformedData = {
-        facilities: facilities.map((facility) => ({
-          id: facility.id,
-          location_code: facility.location_code,
-          location_name: facility.location_name,
-          systems: systems
-            .filter((system) => system.facility_id === facility.id)
-            .map((system) => ({
-              id: system.id,
-              system_code: system.system_code,
-              system_no: system.system_no,
-              system_name: system.system_name,
-              packages: packages
-                .filter((pkg) => pkg.system_id === system.id)
-                .map((pkg) => ({
-                  id: pkg.id,
-                  package_name: pkg.package_name,
-                  package_no: pkg.package_no,
-                  package_tag: pkg.package_tag,
-                  assets: assets
-                    .filter((asset) => asset.package_id === pkg.id)
-                    .map((asset) => ({
-                      id: asset.id,
-                      asset_name: asset.asset_name,
-                      asset_no: asset.asset_no,
-                      asset_sce_id: asset.asset_sce_id,
-                    })),
-                })),
-            })),
-        })),
+      // Return raw data without transformation
+      return {
+        facilities,
+        systems,
+        packages,
+        assets,
       };
-
-      return [transformedData];
     },
   });
 };

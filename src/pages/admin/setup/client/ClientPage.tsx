@@ -133,6 +133,7 @@ const ClientPage: React.FC = () => {
           onRowClick={handleRowClick}
           onEdit={handleEditClient}
           onDelete={handleDeleteClient}
+          onIndex={true}
         />
       )}
 

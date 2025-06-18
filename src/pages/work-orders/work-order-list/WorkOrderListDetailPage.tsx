@@ -169,17 +169,17 @@ const WorkOrderListDetailPage: React.FC = () => {
                 )}
                 {(workOrder?.work_order_type === 2 &&
                   <>
-                    <TabsTrigger value="generalPm">General</TabsTrigger>
-                    <TabsTrigger value="taskDetailPm">Task Detail</TabsTrigger>
-                    <TabsTrigger value="planPm">Plan</TabsTrigger>
-                    <TabsTrigger value="actualPm">Actual</TabsTrigger>
-                    <TabsTrigger value="relatedWo">Related WO</TabsTrigger>
-                    <TabsTrigger value="reportPm">Reports</TabsTrigger>
-                    <TabsTrigger value="deferPm">Defer</TabsTrigger>
-                    <TabsTrigger value="attachmentPm">Attachment</TabsTrigger>
-                    <TabsTrigger value="criteriaPm">Min Acceptance Criteria</TabsTrigger>
-                    <TabsTrigger value="checksheetPm">Checksheet</TabsTrigger>
-                    <TabsTrigger value="additionalInfoPm">Additional Info</TabsTrigger>
+                    <TabsTrigger value="generalPm" className="px-2">General</TabsTrigger>
+                    <TabsTrigger value="taskDetailPm" className="px-2">Task Detail</TabsTrigger>
+                    <TabsTrigger value="planPm" className="px-2">Plan</TabsTrigger>
+                    <TabsTrigger value="actualPm" className="px-2">Actual</TabsTrigger>
+                    <TabsTrigger value="relatedWo" className="px-2">Related WO</TabsTrigger>
+                    <TabsTrigger value="reportPm" className="px-2">Reports</TabsTrigger>
+                    <TabsTrigger value="deferPm" className="px-2">Defer</TabsTrigger>
+                    <TabsTrigger value="attachmentPm" className="px-2">Attachment</TabsTrigger>
+                    <TabsTrigger value="criteriaPm" className="px-2">Min Acceptance Criteria</TabsTrigger>
+                    <TabsTrigger value="checksheetPm" className="px-2">Checksheet</TabsTrigger>
+                    <TabsTrigger value="additionalInfoPm" className="px-2">Additional Info</TabsTrigger>
                     <TabsTrigger value="maintainGroupPm">Maintanable Group</TabsTrigger>
                   </>
                 )}
@@ -199,7 +199,11 @@ const WorkOrderListDetailPage: React.FC = () => {
                     {id && <CmFindingTab cmGeneralId={Number(workOrder.cm_work_order_id.id)} />}
                   </TabsContent>
                   <TabsContent value="relatedWo">
-                    {id && <RelatedWoTab assetId={Number(workOrder.asset_id)} />}
+                    {id && workOrder.asset_id ? (
+                      <RelatedWoTab assetId={Number(workOrder.asset_id)} />
+                    ) : (
+                      <div>No related work orders available for this asset.</div>
+                    )}
                   </TabsContent>
                   <TabsContent value="reportsCm">
                     {id && <CmReportsTab cmGeneralId={Number(workOrder.cm_work_order_id.id)} />}
@@ -233,7 +237,11 @@ const WorkOrderListDetailPage: React.FC = () => {
                     {id && <PmActualTab pmWoId={Number(workOrder.pm_work_order_id.id)} workCenterId={workOrder.pm_work_order_id.work_center_id} />}
                   </TabsContent>
                   <TabsContent value="relatedWo">
-                    {id && <RelatedWoTab assetId={Number(workOrder.asset_id)} />}
+                    {id && workOrder.asset_id ? (
+                      <RelatedWoTab assetId={Number(workOrder.asset_id)} />
+                    ) : (
+                      <div>No related work orders available for this asset.</div>
+                    )}
                   </TabsContent>
                   <TabsContent value="reportPm">
                     {id && <PmReportsTab pmWoId={Number(workOrder.pm_work_order_id.id)} />}

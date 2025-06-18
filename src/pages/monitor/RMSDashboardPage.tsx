@@ -35,8 +35,6 @@ interface AssetPerformanceData {
   utilization: number;
   availability: number;
   reliability: number;
-  mttrAvailability: number;
-  mttrReliability: number;
   target: number;
   systemId?: number;
   assetCount?: number;
@@ -73,11 +71,56 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
 };
 
 const RMSDashboardPage = () => {
-  const [dateRange, setDateRange] = useState({
+  const [filterType, setFilterType] = useState<'year' | 'dateRange'>('year');
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+  const [tempDateRange, setTempDateRange] = useState({
     from: subDays(new Date(), 30),
     to: new Date(),
   });
+
+  const [appliedDateRange, setAppliedDateRange] = useState({
+    from: subDays(new Date(), 30),
+    to: new Date(),
+  });
+
   const [reliabilityTarget, setReliabilityTarget] = useState(95);
+
+  // Calculate the actual date range based on filter type
+  const dateRange = useMemo(() => {
+    if (filterType === 'year') {
+      const startOfYear = new Date(selectedYear, 0, 1);
+      const endOfYear = new Date(selectedYear, 11, 31);
+
+      return {
+        from: startOfYear, // January 1st
+        to: endOfYear, // December 31st
+      }
+    } else {
+      return appliedDateRange;
+    }
+  }, [filterType, selectedYear, appliedDateRange]);
+
+  const applyDateRange = () => {
+    if (tempDateRange.from && tempDateRange.to) {
+      const fromDate = new Date(tempDateRange.from);
+      const toDate = new Date(tempDateRange.to);
+
+      setAppliedDateRange({
+        from: fromDate,
+        to: toDate
+      });
+    }
+  };
+
+  const switchToYearFilter = (year: number) => {
+    setSelectedYear(year);
+    setFilterType('year');
+  };
+
+  const switchToDateRangeFilter = () => {
+    setFilterType('dateRange');
+  };
 
   // Fetch data
   const { data: assets = [], isLoading: assetsLoading } = useAssets();
@@ -152,8 +195,6 @@ const RMSDashboardPage = () => {
         utilization: Math.max(0, Math.min(100, utilization)),
         availability: Math.max(0, Math.min(100, availability)),
         reliability: Math.max(0, Math.min(100, reliability)),
-        mttrAvailability: 100.00, // Placeholder - would need MTTR data
-        mttrReliability: 100.00, // Placeholder - would need MTTR data
         target: reliabilityTarget,
         systemId: asset.system_id,
         assetCount: 1
@@ -271,32 +312,94 @@ const RMSDashboardPage = () => {
       />
       
       <Breadcrumbs />
-      
-      <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
-        <div>
-          <DatePickerWithRange 
-            dateRange={dateRange}
-            setDateRange={setDateRange}
-          />
+
+      <div className="space-y-4 mb-6">
+        {/* Filter Type Selector */}
+        <div className="flex items-center gap-4">
+          <Label>Filter by:</Label>
+          <div className="flex gap-2">
+            <Button
+              variant={filterType === 'year' ? 'default' : 'outline'}
+              size='sm'
+              onClick={() => setFilterType('year')}
+            >
+              Year
+            </Button>
+            <Button
+              variant={filterType === 'dateRange' ? 'default' : 'outline'}
+              size='sm'
+              onClick={() => setFilterType('dateRange')}
+            >
+              Date Range
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Label htmlFor="reliability-target">Reliability Target (%):</Label>
-          <Input
-            id="reliability-target"
-            type="number"
-            min="0"
-            max="100"
-            value={reliabilityTarget}
-            onChange={(e) => setReliabilityTarget(Number(e.target.value))}
-            className="w-20"
-          />
-          <Button
-            onClick={() => setReliabilityTarget(95)}
-            variant="ghost"
-            size="sm"
-          >
-            Reset
-          </Button>
+
+        <div className="flex flex-col sm:flex-row justify-between gap-4">
+          <div className='flex items-center gap-2'>
+            {filterType === 'year' ? (
+              <>
+                <Label htmlFor='year-select'>Year:</Label>
+                <select 
+                  id="year-select"
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
+                  className='px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+                >
+                  {Array.from({ length: 10 }, (_, i) => {
+                    const year = new Date().getFullYear() - 5 + i;
+                    return (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    );
+                  })}
+                </select>
+              </>
+            ) : (
+              <>
+                <DatePickerWithRange 
+                  dateRange={tempDateRange}
+                  setDateRange={setTempDateRange}
+                />
+                <Button
+                  onClick={applyDateRange}
+                  disabled={!tempDateRange.from || !tempDateRange.to}
+                >
+                  Apply
+                </Button>
+              </>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Label htmlFor="reliability-target">Reliability Target (%):</Label>
+            <Input
+              id="reliability-target"
+              type="number"
+              min="0"
+              max="100"
+              value={reliabilityTarget}
+              onChange={(e) => setReliabilityTarget(Number(e.target.value))}
+              className="w-20"
+            />
+            <Button
+              onClick={() => setReliabilityTarget(95)}
+              variant="ghost"
+              size="sm"
+            >
+              Reset
+            </Button>
+          </div>
+        </div>
+
+        {/* Current Filter Display */}
+        <div className="text-sm text-gray-600">
+          <span className="font-medium">Current filter: </span>
+          {filterType === 'year'
+            ? `Year ${selectedYear}`
+            : `${format(dateRange.from, "MMM dd, yyyy")} - ${format(dateRange.to, "MMM dd, yyyy")}`
+          }
         </div>
       </div>
       
@@ -357,10 +460,9 @@ const RMSDashboardPage = () => {
                   />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend verticalAlign="top" height={36} />
+                  <Bar dataKey="utilization" name="Utilization" fill="#ff9800" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="availability" name="Availability" fill="#8bc34a" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="mttrAvailability" name="MTTR Availability" fill="#4caf50" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="reliability" name="Reliability" fill="#03a9f4" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="mttrReliability" name="MTTR Reliability" fill="#2196f3" radius={[4, 4, 0, 0]} />
                   <ReferenceLine y={reliabilityTarget} stroke="red" strokeWidth={2} />
                 </BarChart>
               </ResponsiveContainer>
@@ -383,29 +485,23 @@ const RMSDashboardPage = () => {
                     ))}
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-medium">MTTR Availability %</TableCell>
-                    {assetPerformanceData.map((asset) => (
-                      <TableCell key={`${asset.name}-mttr-avail`}>{formatPercentage(asset.mttrAvailability)}</TableCell>
-                    ))}
-                  </TableRow>
-                  <TableRow>
                     <TableCell className="font-medium">Reliability %</TableCell>
                     {assetPerformanceData.map((asset) => (
                       <TableCell key={`${asset.name}-rel`}>{formatPercentage(asset.reliability)}</TableCell>
                     ))}
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-medium">MTTR Reliability %</TableCell>
+                    <TableCell className="font-medium">Utilization %</TableCell>
                     {assetPerformanceData.map((asset) => (
-                      <TableCell key={`${asset.name}-mttr-rel`}>{formatPercentage(asset.mttrReliability)}</TableCell>
+                      <TableCell key={`${asset.name}-util`}>{formatPercentage(asset.utilization)}</TableCell>
                     ))}
                   </TableRow>
-                  <TableRow>
+                  {/* <TableRow>
                     <TableCell className="font-medium">Reliability Target (CC) %</TableCell>
                     {assetPerformanceData.map((asset) => (
                       <TableCell key={`${asset.name}-target`}>{formatPercentage(asset.target)}</TableCell>
                     ))}
-                  </TableRow>
+                  </TableRow> */}
                 </TableBody>
               </Table>
             </div>
