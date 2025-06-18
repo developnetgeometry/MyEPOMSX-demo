@@ -269,17 +269,55 @@ const UptimeEntryModal: React.FC<UptimeEntryModalProps> = ({
           parsedDate = new Date(excelEpoch.getTime() + (dateValue - 2) * 24 * 60 * 60 * 1000);
         } else {
           // String date
-          parsedDate = new Date(dateValue);
+          const dateStr = String(dateValue).trim();
+
+          // Parse as is first
+          parsedDate = new Date(dateStr);
 
           if (isNaN(parsedDate.getTime())) {
-            const dateStr = String(dateValue).trim();
-
-            // MM/DD/YYYY format
+            // DD/MM/YYYY format
             const parts = dateStr.split('/');
             if(parts.length === 3) {
-              parsedDate = new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]));
+              const day = parseInt(parts[0]);
+              const month = parseInt(parts[1]) - 1;
+              const year = parseInt(parts[2]);
+
+              // Validate the parts
+              if (day >= 1 && day <= 31 && month >= 0 && month <= 11 && year > 1900) {
+                parsedDate = new Date(year, month, day);
+              } else {
+                continue; // Skip invalid dates
+              }
             } else {
-              continue; // Skip invalid dates
+              // Try other common separators
+              const dashParts =  dateStr.split('-');
+              const dotParts = dateStr.split('.');
+
+              if(dashParts.length === 3) {
+                // Handle DD-MM-YYYY format
+                const day = parseInt(dashParts[0]);
+                const month = parseInt(dashParts[1]) - 1;
+                const year = parseInt(dashParts[2]);
+
+                if (day >= 1 && day <= 31 && month >= 0 && month <= 11 && year > 1900) {
+                  parsedDate = new Date(year, month, day);
+                } else {
+                  continue; // Skip invalid dates
+                }
+              } else if (dotParts.length === 3) {
+                // Handle DD.MM.YYYY format
+                const day = parseInt(dotParts[0]);
+                const month = parseInt(dotParts[1]) - 1;
+                const year = parseInt(dotParts[2]);
+
+                if (day >= 1 && day <= 31 && month >= 0 && month <= 11 && year > 1900) {
+                  parsedDate = new Date(year, month, day);
+                } else {
+                  continue; // Skip invalid dates
+                }
+              } else {
+                continue;
+              }
             }
           }
         }
@@ -289,10 +327,10 @@ const UptimeEntryModal: React.FC<UptimeEntryModalProps> = ({
         const dateString = parsedDate.toISOString().split('T')[0];
 
         // Skip if date already exists
-        if (existingDates.has(dateString)) {
-            console.warn(`Skipping duplicate date: ${dateString}`);
-            continue;
-        }
+        // if (existingDates.has(dateString)) {
+        //     console.warn(`Skipping duplicate date: ${dateString}`);
+        //     continue;
+        // }
 
         const uptime = uptimeValue !== null && uptimeValue !== undefined ? 
           (typeof uptimeValue === 'number' ? uptimeValue : parseFloat(String(uptimeValue))) : 0;
