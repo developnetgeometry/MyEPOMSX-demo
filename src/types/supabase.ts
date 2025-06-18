@@ -76,6 +76,7 @@ export type Database = {
           created_by: string | null
           facility_id: number | null
           id: number
+          is_active: boolean | null
           package_id: number | null
           parent_asset_id: number | null
           status_id: number | null
@@ -95,6 +96,7 @@ export type Database = {
           created_by?: string | null
           facility_id?: number | null
           id?: number
+          is_active?: boolean | null
           package_id?: number | null
           parent_asset_id?: number | null
           status_id?: number | null
@@ -114,6 +116,7 @@ export type Database = {
           created_by?: string | null
           facility_id?: number | null
           id?: number
+          is_active?: boolean | null
           package_id?: number | null
           parent_asset_id?: number | null
           status_id?: number | null
@@ -363,6 +366,7 @@ export type Database = {
         Row: {
           area_id: number | null
           asset_class_id: number | null
+          asset_id: number | null
           asset_image_path: string | null
           bom_id: number | null
           category_id: number | null
@@ -383,7 +387,6 @@ export type Database = {
           maker_no: string | null
           manufacturer_id: number | null
           model: string | null
-          parent_asset_id: number | null
           sce_id: number | null
           serial_number: string | null
           specification: string | null
@@ -394,6 +397,7 @@ export type Database = {
         Insert: {
           area_id?: number | null
           asset_class_id?: number | null
+          asset_id?: number | null
           asset_image_path?: string | null
           bom_id?: number | null
           category_id?: number | null
@@ -414,7 +418,6 @@ export type Database = {
           maker_no?: string | null
           manufacturer_id?: number | null
           model?: string | null
-          parent_asset_id?: number | null
           sce_id?: number | null
           serial_number?: string | null
           specification?: string | null
@@ -425,6 +428,7 @@ export type Database = {
         Update: {
           area_id?: number | null
           asset_class_id?: number | null
+          asset_id?: number | null
           asset_image_path?: string | null
           bom_id?: number | null
           category_id?: number | null
@@ -445,7 +449,6 @@ export type Database = {
           maker_no?: string | null
           manufacturer_id?: number | null
           model?: string | null
-          parent_asset_id?: number | null
           sce_id?: number | null
           serial_number?: string | null
           specification?: string | null
@@ -454,6 +457,13 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "e_asset_detail_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: true
+            referencedRelation: "e_asset"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "e_asset_detail_asset_sce_id_fkey"
             columns: ["sce_id"]
@@ -515,13 +525,6 @@ export type Database = {
             columns: ["manufacturer_id"]
             isOneToOne: false
             referencedRelation: "e_manufacturer"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "e_asset_detail_parent_asset_id_fkey"
-            columns: ["parent_asset_id"]
-            isOneToOne: true
-            referencedRelation: "e_asset"
             referencedColumns: ["id"]
           },
         ]
@@ -6725,6 +6728,7 @@ export type Database = {
           fcenviron: number | null
           fracevap: number | null
           id: number
+          ims_general_id: number | null
           injcost: number | null
           outagemult: number | null
           updated_at: string | null
@@ -6740,6 +6744,7 @@ export type Database = {
           fcenviron?: number | null
           fracevap?: number | null
           id?: number
+          ims_general_id?: number | null
           injcost?: number | null
           outagemult?: number | null
           updated_at?: string | null
@@ -6755,6 +6760,7 @@ export type Database = {
           fcenviron?: number | null
           fracevap?: number | null
           id?: number
+          ims_general_id?: number | null
           injcost?: number | null
           outagemult?: number | null
           updated_at?: string | null
@@ -6769,6 +6775,13 @@ export type Database = {
             referencedRelation: "e_asset_detail"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "i_ims_cof_assessment_cof_prod_ims_general_id_fkey"
+            columns: ["ims_general_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_general"
+            referencedColumns: ["id"]
+          },
         ]
       }
       i_ims_cof_asssessment_cof_area: {
@@ -6781,6 +6794,7 @@ export type Database = {
           det_sys_id: number | null
           id: number
           ideal_gas_specific_heat_eq: number | null
+          ims_general_id: number | null
           ims_service_id: number | null
           iso_sys_id: number | null
           mitigation_system_id: number | null
@@ -6796,6 +6810,7 @@ export type Database = {
           det_sys_id?: number | null
           id?: number
           ideal_gas_specific_heat_eq?: number | null
+          ims_general_id?: number | null
           ims_service_id?: number | null
           iso_sys_id?: number | null
           mitigation_system_id?: number | null
@@ -6811,6 +6826,7 @@ export type Database = {
           det_sys_id?: number | null
           id?: number
           ideal_gas_specific_heat_eq?: number | null
+          ims_general_id?: number | null
           ims_service_id?: number | null
           iso_sys_id?: number | null
           mitigation_system_id?: number | null
@@ -6851,6 +6867,13 @@ export type Database = {
             columns: ["ims_service_id"]
             isOneToOne: false
             referencedRelation: "i_ims_service"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_cof_asssessment_cof_area_ims_general_id_fkey"
+            columns: ["ims_general_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_general"
             referencedColumns: ["id"]
           },
         ]
@@ -7389,7 +7412,7 @@ export type Database = {
       }
       i_ims_rbi_risk_irp: {
         Row: {
-          asset_id: number | null
+          asset_detail_id: number | null
           cof_area: number | null
           cof_financial: number | null
           created_at: string | null
@@ -7401,6 +7424,7 @@ export type Database = {
           dscc: number | null
           dthin: number | null
           id: number
+          ims_general_id: number | null
           pof: number | null
           pof_value: number | null
           risk_level: number | null
@@ -7409,7 +7433,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
-          asset_id?: number | null
+          asset_detail_id?: number | null
           cof_area?: number | null
           cof_financial?: number | null
           created_at?: string | null
@@ -7421,6 +7445,7 @@ export type Database = {
           dscc?: number | null
           dthin?: number | null
           id?: number
+          ims_general_id?: number | null
           pof?: number | null
           pof_value?: number | null
           risk_level?: number | null
@@ -7429,7 +7454,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
-          asset_id?: number | null
+          asset_detail_id?: number | null
           cof_area?: number | null
           cof_financial?: number | null
           created_at?: string | null
@@ -7441,6 +7466,7 @@ export type Database = {
           dscc?: number | null
           dthin?: number | null
           id?: number
+          ims_general_id?: number | null
           pof?: number | null
           pof_value?: number | null
           risk_level?: number | null
@@ -7450,10 +7476,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "i_ims_rbi_risk_irp_asset_id_fkey"
-            columns: ["asset_id"]
+            foreignKeyName: "i_ims_rbi_risk_irp_asset_detail_id_fkey"
+            columns: ["asset_detail_id"]
             isOneToOne: false
-            referencedRelation: "e_asset"
+            referencedRelation: "e_asset_detail"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_rbi_risk_irp_ims_general_id_fkey"
+            columns: ["ims_general_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_general"
             referencedColumns: ["id"]
           },
         ]

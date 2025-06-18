@@ -2,7 +2,6 @@ import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable, { Column } from "@/components/shared/DataTable";
-import { useWorkRequestData, insertWorkRequestData, updateWorkRequestData, deleteWorkRequestData } from "../hooks/use-work-request-data";
 import {
   Dialog,
   DialogContent,
@@ -16,13 +15,12 @@ import StatusBadge from "@/components/shared/StatusBadge";
 import { formatDate } from "@/utils/formatters";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
-import WorkRequestDialogForm from "./WorkRequestDialogForm";
+import { useWorkRequestData } from "../hooks/use-work-request-data";
 
 const WorkRequestPage: React.FC = () => {
   const navigate = useNavigate();
   const { data: workRequests, isLoading, refetch } = useWorkRequestData();
   const [searchQuery, setSearchQuery] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const handleRowClick = (row: any) => {
@@ -33,28 +31,10 @@ const WorkRequestPage: React.FC = () => {
     setSearchQuery(query);
   };
 
-  const handleAddNew = () => {
-    setIsDialogOpen(true);
-  };
-
-  const handleFormSubmit = async (formData: any) => {
-    try {
-      await insertWorkRequestData(formData);
-      toast({
-        title: "Success",
-        description: "Work request added successfully!",
-        variant: "default",
-      });
-      setIsDialogOpen(false);
-      refetch();
-    } catch (error) {
-      console.error("Failed to save work request data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save work request data.",
-        variant: "destructive",
-      });
-    }
+  const handleCreateNewWorkRequest = (assetId: number) => {
+    navigate("/work-orders/work-request/new", {
+      state: { asset_id: assetId },
+    });
   };
 
   const filteredWorkRequests = useMemo(() => {
@@ -98,7 +78,7 @@ const WorkRequestPage: React.FC = () => {
 
       <PageHeader
         title="Work Requests"
-        onAddNew={handleAddNew}
+        onAddNew={() => handleCreateNewWorkRequest(null)}
         addNewLabel="New Work Request"
         onSearch={handleSearch}
       />
@@ -114,28 +94,6 @@ const WorkRequestPage: React.FC = () => {
         />
       )}
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <div className="flex items-start justify-between w-full">
-              <div>
-                <DialogTitle>Add New Work Request</DialogTitle>
-                <DialogDescription>
-                  Fill in the details to add a new work request.
-                </DialogDescription>
-              </div>
-              <Button variant="ghost" size="icon" onClick={() => setIsDialogOpen(false)}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </DialogHeader>
-
-          <WorkRequestDialogForm
-            onSubmit={handleFormSubmit}
-            onCancel={() => setIsDialogOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

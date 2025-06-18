@@ -83,6 +83,7 @@ import WorkOrderDetailPage from "@/pages/work-orders/work-order-list/WorkOrderLi
 import WorkOrderListPage from "@/pages/work-orders/work-order-list/WorkOrderListPage";
 import WorkRequestPage from "@/pages/work-orders/work-request/WorkRequestPage";
 import WorkRequestDetailPage from "@/pages/work-orders/work-request/WorkRequestDetailPage";
+import WorkRequestFormPage from "@/pages/work-orders/work-request/WorkRequestAddPage";
 
 // Measure Pages
 import AssetPerformancePage from "@/pages/measure/AssetPerformancePage";
@@ -769,6 +770,16 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <Layout>
               <WorkRequestPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/work-orders/work-request/new"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <WorkRequestFormPage />
             </Layout>
           </ProtectedRoute>
         }
