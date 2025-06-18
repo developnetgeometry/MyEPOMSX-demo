@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { assetService } from "@/services/assetService";
 import { Asset, AssetWithRelations } from "@/types/manage";
 
@@ -94,6 +94,8 @@ export const useItemByBomId = (bomId: number) => {
     queryKey: assetKeys.bomItemsByBomId(bomId),
     queryFn: () => assetService.getItemsByBomId(bomId),
     enabled: !!bomId,
+    // Add this to prevent automatic refetch on window focus
+    refetchOnWindowFocus: false
   });
 };
 
@@ -110,5 +112,42 @@ export const useAssetAttachments = (assetId: number) => {
     queryKey: assetKeys.attachmentsByAssetId(assetId),
     queryFn: () => assetService.getAssetAttachments(assetId),
     enabled: !!assetId,
+  });
+};
+
+export const useChildAssetsByParentId = (parentAssetId: number) => {
+  return useQuery({
+    queryKey: [...assetKeys.detail(parentAssetId), "childAssets"],
+    queryFn: () => assetService.getChildAssetsByParentId(parentAssetId),
+    enabled: !!parentAssetId,
+  });
+};
+
+export const useRemoveChildAsset = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => assetService.removeChildAsset(id),
+    onSuccess: (_data, id) => {
+      // Invalidate queries to refresh data after deletion
+      queryClient.invalidateQueries({queryKey: assetKeys.all});
+      queryClient.invalidateQueries({queryKey: [...assetKeys.detail(id), "childAssets"]});
+    },
+  });
+};
+
+export const useRemoveBom = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => assetService.removeBom(id),
+    onSuccess: async (_data, id) => {
+      // Invalidate all relevant queries to ensure UI updates
+      await queryClient.invalidateQueries({ queryKey: assetKeys.bomItems() });
+      await queryClient.invalidateQueries({ queryKey: assetKeys.all });
+      await queryClient.invalidateQueries({ queryKey: assetKeys.withRelations() });
+      await queryClient.invalidateQueries({ queryKey: assetKeys.bomItemsByBomId(id) });
+      await queryClient.invalidateQueries({ queryKey: [...assetKeys.bomItemsByBomId(id), "bomItems"] });
+      // Optionally, invalidate asset detail queries if BOM is tied to an asset
+      // await queryClient.invalidateQueries({ queryKey: assetKeys.detail(assetId) });
+    },
   });
 };

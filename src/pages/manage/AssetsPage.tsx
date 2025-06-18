@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Archive, Printer } from "lucide-react";
+import { Archive, Printer, X } from "lucide-react";
 import DataTable from "@/components/shared/DataTable";
 import { Asset, AssetWithRelations } from "@/types/manage";
 import { Column } from "@/components/shared/DataTable";
@@ -25,15 +25,27 @@ import {
 } from "@/hooks/queries/useAssets";
 import HierarchyNode from "@/components/ui/hierarchy";
 import { Loader2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import WorkRequestDialogForm from "../work-orders/work-request/WorkRequestDialogForm";
 
 const AssetsPage: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<any | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isWorkRequestDialogOpen, setIsWorkRequestDialogOpen] = useState(false);
+  const [workRequestData, setWorkRequestData] = useState<any | null>(null);
   const [selectedAsset, setSelectedAsset] = useState<AssetWithRelations | null>(
     null
   );
   const navigate = useNavigate();
-
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(
+    new Set()
+  );
   const { data: assets, isLoading, isError, error } = useAssetsWithRelations();
   const {
     data: assetHierarchy,
@@ -64,13 +76,24 @@ const AssetsPage: React.FC = () => {
   };
 
   const handleExpandAll = () => {
-    // In a real application, you would implement logic to expand all nodes
-    console.log("Expand all nodes");
+  const collectIds = (nodes: any[]): string[] => {
+    let ids: string[] = [];
+    nodes.forEach((node) => {
+      ids.push(String(node.id)); // Ensure string
+      if (node.children && node.children.length > 0) {
+        ids = ids.concat(collectIds(node.children));
+      }
+    });
+    return ids;
   };
+  if (assetHierarchy && assetHierarchy.facilities) {
+    const allIds = collectIds(assetHierarchy.facilities);
+    setExpandedNodes(new Set(allIds));
+  }
+};
 
   const handleCollapseAll = () => {
-    // In a real application, you would implement logic to collapse all nodes
-    console.log("Collapse all nodes");
+    setExpandedNodes(new Set());
   };
 
   const handleAddNew = () => {
@@ -84,6 +107,21 @@ const AssetsPage: React.FC = () => {
   const handleRowClick = (row: Asset) => {
     navigate(`/manage/assets/${row.id}`);
   };
+
+  const handleCreateWorkRequest = () => {
+    if (selectedNode && selectedNode.type === "asset" && nodeDetails) {
+      setWorkRequestData({
+        facility_id: nodeDetails.facility_id,
+        system_id: nodeDetails.system_id,
+        package_id: nodeDetails.package_id,
+        asset_id: nodeDetails.id,
+        asset_sce_id: nodeDetails.asset_sce?.id || "",
+      });
+    }
+    setIsWorkRequestDialogOpen(true);
+  };
+
+  const handleFormSubmit = async (formData: any) => {};
 
   const columns: Column[] = [
     {
@@ -100,7 +138,7 @@ const AssetsPage: React.FC = () => {
       id: "package",
       header: "Package",
       accessorKey: "package",
-      cell: (value) => value.package_name || "-",
+      cell: (value) => value?.package_name || "-",
     },
     {
       id: "system",
@@ -195,6 +233,8 @@ const AssetsPage: React.FC = () => {
                           key={facility.id}
                           node={facility}
                           onSelect={handleNodeSelect}
+                          expandedNodes={expandedNodes}
+                          setExpandedNodes={setExpandedNodes}
                         />
                       ))
                     )}
@@ -213,7 +253,13 @@ const AssetsPage: React.FC = () => {
 
                   {selectedNode ? (
                     <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
+                      <div
+                        className={
+                          selectedNode.type === "asset"
+                            ? "grid grid-cols-3 gap-4"
+                            : "grid grid-cols-2 gap-4"
+                        }
+                      >
                         <div className="p-3 bg-gray-50 rounded-md">
                           <span className="text-xs text-gray-500 block">
                             Name
@@ -230,14 +276,16 @@ const AssetsPage: React.FC = () => {
                             {selectedNode.type}
                           </span>
                         </div>
-                        <div className="p-3 bg-gray-50 rounded-md">
-                          <span className="text-xs text-gray-500 block">
-                            ID
-                          </span>
-                          <span className="text-sm font-medium">
-                            {selectedNode.id}
-                          </span>
-                        </div>
+                        {selectedNode.type === "asset" && (
+                          <div className="flex justify-end">
+                            <Button
+                              variant="default"
+                              onClick={() => handleCreateWorkRequest()}
+                            >
+                              Create Work Request
+                            </Button>
+                          </div>
+                        )}
                       </div>
 
                       <div className="p-4 border rounded-md">
@@ -1063,6 +1111,40 @@ const AssetsPage: React.FC = () => {
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
+
+      <Dialog
+        open={isWorkRequestDialogOpen}
+        onOpenChange={(open) => {
+          setIsWorkRequestDialogOpen(open);
+          if (!open) setWorkRequestData(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-start justify-between w-full">
+              <div>
+                <DialogTitle>Add New Work Request</DialogTitle>
+                <DialogDescription>
+                  Fill in the details to add a new work request.
+                </DialogDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsWorkRequestDialogOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+
+          <WorkRequestDialogForm
+            initialData={workRequestData}
+            onSubmit={handleFormSubmit}
+            onCancel={() => setIsWorkRequestDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

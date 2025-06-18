@@ -17,6 +17,14 @@ export const useBomAssembly = () => {
   });
 };
 
+export const useBomAssemblyById = (id: number) => {
+  return useQuery({
+    queryKey: BomAssemblyKeys.detail(id),
+    queryFn: () => bomAssemblyService.getBomAssemblyById(id),
+    enabled: !!id,
+  });
+}
+
 export const useCreateBomAssembly = () => {
   const queryClient = useQueryClient();
 
