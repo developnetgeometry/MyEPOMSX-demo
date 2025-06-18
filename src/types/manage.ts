@@ -247,7 +247,8 @@ export interface BOMTab {
 
 export interface AssetHierarchyNode {
   id: string;
-  name: string;
+  name?: string;
+  asset_no?: string;
   type: 'facility' | 'system' | 'package' | 'asset';
   children: AssetHierarchyNode[];
 }
