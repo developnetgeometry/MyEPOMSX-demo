@@ -3,48 +3,14 @@ import { useParams, useNavigate } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  ArrowLeft,
-  Archive,
-  FileText,
-  Printer,
-  Search,
-  Plus,
-  Settings,
-  FileUp,
-  File,
-  Loader2,
-  Check,
-  X,
-  Edit,
-  Save,
-  AlertCircle,
-} from "lucide-react";
-import StatusBadge from "@/components/shared/StatusBadge";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { ArrowLeft, Archive, Printer, Loader2, X } from "lucide-react";
 import {
   useAssetAttachments,
   useAssetWithRelations,
+  useChildAssetsByParentId,
   useItemByBomId,
+  useRemoveChildAsset,
+  useRemoveBom,
   useWorkOrdersByAssetId,
 } from "@/hooks/queries/useAssets";
 import { formatDate, getFileNameFromPath } from "@/utils/formatters";
@@ -62,11 +28,19 @@ import {
   useSCEOptions,
 } from "@/hooks/queries/useAssetDropdownOptions";
 import { useAssetStatusOptions } from "@/hooks/queries/useAssetStatusOptions";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useQueryClient } from "@tanstack/react-query";
 import { assetKeys } from "@/hooks/queries/useAssets";
 import InstallationFormDialog from "@/components/manage/InstallationFormDialog";
 import InstallationDetailDialog from "@/components/manage/InstallationDetailDialog";
+import AssetBasicInfoCard from "@/components/asset/AssetBasicInfoCard";
+import AssetDetailsCard from "@/components/asset/AssetDetailsCard";
+import AssetTabs from "@/components/asset/AssetTabs";
+import AssetChildDetailDialog from "@/components/asset/AssetChildDetailDialog";
+import AddChildAssetDialog from "@/components/asset/AddChildAssetDialog";
+import { useLoadingState } from "@/hooks/use-loading-state";
+import { AddBomDialog } from "@/components/asset/AddBomDialog";
+import BomDetailDialog from "@/components/asset/BomDetailDialog";
+import BomFormDialog from "@/components/asset/BomFormDialog";
 
 // Dummy data for IoT Tab
 const iotData = [
@@ -118,6 +92,11 @@ const AssetDetailPage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { isLoading: isAssetLoading, withLoading } = useLoadingState();
+
+  const [isBomDetailOpen, setIsBomDetailOpen] = useState(false);
+  const [isBomFormOpen, setIsBomFormOpen] = useState(false);
+  const [selectedBom, setSelectedBom] = useState<any>(null);
 
   // Form validation state
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -143,6 +122,11 @@ const AssetDetailPage: React.FC = () => {
   const { data: areaOptions = [] as any[] } = useAssetAreaOptions();
   const { data: criticalityOptions = [] as any[] } = useCriticalityOptions();
   const { data: sceOptions = [] as any[] } = useSCEOptions();
+  const { data: childAssets = [], isLoading: childAssetsLoading } =
+    useChildAssetsByParentId(Number(id));
+
+  const deleteChildAssetMutation = useRemoveChildAsset();
+  const deleteBomMutation = useRemoveBom();
 
   // For file upload
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -156,6 +140,8 @@ const AssetDetailPage: React.FC = () => {
     useState(false);
   const [selectedInstallation, setSelectedInstallation] = useState<any>(null);
   const [isEditingInstallation, setIsEditingInstallation] = useState(false);
+  const [isAddChildDialogOpen, setIsAddChildDialogOpen] = useState(false);
+  const [isAddBomDialogOpen, setIsAddBomDialogOpen] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -292,7 +278,6 @@ const AssetDetailPage: React.FC = () => {
   const { data: attachments = [], refetch: refetchAttachments } =
     useAssetAttachments(Number(id));
 
-  const childAssets = assetDetails?.child_assets;
   const assetInstallation = asset?.asset_installation;
 
   const commissionDate = asset?.commission_date
@@ -757,10 +742,48 @@ const AssetDetailPage: React.FC = () => {
   };
 
   const handleAddChildAsset = () => {
-    toast({
-      title: "Success",
-      description: "Asset added successfully",
-      variant: "default",
+    setIsAddChildDialogOpen(true);
+  };
+
+  const [isChildAssetDetailOpen, setIsChildAssetDetailOpen] = useState(false);
+  const [selectedChildAsset, setSelectedChildAsset] = useState<any>(null);
+
+  // Open form for editing/adding child asset
+  const handleOpenChildAssetForm = (childAsset: any = null) => {
+    navigate(`/manage/assets/${childAsset.id}`);
+  };
+
+  // Open detail dialog for viewing child asset
+  const handleOpenChildAssetDetail = (childAsset: any) => {
+    setSelectedChildAsset(childAsset);
+    setIsChildAssetDetailOpen(true);
+  };
+
+  // Close detail dialog
+  const handleChildAssetDetailClose = () => {
+    setIsChildAssetDetailOpen(false);
+    setSelectedChildAsset(null);
+  };
+
+  const handleDeleteChildAsset = async (id: number) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this child asset from it's parent?"
+      )
+    )
+      return;
+
+    withLoading(async () => {
+      try {
+        await deleteChildAssetMutation.mutateAsync(id);
+        toast({ title: "System deleted successfully" });
+      } catch (error: any) {
+        toast({
+          title: "Error deleting system",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     });
   };
 
@@ -772,11 +795,43 @@ const AssetDetailPage: React.FC = () => {
     });
   };
 
+  const handleViewBom = (bomId: any) => {
+    setSelectedBom(bomId);
+    setIsBomDetailOpen(true);
+  };
+
+  const handleEditBom = (bomId: any) => {
+    setSelectedBom(bomId);
+    setIsBomFormOpen(true);
+  };
+
   const handleAddBom = () => {
-    toast({
-      title: "Success",
-      description: "BOM added successfully",
-      variant: "default",
+    setIsAddBomDialogOpen(true);
+  };
+
+  const handleNewBomRequest = () => {
+    navigate(`/manage/bom/add?assetId=${id}`);
+  };
+
+  const handleRemoveBom = async () => {
+    if (
+      !window.confirm(
+        "Are you sure you want to remove the BOM from this asset?"
+      )
+    )
+      return;
+
+    withLoading(async () => {
+      try {
+        await deleteBomMutation.mutateAsync(Number(id));
+        toast({ title: "Bom deleted successfully" });
+      } catch (error: any) {
+        toast({
+          title: "Error deleting system",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     });
   };
 
@@ -1212,1224 +1267,134 @@ const AssetDetailPage: React.FC = () => {
       </div>
 
       <div>
-        <Card className="mb-4">
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-1 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Facility Location</label>
-                <Input value={asset?.facility.location_name} readOnly />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">System</label>
-                <Input value={asset?.system.system_name} readOnly />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Package</label>
-                <Input value={asset?.package.package_name} readOnly />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Asset No</label>
-                <Input
-                  value={formData.assetNo}
-                  onChange={(e) => handleChange("assetNo", e.target.value)}
-                  readOnly={!isEditing}
-                  name="assetNo"
-                  className={errors.assetNo ? "border-red-500" : ""}
-                />
-                {errors.assetNo && (
-                  <p className="text-sm text-red-500 mt-1">{errors.assetNo}</p>
-                )}
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Asset Name</label>
-                <Input
-                  value={formData.assetName}
-                  onChange={(e) => handleChange("assetName", e.target.value)}
-                  readOnly={!isEditing}
-                  name="assetName"
-                  className={errors.assetName ? "border-red-500" : ""}
-                />
-                {errors.assetName && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {errors.assetName}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Asset Tag</label>
-                {isEditing ? (
-                  <Select
-                    value={formData.assetTagId}
-                    onValueChange={(value) => handleChange("assetTagId", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select asset tag" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.isArray(assetTagOptions) &&
-                        assetTagOptions.map((option) => (
-                          <SelectItem
-                            key={option.id}
-                            value={option.id.toString()}
-                          >
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input value={asset?.asset_tag.name} readOnly />
-                )}
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Asset Status</label>
-                {isEditing ? (
-                  <Select
-                    value={formData.assetStatusId}
-                    onValueChange={(value) =>
-                      handleChange("assetStatusId", value)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statusOptions.map((option) => (
-                        <SelectItem
-                          key={option.id}
-                          value={option.id.toString()}
-                        >
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input value={asset?.asset_status.name} readOnly />
-                )}
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">
-                  Commissioning Date
-                </label>
-                {isEditing ? (
-                  <Input
-                    type="date"
-                    value={formData.commissionDate}
-                    onChange={(e) =>
-                      handleChange("commissionDate", e.target.value)
-                    }
-                  />
-                ) : (
-                  <Input value={commissionDate} readOnly />
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <AssetBasicInfoCard
+          asset={asset}
+          formData={formData}
+          isEditing={isEditing}
+          errors={errors}
+          handleChange={handleChange}
+          assetTagOptions={assetTagOptions}
+          statusOptions={statusOptions}
+          commissionDate={commissionDate}
+        />
 
         {/* Asset Details Section with Blue Header */}
-        <Card className="mb-4">
-          <CardHeader className="bg-blue-500 text-white p-2">
-            <CardTitle className="text-base">Asset Details</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Category</label>
-                {isEditing ? (
-                  <Select
-                    value={formData.categoryId}
-                    onValueChange={(value) => handleChange("categoryId", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categoryOptions.map((option) => (
-                        <SelectItem
-                          key={option.id}
-                          value={option.id.toString()}
-                        >
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input value={assetDetails?.category?.name || ""} readOnly />
-                )}
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Type</label>
-                {isEditing ? (
-                  <Select
-                    value={formData.typeId}
-                    onValueChange={(value) => handleChange("typeId", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {typeOptions.map((option) => (
-                        <SelectItem
-                          key={option.id}
-                          value={option.id.toString()}
-                        >
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input value={assetDetails?.type?.name || ""} readOnly />
-                )}
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Manufacturer</label>
-                {isEditing ? (
-                  <Select
-                    value={formData.manufacturerId}
-                    onValueChange={(value) =>
-                      handleChange("manufacturerId", value)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select manufacturer" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.isArray(manufacturerOptions) &&
-                        manufacturerOptions.map((option) => (
-                          <SelectItem
-                            key={option.id}
-                            value={option.id.toString()}
-                          >
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input
-                    value={assetDetails?.manufacturer?.name || ""}
-                    readOnly
-                  />
-                )}
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Maker No</label>
-                <Input
-                  value={formData.makerNo}
-                  onChange={(e) => handleChange("makerNo", e.target.value)}
-                  readOnly={!isEditing}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Model</label>
-                <Input
-                  value={formData.model}
-                  onChange={(e) => handleChange("model", e.target.value)}
-                  readOnly={!isEditing}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Serial Number</label>
-                <Input
-                  value={formData.serialNumber}
-                  onChange={(e) => handleChange("serialNumber", e.target.value)}
-                  readOnly={!isEditing}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Area</label>
-                {isEditing ? (
-                  <Select
-                    value={formData.areaId}
-                    onValueChange={(value) => handleChange("areaId", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select area" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.isArray(areaOptions) &&
-                        areaOptions.map((option) => (
-                          <SelectItem
-                            key={option.id}
-                            value={option.id.toString()}
-                          >
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input value={assetDetails?.area?.name || ""} readOnly />
-                )}
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Asset Class</label>
-                {isEditing ? (
-                  <Select
-                    value={formData.assetClassId}
-                    onValueChange={(value) =>
-                      handleChange("assetClassId", value)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select asset class" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.isArray(assetClassOptions) &&
-                        assetClassOptions.map((option) => (
-                          <SelectItem
-                            key={option.id}
-                            value={option.id.toString()}
-                          >
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input
-                    value={assetDetails?.asset_class?.name || ""}
-                    readOnly
-                  />
-                )}
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">HCode</label>
-                <Input
-                  value={formData.hsCode}
-                  onChange={(e) => handleChange("hsCode", e.target.value)}
-                  readOnly={!isEditing}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Specification</label>
-                <Input
-                  value={formData.specification}
-                  onChange={(e) =>
-                    handleChange("specification", e.target.value)
-                  }
-                  readOnly={!isEditing}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Sensor</label>
-                {isEditing ? (
-                  <Select
-                    value={formData.iotSensorId}
-                    onValueChange={(value) =>
-                      handleChange("iotSensorId", value)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select sensor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.isArray(assetSensorOptions) &&
-                        assetSensorOptions.map((option) => (
-                          <SelectItem
-                            key={option.id}
-                            value={option.id.toString()}
-                          >
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input
-                    value={assetDetails?.iot_sensor?.sensor_type?.name || ""}
-                    readOnly
-                  />
-                )}
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">EX Class</label>
-                <Input
-                  value={formData.exClass}
-                  onChange={(e) => handleChange("exClass", e.target.value)}
-                  readOnly={!isEditing}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">EX Certificate</label>
-                <Input
-                  value={formData.exCertificate}
-                  onChange={(e) =>
-                    handleChange("exCertificate", e.target.value)
-                  }
-                  readOnly={!isEditing}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Drawing No</label>
-                <Input
-                  value={formData.drawingNo}
-                  onChange={(e) => handleChange("drawingNo", e.target.value)}
-                  readOnly={!isEditing}
-                />
-              </div>
-
-              <div className="col-span-2 grid grid-cols-2 gap-4 pt-2">
-                {/* Criticality Section */}
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="criticality"
-                      checked={formData.isCriticality}
-                      onCheckedChange={(checked) =>
-                        handleChange("isCriticality", !!checked)
-                      }
-                      disabled={!isEditing}
-                    />
-                    <label
-                      htmlFor="criticality"
-                      className="text-sm font-medium"
-                    >
-                      Criticality
-                    </label>
-                  </div>
-
-                  {/* Show criticality dropdown if checkbox is checked */}
-                  {formData.isCriticality && (
-                    <div className="mt-2">
-                      {isEditing ? (
-                        <Select
-                          value={formData.criticalityId}
-                          onValueChange={(value) =>
-                            handleChange("criticalityId", value)
-                          }
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select Criticality Level" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Array.isArray(criticalityOptions) &&
-                              criticalityOptions.map((option) => (
-                                <SelectItem
-                                  key={option.id}
-                                  value={String(option.value)}
-                                >
-                                  {option.label}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <div className="text-sm text-gray-600">
-                          {criticalityOptions.find(
-                            (opt) => opt.value === formData.criticalityId
-                          )?.label || "Not selected"}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* SCE Section */}
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="sce"
-                      checked={formData.isSce}
-                      onCheckedChange={(checked) =>
-                        handleChange("isSce", !!checked)
-                      }
-                      disabled={!isEditing}
-                    />
-                    <label htmlFor="sce" className="text-sm font-medium">
-                      SCE Code
-                    </label>
-                  </div>
-
-                  {/* Show SCE dropdown if checkbox is checked */}
-                  {formData.isSce && (
-                    <div className="mt-2">
-                      {isEditing ? (
-                        <Select
-                          value={formData.sceId}
-                          onValueChange={(value) =>
-                            handleChange("sceId", value)
-                          }
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select SCE Code" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Array.isArray(sceOptions) &&
-                              sceOptions.map((option) => (
-                                <SelectItem
-                                  key={option.id}
-                                  value={String(option.value)}
-                                >
-                                  {option.label}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <div className="text-sm text-gray-600">
-                          {sceOptions.find(
-                            (opt) => opt.value === formData.sceId
-                          )?.label || "Not selected"}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="active"
-                    checked={formData.isActive}
-                    onCheckedChange={(checked) =>
-                      handleChange("isActive", !!checked)
-                    }
-                    disabled={!isEditing}
-                  />
-                  <label htmlFor="active" className="text-sm font-medium">
-                    Active
-                  </label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="integrity"
-                    checked={formData.isIntegrity}
-                    onCheckedChange={(checked) =>
-                      handleChange("isIntegrity", !!checked)
-                    }
-                    disabled={!isEditing}
-                  />
-                  <label htmlFor="integrity" className="text-sm font-medium">
-                    Integrity
-                  </label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="reliability"
-                    checked={formData.isReliability}
-                    onCheckedChange={(checked) =>
-                      handleChange("isReliability", !!checked)
-                    }
-                    disabled={!isEditing}
-                  />
-                  <label htmlFor="reliability" className="text-sm font-medium">
-                    Reliability
-                  </label>
-                </div>
-              </div>
-
-              <div className="col-span-2 space-y-1.5">
-                <label className="text-sm font-medium">Asset Image</label>
-                <div className="flex flex-col gap-2 mt-1">
-                  {isEditing ? (
-                    <>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="file"
-                          ref={fileInputRef}
-                          accept="image/*"
-                          style={{ display: "none" }}
-                          onChange={handleFileChange}
-                        />
-                        <Button
-                          variant="outline"
-                          className="flex items-center gap-2"
-                          onClick={() => fileInputRef.current?.click()}
-                        >
-                          <FileUp className="h-4 w-4" /> Choose file
-                        </Button>
-                        <span className="text-sm text-muted-foreground">
-                          {selectedFile
-                            ? selectedFile.name
-                            : "No file selected"}
-                        </span>
-                      </div>
-                      {fileUploadError && (
-                        <p className="text-sm text-red-500">
-                          {fileUploadError}
-                        </p>
-                      )}
-                    </>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        className="flex items-center gap-2"
-                        disabled
-                      >
-                        <FileUp className="h-4 w-4" /> Choose file
-                      </Button>
-                      <span className="text-sm text-muted-foreground">
-                        {attachments.length > 0
-                          ? `${attachments.length} file(s) uploaded`
-                          : "No file chosen"}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Display existing attachments */}
-                  {attachments.length > 0 && (
-                    <div className="mt-2 grid grid-cols-3 gap-2">
-                      {attachments.slice(0, 3).map((attachment) => (
-                        <div
-                          key={attachment.id}
-                          className="relative border rounded-md p-2"
-                        >
-                          {attachment.file_path &&
-                          attachment.file_path.match(
-                            /\.(jpeg|jpg|png|gif|webp)$/i
-                          ) ? (
-                            <img
-                              src={attachment.file_path}
-                              alt={attachment.file_name || "Asset image"}
-                              className="w-full h-24 object-cover rounded cursor-pointer"
-                              onClick={() =>
-                                setZoomedImage(attachment.file_path)
-                              }
-                              style={{ transition: "transform 0.2s" }}
-                              onMouseOver={(e) => {
-                                e.currentTarget.style.transform = "scale(1.05)";
-                              }}
-                              onMouseOut={(e) => {
-                                e.currentTarget.style.transform = "scale(1)";
-                              }}
-                            />
-                          ) : (
-                            <div className="flex items-center justify-center w-full h-24 bg-muted rounded">
-                              <File className="h-8 w-8 text-muted-foreground" />
-                            </div>
-                          )}
-                          <p className="text-xs mt-1 truncate">
-                            {attachment.file_name ||
-                              getFileNameFromPath(attachment.file_path)}
-                          </p>
-                        </div>
-                      ))}
-                      {attachments.length > 3 && (
-                        <div className="flex items-center justify-center border rounded-md p-2 h-24">
-                          <p className="text-sm text-muted-foreground">
-                            +{attachments.length - 3} more
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Form validation and submission status */}
-            {(formSubmissionError || Object.keys(errors).length > 0) && (
-              <Alert variant="destructive" className="mt-6">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>
-                  {formSubmissionError ||
-                    "Please correct the errors in the form before submitting."}
-                  {Object.keys(errors).length > 0 && (
-                    <ul className="mt-2 list-disc pl-5">
-                      {Object.entries(errors).map(([field, message]) => (
-                        <li key={field}>{message}</li>
-                      ))}
-                    </ul>
-                  )}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {formSubmissionSuccess && !formSubmissionError && (
-              <Alert className="mt-6 bg-green-50 border-green-500 text-green-800">
-                <Check className="h-4 w-4" />
-                <AlertTitle>Success</AlertTitle>
-                <AlertDescription>Asset updated successfully.</AlertDescription>
-              </Alert>
-            )}
-
-            {/* Action Buttons */}
-            <div className="flex justify-end space-x-4 mt-8">
-              {isEditing ? (
-                <>
-                  <Button
-                    variant="outline"
-                    onClick={handleCancel}
-                    className="flex items-center gap-2"
-                    disabled={isSubmitting}
-                  >
-                    <X className="h-4 w-4" />
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="default"
-                    onClick={handleApplyChanges}
-                    disabled={isSubmitting}
-                    className="flex items-center gap-2"
-                  >
-                    {isSubmitting ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Save className="h-4 w-4" />
-                    )}
-                    Apply Changes
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button
-                    variant="outline"
-                    onClick={() => navigate("/manage/assets")}
-                    className="flex items-center gap-2"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                    Back to Assets
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={handleWorkRequest}
-                    className="flex items-center gap-2"
-                  >
-                    <FileText className="h-4 w-4" />
-                    Work Request
-                  </Button>
-                  <Button
-                    onClick={toggleEditMode}
-                    className="flex items-center gap-2"
-                    variant="default"
-                  >
-                    <Edit className="h-4 w-4" />
-                    Edit
-                  </Button>
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        <AssetDetailsCard
+          assetDetails={assetDetails}
+          formData={formData}
+          isEditing={isEditing}
+          errors={errors}
+          handleChange={handleChange}
+          categoryOptions={categoryOptions}
+          typeOptions={typeOptions}
+          manufacturerOptions={manufacturerOptions}
+          areaOptions={areaOptions}
+          assetClassOptions={assetClassOptions}
+          assetSensorOptions={assetSensorOptions}
+          criticalityOptions={criticalityOptions}
+          sceOptions={sceOptions}
+          attachments={attachments}
+          fileInputRef={fileInputRef}
+          selectedFile={selectedFile}
+          fileUploadError={fileUploadError}
+          setZoomedImage={setZoomedImage}
+          isPrinting={isPrinting}
+          handleFileChange={handleFileChange}
+          formSubmissionError={formSubmissionError}
+          formSubmissionSuccess={formSubmissionSuccess}
+          isSubmitting={isSubmitting}
+          handleCancel={handleCancel}
+          handleApplyChanges={handleApplyChanges}
+          navigate={navigate}
+          handleWorkRequest={handleWorkRequest}
+          toggleEditMode={toggleEditMode}
+        />
 
         {/* Tabs for Asset Name Details */}
-        <Card>
-          <CardHeader className="bg-blue-500 text-white p-2">
-            <CardTitle className="text-base">
-              {asset.asset_name} Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <Tabs
-              value={activeTab}
-              onValueChange={setActiveTab}
-              className="w-full"
-            >
-              <TabsList className="w-full justify-start">
-                <TabsTrigger value="installation">Installation</TabsTrigger>
-                <TabsTrigger value="childAsset">Child Asset</TabsTrigger>
-                <TabsTrigger value="bom">BOM</TabsTrigger>
-                <TabsTrigger value="workOrder">Work Order</TabsTrigger>
-                <TabsTrigger value="attachment">Attachment</TabsTrigger>
-                {/* <TabsTrigger value="integrity">IoT</TabsTrigger> */}
-              </TabsList>
-
-              <TabsContent value="installation" className="pt-4">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center">
-                    <Input placeholder="Search..." className="w-64 mr-2" />
-                    <Button size="sm">Go</Button>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Select defaultValue="actions">
-                      <SelectTrigger className="w-40">
-                        <SelectValue placeholder="Actions" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="actions">Actions</SelectItem>
-                        <SelectItem value="export">Export</SelectItem>
-                        <SelectItem value="delete">Delete Selected</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      size="icon"
-                      className="ml-2"
-                      onClick={handleAddInstallation}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="border rounded-md overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/50">
-                        <TableHead className="text-left p-3 font-medium">
-                          Installation Date
-                        </TableHead>
-                        <TableHead className="text-left p-3 font-medium">
-                          Startup Date
-                        </TableHead>
-                        <TableHead className="text-left p-3 font-medium">
-                          Service Type
-                        </TableHead>
-                        <TableHead className="text-left p-3 font-medium">
-                          EX Certificate
-                        </TableHead>
-                        <TableHead className="text-left p-3 font-medium">
-                          Drawing No
-                        </TableHead>
-                        <TableHead className="text-left p-3 font-medium">
-                          Actions
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody className="divide-y">
-                      {assetInstallation && assetInstallation.length > 0 ? (
-                        assetInstallation.map((item) => (
-                          <TableRow key={item.id} className="hover:bg-muted/30">
-                            <TableCell className="p-3">
-                              {item.actual_installation_date
-                                ? formatDate(item.actual_installation_date)
-                                : "-"}
-                            </TableCell>
-                            <TableCell className="p-3">
-                              {item.actual_startup_date
-                                ? formatDate(item.actual_startup_date)
-                                : "-"}
-                            </TableCell>
-                            <TableCell className="p-3">
-                              {item.intermittent_service || "-"}
-                            </TableCell>
-                            <TableCell className="p-3">
-                              {item.ex_certificate || "-"}
-                            </TableCell>
-                            <TableCell className="p-3">
-                              {item.drawing_no || "-"}
-                            </TableCell>
-                            <TableCell className="p-3">
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleViewInstallation(item)}
-                                  className="text-blue-600 hover:text-blue-800"
-                                >
-                                  View
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleEditInstallation(item)}
-                                  className="text-green-600 hover:text-green-800"
-                                >
-                                  Edit
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleDeleteInstallation(item.id)
-                                  }
-                                  className="text-red-600 hover:text-red-800"
-                                >
-                                  Delete
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell
-                            colSpan={6}
-                            className="p-8 text-center text-muted-foreground"
-                          >
-                            No installation records found. Click the + button to
-                            add a new installation.
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="childAsset" className="pt-4">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center">
-                    <Input placeholder="Search..." className="w-64 mr-2" />
-                    <Button size="sm">Go</Button>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Select defaultValue="actions">
-                      <SelectTrigger className="w-40">
-                        <SelectValue placeholder="Actions" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="actions">Actions</SelectItem>
-                        <SelectItem value="export">Export</SelectItem>
-                        <SelectItem value="delete">Delete Selected</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      size="icon"
-                      className="ml-2"
-                      onClick={handleAddChildAsset}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="border rounded-md overflow-hidden">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-muted/50">
-                        <th className="text-left p-3 font-medium">Asset No</th>
-                        <th className="text-left p-3 font-medium">Name</th>
-                        <th className="text-left p-3 font-medium">Type</th>
-                        <th className="text-left p-3 font-medium">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      {childAssets &&
-                        childAssets.map((item: any) => (
-                          <tr key={item.id} className="hover:bg-muted/30">
-                            <td className="p-3">
-                              {item.asset && item.asset[0]?.asset_no}
-                            </td>
-                            <td className="p-3">
-                              {item.asset && item.asset[0]?.asset_name}
-                            </td>
-                            <td className="p-3">{item.type?.name}</td>
-                            <td className="p-3">
-                              <Button variant="ghost" size="sm">
-                                <Settings className="h-4 w-4" />
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="bom" className="pt-4">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center">
-                    <Input placeholder="Search..." className="w-64 mr-2" />
-                    <Button size="sm">Go</Button>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Select defaultValue="actions">
-                      <SelectTrigger className="w-40">
-                        <SelectValue placeholder="Actions" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="actions">Actions</SelectItem>
-                        <SelectItem value="export">Export</SelectItem>
-                        <SelectItem value="delete">Delete Selected</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button size="icon" className="ml-2" onClick={handleAddBom}>
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="border rounded-md overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/50">
-                        <TableHead className="text-left p-3 font-medium">
-                          Part No
-                        </TableHead>
-                        <TableHead className="text-left p-3 font-medium">
-                          Part Name
-                        </TableHead>
-                        <TableHead className="text-left p-3 font-medium">
-                          Quantity
-                        </TableHead>
-                        <TableHead className="text-left p-3 font-medium">
-                          Unit of Measure
-                        </TableHead>
-                        <TableHead className="text-left p-3 font-medium">
-                          Remarks
-                        </TableHead>
-                        <TableHead className="text-left p-3 font-medium">
-                          Actions
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody className="divide-y">
-                      {bomData?.map((item) => (
-                        <TableRow key={item.id} className="hover:bg-muted/30">
-                          <TableCell className="p-3">
-                            {item.item_master.item_no}
-                          </TableCell>
-                          <TableCell className="p-3">
-                            {item.item_master.item_name}
-                          </TableCell>
-                          <TableCell className="p-3">{item.quantity}</TableCell>
-                          <TableCell className="p-3">
-                            {item.item_master.unit.name}
-                          </TableCell>
-                          <TableCell className="p-3">
-                            {item.description}
-                          </TableCell>
-                          <TableCell className="p-3">
-                            <Button variant="ghost" size="sm">
-                              <Settings className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="workOrder" className="pt-4">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center">
-                    <Input placeholder="Search..." className="w-64 mr-2" />
-                    <Button size="sm">Go</Button>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Select defaultValue="actions">
-                      <SelectTrigger className="w-40">
-                        <SelectValue placeholder="Actions" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="actions">Actions</SelectItem>
-                        <SelectItem value="export">Export</SelectItem>
-                        <SelectItem value="delete">Delete Selected</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      size="icon"
-                      className="ml-2"
-                      onClick={handleAddWorkOrder}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="border rounded-md overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/50">
-                        <TableHead className="text-left p-3 font-medium">
-                          Work Order No
-                        </TableHead>
-                        <TableHead className="text-left p-3 font-medium">
-                          Task
-                        </TableHead>
-                        <TableHead className="text-left p-3 font-medium">
-                          WO Status
-                        </TableHead>
-                        <TableHead className="text-left p-3 font-medium">
-                          Due Date
-                        </TableHead>
-                        <TableHead className="text-left p-3 font-medium">
-                          Actions
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody className="divide-y">
-                      {workOrder?.map((item) => (
-                        <TableRow key={item.id} className="hover:bg-muted/30">
-                          <TableCell className="p-3">
-                            {item.work_order_no}
-                          </TableCell>
-                          <TableCell className="p-3">
-                            {item.task.task_name}
-                          </TableCell>
-                          <TableCell className="p-3">
-                            <StatusBadge status={item.status.name} />
-                          </TableCell>
-                          <TableCell className="p-3">
-                            {formatDate(item.due_date)}
-                          </TableCell>
-                          <TableCell className="p-3">
-                            <Button variant="ghost" size="sm">
-                              <Settings className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="attachment" className="pt-4">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center">
-                    <Input placeholder="Search..." className="w-64 mr-2" />
-                    <Button size="sm">Go</Button>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Select defaultValue="actions">
-                      <SelectTrigger className="w-40">
-                        <SelectValue placeholder="Actions" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="actions">Actions</SelectItem>
-                        <SelectItem value="export">Export</SelectItem>
-                        <SelectItem value="delete">Delete Selected</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      size="icon"
-                      className="ml-2"
-                      onClick={handleAddAttachment}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="border rounded-md overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/50">
-                        <TableHead className="text-left p-3 font-medium">
-                          Type
-                        </TableHead>
-                        <TableHead className="text-left p-3 font-medium">
-                          Attachment Date
-                        </TableHead>
-                        <TableHead className="text-left p-3 font-medium">
-                          Notes
-                        </TableHead>
-                        <TableHead className="text-left p-3 font-medium">
-                          Attachment
-                        </TableHead>
-                        <TableHead className="text-left p-3 font-medium">
-                          Actions
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody className="divide-y">
-                      {attachments.map((item) => (
-                        <TableRow key={item.id} className="hover:bg-muted/30">
-                          <TableCell className="p-3">{item.type}</TableCell>
-                          <TableCell className="p-3">
-                            {formatDate(item.created_at)}
-                          </TableCell>
-                          <TableCell className="p-3">{item.notes}</TableCell>
-                          <TableCell className="p-3">
-                            <div className="flex items-center gap-2">
-                              <File className="h-4 w-4" />
-                              <span>{getFileNameFromPath(item.file_path)}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="p-3">
-                            <Button variant="ghost" size="sm">
-                              <Settings className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="integrity" className="pt-4">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center">
-                    <Input placeholder="Search..." className="w-64 mr-2" />
-                    <Button size="sm">Go</Button>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Select defaultValue="actions">
-                      <SelectTrigger className="w-40">
-                        <SelectValue placeholder="Actions" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="actions">Actions</SelectItem>
-                        <SelectItem value="export">Export</SelectItem>
-                        <SelectItem value="delete">Delete Selected</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button size="icon" className="ml-2" onClick={handleAddIOT}>
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="border rounded-md overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/50">
-                        <TableHead className="text-left p-3 font-medium">
-                          Sensor Type
-                        </TableHead>
-                        <TableHead className="text-left p-3 font-medium">
-                          Reading Value
-                        </TableHead>
-                        <TableHead className="text-left p-3 font-medium">
-                          Status
-                        </TableHead>
-                        <TableHead className="text-left p-3 font-medium">
-                          Last Sync Date
-                        </TableHead>
-                        <TableHead className="text-left p-3 font-medium">
-                          Actions
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody className="divide-y">
-                      {iotData.map((item) => (
-                        <TableRow key={item.id} className="hover:bg-muted/30">
-                          <TableCell className="p-3">
-                            {item.sensorType}
-                          </TableCell>
-                          <TableCell className="p-3">
-                            {item.readingValue}
-                          </TableCell>
-                          <TableCell className="p-3">
-                            <StatusBadge status={item.status} />
-                          </TableCell>
-                          <TableCell className="p-3">{item.lastSync}</TableCell>
-                          <TableCell className="p-3">
-                            <Button variant="ghost" size="sm">
-                              <Settings className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+        <AssetTabs
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          assetInstallation={assetInstallation}
+          handleAddInstallation={handleAddInstallation}
+          handleViewInstallation={handleViewInstallation}
+          handleEditInstallation={handleEditInstallation}
+          handleDeleteInstallation={handleDeleteInstallation}
+          childAssets={childAssets}
+          handleAddChildAsset={handleAddChildAsset}
+          handleViewChildAsset={handleOpenChildAssetDetail}
+          handleEditChildAsset={handleOpenChildAssetForm}
+          handleDeleteChildAsset={handleDeleteChildAsset}
+          bomData={bomData}
+          handleAddBom={handleAddBom}
+          handleViewBom={handleViewBom}
+          handleEditBom={handleEditBom}
+          handleRemoveBom={handleRemoveBom}
+          workOrder={workOrder}
+          handleAddWorkOrder={handleAddWorkOrder}
+          attachments={attachments}
+          handleAddAttachment={handleAddAttachment}
+          iotData={iotData}
+          handleAddIOT={handleAddIOT}
+        />
       </div>
+
+      <AssetChildDetailDialog
+        isOpen={isChildAssetDetailOpen}
+        onClose={handleChildAssetDetailClose}
+        data={selectedChildAsset}
+      />
+
+      <AddChildAssetDialog
+        isOpen={isAddChildDialogOpen}
+        onClose={() => setIsAddChildDialogOpen(false)}
+        parentAssetId={Number(id)}
+        childAssets={childAssets}
+        onChildAdded={async () => {
+          // Invalidate all relevant queries for child asset changes
+          await queryClient.invalidateQueries({
+            queryKey: [...assetKeys.detail(Number(id)), "childAssets"],
+          });
+          await queryClient.invalidateQueries({ queryKey: assetKeys.all });
+          await queryClient.invalidateQueries({
+            queryKey: assetKeys.withRelations(),
+          });
+          await queryClient.invalidateQueries({
+            queryKey: assetKeys.detail(Number(id)),
+          });
+          // Optionally, refetch the current asset
+          if (refetch) await refetch();
+        }}
+        onNewAssetRequest={() => {
+          navigate(`/manage/assets/add?parentAssetId=${id}`);
+        }}
+      />
+
+      <BomDetailDialog
+        isOpen={isBomDetailOpen}
+        onClose={() => setIsBomDetailOpen(false)}
+        bomId={selectedBom}
+      />
+
+      <BomFormDialog
+        isOpen={isBomFormOpen}
+        onClose={() => setIsBomFormOpen(false)}
+        bomData={selectedBom}
+        onSuccess={() => {
+          refetch(); // Refresh asset data
+          setIsBomFormOpen(false);
+        }}
+      />
+
+      <AddBomDialog
+        isOpen={isAddBomDialogOpen}
+        onClose={() => setIsAddBomDialogOpen(false)}
+        assetId={Number(id)}
+        onBomAdded={() => {
+          // Refresh asset data to show updated BOM
+          refetch();
+        }}
+        onNewBomRequest={handleNewBomRequest}
+      />
 
       {/* Installation Dialogs */}
       <InstallationFormDialog

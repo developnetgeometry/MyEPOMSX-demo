@@ -43,11 +43,21 @@ const fetchRMSUptimeData = async (startDate?: Date, endDate?: Date): Promise<RMS
         .order('date', { ascending: false });
 
     if (startDate) {
-        query = query.gte('date', startDate.toISOString().split('T')[0]);
+        // query = query.gte('date', startDate.toISOString().split('T')[0]);
+        const startDateStr = startDate.getFullYear() + '-' +
+            String(startDate.getMonth() +1).padStart(2, '0') + '-' +
+            String(startDate.getDate()).padStart(2, '0');
+
+        query = query.gte('date', startDateStr);
     }
 
     if (endDate) {
-        query = query.lte('date', endDate.toISOString().split('T')[0]);
+        // query = query.lte('date', endDate.toISOString().split('T')[0]);
+        const endDateStr = endDate.getFullYear() + '-' + 
+            String(endDate.getMonth() + 1).padStart(2, '0') + '-' + 
+            String(endDate.getDate()).padStart(2, '0');
+            
+        query = query.lte('date', endDateStr);
     }
 
     const { data, error } = await query;
