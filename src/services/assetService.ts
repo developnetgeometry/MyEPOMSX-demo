@@ -35,7 +35,7 @@ export const assetService = {
       asset_sce:e_asset_sce(*)
     `
       )
-      .order("asset_no");
+      .order("created_at", { ascending: false });
 
     if (error) {
       throw new Error(`Error fetching assets with relations: ${error.message}`);
@@ -95,7 +95,8 @@ export const assetService = {
 
       packageNode.children.push({
         id: asset.id,
-        name: asset.name || asset.asset_tag?.name || `Asset ${asset.asset_no}`,
+        asset_no:
+          asset.asset_no || asset.asset_tag?.name || `Asset ${asset.asset_no}`,
         type: "asset",
         children: [],
       });
@@ -107,55 +108,21 @@ export const assetService = {
   },
 
   async getAssetByIdWithRelations(id: number): Promise<AssetWithRelations> {
-    // @ts-ignore
     const { data, error } = await supabase
       .from("e_asset")
       .select(
         `
-        *,
-        facility:e_facility(*),
-        asset_sce:e_asset_sce(*),
-        system:e_system(*),
-        package:e_package(*),
-        asset_tag:e_asset_tag(*),
-        asset_status:e_asset_status(*),
-        asset_group:e_asset_group(*),
-        asset_installation:e_asset_installation(*),
-        asset_detail:e_asset_detail(
-          *,
-          category:e_asset_category(*),
-          type:e_asset_type(
-            *,
-            category:e_asset_category(*)
-          ),
-          manufacturer:e_manufacturer(*),
-          area:e_asset_area(*),
-          asset_class:e_asset_class(*),
-          iot_sensor:e_iot_sensor(
-            *,
-            sensor_type:e_sensor_type(*),
-            manufacturer:e_manufacturer(*),
-            client:e_client(*)
-          ),
-          child_assets:e_asset_detail!parent_asset_id(
-            *,
-            asset:e_asset(
-              *,
-              facility:e_facility(*),
-              asset_sce:e_asset_sce(*),
-              system:e_system(*),
-              package:e_package(*),
-              asset_tag:e_asset_tag(*),
-              asset_status:e_asset_status(*),
-              asset_group:e_asset_group(*),
-              asset_installation:e_asset_installation(*)
-            ),
-            type:e_asset_type(
-              *
-            )
-          )
-        )
-      `
+      *,
+      facility:e_facility(*),
+      asset_sce:e_asset_sce(*),
+      system:e_system(*),
+      package:e_package(*),
+      asset_tag:e_asset_tag(*),
+      asset_status:e_asset_status(*),
+      asset_group:e_asset_group(*),
+      asset_installation:e_asset_installation(*),
+      asset_detail:e_asset_detail!asset_id(*,category:e_asset_category(*),type:e_asset_type(*),manufacturer:e_manufacturer(*),asset_class:e_asset_class(*),area:e_asset_area(*),iot_sensor:e_iot_sensor(name,sensor_type:e_sensor_type(name),manufacturer:e_manufacturer(name),client:e_client(name)))
+    `
       )
       .eq("id", id)
       .single();
@@ -177,6 +144,7 @@ export const assetService = {
       .select(
         `
         *,
+        bom: bom_id(*),
         item_master: item_master_id(*, unit: unit_id(*))
       `
       )
@@ -274,7 +242,7 @@ export const assetService = {
               asset_name,
               commission_date,
               asset_status:e_asset_status(name),
-              asset_detail:e_asset_detail(
+              asset_detail:e_asset_detail!asset_id(
                 specification,
                 serial_number,
                 model,
@@ -288,7 +256,6 @@ export const assetService = {
           )
           .eq("id", Number(nodeId))
           .single();
-
         if (packageError) {
           throw new Error(
             `Error fetching package details: ${packageError.message}`
@@ -320,7 +287,7 @@ export const assetService = {
               overall_length,
               overall_width
             ),
-            asset_detail:e_asset_detail(
+            asset_detail:e_asset_detail!asset_id(
               *,
               specification,
               serial_number,
@@ -331,16 +298,7 @@ export const assetService = {
               manufacturer:e_manufacturer(name),
               type:e_asset_type(name, category:e_asset_category(name)),
               asset_class:e_asset_class(name),
-              area:e_asset_area(name),
-              child_assets:e_asset_detail!parent_asset_id(
-                *,
-                asset:e_asset(
-                  id,
-                  asset_no,
-                  asset_name,
-                  asset_status:e_asset_status(name)
-                )
-              )
+              area:e_asset_area(name)
             )
           `
           )
@@ -359,4 +317,52 @@ export const assetService = {
         throw new Error(`Unknown node type: ${nodeType}`);
     }
   },
+
+  async getChildAssetsByParentId(parentAssetId: number) {
+    // @ts-ignore
+    const { data, error } = await supabase
+      .from("e_asset")
+      .select(
+        `
+        *,
+        asset_detail:asset_detail_id(category:e_asset_category(name), type:e_asset_type(name), specification, serial_number, asset_class:e_asset_class(name)), status:e_asset_status(name), asset_tag:e_asset_tag(name)
+        `
+      )
+      .eq("parent_asset_id", parentAssetId);
+
+    if (error) {
+      throw new Error(`Error fetching child assets: ${error.message}`);
+    }
+
+    return data || [];
+  },
+
+  async removeChildAsset(id: number) {
+    const { error } = await supabase
+      .from("e_asset")
+      .update({
+        parent_asset_id: null, // Remove the parent reference
+      })
+      .eq("id", id);
+
+    if (error) {
+      throw new Error(`Error removing child asset: ${error.message}`);
+    }
+
+    return true;
+  },
+
+  async removeBom(id: number) {
+    // @ts-ignore
+    const { error } = await supabase
+      .from("e_asset_detail")
+      .update({ bom_id: null })
+      .eq("asset_id", Number(id));
+
+    if (error) {
+      throw new Error(`Error removing BOM: ${error.message}`);
+    }
+
+    return true;
+  }
 };

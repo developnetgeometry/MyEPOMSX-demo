@@ -16,6 +16,19 @@ export const bomAssemblyService = {
     return data || [];
   },
 
+  async getBomAssemblyById(id: number): Promise<any> {
+    const { data, error } = await supabase
+      .from("e_bom_assembly")
+      .select("*,items: e_item_master(*)")
+      .eq("id", id);
+
+    if (error) {
+      throw new Error(`Error fetching BOM Assembly by ID: ${error.message}`);
+    }
+
+    return data[0];
+  },
+
   async createBomAssembly(payload: BomAssemblyInsert): Promise<BomAssembly> {
     const { data, error } = await supabase
       .from("e_bom_assembly")
