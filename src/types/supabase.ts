@@ -181,13 +181,6 @@ export type Database = {
             referencedRelation: "e_system"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "e_asset_parent_asset_id_fkey"
-            columns: ["parent_asset_id"]
-            isOneToOne: false
-            referencedRelation: "e_asset"
-            referencedColumns: ["id"]
-          },
         ]
       }
       e_asset_area: {
@@ -5996,6 +5989,7 @@ export type Database = {
           i_ims_design_id: number | null
           i_ims_protection_id: number | null
           id: number
+          ims_general_id: number | null
           ims_pof_assessment_id: number | null
           last_inspection_date: string | null
           ncuifa: number | null
@@ -6014,6 +6008,7 @@ export type Database = {
           i_ims_design_id?: number | null
           i_ims_protection_id?: number | null
           id?: number
+          ims_general_id?: number | null
           ims_pof_assessment_id?: number | null
           last_inspection_date?: string | null
           ncuifa?: number | null
@@ -6032,6 +6027,7 @@ export type Database = {
           i_ims_design_id?: number | null
           i_ims_protection_id?: number | null
           id?: number
+          ims_general_id?: number | null
           ims_pof_assessment_id?: number | null
           last_inspection_date?: string | null
           ncuifa?: number | null
@@ -6071,6 +6067,13 @@ export type Database = {
             referencedRelation: "i_ims_protection"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "i_df_cui_ims_general_id_fkey"
+            columns: ["ims_general_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_general"
+            referencedColumns: ["id"]
+          },
         ]
       }
       i_df_ext: {
@@ -6082,7 +6085,8 @@ export type Database = {
           i_ims_design_id: number | null
           i_ims_protection_id: number | null
           id: number
-          ims_por_assessment_id: number | null
+          ims_general_id: number | null
+          ims_pof_assessment_id: number | null
           last_inspection_date: string | null
           new_coating_date: string | null
           nextcorra: number | null
@@ -6100,7 +6104,8 @@ export type Database = {
           i_ims_design_id?: number | null
           i_ims_protection_id?: number | null
           id?: number
-          ims_por_assessment_id?: number | null
+          ims_general_id?: number | null
+          ims_pof_assessment_id?: number | null
           last_inspection_date?: string | null
           new_coating_date?: string | null
           nextcorra?: number | null
@@ -6118,7 +6123,8 @@ export type Database = {
           i_ims_design_id?: number | null
           i_ims_protection_id?: number | null
           id?: number
-          ims_por_assessment_id?: number | null
+          ims_general_id?: number | null
+          ims_pof_assessment_id?: number | null
           last_inspection_date?: string | null
           new_coating_date?: string | null
           nextcorra?: number | null
@@ -6144,17 +6150,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "i_df_ext_i_ims_pof_assessment_general_fk"
-            columns: ["ims_por_assessment_id"]
-            isOneToOne: false
-            referencedRelation: "i_ims_pof_assessment_general"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "i_df_ext_i_ims_protection_fk"
             columns: ["i_ims_protection_id"]
             isOneToOne: false
             referencedRelation: "i_ims_protection"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_df_ext_ims_general_id_fkey"
+            columns: ["ims_general_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_general"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_df_ext_ims_pof_assessment_id_fkey"
+            columns: ["ims_pof_assessment_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_pof_assessment_general"
             referencedColumns: ["id"]
           },
         ]
@@ -6168,8 +6181,9 @@ export type Database = {
           i_ims_design_id: number | null
           i_ims_protection_id: number | null
           id: number
+          ims_general_id: number | null
           ims_pof_asessment_id: number | null
-          inspection_efficiency: number | null
+          inspection_efficiency_id: number | null
           last_inspection_date: string | null
           new_coating_date: string | null
           updated_at: string | null
@@ -6183,8 +6197,9 @@ export type Database = {
           i_ims_design_id?: number | null
           i_ims_protection_id?: number | null
           id?: number
+          ims_general_id?: number | null
           ims_pof_asessment_id?: number | null
-          inspection_efficiency?: number | null
+          inspection_efficiency_id?: number | null
           last_inspection_date?: string | null
           new_coating_date?: string | null
           updated_at?: string | null
@@ -6198,8 +6213,9 @@ export type Database = {
           i_ims_design_id?: number | null
           i_ims_protection_id?: number | null
           id?: number
+          ims_general_id?: number | null
           ims_pof_asessment_id?: number | null
-          inspection_efficiency?: number | null
+          inspection_efficiency_id?: number | null
           last_inspection_date?: string | null
           new_coating_date?: string | null
           updated_at?: string | null
@@ -6235,8 +6251,15 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "i_df_ext_clscc_i_inspection_efficiency_fk"
-            columns: ["inspection_efficiency"]
+            foreignKeyName: "i_df_ext_clscc_ims_general_id_fkey"
+            columns: ["ims_general_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_general"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_df_ext_clscc_inspection_efficiency_id_fkey"
+            columns: ["inspection_efficiency_id"]
             isOneToOne: false
             referencedRelation: "i_inspection_efficiency"
             referencedColumns: ["id"]
@@ -6253,6 +6276,7 @@ export type Database = {
           data_confidence_id: number | null
           dmfatfb: number | null
           id: number
+          ims_general_id: number | null
           ims_pof_assessment_id: number | null
           joint_branch_design_id: number | null
           pipe_complexity_id: number | null
@@ -6272,6 +6296,7 @@ export type Database = {
           data_confidence_id?: number | null
           dmfatfb?: number | null
           id?: number
+          ims_general_id?: number | null
           ims_pof_assessment_id?: number | null
           joint_branch_design_id?: number | null
           pipe_complexity_id?: number | null
@@ -6291,6 +6316,7 @@ export type Database = {
           data_confidence_id?: number | null
           dmfatfb?: number | null
           id?: number
+          ims_general_id?: number | null
           ims_pof_assessment_id?: number | null
           joint_branch_design_id?: number | null
           pipe_complexity_id?: number | null
@@ -6379,6 +6405,13 @@ export type Database = {
             referencedRelation: "i_visible_audio_shaking"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "i_df_mfat_ims_general_id_fkey"
+            columns: ["ims_general_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_general"
+            referencedColumns: ["id"]
+          },
         ]
       }
       i_df_scc_scc: {
@@ -6389,8 +6422,9 @@ export type Database = {
           dfsccfb: number | null
           h2s_in_water: number | null
           hardness_brinnel: number | null
-          i_ims_general_id: number | null
           id: number
+          ims_general_id: number | null
+          ims_pof_assessment_id: number | null
           inspection_efficiency_id: number | null
           last_inspection_date: string | null
           ph: number | null
@@ -6404,8 +6438,9 @@ export type Database = {
           dfsccfb?: number | null
           h2s_in_water?: number | null
           hardness_brinnel?: number | null
-          i_ims_general_id?: number | null
           id?: number
+          ims_general_id?: number | null
+          ims_pof_assessment_id?: number | null
           inspection_efficiency_id?: number | null
           last_inspection_date?: string | null
           ph?: number | null
@@ -6419,8 +6454,9 @@ export type Database = {
           dfsccfb?: number | null
           h2s_in_water?: number | null
           hardness_brinnel?: number | null
-          i_ims_general_id?: number | null
           id?: number
+          ims_general_id?: number | null
+          ims_pof_assessment_id?: number | null
           inspection_efficiency_id?: number | null
           last_inspection_date?: string | null
           ph?: number | null
@@ -6429,17 +6465,24 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "i_df_scc_scc_i_ims_general_fk"
-            columns: ["i_ims_general_id"]
+            foreignKeyName: "i_df_scc_scc_i_inspection_efficiency_fk"
+            columns: ["inspection_efficiency_id"]
+            isOneToOne: false
+            referencedRelation: "i_inspection_efficiency"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_df_scc_scc_ims_general_id_fkey"
+            columns: ["ims_general_id"]
             isOneToOne: false
             referencedRelation: "i_ims_general"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "i_df_scc_scc_i_inspection_efficiency_fk"
-            columns: ["inspection_efficiency_id"]
+            foreignKeyName: "i_df_scc_scc_ims_pof_assessment_id_fkey"
+            columns: ["ims_pof_assessment_id"]
             isOneToOne: false
-            referencedRelation: "i_inspection_efficiency"
+            referencedRelation: "i_ims_pof_assessment_general"
             referencedColumns: ["id"]
           },
         ]
@@ -6451,9 +6494,9 @@ export type Database = {
           dfscc_sohic: number | null
           h2s_in_water: number | null
           harness_brinnel: number | null
-          i_ims_general_id: number | null
           i_ims_protection_id: number | null
           id: number
+          ims_general_id: number | null
           ims_pof_assessment_id: number | null
           inspection_efficiency_id: number | null
           last_inspection_date: string | null
@@ -6468,9 +6511,9 @@ export type Database = {
           dfscc_sohic?: number | null
           h2s_in_water?: number | null
           harness_brinnel?: number | null
-          i_ims_general_id?: number | null
           i_ims_protection_id?: number | null
           id?: number
+          ims_general_id?: number | null
           ims_pof_assessment_id?: number | null
           inspection_efficiency_id?: number | null
           last_inspection_date?: string | null
@@ -6485,9 +6528,9 @@ export type Database = {
           dfscc_sohic?: number | null
           h2s_in_water?: number | null
           harness_brinnel?: number | null
-          i_ims_general_id?: number | null
           i_ims_protection_id?: number | null
           id?: number
+          ims_general_id?: number | null
           ims_pof_assessment_id?: number | null
           inspection_efficiency_id?: number | null
           last_inspection_date?: string | null
@@ -6497,13 +6540,6 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "i_df_scc_sohic_i_ims_general_fk"
-            columns: ["i_ims_general_id"]
-            isOneToOne: false
-            referencedRelation: "i_ims_general"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "i_df_scc_sohic_i_ims_pof_assessment_general_fk"
             columns: ["ims_pof_assessment_id"]
@@ -6532,6 +6568,13 @@ export type Database = {
             referencedRelation: "i_steelscontent"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "i_df_scc_sohic_ims_general_id_fkey"
+            columns: ["ims_general_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_general"
+            referencedColumns: ["id"]
+          },
         ]
       }
       i_df_thin: {
@@ -6540,6 +6583,7 @@ export type Database = {
           data_confidence_id: number | null
           dfthinfb: number | null
           id: number
+          ims_general_id: number | null
           ims_pof_assessment_id: number | null
           last_coating_date: string | null
           last_inspection_date: string | null
@@ -6553,6 +6597,7 @@ export type Database = {
           data_confidence_id?: number | null
           dfthinfb?: number | null
           id?: number
+          ims_general_id?: number | null
           ims_pof_assessment_id?: number | null
           last_coating_date?: string | null
           last_inspection_date?: string | null
@@ -6566,6 +6611,7 @@ export type Database = {
           data_confidence_id?: number | null
           dfthinfb?: number | null
           id?: number
+          ims_general_id?: number | null
           ims_pof_assessment_id?: number | null
           last_coating_date?: string | null
           last_inspection_date?: string | null
@@ -6587,6 +6633,13 @@ export type Database = {
             columns: ["ims_pof_assessment_id"]
             isOneToOne: false
             referencedRelation: "i_ims_pof_assessment_general"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_df_thin_ims_general_id_fkey"
+            columns: ["ims_general_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_general"
             referencedColumns: ["id"]
           },
         ]
@@ -6718,73 +6771,7 @@ export type Database = {
           },
         ]
       }
-      i_ims_cof_assessment_cof_prod: {
-        Row: {
-          asset_detail_id: number | null
-          created_at: string | null
-          created_by: string | null
-          envcost: number | null
-          fc: number | null
-          fcenviron: number | null
-          fracevap: number | null
-          id: number
-          ims_general_id: number | null
-          injcost: number | null
-          outagemult: number | null
-          updated_at: string | null
-          updated_by: string | null
-          volenv: number | null
-        }
-        Insert: {
-          asset_detail_id?: number | null
-          created_at?: string | null
-          created_by?: string | null
-          envcost?: number | null
-          fc?: number | null
-          fcenviron?: number | null
-          fracevap?: number | null
-          id?: number
-          ims_general_id?: number | null
-          injcost?: number | null
-          outagemult?: number | null
-          updated_at?: string | null
-          updated_by?: string | null
-          volenv?: number | null
-        }
-        Update: {
-          asset_detail_id?: number | null
-          created_at?: string | null
-          created_by?: string | null
-          envcost?: number | null
-          fc?: number | null
-          fcenviron?: number | null
-          fracevap?: number | null
-          id?: number
-          ims_general_id?: number | null
-          injcost?: number | null
-          outagemult?: number | null
-          updated_at?: string | null
-          updated_by?: string | null
-          volenv?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "i_ims_cof_assessment_cof_prod_e_asset_detail_fk"
-            columns: ["asset_detail_id"]
-            isOneToOne: false
-            referencedRelation: "e_asset_detail"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "i_ims_cof_assessment_cof_prod_ims_general_id_fkey"
-            columns: ["ims_general_id"]
-            isOneToOne: false
-            referencedRelation: "i_ims_general"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      i_ims_cof_asssessment_cof_area: {
+      i_ims_cof_assessment_cof_area: {
         Row: {
           asset_detail_id: number | null
           ca_cmdflam: number | null
@@ -6871,6 +6858,72 @@ export type Database = {
           },
           {
             foreignKeyName: "i_ims_cof_asssessment_cof_area_ims_general_id_fkey"
+            columns: ["ims_general_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_general"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      i_ims_cof_assessment_cof_prod: {
+        Row: {
+          asset_detail_id: number | null
+          created_at: string | null
+          created_by: string | null
+          envcost: number | null
+          fc: number | null
+          fcenviron: number | null
+          fracevap: number | null
+          id: number
+          ims_general_id: number | null
+          injcost: number | null
+          outagemult: number | null
+          updated_at: string | null
+          updated_by: string | null
+          volenv: number | null
+        }
+        Insert: {
+          asset_detail_id?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          envcost?: number | null
+          fc?: number | null
+          fcenviron?: number | null
+          fracevap?: number | null
+          id?: number
+          ims_general_id?: number | null
+          injcost?: number | null
+          outagemult?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+          volenv?: number | null
+        }
+        Update: {
+          asset_detail_id?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          envcost?: number | null
+          fc?: number | null
+          fcenviron?: number | null
+          fracevap?: number | null
+          id?: number
+          ims_general_id?: number | null
+          injcost?: number | null
+          outagemult?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+          volenv?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "i_ims_cof_assessment_cof_prod_e_asset_detail_fk"
+            columns: ["asset_detail_id"]
+            isOneToOne: false
+            referencedRelation: "e_asset_detail"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_cof_assessment_cof_prod_ims_general_id_fkey"
             columns: ["ims_general_id"]
             isOneToOne: false
             referencedRelation: "i_ims_general"
