@@ -29,12 +29,12 @@ const PofTab: React.FC<{ formData: any; setFormData: any }> = ({ formData, setFo
 
       <TabsContent value="general">
         <div className="space-y-6">
-        <GeneralSubTab
+        {/* <GeneralSubTab
           formData={formData}
           handleInputChange={handleInputChange}
           handleSelectChange={handleSelectChange}
           handleRadioChange={handleRadioChange}
-        />
+        /> */}
         <DfMainSubTab
           formData={formData}
           setFormData={setFormData}

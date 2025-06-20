@@ -9,8 +9,9 @@ export const useImsDfCuiData = (imsGeneralId: number) => {
         .from("i_df_cui")
         .select(
           `id, last_inspection_date, new_coating_date, dfcuiff,
-          ims_pof_assessment_id, data_confidence_id, i_ims_protection_id,
-          i_ims_design_id, ncuifa, ncuifb, ncuifc, ncuifd, ims_general_id`
+          ims_pof_assessment_id, data_confidence_id, cr_act,
+          i_ims_protection_id(id, coating_quality_id, insulation_type_id, insulation_complexity_id, insulation_condition, design_fabrication_id, interface_id),
+          i_ims_design_id (id, ext_env_id), ncuifa, ncuifb, ncuifc, ncuifd, ims_general_id`
         )
         .eq("ims_general_id", imsGeneralId) // Fetch records based on ims_pof_assessment_id
         .single(); // Use single() to get a single record
