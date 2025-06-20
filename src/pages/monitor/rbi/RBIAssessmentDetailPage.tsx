@@ -177,6 +177,7 @@ const RBIAssessmentDetailPage: React.FC = () => {
         cract_cui: dfCuiData?.cr_act || 0,
         art_cui: 0,
         fscuif_cui: 0,
+        srcuif_cui: 0,
         ncuifa_cui: dfCuiData?.ncuifa || 0,
         ncuifb_cui: dfCuiData?.ncuifb || 0,
         ncuifc_cui: dfCuiData?.ncuifc || 0,

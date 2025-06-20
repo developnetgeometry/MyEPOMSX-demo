@@ -60,19 +60,19 @@ const DfMainSubTab: React.FC<{ formData: any; setFormData: any }> = ({ formData,
       <TabsContent value="dfCui">
         <div className="border p-4 rounded-lg space-y-4">
           <p className="text-sm text-muted-foreground">Damage Factor (DF) for Corrosion Under Insulation (CUI)</p>
-          {/* <DfCuiSubTab formData={formData} handleInputChange={handleInputChange} /> */}
+          <DfCuiSubTab formData={formData} handleInputChange={handleInputChange}  handleSelectChange={handleSelectChange} />
         </div>
       </TabsContent>
       <TabsContent value="dfSccScc">
         <div className="border p-4 rounded-lg space-y-4">
           <p className="text-sm text-muted-foreground">DF Stress Corrosion Cracking - Sulfide Stress Cracking (SSC)</p>
-          {/* <DfSccSccSubTab formData={formData} handleInputChange={handleInputChange} /> */}
+          <DfSccSccSubTab formData={formData} handleInputChange={handleInputChange} handleSelectChange={handleSelectChange} handleRadioChange={handleRadioChange}/>
         </div>
       </TabsContent>
       <TabsContent value="dfSccSohic">
         <div className="border p-4 rounded-lg space-y-4">
           <p className="text-sm text-muted-foreground">DF Stress Corrosion Cracking - Stress-Oriented Hydrogen Induced Cracking (SOHIC)</p>
-          {/* <DfSccSohicSubTab formData={formData} handleInputChange={handleInputChange} /> */}
+          <DfSccSohicSubTab formData={formData} handleInputChange={handleInputChange} handleSelectChange={handleSelectChange} handleRadioChange={handleRadioChange}/>
         </div>
       </TabsContent>
     </Tabs>
