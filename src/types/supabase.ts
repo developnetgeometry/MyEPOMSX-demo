@@ -5923,6 +5923,185 @@ export type Database = {
         }
         Relationships: []
       }
+      i_corrosion_factor: {
+        Row: {
+          base_material_id: number | null
+          co2_concentration: number | null
+          corrosion_study_id: number
+          created_at: string | null
+          fluid_velocity: number | null
+          h2s_concentration: number | null
+          id: number
+          pressure: number | null
+          temperature: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          base_material_id?: number | null
+          co2_concentration?: number | null
+          corrosion_study_id: number
+          created_at?: string | null
+          fluid_velocity?: number | null
+          h2s_concentration?: number | null
+          id?: number
+          pressure?: number | null
+          temperature?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          base_material_id?: number | null
+          co2_concentration?: number | null
+          corrosion_study_id?: number
+          created_at?: string | null
+          fluid_velocity?: number | null
+          h2s_concentration?: number | null
+          id?: number
+          pressure?: number | null
+          temperature?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "i_corrosion_factor_base_material_id_fkey"
+            columns: ["base_material_id"]
+            isOneToOne: false
+            referencedRelation: "i_material_construction"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_corrosion_factor_corrosion_study_id_fkey"
+            columns: ["corrosion_study_id"]
+            isOneToOne: false
+            referencedRelation: "i_corrosion_study"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      i_corrosion_group: {
+        Row: {
+          description: string | null
+          id: number
+          name: string
+        }
+        Insert: {
+          description?: string | null
+          id?: number
+          name: string
+        }
+        Update: {
+          description?: string | null
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
+      i_corrosion_monitoring: {
+        Row: {
+          id: number
+          name: string
+        }
+        Insert: {
+          id?: number
+          name: string
+        }
+        Update: {
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
+      i_corrosion_study: {
+        Row: {
+          asset_id: number
+          co2_presence: boolean | null
+          corrosion_group_id: number | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          environment: string | null
+          expected_external_corrosion_rate: number | null
+          expected_internal_corrosion_rate: number | null
+          external_damage_mechanism: string | null
+          h2s_presence: boolean | null
+          id: number
+          internal_damage_mechanism: string | null
+          material_construction_id: number | null
+          monitoring_method_id: number | null
+          ph: number | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          asset_id: number
+          co2_presence?: boolean | null
+          corrosion_group_id?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          environment?: string | null
+          expected_external_corrosion_rate?: number | null
+          expected_internal_corrosion_rate?: number | null
+          external_damage_mechanism?: string | null
+          h2s_presence?: boolean | null
+          id?: number
+          internal_damage_mechanism?: string | null
+          material_construction_id?: number | null
+          monitoring_method_id?: number | null
+          ph?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          asset_id?: number
+          co2_presence?: boolean | null
+          corrosion_group_id?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          environment?: string | null
+          expected_external_corrosion_rate?: number | null
+          expected_internal_corrosion_rate?: number | null
+          external_damage_mechanism?: string | null
+          h2s_presence?: boolean | null
+          id?: number
+          internal_damage_mechanism?: string | null
+          material_construction_id?: number | null
+          monitoring_method_id?: number | null
+          ph?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "i_corrosion_study_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "e_asset"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_corrosion_study_corrosion_group_id_fkey"
+            columns: ["corrosion_group_id"]
+            isOneToOne: false
+            referencedRelation: "i_corrosion_group"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_corrosion_study_material_construction_id_fkey"
+            columns: ["material_construction_id"]
+            isOneToOne: false
+            referencedRelation: "i_material_construction"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_corrosion_study_monitoring_method_id_fkey"
+            columns: ["monitoring_method_id"]
+            isOneToOne: false
+            referencedRelation: "i_corrosion_monitoring"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       i_cyclic_load_type: {
         Row: {
           created_at: string | null
@@ -6587,7 +6766,6 @@ export type Database = {
           ims_pof_assessment_id: number | null
           last_inspection_date: string | null
           manual_cr_act: number | null
-          new_coating_date: string | null
           nthin_a: number | null
           nthin_b: number | null
           nthin_c: number | null
@@ -6602,7 +6780,6 @@ export type Database = {
           ims_pof_assessment_id?: number | null
           last_inspection_date?: string | null
           manual_cr_act?: number | null
-          new_coating_date?: string | null
           nthin_a?: number | null
           nthin_b?: number | null
           nthin_c?: number | null
@@ -6617,7 +6794,6 @@ export type Database = {
           ims_pof_assessment_id?: number | null
           last_inspection_date?: string | null
           manual_cr_act?: number | null
-          new_coating_date?: string | null
           nthin_a?: number | null
           nthin_b?: number | null
           nthin_c?: number | null
@@ -7132,13 +7308,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "i_ims_general_e_material_construction_fk"
-            columns: ["material_construction_id"]
-            isOneToOne: false
-            referencedRelation: "e_material_construction"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "i_ims_general_e_pipe_class_fk"
             columns: ["pipe_class_id"]
             isOneToOne: false
@@ -7157,6 +7326,13 @@ export type Database = {
             columns: ["ims_asset_type_id"]
             isOneToOne: false
             referencedRelation: "i_ims_asset_type"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_general_material_construction_id_fkey"
+            columns: ["material_construction_id"]
+            isOneToOne: false
+            referencedRelation: "i_spec_master"
             referencedColumns: ["id"]
           },
         ]
@@ -7933,6 +8109,24 @@ export type Database = {
           name?: string | null
           updated_at?: string | null
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      i_material_construction: {
+        Row: {
+          description: string | null
+          id: number
+          name: string
+        }
+        Insert: {
+          description?: string | null
+          id?: number
+          name: string
+        }
+        Update: {
+          description?: string | null
+          id?: number
+          name?: string
         }
         Relationships: []
       }

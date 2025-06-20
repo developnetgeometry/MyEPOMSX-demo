@@ -67,7 +67,6 @@ const RBIAssessmentDetailPage: React.FC = () => {
         nthin_b_thin: dfThinData?.nthin_b || 0,
         nthin_c_thin: dfThinData?.nthin_c || 0,
         nthin_d_thin: dfThinData?.nthin_d || 0,
-        new_coating_date_thin: dfThinData?.new_coating_date || "",
         agerc_thin: dfThinData?.agerc || "",
         dfthinfb_thin: dfThinData?.dfthinfb || 0,
         manual_cr_act_thin: dfThinData?.manual_cr_act || 0,
@@ -127,10 +126,9 @@ const RBIAssessmentDetailPage: React.FC = () => {
         data_confidence_id_ext_clscc: dfExtClsccData?.data_confidence_id || null,
         df_ext_cl_scc_ext_clscc: dfExtClsccData?.df_ext_cl_scc || 0,
         i_ims_design_id_ext_clscc: dfExtClsccData?.i_ims_design_id || null,
-        ims_general_id_ext_clscc: dfExtClsccData?.ims_general_id || null
 
         // i_df_mfat
-        , previous_failure_id_mfat: dfMfatData?.previous_failure_id || null,
+        previous_failure_id_mfat: dfMfatData?.previous_failure_id || null,
         visible_audible_shaking_id_mfat: dfMfatData?.visible_audible_shaking_id || null,
         shaking_frequency_id_mfat: dfMfatData?.shaking_frequency_id || null,
         cyclic_load_type_id_mfat: dfMfatData?.cyclic_load_type_id || null,

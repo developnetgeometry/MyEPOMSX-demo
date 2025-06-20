@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any }> = ({ formData, handleInputChange }) => {
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-2">
         <div>
           <Label htmlFor="last_inspection_date_thin">Last Inspection Date</Label>
           <Input
@@ -13,17 +13,6 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any }> = ({ for
             name="last_inspection_date_thin"
             type="date"
             value={formData?.last_inspection_date_thin || ""}
-            onChange={handleInputChange}
-            className="mt-1"
-          />
-        </div>
-        <div>
-          <Label htmlFor="new_coating_date_thin">New Coating Date</Label>
-          <Input
-            id="new_coating_date_thin"
-            name="new_coating_date_thin"
-            type="date"
-            value={formData?.new_coating_date_thin || ""}
             onChange={handleInputChange}
             className="mt-1"
           />

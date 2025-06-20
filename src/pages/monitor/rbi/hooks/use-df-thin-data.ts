@@ -9,7 +9,7 @@ export const useImsDfThinData = (imsGeneralId: number) => {
         .from("i_df_thin")
         .select(
           `id, last_inspection_date, data_confidence_id, nthin_a, nthin_b,
-          nthin_c, nthin_d, new_coating_date, agerc, ims_pof_assessment_id, dfthinfb, ims_general_id,
+          nthin_c, nthin_d, agerc, ims_pof_assessment_id, dfthinfb, ims_general_id,
           manual_cr_act`
         )
         .eq("ims_general_id", imsGeneralId) // Fetch records based on ims_pof_assessment_id
