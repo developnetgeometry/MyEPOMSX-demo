@@ -1,6 +1,12 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 const AssetBasicInfoCard = ({
   asset,
@@ -31,7 +37,7 @@ const AssetBasicInfoCard = ({
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Asset No</label>
+          <label className="text-sm font-medium">Asset Code</label>
           <Input
             value={formData.assetNo}
             onChange={(e) => handleChange("assetNo", e.target.value)}

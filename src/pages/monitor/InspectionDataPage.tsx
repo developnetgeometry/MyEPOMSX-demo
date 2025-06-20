@@ -164,7 +164,7 @@ const InspectionDataPage: React.FC = () => {
   };
 
   const columns: Column[] = [
-    { id: "assetNo", header: "Asset No", accessorKey: "assetNo" },
+    { id: "assetNo", header: "Asset Code", accessorKey: "assetNo" },
     { id: "assetName", header: "Asset Name", accessorKey: "assetName" },
     {
       id: "ltcr",
@@ -208,9 +208,7 @@ const InspectionDataPage: React.FC = () => {
       cell: (value) => (
         <span
           className={`px-2 py-1 rounded-full text-xs font-medium ${
-            value
-              ? "bg-green-100 text-green-800"
-              : "bg-gray-100 text-gray-800"
+            value ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
           }`}
         >
           {value ? "Active" : "Inactive"}
@@ -293,7 +291,7 @@ const InspectionDataPage: React.FC = () => {
                 >
                   Previous
                 </Button>
-                
+
                 {/* Page numbers */}
                 <div className="flex gap-1">
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map(

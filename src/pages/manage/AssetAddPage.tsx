@@ -355,7 +355,9 @@ const AssetAddPage: React.FC = () => {
           asset_class_id: formData.assetClass
             ? parseInt(formData.assetClass)
             : null,
-          parent_asset_id: formData.parentAssetId ? parseInt(formData.parentAssetId) : null,
+          parent_asset_id: formData.parentAssetId
+            ? parseInt(formData.parentAssetId)
+            : null,
           specification: formData.assetSpecification || null,
           is_integrity: formData.assetIntegrity,
           is_reliability: formData.assetReliability,
@@ -486,16 +488,18 @@ const AssetAddPage: React.FC = () => {
         }
       }
 
-      
       // Show success message
       toast({
         title: "Success",
         description: "Asset created successfully",
         variant: "default",
       });
-      
+
       // Invalidate queries to refresh asset data
-      await queryClient.invalidateQueries({ queryKey: ["assets"]} );
+      await queryClient.invalidateQueries({ queryKey: ["assets"] });
+
+      // Invalidate queries to refresh asset data
+      await queryClient.invalidateQueries({ queryKey: ["assets"] });
 
       // Navigate back to asset list
       navigate("/manage/assets");
@@ -504,12 +508,14 @@ const AssetAddPage: React.FC = () => {
         typeof error?.message === "string" ? error.message : "";
       if (
         error.code === "23505" ||
-        errorMessage.includes('duplicate key value violates unique constraint "e_asset_unique"')
+        errorMessage.includes(
+          'duplicate key value violates unique constraint "e_asset_unique"'
+        )
       ) {
         toast({
           title: "Duplicate Entry",
           description:
-            "Asset No. already exists. Please enter a different Asset No.",
+            "Asset Code. already exists. Please enter a different Asset Code.",
           variant: "destructive",
         });
       } else {
@@ -545,7 +551,6 @@ const AssetAddPage: React.FC = () => {
       }));
     }
   }, [parentAssetId]);
-  
 
   return (
     <div className="space-y-6">
@@ -663,7 +668,7 @@ const AssetAddPage: React.FC = () => {
 
                     <div className="space-y-2">
                       <Label htmlFor="assetNo">
-                        Asset No<span className="text-red-500">*</span>
+                        Asset Code<span className="text-red-500">*</span>
                       </Label>
                       <Input
                         id="assetNo"

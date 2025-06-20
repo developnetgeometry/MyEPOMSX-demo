@@ -456,7 +456,7 @@ const AssetDetailPage: React.FC = () => {
 
     // Required fields validation
     if (!formData.assetNo.trim()) {
-      newErrors.assetNo = "Asset No is required";
+      newErrors.assetNo = "Asset Code is required";
     }
 
     if (!formData.assetName.trim()) {
@@ -992,7 +992,7 @@ const AssetDetailPage: React.FC = () => {
       <body>
         <div class="header">
           <h1>Asset Details: ${asset.asset_name || "Unnamed Asset"}</h1>
-          <div class="asset-id">Asset No: ${asset.asset_no || "-"}</div>
+          <div class="asset-id">Asset Code: ${asset.asset_no || "-"}</div>
         </div>
         
         <div class="content">
@@ -1124,7 +1124,7 @@ const AssetDetailPage: React.FC = () => {
             <table>
               <thead>
                 <tr>
-                  <th>Asset No</th>
+                  <th>Asset Code</th>
                   <th>Asset Name</th>
                   <th>Type</th>
                 </tr>
@@ -1197,7 +1197,7 @@ const AssetDetailPage: React.FC = () => {
   }
 
   if (!asset) {
-    return <div>Asset not found</div>;
+    return <div>Asset Codet found</div>;
   }
 
   return (

@@ -4,7 +4,7 @@ import { formatDate } from "@/utils/formatters";
 
 // Field configuration for child asset detail view
 const childAssetDetailFields = [
-  { name: "asset_no", label: "Asset No" },
+  { name: "asset_no", label: "Asset Code" },
   { name: "asset_name", label: "Asset Name" },
   { name: "asset_tag", label: "Asset Tag" },
   { name: "status", label: "Status" },
@@ -13,7 +13,11 @@ const childAssetDetailFields = [
   { name: "asset_detail.serial_number", label: "Serial Number" },
   { name: "asset_detail.specification", label: "Specification" },
   { name: "asset_detail.asset_class", label: "Class" },
-  { name: "commission_date", label: "Commission Date", render: (value: string) => formatDate(value) },
+  {
+    name: "commission_date",
+    label: "Commission Date",
+    render: (value: string) => formatDate(value),
+  },
 ];
 
 export interface AssetChildDetailDialogProps {

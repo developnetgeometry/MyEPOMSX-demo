@@ -319,7 +319,7 @@ const NewPressureVesselPage: React.FC = () => {
       );
 
       if (!selectedAsset) {
-        throw new Error("Selected asset not found");
+        throw new Error("Selected Asset Codet found");
       }
 
       // Prepare main pressure vessel data for i_ims_general table insertion
