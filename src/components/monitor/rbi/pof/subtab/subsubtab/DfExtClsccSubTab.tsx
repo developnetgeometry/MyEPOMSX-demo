@@ -34,15 +34,51 @@ const DfExtClssSubTab: React.FC<{ formData: any; handleInputChange: any; handleS
           />
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
         <div>
-          <Label htmlFor="coating_quality_id">Coating Quality</Label>
+          <Label htmlFor="coating_quality_id">Inspection Efficiency</Label>
           <Select
             value={formData?.coating_quality_id?.toString() || ""}
             onValueChange={(value) => handleSelectChange("coating_quality_id", parseInt(value))}
           >
             <SelectTrigger className="mt-1">
-              <SelectValue placeholder="Select Coating Quality" />
+              <SelectValue placeholder="Select Inspection Efficiency" />
+            </SelectTrigger>
+            <SelectContent>
+              {coatingQualities?.map((quality) => (
+                <SelectItem key={quality.id} value={quality.id.toString()}>
+                  {quality.name} - {quality.value}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="coating_quality_id">Steel S Content</Label>
+          <Select
+            value={formData?.coating_quality_id?.toString() || ""}
+            onValueChange={(value) => handleSelectChange("coating_quality_id", parseInt(value))}
+          >
+            <SelectTrigger className="mt-1">
+              <SelectValue placeholder="Select Steel S Content" />
+            </SelectTrigger>
+            <SelectContent>
+              {coatingQualities?.map((quality) => (
+                <SelectItem key={quality.id} value={quality.id.toString()}>
+                  {quality.name} - {quality.value}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="coating_quality_id">Hardnessbrinnel</Label>
+          <Select
+            value={formData?.coating_quality_id?.toString() || ""}
+            onValueChange={(value) => handleSelectChange("coating_quality_id", parseInt(value))}
+          >
+            <SelectTrigger className="mt-1">
+              <SelectValue placeholder="Select Hardnessbrinnel" />
             </SelectTrigger>
             <SelectContent>
               {coatingQualities?.map((quality) => (
