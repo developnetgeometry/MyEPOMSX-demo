@@ -442,13 +442,10 @@ const AssetDetailPage: React.FC = () => {
     }
   };
 
-  const handleWorkRequest = () => {
-    toast({
-      title: "Success",
-      description: "Adding work request",
-      variant: "default",
+    const handleWorkRequest = (assetId: number) => {
+    navigate("/work-orders/work-request/new", {
+      state: { asset_id: assetId },
     });
-    navigate(`/maintain/work-request?assetId=${id}`);
   };
 
   const validateForm = () => {
@@ -1306,7 +1303,7 @@ const AssetDetailPage: React.FC = () => {
           handleCancel={handleCancel}
           handleApplyChanges={handleApplyChanges}
           navigate={navigate}
-          handleWorkRequest={handleWorkRequest}
+          handleWorkRequest={() => handleWorkRequest(asset.id)}
           toggleEditMode={toggleEditMode}
         />
 

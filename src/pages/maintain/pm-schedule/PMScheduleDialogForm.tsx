@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -60,52 +60,101 @@ const PMScheduleDialogForm: React.FC<PMScheduleDialogFormProps> = ({
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
+    const facilities = useMemo(() => {
+        const map = new Map<number, any>();
+        apsf?.forEach((a) => {
+            const f = a.package_id.system_id.facility_id;
+            map.set(f.id, f);
+        });
+        return Array.from(map.values());
+    }, [apsf]);
+
+    const systems = useMemo(() => {
+        const map = new Map<number, any>();
+        apsf?.forEach((a) => {
+            const sys = a.package_id.system_id;
+            if (formData.facility_id && sys.facility_id.id !== formData.facility_id)
+                return;
+            map.set(sys.id, sys);
+        });
+        return Array.from(map.values());
+    }, [apsf, formData.facility_id]);
+
+    const packages = useMemo(() => {
+        const map = new Map<number, any>();
+        apsf?.forEach((a) => {
+            const pkg = a.package_id;
+            const sys = pkg.system_id;
+            if (formData.facility_id && sys.facility_id.id !== formData.facility_id)
+                return;
+            if (formData.system_id && sys.id !== formData.system_id) return;
+            map.set(pkg.id, pkg);
+        });
+        return Array.from(map.values());
+    }, [apsf, formData.facility_id, formData.system_id]);
+
+    const assets = useMemo(() => {
+        return (
+            apsf?.filter((a) => {
+                const pkg = a.package_id;
+                const sys = pkg.system_id;
+                if (formData.facility_id && sys.facility_id.id !== formData.facility_id)
+                    return false;
+                if (formData.system_id && sys.id !== formData.system_id) return false;
+                if (formData.package_id && pkg.id !== formData.package_id) return false;
+                return true;
+            }) || []
+        );
+    }, [
+        apsf,
+        formData.facility_id,
+        formData.system_id,
+        formData.package_id,
+    ]);
+
+    /* ---------------- handleSelectChange ---------------- */
     const handleSelectChange = (name: string, value: any) => {
-        let updatedFormData = { ...formData, [name]: value };
+        setFormData((prev) => {
+            const next = { ...prev, [name]: value };
 
-        if (name === "asset_id") {
-            const selectedAsset = apsf.assets.find((asset) => asset.id === value);
-            const selectedPackage = apsf.packages.find((pkg) => pkg.id === selectedAsset?.package_id);
-            const selectedSystem = apsf.systems.find((sys) => sys.id === selectedPackage?.system_id);
-            const selectedFacility = apsf.facilities.find((fac) => fac.id === selectedSystem?.facility_id);
+            /* -------- clear children when a parent changes -------- */
+            if (name === "facility_id") {
+                next.system_id = null;
+                next.package_id = null;
+                next.asset_id = null;
+            } else if (name === "system_id") {
+                next.package_id = null;
+                next.asset_id = null;
+            } else if (name === "package_id") {
+                next.asset_id = null;
+            }
 
-            updatedFormData = {
-                ...updatedFormData,
-                facility_id: selectedFacility?.id || null,
-                system_id: selectedSystem?.id || null,
-                package_id: selectedPackage?.id || null,
-            };
-        } else if (name === "package_id") {
-            const selectedPackage = apsf.packages.find((pkg) => pkg.id === value);
-            const selectedSystem = apsf.systems.find((sys) => sys.id === selectedPackage?.system_id);
-            const selectedFacility = apsf.facilities.find((fac) => fac.id === selectedSystem?.facility_id);
+            /* -------- auto‑select parents when a child changes -------- */
+            if (name === "asset_id" && value) {
+                const asset = apsf?.find((a) => a.id === value);
+                if (asset) {
+                    const pkg = asset.package_id;
+                    const sys = pkg.system_id;
+                    next.package_id = pkg.id;
+                    next.system_id = sys.id;
+                    next.facility_id = sys.facility_id.id;
+                }
+            } else if (name === "package_id" && value) {
+                const assetWithPkg = apsf?.find((a) => a.package_id.id === value);
+                if (assetWithPkg) {
+                    const sys = assetWithPkg.package_id.system_id;
+                    next.system_id = sys.id;
+                    next.facility_id = sys.facility_id.id;
+                }
+            } else if (name === "system_id" && value) {
+                const assetWithSys = apsf?.find((a) => a.package_id.system_id.id === value);
+                if (assetWithSys) {
+                    next.facility_id = assetWithSys.package_id.system_id.facility_id.id;
+                }
+            }
 
-            updatedFormData = {
-                ...updatedFormData,
-                facility_id: selectedFacility?.id || null,
-                system_id: selectedSystem?.id || null,
-                asset_id: null,
-            };
-        } else if (name === "system_id") {
-            const selectedSystem = apsf.systems.find((sys) => sys.id === value);
-            const selectedFacility = apsf.facilities.find((fac) => fac.id === selectedSystem?.facility_id);
-
-            updatedFormData = {
-                ...updatedFormData,
-                facility_id: selectedFacility?.id || null,
-                package_id: null,
-                asset_id: null,
-            };
-        } else if (name === "facility_id") {
-            updatedFormData = {
-                ...updatedFormData,
-                system_id: null,
-                package_id: null,
-                asset_id: null,
-            };
-        }
-
-        setFormData(updatedFormData);
+            return next;
+        });
     };
 
     const showValidationError = (description: string) => {
@@ -253,80 +302,88 @@ const PMScheduleDialogForm: React.FC<PMScheduleDialogFormProps> = ({
                             </Select>
                         </div>
 
-                        {/* Facility Select */}
+                        {/* FACILITY */}
                         <div className="space-y-2">
-                            <Label htmlFor="facility_id">Facility<span className="text-red-500 ml-1">*</span></Label>
+                            <Label htmlFor="facility_id">Facility</Label>
                             <Select
                                 value={formData.facility_id?.toString() || ""}
-                                onValueChange={(value) => handleSelectChange("facility_id", parseInt(value))}
+                                onValueChange={(v) =>
+                                    handleSelectChange("facility_id", v ? parseInt(v) : null)
+                                }
                             >
                                 <SelectTrigger id="facility_id" className="w-full">
                                     <SelectValue placeholder="Select Facility" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {apsf?.facilities?.map((facility) => (
-                                        <SelectItem key={facility.id} value={facility.id.toString()}>
-                                            {facility.location_code} - {facility.location_name}
+                                    {facilities.map((f) => (
+                                        <SelectItem key={f.id} value={f.id.toString()}>
+                                            {f.location_code} - {f.location_name}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </div>
 
-                        {/* System Select */}
+                        {/* SYSTEM */}
                         <div className="space-y-2">
-                            <Label htmlFor="system_id">System<span className="text-red-500 ml-1">*</span></Label>
+                            <Label htmlFor="system_id">System</Label>
                             <Select
                                 value={formData.system_id?.toString() || ""}
-                                onValueChange={(value) => handleSelectChange("system_id", parseInt(value))}
+                                onValueChange={(v) =>
+                                    handleSelectChange("system_id", v ? parseInt(v) : null)
+                                }
                             >
                                 <SelectTrigger id="system_id" className="w-full">
                                     <SelectValue placeholder="Select System" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {apsf?.systems?.map((system) => (
-                                        <SelectItem key={system.id} value={system.id.toString()}>
-                                            {system.system_name}
+                                    {systems.map((s) => (
+                                        <SelectItem key={s.id} value={s.id.toString()}>
+                                            {s.system_code} - {s.system_name}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </div>
 
-                        {/* Package Select */}
+                        {/* PACKAGE */}
                         <div className="space-y-2">
-                            <Label htmlFor="package_id">Package<span className="text-red-500 ml-1">*</span></Label>
+                            <Label htmlFor="package_id">Package</Label>
                             <Select
                                 value={formData.package_id?.toString() || ""}
-                                onValueChange={(value) => handleSelectChange("package_id", parseInt(value))}
+                                onValueChange={(v) =>
+                                    handleSelectChange("package_id", v ? parseInt(v) : null)
+                                }
                             >
                                 <SelectTrigger id="package_id" className="w-full">
                                     <SelectValue placeholder="Select Package" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {apsf?.packages?.map((pkg) => (
-                                        <SelectItem key={pkg.id} value={pkg.id.toString()}>
-                                            {pkg.package_name}
+                                    {packages.map((p) => (
+                                        <SelectItem key={p.id} value={p.id.toString()}>
+                                            {p.package_tag} - {p.package_name}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </div>
 
-                        {/* Asset Select */}
+                        {/* ASSET */}
                         <div className="space-y-2">
                             <Label htmlFor="asset_id">Asset</Label>
                             <Select
                                 value={formData.asset_id?.toString() || ""}
-                                onValueChange={(value) => handleSelectChange("asset_id", parseInt(value))}
+                                onValueChange={(v) =>
+                                    handleSelectChange("asset_id", v ? parseInt(v) : null)
+                                }
                             >
                                 <SelectTrigger id="asset_id" className="w-full">
                                     <SelectValue placeholder="Select Asset" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {apsf?.assets?.map((asset) => (
-                                        <SelectItem key={asset.id} value={asset.id.toString()}>
-                                            {asset.asset_name}
+                                    {assets.map((a) => (
+                                        <SelectItem key={a.id} value={a.id.toString()}>
+                                            {a.asset_no} - {a.asset_name}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
