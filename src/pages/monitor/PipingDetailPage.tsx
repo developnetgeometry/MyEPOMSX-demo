@@ -1,73 +1,114 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import PageHeader from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import PageHeader from "@/components/shared/PageHeader";
+import {
+  ShieldIcon,
+  ArrowLeft,
+  Edit,
+  Save,
+  X,
+  FileText,
+  Download,
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabaseClient";
 
-// Sample piping data
-const pipingData = {
-  id: "new-piping-1",
-  // General Tab
-  asset: "Asset 1",
-  yearInService: "2020-05-15",
-  materialConstruction: "Carbon Steel",
-  area: "Process Area A",
-  system: "Production System",
-  circuitId: "CID-001",
-  lineNo: "LN-2023-001",
-  tmin: "3.2",
-  pipeClass: "Class A",
-  pipeSchedule: "Schedule 40",
-  nominalWallThickness: "5.5",
-  nominalBoreDiameter: '2"',
-  pressureRating: "150",
-  description: "Main process piping for production system transfer line",
-  insulation: true,
-  lineH2S: false,
-  internalLining: true,
-  pwht: true,
-  cladding: false,
+interface PipingData {
+  // General data from i_ims_general
+  general: {
+    id: number;
+    asset_detail_id: number;
+    year_in_service: string;
+    tmin: string;
+    material_construction_id: number;
+    description: string;
+    normal_wall_thickness: number;
+    nominal_bore_diameter: number;
+    pressure_rating: number;
+    pipe_class_id: number;
+    pipe_schedule_id: number;
+    circuit_id: number;
+    line_no: string;
+    insulation: boolean;
+    line_h2s: boolean;
+    internal_lining: boolean;
+    pwht: boolean;
+    cladding: boolean;
+    inner_diameter: number;
+    clad_thickness: number;
+  };
 
-  // Design Tab
-  internalDiameter: "50.8",
-  outerDiameter: "60.3",
-  length: "120",
-  weldJoinEfficiency: "0.85",
-  designTemperature: "350",
-  operatingTemperature: "280",
-  designPressure: "2.5",
-  operatingPressure: "1.8",
-  allowableStress: "137.9",
-  corrosionAllowance: "3.0",
-  externalEnvironment: "Marine",
-  geometry: "Straight",
-  pipeSupport: true,
-  soilWaterInterface: false,
-  deadLegs: false,
-  mixPoint: true,
+  // Design data from i_ims_design
+  design: {
+    outer_diameter: number;
+    internal_diameter: number;
+    length: number;
+    welding_efficiency: number;
+    design_temperature: number;
+    operating_temperature: number;
+    design_pressure: number;
+    operating_pressure_mpa: number;
+    allowable_stress_mpa: number;
+    corrosion_allowance: number;
+    ext_env_id: number;
+    geometry_id: number;
+    pipe_support: boolean;
+    soil_water_interface: boolean;
+    dead_legs: boolean;
+    mix_point: boolean;
+  };
 
-  // Protection Tab
-  coatingQuality: "Good",
-  isolationSystem: "System A",
-  onlineMonitor: "Monitor B",
-  trd: "4.8",
-  minimumThickness: "3.5",
-  postWeldHeatTreatment: "Applied as per ASME B31.3",
-  lineDescription: "Process fluid transfer line from separator to storage",
-  replacementLine: "N/A",
-  detectionSystem: "System B",
-  mitigationSystem: "System X",
-  active: true,
-  crExp: "0.127",
-  sretCorr: "0.85",
-  fsectCorr: "1.2",
+  // Protection data from i_ims_protection
+  protection: {
+    coating_quality_id: number;
+    insulation_type_id: number;
+    insulation_complexity_id: number;
+    insulation_condition: string;
+    design_fabrication_id: number;
+    interface_id: number;
+    lining_type: string;
+    lining_condition: string;
+    lining_monitoring: string;
+    isolation_system_id: number;
+    detection_system_id: number;
+    mitigation_system_id: number;
+    online_monitor: number;
+    post_weld_heat_treatment: number;
+    line_description: string;
+    replacement_line: string;
+    minimum_thickness: number;
+  };
 
-  // Service Tab
-  toxicity: "Medium",
-  toxicMassFraction: "0.05",
-};
+  // Service data from i_ims_service
+  service: {
+    fluid_representive_id: number;
+    toxicity_id: number;
+    fluid_phase_id: number;
+    toxic_mass_fraction: number;
+  };
+
+  // Asset detail from e_asset_detail
+  assetDetail: {
+    equipment_tag: string;
+    component_type: string;
+    area: string;
+    system: string;
+  };
+}
 
 const PipingDetailPage: React.FC = () => {
   const navigate = useNavigate();

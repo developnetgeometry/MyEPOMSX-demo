@@ -356,7 +356,7 @@ export const useAssetWithComponentTypeOptions = () => {
           asset_name,
           asset_detail_id,
           system_id,
-          asset_detail:e_asset_detail(
+          asset_detail:e_asset_detail!e_asset_asset_detail_id_fkey(
             id,
             type_id,
             area_id,
