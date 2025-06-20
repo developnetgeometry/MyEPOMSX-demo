@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any }> = ({ formData, handleInputChange }) => {
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         <div>
           <Label htmlFor="last_inspection_date_ext">Last Inspection Date</Label>
           <Input
@@ -28,6 +28,8 @@ const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any }> = ({ form
             className="mt-1"
           />
         </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         <div>
           <Label htmlFor="agetk_ext">AgeTK</Label>
           <Input
