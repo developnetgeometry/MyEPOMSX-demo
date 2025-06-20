@@ -6585,8 +6585,9 @@ export type Database = {
           id: number
           ims_general_id: number | null
           ims_pof_assessment_id: number | null
-          last_coating_date: string | null
           last_inspection_date: string | null
+          manual_cr_act: number | null
+          new_coating_date: string | null
           nthin_a: number | null
           nthin_b: number | null
           nthin_c: number | null
@@ -6599,8 +6600,9 @@ export type Database = {
           id?: number
           ims_general_id?: number | null
           ims_pof_assessment_id?: number | null
-          last_coating_date?: string | null
           last_inspection_date?: string | null
+          manual_cr_act?: number | null
+          new_coating_date?: string | null
           nthin_a?: number | null
           nthin_b?: number | null
           nthin_c?: number | null
@@ -6613,8 +6615,9 @@ export type Database = {
           id?: number
           ims_general_id?: number | null
           ims_pof_assessment_id?: number | null
-          last_coating_date?: string | null
           last_inspection_date?: string | null
+          manual_cr_act?: number | null
+          new_coating_date?: string | null
           nthin_a?: number | null
           nthin_b?: number | null
           nthin_c?: number | null
@@ -7252,6 +7255,7 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           current_thickness: number | null
+          data_confidence_id: number | null
           description: string | null
           id: number
           ims_general_id: number | null
@@ -7266,6 +7270,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           current_thickness?: number | null
+          data_confidence_id?: number | null
           description?: string | null
           id?: number
           ims_general_id?: number | null
@@ -7280,6 +7285,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           current_thickness?: number | null
+          data_confidence_id?: number | null
           description?: string | null
           id?: number
           ims_general_id?: number | null
@@ -7288,6 +7294,13 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "i_ims_pof_assessment_general_data_confidence_id_fkey"
+            columns: ["data_confidence_id"]
+            isOneToOne: false
+            referencedRelation: "i_data_confidence"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "i_ims_pof_assessment_general_e_asset_detail_fk"
             columns: ["asset_detail_id"]
@@ -7779,6 +7792,65 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: []
+      }
+      i_inventory_group: {
+        Row: {
+          asset_detail_id: number
+          component_inventory: number | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          equipment_volume: number | null
+          group_name: string | null
+          group_type: string | null
+          id: number
+          is_status: boolean
+          representative_component: string | null
+          total_inventory: number | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          asset_detail_id: number
+          component_inventory?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          equipment_volume?: number | null
+          group_name?: string | null
+          group_type?: string | null
+          id?: number
+          is_status?: boolean
+          representative_component?: string | null
+          total_inventory?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          asset_detail_id?: number
+          component_inventory?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          equipment_volume?: number | null
+          group_name?: string | null
+          group_type?: string | null
+          id?: number
+          is_status?: boolean
+          representative_component?: string | null
+          total_inventory?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "i_inventory_group_asset_detail_id_fkey"
+            columns: ["asset_detail_id"]
+            isOneToOne: false
+            referencedRelation: "e_asset"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       i_joint_branch_design: {
         Row: {

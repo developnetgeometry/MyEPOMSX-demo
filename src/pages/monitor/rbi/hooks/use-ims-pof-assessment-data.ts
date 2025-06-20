@@ -8,9 +8,9 @@ export const useImsPofAssessmentData = (imsGeneralId: number) => {
       const { data, error } = await supabase
         .from("i_ims_pof_assessment_general")
         .select(
-          `id, asset_detail_id (asset_id), coating_quality_id, cladding,
+          `id, asset_detail_id, coating_quality_id, cladding,
           nominal_thickness, current_thickness, description,
-          ims_general_id`
+          ims_general_id, data_confidence_id`
         )
         .eq("ims_general_id", imsGeneralId)
         .single(); // Fetch a single record based on imsGeneralId

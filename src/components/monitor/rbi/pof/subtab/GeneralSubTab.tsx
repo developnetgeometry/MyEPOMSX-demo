@@ -4,6 +4,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
+import { useAssetData } from "@/pages/work-orders/hooks/use-apsf-by-project-data";
+import { useCoatingQualityData } from "@/hooks/lookup/lookup-coating-quality";
+import { useDataConfidenceData } from "@/hooks/lookup/lookup-data-confidence";
 
 const GeneralSubTab: React.FC<{
     formData: any;
@@ -11,62 +14,74 @@ const GeneralSubTab: React.FC<{
     handleSelectChange: any;
     handleRadioChange: any;
 }> = ({ formData, handleInputChange, handleSelectChange, handleRadioChange }) => {
+
+    const { data: assets } = useAssetData();
+    const { data: coatingQualities } = useCoatingQualityData();
+    const { data: dataConfidences } = useDataConfidenceData();
+
+
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
                 <div>
                     <Label htmlFor="asset">Asset</Label>
                     <Select
-                        value={formData.asset}
-                        onValueChange={(value) => handleSelectChange("asset", value)}
+                        value={formData?.asset_detail_id?.toString() || ""}
+                        onValueChange={(value) => handleSelectChange("asset_detail_id", parseInt(value))}
                     >
                         <SelectTrigger className="mt-1">
                             <SelectValue placeholder="Select Asset" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="Asset1">Asset1</SelectItem>
-                            <SelectItem value="Asset2">Asset2</SelectItem>
+                            {assets?.map((asset) => (
+                                <SelectItem key={asset.asset_detail_id} value={asset.asset_detail_id.toString()}>
+                                    {asset.asset_no} - {asset.asset_name}
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </div>
                 <div>
-                    <Label htmlFor="coatingQuality">Coating Quality</Label>
+                    <Label htmlFor="coating_quality_id">Coating Quality</Label>
                     <Select
-                        value={formData.coatingQuality}
-                        onValueChange={(value) => handleSelectChange("coatingQuality", value)}
+                        value={formData?.coating_quality_id?.toString() || ""}
+                        onValueChange={(value) => handleSelectChange("coating_quality_id", parseInt(value))}
                     >
                         <SelectTrigger className="mt-1">
-                            <SelectValue placeholder="Select coating quality" />
+                            <SelectValue placeholder="Select Coating Quality" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="Excellent">Excellent</SelectItem>
-                            <SelectItem value="Good">Good</SelectItem>
-                            <SelectItem value="Fair">Fair</SelectItem>
-                            <SelectItem value="Poor">Poor</SelectItem>
+                            {coatingQualities?.map((quality) => (
+                                <SelectItem key={quality.id} value={quality.id.toString()}>
+                                    {quality.name} - {quality.value}
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </div>
                 <div>
-                    <Label htmlFor="dataConfidence">Data Confidence</Label>
+                    <Label htmlFor="data_confidence_id">Data Confidence</Label>
                     <Select
-                        value={formData.dataConfidence}
-                        onValueChange={(value) => handleSelectChange("dataConfidence", value)}
+                        value={formData?.data_confidence_id?.toString() || ""}
+                        onValueChange={(value) => handleSelectChange("data_confidence_id", value)}
                     >
                         <SelectTrigger className="mt-1">
-                            <SelectValue placeholder="Select data confidence" />
+                            <SelectValue placeholder="Select Data Confidence" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="High">High</SelectItem>
-                            <SelectItem value="Medium">Medium</SelectItem>
-                            <SelectItem value="Low">Low</SelectItem>
+                            {dataConfidences?.map((confidence) => (
+                                <SelectItem key={confidence.id} value={confidence.id.toString()}>
+                                    {confidence.name}
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </div>
                 <div className="space-y-2">
                     <Label>Cladding</Label>
                     <RadioGroup
-                        value={formData.hasCladding ? "yes" : "no"}
-                        onValueChange={(value) => handleRadioChange("hasCladding", value)}
+                        value={formData?.cladding ? "yes" : "no"}
+                        onValueChange={(value) => handleRadioChange("cladding", value)}
                         className="flex flex-row space-x-4"
                     >
                         <div className="flex items-center space-x-2">
@@ -83,34 +98,34 @@ const GeneralSubTab: React.FC<{
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
 
                 <div>
-                    <Label htmlFor="nominalThickness">Nominal Thickness (MM)</Label>
+                    <Label htmlFor="nominal_thickness">Nominal Thickness (MM)</Label>
                     <Input
-                        id="nominalThickness"
-                        name="nominalThickness"
+                        id="nominal_thickness"
+                        name="nominal_thickness"
                         type="number"
-                        value={formData.nominalThickness}
+                        value={formData?.nominal_thickness || 0}
                         onChange={handleInputChange}
                         className="mt-1"
                     />
                 </div>
                 <div>
-                    <Label htmlFor="tMin">TMin (Calculated)</Label>
+                    <Label htmlFor="tmin">TMin (Calculated)</Label>
                     <Input
-                        id="tMin"
-                        name="tMin"
+                        id="tmin"
+                        name="tmin"
                         type="number"
-                        value={formData.tMin}
+                        value={formData?.tmin || 0}
                         disabled
                         className="mt-1 bg-gray-50"
                     />
                 </div>
                 <div>
-                    <Label htmlFor="currentThickness">Current Thickness (mm)</Label>
+                    <Label htmlFor="current_thickness">Current Thickness (mm)</Label>
                     <Input
-                        id="currentThickness"
-                        name="currentThickness"
+                        id="current_thickness"
+                        name="current_thickness"
                         type="number"
-                        value={formData.currentThickness}
+                        value={formData?.current_thickness || 0}
                         onChange={handleInputChange}
                         className="mt-1"
                     />
@@ -120,7 +135,7 @@ const GeneralSubTab: React.FC<{
                     <Textarea
                         id="description"
                         name="description"
-                        value={formData.description}
+                        value={formData?.description || ""}
                         onChange={handleInputChange}
                         className="mt-1 min-h-[100px]"
                         placeholder="Enter description"

@@ -9,7 +9,7 @@ export const useAssetData = () => {
       const { data: assets, error: assetError } = await supabase
         .from("e_asset")
         .select(
-          `id, asset_name, asset_no, asset_sce_id (id, sce_code), 
+          `id, asset_name, asset_no, asset_detail_id, asset_sce_id (id, sce_code), 
           package_id (id, package_name, package_no, package_tag, 
             system_id (id, system_code, system_no, system_name, 
               facility_id (id, location_code, location_name)
