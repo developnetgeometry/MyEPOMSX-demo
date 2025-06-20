@@ -6,29 +6,50 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/shared/StatusBadge";
-import { ShieldIcon, Plus } from "lucide-react";
+import { ShieldIcon, Plus, Loader2 } from "lucide-react";
+import {
+  usePressureVesselAssets,
+  usePipingAssets,
+} from "@/hooks/queries/useIntegrityAssets";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const IntegrityPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("pressureVessel");
 
+  // Fetch data using the new hooks
+  const {
+    data: pressureVesselData = [],
+    isLoading: isPressureVesselLoading,
+    error: pressureVesselError,
+  } = usePressureVesselAssets();
+
+  const {
+    data: pipingData = [],
+    isLoading: isPipingLoading,
+    error: pipingError,
+  } = usePipingAssets();
+
   const columns: Column[] = [
-    { id: "assetCode", header: "Asset Code", accessorKey: "assetCode" },
-    { id: "assetName", header: "Asset Name", accessorKey: "assetName" },
+    { id: "asset_no", header: "Asset Code", accessorKey: "asset_no" },
+    { id: "asset_name", header: "Asset Name", accessorKey: "asset_name" },
     { id: "area", header: "Area", accessorKey: "area" },
     { id: "system", header: "System", accessorKey: "system" },
     {
       id: "status",
       header: "Status",
       accessorKey: "status",
-      cell: (value) => <StatusBadge status={value} />,
+      cell: (value) => <StatusBadge status={value || "Unknown"} />,
     },
   ];
 
   const handleRowClick = (row: any) => {
     // Navigate to the asset integrity detail page with the current tab type and row id
-    const assetType = activeTab === "piping" ? "piping" : "pressureVessel";
-    navigate(`/monitor/integrity/${assetType}/${row.id}`);
+    if (activeTab === "piping") {
+      navigate(`/monitor/integrity/piping/${row.id}`);
+    } else {
+      navigate(`/monitor/integrity/pressure-vessel/${row.id}`);
+    }
   };
 
   const handleNewAsset = () => {
@@ -45,9 +66,13 @@ const IntegrityPage: React.FC = () => {
       : "New Piping";
   };
 
-  // Empty data arrays - replace with actual data from your backend
-  const pressureVesselData: any[] = [];
-  const pipingData: any[] = [];
+  // Handle loading and error states
+  const isLoading =
+    activeTab === "pressureVessel" ? isPressureVesselLoading : isPipingLoading;
+  const error =
+    activeTab === "pressureVessel" ? pressureVesselError : pipingError;
+  const currentData =
+    activeTab === "pressureVessel" ? pressureVesselData : pipingData;
 
   return (
     <div className="space-y-6">
@@ -57,6 +82,15 @@ const IntegrityPage: React.FC = () => {
         icon={<ShieldIcon className="h-6 w-6" />}
         onSearch={(query) => console.log("Search:", query)}
       />
+
+      {/* Display error if any */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>
+            Error loading integrity data: {error.message}
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Tabs
         defaultValue="pressureVessel"
@@ -83,10 +117,17 @@ const IntegrityPage: React.FC = () => {
               </Button>
             </CardHeader>
             <CardContent className="p-6 pt-0">
-              {pressureVesselData.length > 0 ? (
+              {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  <span className="ml-2 text-muted-foreground">
+                    Loading pressure vessels...
+                  </span>
+                </div>
+              ) : currentData.length > 0 ? (
                 <DataTable
                   columns={columns}
-                  data={pressureVesselData}
+                  data={currentData}
                   onRowClick={handleRowClick}
                 />
               ) : (
@@ -123,10 +164,17 @@ const IntegrityPage: React.FC = () => {
               </Button>
             </CardHeader>
             <CardContent className="p-6 pt-0">
-              {pipingData.length > 0 ? (
+              {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  <span className="ml-2 text-muted-foreground">
+                    Loading piping assets...
+                  </span>
+                </div>
+              ) : currentData.length > 0 ? (
                 <DataTable
                   columns={columns}
-                  data={pipingData}
+                  data={currentData}
                   onRowClick={handleRowClick}
                 />
               ) : (

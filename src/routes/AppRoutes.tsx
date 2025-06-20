@@ -102,6 +102,7 @@ import InspectionDataFormPage from "@/pages/monitor/InspectionDataFormPage";
 import InspectionDataDetailPage from "@/pages/monitor/InspectionDataDetailPage";
 import IntegrityPage from "@/pages/monitor/IntegrityPage";
 import NewPressureVesselPage from "@/pages/monitor/NewPressureVesselPage";
+import PressureVesselDetailPage from "@/pages/monitor/PressureVesselDetailPage";
 import NewPipingPage from "@/pages/monitor/NewPipingPage";
 import FormulaTestingPage from "@/pages/monitor/FormulaTestingPage";
 import InventoryGroupsPage from "@/pages/monitor/InventoryGroupsPage";
@@ -997,16 +998,16 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-      {/* <Route
-        path="/monitor/integrity/pressureVessel/:id"
+      <Route
+        path="/monitor/integrity/pressure-vessel/:id"
         element={
           <ProtectedRoute>
             <Layout>
-              <RBIAssessmentPVDetailPage />
+              <PressureVesselDetailPage />
             </Layout>
           </ProtectedRoute>
         }
-      /> */}
+      />
       <Route
         path="/monitor/integrity/piping/new"
         element={
