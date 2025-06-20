@@ -6028,6 +6028,10 @@ export type Database = {
           material_construction_id: number | null
           monitoring_method_id: number | null
           ph: number | null
+<<<<<<< HEAD
+=======
+          system_id: number | null
+>>>>>>> origin/main
           updated_at: string | null
           updated_by: string | null
         }
@@ -6048,6 +6052,10 @@ export type Database = {
           material_construction_id?: number | null
           monitoring_method_id?: number | null
           ph?: number | null
+<<<<<<< HEAD
+=======
+          system_id?: number | null
+>>>>>>> origin/main
           updated_at?: string | null
           updated_by?: string | null
         }
@@ -6068,6 +6076,10 @@ export type Database = {
           material_construction_id?: number | null
           monitoring_method_id?: number | null
           ph?: number | null
+<<<<<<< HEAD
+=======
+          system_id?: number | null
+>>>>>>> origin/main
           updated_at?: string | null
           updated_by?: string | null
         }
@@ -6100,6 +6112,16 @@ export type Database = {
             referencedRelation: "i_corrosion_monitoring"
             referencedColumns: ["id"]
           },
+<<<<<<< HEAD
+=======
+          {
+            foreignKeyName: "i_corrosion_study_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "e_system"
+            referencedColumns: ["id"]
+          },
+>>>>>>> origin/main
         ]
       }
       i_cyclic_load_type: {

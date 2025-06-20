@@ -1,14 +1,25 @@
-
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import PageHeader from '@/components/shared/PageHeader';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Wrench, Pencil } from 'lucide-react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import StatusBadge from '@/components/shared/StatusBadge';
-import { assets, packages, systems, facilityLocations } from '@/data/sampleData';
-import { toast } from 'sonner';
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import PageHeader from "@/components/shared/PageHeader";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowLeft, Wrench, Pencil } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import StatusBadge from "@/components/shared/StatusBadge";
+import {
+  assets,
+  packages,
+  systems,
+  facilityLocations,
+} from "@/data/sampleData";
+import { toast } from "sonner";
 
 interface Asset {
   id: string;
@@ -31,26 +42,28 @@ const AssetRegisterDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [asset, setAsset] = useState<Asset | null>(null);
-  
+
   useEffect(() => {
     // Fetch asset data based on id
-    const foundAsset = assets.find(a => a.id === id);
-    
+    const foundAsset = assets.find((a) => a.id === id);
+
     if (foundAsset) {
       // Find related data
-      const pkg = packages.find(p => p.id === foundAsset.packageId);
-      const system = systems.find(s => s.id === foundAsset.systemId);
-      const facility = facilityLocations.find(f => f.id === foundAsset.facilityId);
-      
+      const pkg = packages.find((p) => p.id === foundAsset.packageId);
+      const system = systems.find((s) => s.id === foundAsset.systemId);
+      const facility = facilityLocations.find(
+        (f) => f.id === foundAsset.facilityId
+      );
+
       setAsset({
         ...foundAsset,
-        package: pkg?.name || 'Unknown',
-        system: system?.name || 'Unknown',
-        facility: facility?.name || 'Unknown'
+        package: pkg?.name || "Unknown",
+        system: system?.name || "Unknown",
+        facility: facility?.name || "Unknown",
       });
     } else {
-      toast.error("Asset not found");
-      navigate('/manage/asset-register');
+      toast.error("Asset Codet found");
+      navigate("/manage/asset-register");
     }
   }, [id, navigate]);
 
@@ -58,7 +71,7 @@ const AssetRegisterDetailPage: React.FC = () => {
     // In a real application, this would open an edit form
     toast.info("Edit functionality would be implemented here");
   };
-  
+
   if (!asset) {
     return <div>Loading...</div>;
   }
@@ -66,19 +79,19 @@ const AssetRegisterDetailPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <PageHeader 
-          title="Asset Detail" 
+        <PageHeader
+          title="Asset Detail"
           icon={<Wrench className="h-6 w-6" />}
         />
-        <Button 
-          variant="outline" 
-          onClick={() => navigate('/manage/asset-register')} 
+        <Button
+          variant="outline"
+          onClick={() => navigate("/manage/asset-register")}
           className="flex items-center gap-2"
         >
           <ArrowLeft className="h-4 w-4" /> Back to Asset Register
         </Button>
       </div>
-      
+
       <Card>
         <CardContent className="pt-6">
           <Table>
@@ -91,7 +104,7 @@ const AssetRegisterDetailPage: React.FC = () => {
             </TableHeader>
             <TableBody>
               <TableRow>
-                <TableCell className="font-medium">Asset No</TableCell>
+                <TableCell className="font-medium">Asset Code</TableCell>
                 <TableCell>{asset.assetNo}</TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="sm" onClick={handleEdit}>

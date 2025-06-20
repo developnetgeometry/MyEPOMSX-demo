@@ -41,9 +41,7 @@ const AssetsPage: React.FC = () => {
     null
   );
   const navigate = useNavigate();
-  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(
-    new Set()
-  );
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const { data: assets, isLoading, isError, error } = useAssetsWithRelations();
   const {
     data: assetHierarchy,
@@ -118,7 +116,7 @@ const AssetsPage: React.FC = () => {
   const columns: Column[] = [
     {
       id: "asset_no",
-      header: "Asset No",
+      header: "Asset Code",
       accessorKey: "asset_no",
     },
     {
@@ -620,7 +618,7 @@ const AssetsPage: React.FC = () => {
                                   </div>
                                   <div className="p-2 bg-gray-50 rounded-md">
                                     <span className="text-xs text-gray-500 block">
-                                      Asset No
+                                      Asset Code
                                     </span>
                                     <span className="text-sm font-medium">
                                       {nodeDetails.asset_no || "-"}
