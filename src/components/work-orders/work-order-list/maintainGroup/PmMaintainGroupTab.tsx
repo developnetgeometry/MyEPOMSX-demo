@@ -14,7 +14,7 @@ const PmMaintainGroupTab: React.FC<PmMaintainGroupTabProps> = ({ pmWoId }) => {
   const columns: Column[] = [
     {
       id: "asset_no",
-      header: "Asset No",
+      header: "Asset Code",
       accessorKey: "asset_id.asset_no",
     },
     {
