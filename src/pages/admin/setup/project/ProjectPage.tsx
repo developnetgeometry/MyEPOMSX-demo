@@ -170,6 +170,7 @@ const ProjectPage: React.FC = () => {
           onRowClick={handleRowClick}
           onEdit={handleEditProject}
           onDelete={handleDeleteProject}
+          onIndex={true}
         />
       )}
 
@@ -209,12 +210,13 @@ const ProjectPage: React.FC = () => {
 };
 
 // Wrap the component with AdminLayout for consistency with other admin pages
-const ProjectPageWithLayout = () => {
-  return (
-    <AdminLayout>
-      <ProjectPage />
-    </AdminLayout>
-  );
-};
+// const ProjectPageWithLayout = () => {
+//   return (
+//     <AdminLayout>
+//       <ProjectPage />
+//     </AdminLayout>
+//   );
+// };
 
-export default ProjectPageWithLayout;
+// export default ProjectPageWithLayout;
+export default ProjectPage;

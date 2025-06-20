@@ -24,6 +24,7 @@ export const createWorkOrderIndividual = async ({
                     start_date,
                     end_date,
                     is_individual: true,
+                    pm_schedule_id,
                 },
             ])
             .select("id")

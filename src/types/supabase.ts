@@ -6028,6 +6028,8 @@ export type Database = {
           material_construction_id: number | null
           monitoring_method_id: number | null
           ph: number | null
+          study_code: string | null
+          study_name: string | null
           system_id: number | null
           updated_at: string | null
           updated_by: string | null
@@ -6049,6 +6051,8 @@ export type Database = {
           material_construction_id?: number | null
           monitoring_method_id?: number | null
           ph?: number | null
+          study_code?: string | null
+          study_name?: string | null
           system_id?: number | null
           updated_at?: string | null
           updated_by?: string | null
@@ -6070,6 +6074,8 @@ export type Database = {
           material_construction_id?: number | null
           monitoring_method_id?: number | null
           ph?: number | null
+          study_code?: string | null
+          study_name?: string | null
           system_id?: number | null
           updated_at?: string | null
           updated_by?: string | null

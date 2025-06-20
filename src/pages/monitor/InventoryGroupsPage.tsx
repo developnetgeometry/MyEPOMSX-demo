@@ -25,7 +25,6 @@ import {
   Loader2,
   AlertTriangle,
 } from "lucide-react";
-import { useAssetData } from "@/hooks/lookup/looukp-asset";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -39,6 +38,7 @@ import {
   type ValidationError,
   type InventoryGroupFormData,
 } from "@/services/inventoryGroupValidationService";
+import { useAssetData } from "../work-orders/hooks/use-apsf-by-project-data";
 
 const InventoryGroupsPage: React.FC = () => {
   const navigate = useNavigate();

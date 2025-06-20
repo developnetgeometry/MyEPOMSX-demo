@@ -1,0 +1,110 @@
+import { supabase } from "@/lib/supabaseClient";
+import { useQuery } from "@tanstack/react-query";
+
+export const useImsDfExtData = (imsGeneralId: number) => {
+  return useQuery({
+    queryKey: ["i-df-ext", imsGeneralId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("i_df_ext")
+        .select(
+          `id, last_inspection_date, new_coating_date, ims_pof_assessment_id,
+          data_confidence_id, dfextcorrf, i_ims_protection_id, i_ims_design_id,
+          nextcorra, nextcorrb, nextcorrc, nextcorrd, ims_general_id`
+        )
+        .eq("ims_general_id", imsGeneralId) // Fetch records based on ims_por_assessment_id
+        .single(); // Use single() to get a single record
+
+      if (error) {
+        console.error("Error fetching i_df_ext data:", error);
+        throw error;
+      }
+
+      return data;
+    },
+    enabled: !!imsGeneralId, // Only fetch if imsGeneralId is provided
+  });
+};
+
+export const insertImsDfExtData = async (dfExtData: {
+  last_inspection_date?: string; // Use ISO string format for dates
+  new_coating_date?: string; // Use ISO string format for dates
+  ims_por_assessment_id?: number;
+  data_confidence_id?: number;
+  dfextcorrf?: number;
+  i_ims_protection_id?: number;
+  i_ims_design_id?: number;
+  nextcorra?: number;
+  nextcorrb?: number;
+  nextcorrc?: number;
+  nextcorrd?: number;
+}) => {
+  try {
+    const { data, error } = await supabase
+      .from("i_df_ext")
+      .insert([dfExtData]);
+
+    if (error) {
+      console.error("Error inserting i_df_ext data:", error);
+      throw error;
+    }
+
+    return data;
+  } catch (err) {
+    console.error("Unexpected error inserting i_df_ext data:", err);
+    throw err;
+  }
+};
+
+export const updateImsDfExtData = async (
+  id: number,
+  updatedData: Partial<{
+    last_inspection_date?: string; // Use ISO string format for dates
+    new_coating_date?: string; // Use ISO string format for dates
+    ims_por_assessment_id?: number;
+    data_confidence_id?: number;
+    dfextcorrf?: number;
+    i_ims_protection_id?: number;
+    i_ims_design_id?: number;
+    nextcorra?: number;
+    nextcorrb?: number;
+    nextcorrc?: number;
+    nextcorrd?: number;
+  }>
+) => {
+  try {
+    const { data, error } = await supabase
+      .from("i_df_ext")
+      .update(updatedData)
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error updating i_df_ext data:", error);
+      throw error;
+    }
+
+    return data;
+  } catch (err) {
+    console.error("Unexpected error updating i_df_ext data:", err);
+    throw err;
+  }
+};
+
+export const deleteImsDfExtData = async (id: number) => {
+  try {
+    const { data, error } = await supabase
+      .from("i_df_ext")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error deleting i_df_ext data:", error);
+      throw error;
+    }
+
+    return data;
+  } catch (err) {
+    console.error("Unexpected error deleting i_df_ext data:", err);
+    throw err;
+  }
+};

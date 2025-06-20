@@ -17,7 +17,7 @@ export const useWorkRequestData = () => {
                     maintenance_type (id, code, name), requested_by (id, email, full_name), 
                     priority_id (id, name), 
                     finding_detail, anomaly_report, quick_incident_report,
-                    work_request_no, is_work_order_created`
+                    work_request_no, is_work_order_created, wo_id (work_order_no, work_order_status_id (id, name))`
                 )
                 .order("id", { ascending: false });
 
@@ -30,6 +30,7 @@ export const useWorkRequestData = () => {
         },
     });
 };
+
 export const useWorkRequestDataById = (id: number) => {
     return useQuery({
         queryKey: ["e-new-work-request-data-id", id],
@@ -40,15 +41,15 @@ export const useWorkRequestDataById = (id: number) => {
                     .from("e_new_work_request")
                     .select(
                         `id, cm_status_id (id, name), 
-            description, work_request_date, target_due_date, 
-            facility_id (id, location_code, location_name), system_id (id, system_name), 
-            package_id (id, package_no, package_tag, package_name), 
-            asset_id (id, asset_name), cm_sce_code (id, cm_group_name, cm_sce_code ), 
-            work_center_id (id, code, name), date_finding, 
-            maintenance_type (id, code, name), requested_by (id, email, full_name), 
-            priority_id (id, name), 
-            finding_detail, anomaly_report, quick_incident_report,
-            work_request_no, is_work_order_created`
+                        description, work_request_date, target_due_date, 
+                        facility_id (id, location_code, location_name), system_id (id, system_name), 
+                        package_id (id, package_no, package_tag, package_name), 
+                        asset_id (id, asset_name), cm_sce_code (id, cm_group_name, cm_sce_code ), 
+                        work_center_id (id, code, name), date_finding, 
+                        maintenance_type (id, code, name), requested_by (id, email, full_name), 
+                        priority_id (id, name), 
+                        finding_detail, anomaly_report, quick_incident_report,
+                        work_request_no, is_work_order_created`
                     )
                     .eq("id", id)
                     .single();
@@ -58,31 +59,10 @@ export const useWorkRequestDataById = (id: number) => {
                     throw workRequestError;
                 }
 
-                // Only fetch data from e_cm_general if cm_status_id === 3
-                let cmGeneralData = null;
-                if (workRequestData.cm_status_id?.id === 3) {
-                    const { data, error } = await supabase
-                        .from("e_cm_general")
-                        .select(`id`)
-                        .eq("work_request_id", id)
-                        .single();
-
-                    if (error && error.code !== "PGRST116") {
-                        // Ignore "No rows found" error (code PGRST116)
-                        console.error("Error fetching e_cm_general data:", error);
-                        throw error;
-                    }
-
-                    cmGeneralData = data;
-                }
-
-                // Combine data
-                return {
-                    ...workRequestData,
-                    cm_work_order_id: cmGeneralData?.id ?? null, // Add cm_work_order_id if available
-                };
+                // Return only the data from e_new_work_request
+                return workRequestData;
             } catch (error) {
-                console.error("Error combining data:", error);
+                console.error("Error fetching data:", error);
                 throw error;
             }
         },
@@ -209,14 +189,17 @@ export const insertCmGeneral = async (cmGeneralData: {
     try {
         const { data, error } = await supabase
             .from("e_cm_general")
-            .insert([cmGeneralData]);
+            .insert([cmGeneralData])
+            .select("id"); // Ensure the ID column is returned
 
         if (error) {
             console.error("Error inserting e_cm_general data:", error);
             throw error;
         }
 
-        return data;
+        // Assuming the ID is returned in the first row of the data array
+        const cmGeneralId = data?.[0]?.id;
+        return { cmGeneralId };
     } catch (err) {
         console.error("Unexpected error inserting e_cm_general data:", err);
         throw err;

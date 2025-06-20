@@ -30,13 +30,7 @@ export const usePmScheduleData = () => {
         throw error;
       }
 
-      // Add index to each row (starting from 1)
-      const indexedData = data?.map((item, index) => ({
-        index: index + 1, // 1-based index
-        ...item,
-      }));
-
-      return indexedData;
+      return data;
     },
   });
 };
