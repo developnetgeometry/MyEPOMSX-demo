@@ -103,6 +103,8 @@ const PMScheduleDetailPage: React.FC = () => {
             refetch();
             queryClient.invalidateQueries({ queryKey: ["e-pm-schedule-data"] });
             queryClient.invalidateQueries({ queryKey: ["e-work-order-data"] });
+            queryClient.invalidateQueries({ queryKey: ["e-pm-wo-generate-history"] });
+            queryClient.invalidateQueries({ queryKey: ["e-wo-history-counts"] });
           }
         } catch (error) {
           console.error("Failed to create work order:", error);
@@ -185,11 +187,14 @@ const PMScheduleDetailPage: React.FC = () => {
               <TabsContent value="checksheet">
                 {id && <ChecksheetTab pmScheduleId={Number(pmSchedule.id)} />}
               </TabsContent>
-              {id && pmSchedule.asset_id?.id ? (
-                <RelatedWoTab assetId={Number(pmSchedule.asset_id.id)} />
-              ) : (
-                <div>No related work orders available for this asset.</div>
-              )}
+              <TabsContent value="workOrder">
+                {id && pmSchedule.asset_id?.id ? (
+                  <RelatedWoTab assetId={Number(pmSchedule.asset_id.id)} />
+                ) : (
+                  <div>No related work orders available for this asset.</div>
+                )}
+              </TabsContent>
+
               <TabsContent value="additionalInfo">
                 {id && <AdditionalInfoTab pmScheduleId={Number(pmSchedule.id)} />}
               </TabsContent>

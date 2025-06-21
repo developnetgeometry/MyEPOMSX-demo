@@ -83,6 +83,7 @@ import WorkOrderDetailPage from "@/pages/work-orders/work-order-list/WorkOrderLi
 import WorkOrderListPage from "@/pages/work-orders/work-order-list/WorkOrderListPage";
 import WorkRequestPage from "@/pages/work-orders/work-request/WorkRequestPage";
 import WorkRequestDetailPage from "@/pages/work-orders/work-request/WorkRequestDetailPage";
+import WorkRequestFormPage from "@/pages/work-orders/work-request/WorkRequestAddPage";
 
 // Measure Pages
 import AssetPerformancePage from "@/pages/measure/AssetPerformancePage";
@@ -106,8 +107,8 @@ import PressureVesselDetailPage from "@/pages/monitor/PressureVesselDetailPage";
 import NewPipingPage from "@/pages/monitor/NewPipingPage";
 import FormulaTestingPage from "@/pages/monitor/FormulaTestingPage";
 import InventoryGroupsPage from "@/pages/monitor/InventoryGroupsPage";
-import RBIAssessmentPage from "@/pages/monitor/RBIAssessmentPage";
-import RBIAssessmentDetailPage from "@/pages/monitor/RBIAssessmentDetailPage";
+import RBIAssessmentPage from "@/pages/monitor/rbi/RBIAssessmentPage";
+import RBIAssessmentDetailPage from "@/pages/monitor/rbi/RBIAssessmentDetailPage";
 // import RBIAssessmentPVDetailPage from "@/pages/monitor/RBIAssessmentPVDetailPage";
 import RMSAssetListPage from "@/pages/monitor/RMSAssetListPage";
 import RMSAssetDetailPage from "@/pages/monitor/RMSAssetDetailPage";
@@ -770,6 +771,16 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <Layout>
               <WorkRequestPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/work-orders/work-request/new"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <WorkRequestFormPage />
             </Layout>
           </ProtectedRoute>
         }

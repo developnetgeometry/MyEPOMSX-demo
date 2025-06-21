@@ -387,7 +387,7 @@ const NewPipingPage: React.FC = () => {
       );
 
       if (!selectedAsset) {
-        throw new Error("Selected asset not found");
+        throw new Error("Selected Asset Codet found");
       }
 
       // Prepare main piping data for i_ims_general table insertion

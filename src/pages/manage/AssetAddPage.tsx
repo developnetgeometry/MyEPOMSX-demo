@@ -307,8 +307,49 @@ const AssetAddPage: React.FC = () => {
     setFileErrors([]);
   };
 
+  const showValidationError = (description: string) => {
+    toast({
+      title: "Form Incomplete",
+      description,
+      variant: "destructive",
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Ensure all required fields are filled
+    if (!formData.facilityLocations) {
+      setActiveTab("asset-info"); // Navigate to the "Asset Information" tab
+      return showValidationError("Facility Location is required");
+    }
+    if (!formData.systems) {
+      setActiveTab("asset-info"); // Navigate to the "Asset Information" tab
+      return showValidationError("System is required");
+    }
+    if (!formData.packages) {
+      setActiveTab("asset-info"); // Navigate to the "Asset Information" tab
+      return showValidationError("Package is required");
+    }
+    if (!formData.assetNo) {
+      setActiveTab("asset-info"); // Navigate to the "Asset Information" tab
+      return showValidationError("Asset No is required");
+    }
+    if (!formData.assetName) {
+      setActiveTab("asset-info"); // Navigate to the "Asset Information" tab
+      return showValidationError("Asset Name is required");
+    }
+    if (!formData.assetTag) {
+      setActiveTab("asset-info"); // Navigate to the "Asset Information" tab
+      return showValidationError("Asset Tag is required");
+    }
+    if (!formData.assetStatus) {
+      setActiveTab("asset-info"); // Navigate to the "Asset Information" tab
+      return showValidationError("Asset Status is required");
+    }
+
+
+
 
     // Prevent multiple submissions
     if (isSubmitting) return;
@@ -355,7 +396,9 @@ const AssetAddPage: React.FC = () => {
           asset_class_id: formData.assetClass
             ? parseInt(formData.assetClass)
             : null,
-          parent_asset_id: formData.parentAssetId ? parseInt(formData.parentAssetId) : null,
+          parent_asset_id: formData.parentAssetId
+            ? parseInt(formData.parentAssetId)
+            : null,
           specification: formData.assetSpecification || null,
           is_integrity: formData.assetIntegrity,
           is_reliability: formData.assetReliability,
@@ -390,8 +433,8 @@ const AssetAddPage: React.FC = () => {
       // Find the selected status option to get its id
       const selectedStatusOption = Array.isArray(statusOptionsData)
         ? statusOptionsData.find(
-            (option) => String(option.value) === String(formData.assetStatus)
-          )
+          (option) => String(option.value) === String(formData.assetStatus)
+        )
         : undefined;
 
       const statusId = selectedStatusOption?.id || formData.assetStatus || null;
@@ -486,16 +529,15 @@ const AssetAddPage: React.FC = () => {
         }
       }
 
-      
       // Show success message
       toast({
         title: "Success",
         description: "Asset created successfully",
         variant: "default",
       });
-      
+
       // Invalidate queries to refresh asset data
-      await queryClient.invalidateQueries({ queryKey: ["assets"]} );
+      await queryClient.invalidateQueries({ queryKey: ["assets"] });
 
       // Navigate back to asset list
       navigate("/manage/assets");
@@ -504,12 +546,14 @@ const AssetAddPage: React.FC = () => {
         typeof error?.message === "string" ? error.message : "";
       if (
         error.code === "23505" ||
-        errorMessage.includes('duplicate key value violates unique constraint "e_asset_unique"')
+        errorMessage.includes(
+          'duplicate key value violates unique constraint "e_asset_unique"'
+        )
       ) {
         toast({
           title: "Duplicate Entry",
           description:
-            "Asset No. already exists. Please enter a different Asset No.",
+            "Asset Code. already exists. Please enter a different Asset Code.",
           variant: "destructive",
         });
       } else {
@@ -545,7 +589,6 @@ const AssetAddPage: React.FC = () => {
       }));
     }
   }, [parentAssetId]);
-  
 
   return (
     <div className="space-y-6">
@@ -663,7 +706,7 @@ const AssetAddPage: React.FC = () => {
 
                     <div className="space-y-2">
                       <Label htmlFor="assetNo">
-                        Asset No<span className="text-red-500">*</span>
+                        Asset Code<span className="text-red-500">*</span>
                       </Label>
                       <Input
                         id="assetNo"

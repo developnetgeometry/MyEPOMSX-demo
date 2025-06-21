@@ -35,14 +35,16 @@ const AddChildAssetDialog: React.FC<AddChildAssetDialogProps> = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedAsset, setSelectedAsset] = useState<number | null>(null);
   const [isAssigning, setIsAssigning] = useState(false);
-  const exclusionIds = [
-    parentAssetId,
-    ...childAssets.map((a) => a.id),
-  ];
+  const exclusionIds = [parentAssetId, ...childAssets.map((a) => a.id)];
 
   // Query to fetch assets that are not already children
   const { data: availableAssets, isLoading } = useQuery({
-    queryKey: ["availableAssetsForParent", parentAssetId, exclusionIds, searchTerm],
+    queryKey: [
+      "availableAssetsForParent",
+      parentAssetId,
+      exclusionIds,
+      searchTerm,
+    ],
     queryFn: async () => {
       let query = supabase
         .from("e_asset")
@@ -53,7 +55,9 @@ const AddChildAssetDialog: React.FC<AddChildAssetDialogProps> = ({
       }
 
       if (searchTerm) {
-        query = query.or(`asset_no.ilike.%${searchTerm}%,asset_name.ilike.%${searchTerm}%`);
+        query = query.or(
+          `asset_no.ilike.%${searchTerm}%,asset_name.ilike.%${searchTerm}%`
+        );
       }
 
       const { data, error } = await query;
@@ -64,25 +68,25 @@ const AddChildAssetDialog: React.FC<AddChildAssetDialogProps> = ({
   });
 
   const handleAssignExisting = async () => {
-  if (!selectedAsset) return;
+    if (!selectedAsset) return;
 
-  setIsAssigning(true);
-  try {
-    const { error } = await supabase
-      .from('e_asset')
-      .update({ parent_asset_id: parentAssetId })
-      .eq('id', selectedAsset);
+    setIsAssigning(true);
+    try {
+      const { error } = await supabase
+        .from("e_asset")
+        .update({ parent_asset_id: parentAssetId })
+        .eq("id", selectedAsset);
 
-    if (error) throw error;
+      if (error) throw error;
 
-    onChildAdded();
-    onClose();
-  } catch (error) {
-    console.error("Error assigning child asset:", error);
-  } finally {
-    setIsAssigning(false);
-  }
-};
+      onChildAdded();
+      onClose();
+    } catch (error) {
+      console.error("Error assigning child asset:", error);
+    } finally {
+      setIsAssigning(false);
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -94,12 +98,15 @@ const AddChildAssetDialog: React.FC<AddChildAssetDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)}>
+        <Tabs
+          value={activeTab}
+          onValueChange={(value: any) => setActiveTab(value)}
+        >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="existing">Select Existing</TabsTrigger>
             <TabsTrigger value="new">Create New</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="existing">
             <div className="space-y-4">
               <div className="relative">
@@ -111,7 +118,7 @@ const AddChildAssetDialog: React.FC<AddChildAssetDialogProps> = ({
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              
+
               {isLoading ? (
                 <div className="flex justify-center py-4">
                   <Loader2 className="h-6 w-6 animate-spin" />
@@ -122,19 +129,23 @@ const AddChildAssetDialog: React.FC<AddChildAssetDialogProps> = ({
                     <div
                       key={asset.id}
                       className={`p-3 border-b cursor-pointer hover:bg-gray-50 ${
-                        selectedAsset === asset.id ? "bg-blue-50 border-l-4 border-l-blue-500" : ""
+                        selectedAsset === asset.id
+                          ? "bg-blue-50 border-l-4 border-l-blue-500"
+                          : ""
                       }`}
                       onClick={() => setSelectedAsset(asset.id)}
                     >
                       <div className="font-medium">{asset.asset_name}</div>
-                      <div className="text-sm text-gray-500">Asset No: {asset.asset_no}</div>
+                      <div className="text-sm text-gray-500">
+                        Asset Code: {asset.asset_no}
+                      </div>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="py-8 text-center">
                   <div className="text-gray-500 mb-2">No assets found</div>
-                  <Button 
+                  <Button
                     variant="outline"
                     onClick={() => {
                       setActiveTab("new");
@@ -145,7 +156,7 @@ const AddChildAssetDialog: React.FC<AddChildAssetDialogProps> = ({
                   </Button>
                 </div>
               )}
-              
+
               <Button
                 onClick={handleAssignExisting}
                 disabled={!selectedAsset || isAssigning}
@@ -158,13 +169,14 @@ const AddChildAssetDialog: React.FC<AddChildAssetDialogProps> = ({
               </Button>
             </div>
           </TabsContent>
-          
+
           <TabsContent value="new">
             <div className="space-y-4">
               <p className="text-sm text-gray-600">
-                Create a new asset that will be automatically added as a child of this asset.
+                Create a new asset that will be automatically added as a child
+                of this asset.
               </p>
-              <Button 
+              <Button
                 onClick={() => {
                   onNewAssetRequest();
                   onClose();

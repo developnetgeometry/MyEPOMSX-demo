@@ -165,6 +165,8 @@ const { filteredSchedules, readyToGenerateCount } = useMemo(() => {
       refetch(); // Refresh the PM Schedules data
       queryClient.invalidateQueries({ queryKey: ["e-work-order-data"] });
       queryClient.invalidateQueries({ queryKey: ["e-pm-schedule-data"] });
+      queryClient.invalidateQueries({ queryKey: ["e-pm-wo-generate-history"] });
+      queryClient.invalidateQueries({ queryKey: ["e-wo-history-counts"] });
     } catch (error) {
       console.error("Failed to create work orders:", error);
       toast({

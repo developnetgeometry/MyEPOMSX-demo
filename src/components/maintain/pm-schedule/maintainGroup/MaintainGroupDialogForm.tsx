@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import Loading from "@/components/shared/Loading";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAssetGroupData } from "@/hooks/lookup/lookup-asset-group";
-import { useAssetData } from "@/hooks/lookup/looukp-asset";
+import { useAssetData } from "@/pages/work-orders/hooks/use-apsf-by-project-data";
 
 interface MaintainGroupDialogFormProps {
   onSubmit: (formData: any) => Promise<void>;
@@ -65,7 +65,7 @@ const MaintainGroupDialogForm: React.FC<MaintainGroupDialogFormProps> = ({
                   <SelectContent>
                     {assets?.map((asset) => (
                       <SelectItem key={asset.id} value={asset.id.toString()}>
-                        {asset.asset_name}
+                        {asset.asset_no} - {asset.asset_name}
                       </SelectItem>
                     ))}
                   </SelectContent>

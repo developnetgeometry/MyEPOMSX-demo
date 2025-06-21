@@ -87,6 +87,7 @@ const WorkRequestDetailPage: React.FC = () => {
           variant: "default",
         });
         refetch();
+        queryClient.invalidateQueries({ queryKey: ["e-new-work-request-data"] });
       }
       setIsDialogOpen(false);
     } catch (error) {
@@ -114,6 +115,7 @@ const WorkRequestDetailPage: React.FC = () => {
               variant: "default",
             });
             refetch();
+            queryClient.invalidateQueries({ queryKey: ["e-new-work-request-data"] });
           }
           setIsConfirmationDialogOpen(false);
         } catch (error) {
@@ -144,6 +146,7 @@ const WorkRequestDetailPage: React.FC = () => {
               variant: "default",
             });
             refetch();
+            queryClient.invalidateQueries({ queryKey: ["e-new-work-request-data"] });
           }
           setIsConfirmationDialogOpen(false);
         } catch (error) {
@@ -170,24 +173,6 @@ const WorkRequestDetailPage: React.FC = () => {
             // Step 1: Update the cm_status_id to 3 in e_new_work_request
             await updateWorkRequestData(workRequest.id, { cm_status_id: 3 });
 
-            // Step 2: Insert data into e_cm_general
-            const cmGeneralData = {
-              priority_id: workRequest.priority_id?.id,
-              work_center_id: workRequest.work_center_id?.id,
-              facility_id: workRequest.facility_id?.id,
-              system_id: workRequest.system_id?.id,
-              package_id: workRequest.package_id?.id,
-              asset_id: workRequest.asset_id?.id,
-              requested_by: workRequest.requested_by?.id,
-              cm_sce_code: workRequest.cm_sce_code?.id,
-              due_date: workRequest.target_due_date,
-              work_request_id: workRequest.id,
-            };
-
-            await insertCmGeneral(cmGeneralData);
-            // Step 3: Trigger supabase on insert e_cm_general to copy table
-            // work_request to e_cm_general
-
             toast({
               title: "Success",
               description: "Work request status updated to 'WO Raised'",
@@ -197,6 +182,7 @@ const WorkRequestDetailPage: React.FC = () => {
             refetch();
             queryClient.invalidateQueries({ queryKey: ["e-new-work-request-data", id] });
             queryClient.invalidateQueries({ queryKey: ["e-work-order-data"] });
+            queryClient.invalidateQueries({ queryKey: ["e-new-work-request-data"] });
           }
           setIsConfirmationDialogOpen(false);
         } catch (error) {
@@ -223,13 +209,33 @@ const WorkRequestDetailPage: React.FC = () => {
             // Step 1: Update the cm_status_id to 3 in e_new_work_request
             await updateWorkRequestData(workRequest.id, { is_work_order_created: true });
 
+
             // Step 2: Insert data into e_cm_general
+            const cmGeneralData = {
+              priority_id: workRequest.priority_id?.id,
+              work_center_id: workRequest.work_center_id?.id,
+              facility_id: workRequest.facility_id?.id,
+              system_id: workRequest.system_id?.id,
+              package_id: workRequest.package_id?.id,
+              asset_id: workRequest.asset_id?.id,
+              requested_by: workRequest.requested_by?.id,
+              cm_sce_code: workRequest.cm_sce_code?.id,
+              due_date: workRequest.target_due_date,
+              work_request_id: workRequest.id,
+            };
+
+            const { cmGeneralId } = await insertCmGeneral(cmGeneralData);
+            // Step 3: Trigger supabase on insert e_cm_general to copy table
+            // work_request to e_cm_general
+
+            // Step 4: Insert data into work_order
             const woData = {
               work_order_type: 1,
               work_order_status_id: 1,
               description: workRequest.description,
-              cm_work_order_id: workRequest.cm_work_order_id,
+              cm_work_order_id: cmGeneralId,
               asset_id: workRequest.asset_id?.id,
+              due_date: workRequest.target_due_date,
             };
 
             await insertWorkOrderData(woData);
@@ -241,6 +247,10 @@ const WorkRequestDetailPage: React.FC = () => {
             });
 
             refetch();
+            queryClient.invalidateQueries({ queryKey: ["e-new-work-request-data", id] });
+            queryClient.invalidateQueries({ queryKey: ["e-work-order-data"] });
+            queryClient.invalidateQueries({ queryKey: ["e-new-work-request-data"] });
+            queryClient.invalidateQueries({ queryKey: ["e-wo-history-counts"] });
           }
           setIsConfirmationDialogOpen(false);
         } catch (error) {
