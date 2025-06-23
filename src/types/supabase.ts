@@ -5927,7 +5927,6 @@ export type Database = {
         Row: {
           base_material_id: number | null
           co2_concentration: number | null
-          corrosion_study_id: number
           created_at: string | null
           fluid_velocity: number | null
           h2s_concentration: number | null
@@ -5939,7 +5938,6 @@ export type Database = {
         Insert: {
           base_material_id?: number | null
           co2_concentration?: number | null
-          corrosion_study_id: number
           created_at?: string | null
           fluid_velocity?: number | null
           h2s_concentration?: number | null
@@ -5951,7 +5949,6 @@ export type Database = {
         Update: {
           base_material_id?: number | null
           co2_concentration?: number | null
-          corrosion_study_id?: number
           created_at?: string | null
           fluid_velocity?: number | null
           h2s_concentration?: number | null
@@ -5966,13 +5963,6 @@ export type Database = {
             columns: ["base_material_id"]
             isOneToOne: false
             referencedRelation: "i_material_construction"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "i_corrosion_factor_corrosion_study_id_fkey"
-            columns: ["corrosion_study_id"]
-            isOneToOne: false
-            referencedRelation: "i_corrosion_study"
             referencedColumns: ["id"]
           },
         ]
@@ -6014,6 +6004,7 @@ export type Database = {
         Row: {
           asset_id: number
           co2_presence: boolean | null
+          corrosion_factor_id: number | null
           corrosion_group_id: number | null
           created_at: string | null
           created_by: string | null
@@ -6037,6 +6028,7 @@ export type Database = {
         Insert: {
           asset_id: number
           co2_presence?: boolean | null
+          corrosion_factor_id?: number | null
           corrosion_group_id?: number | null
           created_at?: string | null
           created_by?: string | null
@@ -6060,6 +6052,7 @@ export type Database = {
         Update: {
           asset_id?: number
           co2_presence?: boolean | null
+          corrosion_factor_id?: number | null
           corrosion_group_id?: number | null
           created_at?: string | null
           created_by?: string | null
@@ -6086,6 +6079,13 @@ export type Database = {
             columns: ["asset_id"]
             isOneToOne: false
             referencedRelation: "e_asset"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_corrosion_study_corrosion_factor_id_fkey"
+            columns: ["corrosion_factor_id"]
+            isOneToOne: false
+            referencedRelation: "i_corrosion_factor"
             referencedColumns: ["id"]
           },
           {
@@ -6775,6 +6775,7 @@ export type Database = {
       i_df_thin: {
         Row: {
           agerc: string | null
+          cr_act: number | null
           data_confidence_id: number | null
           dfthinfb: number | null
           id: number
@@ -6789,6 +6790,7 @@ export type Database = {
         }
         Insert: {
           agerc?: string | null
+          cr_act?: number | null
           data_confidence_id?: number | null
           dfthinfb?: number | null
           id?: number
@@ -6803,6 +6805,7 @@ export type Database = {
         }
         Update: {
           agerc?: string | null
+          cr_act?: number | null
           data_confidence_id?: number | null
           dfthinfb?: number | null
           id?: number
