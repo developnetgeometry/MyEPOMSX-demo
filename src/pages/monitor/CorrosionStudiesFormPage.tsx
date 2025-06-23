@@ -22,54 +22,42 @@ import {
 import PageHeader from "@/components/shared/PageHeader";
 import { ChevronLeft, Database, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAssetTagOptions } from "@/hooks/queries/useAssetDropdownOptions";
 import {
   useMaterialConstructionOptions,
   useExternalEnvironmentOptions,
 } from "@/hooks/queries/useCorrosionDropdownOptions";
-
-// Dummy data for dropdowns that don't have existing hooks
-const corrosionGroupOptions = [
-  { value: "group-a", label: "Group A - Atmospheric Corrosion" },
-  { value: "group-b", label: "Group B - General Corrosion" },
-  { value: "group-c", label: "Group C - Localized Corrosion" },
-  { value: "group-d", label: "Group D - Stress Corrosion Cracking" },
-  { value: "group-e", label: "Group E - High Temperature" },
-];
-
-const corrosionMonitoringOptions = [
-  { value: "ultrasonic", label: "Ultrasonic Testing" },
-  { value: "radiography", label: "Radiography" },
-  { value: "visual", label: "Visual Inspection" },
-  { value: "coupon", label: "Coupon Testing" },
-  { value: "probes", label: "Corrosion Probes" },
-  { value: "pec", label: "Pulsed Eddy Current" },
-];
-
-const baseMaterialOptions = [
-  { value: "carbon-steel", label: "Carbon Steel" },
-  { value: "stainless-304", label: "Stainless Steel 304" },
-  { value: "stainless-316", label: "Stainless Steel 316" },
-  { value: "duplex", label: "Duplex Steel" },
-  { value: "super-duplex", label: "Super Duplex Steel" },
-  { value: "chrome-alloy", label: "Chrome Alloy" },
-  { value: "nickel-alloy", label: "High Nickel Alloy" },
-];
+import {
+  useAssetOptions,
+  useBaseMaterialOptions,
+  useCorrosionGroupOptions,
+  useCorrosionMonitoringOptions,
+  useCreateCorrosionStudy,
+} from "@/hooks/queries/useCorrosionStudy";
+import { useAuth } from "@/contexts/AuthContext";
 
 const CorrosionStudiesFormPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
+
+  const createMutation = useCreateCorrosionStudy();
 
   // Dropdown options hooks
-  const { data: assetTagOptions = [] } = useAssetTagOptions();
+  const { data: assetOptions = [] } = useAssetOptions();
   const { data: materialConstructionOptions = [] } =
     useMaterialConstructionOptions();
   const { data: environmentOptions = [] } = useExternalEnvironmentOptions();
+  const { data: corrosionGroupOptions = [] } = useCorrosionGroupOptions();
+  const { data: baseMaterialOptions = [] } = useBaseMaterialOptions();
+  const { data: corrosionMonitoringOptions = [] } =
+    useCorrosionMonitoringOptions();
 
   const [formData, setFormData] = useState({
     // General Information
     asset: "",
+    asset_name: "",
+    asset_no: "",
     corrosionGroupName: "",
     materialConstruction: "",
     environment: "",
@@ -103,10 +91,23 @@ const CorrosionStudiesFormPage: React.FC = () => {
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    // If the asset dropdown changes, also set asset_name and asset_code
+    if (name === "asset") {
+      const selected = assetOptions.find(
+        (option) => option.value.toString() === value
+      );
+      setFormData((prev) => ({
+        ...prev,
+        asset: value,
+        asset_name: selected?.asset_name || "",
+        asset_no: selected?.asset_no || "",
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleRadioChange = (name: string, value: string) => {
@@ -121,24 +122,74 @@ const CorrosionStudiesFormPage: React.FC = () => {
   };
 
   const handleSave = async () => {
-    setIsSubmitting(true);
-    try {
-      // Here you would typically make an API call to save the data
-      console.log("Saving corrosion study:", formData);
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "User not authenticated. Please login again.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+    setIsSubmitting(true);
+
+    try {
+      // Prepare study data
+      const studyData = {
+        asset_id: parseInt(formData.asset),
+        asset_name: formData.asset_name,
+        asset_no: formData.asset_no,
+        corrosion_group_id: parseInt(formData.corrosionGroupName),
+        material_construction_id: parseInt(formData.materialConstruction),
+        external_environment_id: parseInt(formData.environment),
+        ph: formData.ph ? parseFloat(formData.ph) : null,
+        monitoring_method_id: formData.corrosionMonitoring
+          ? parseInt(formData.corrosionMonitoring)
+          : null,
+        internal_damage_mechanism: formData.internalDamageMechanism || null,
+        external_damage_mechanism: formData.externalDamageMechanism || null,
+        expected_internal_corrosion_rate: formData.expectedInternalCorrosionRate
+          ? parseFloat(formData.expectedInternalCorrosionRate)
+          : null,
+        expected_external_corrosion_rate: formData.expectedExternalCorrosionRate
+          ? parseFloat(formData.expectedExternalCorrosionRate)
+          : null,
+        h2s_presence: formData.h2s === "yes",
+        co2_presence: formData.co2 === "yes",
+        description: formData.description || null,
+      };
+
+      // Prepare factor data
+      const factorData = {
+        temperature: formData.temperature
+          ? parseFloat(formData.temperature)
+          : null,
+        pressure: formData.pressure ? parseFloat(formData.pressure) : null,
+        h2s_concentration: formData.h2sConcentration
+          ? parseFloat(formData.h2sConcentration)
+          : null,
+        co2_concentration: formData.co2Concentration
+          ? parseFloat(formData.co2Concentration)
+          : null,
+        base_material_id: formData.baseMaterial
+          ? parseInt(formData.baseMaterial)
+          : null,
+        fluid_velocity: formData.fluidVelocity
+          ? parseFloat(formData.fluidVelocity)
+          : null,
+      };
+
+      await createMutation.mutateAsync({ studyData, factorData });
 
       toast({
         title: "Success",
-        description: "Corrosion study has been saved successfully.",
+        description: "Corrosion study created successfully!",
       });
-
       navigate("/monitor/corrosion-studies");
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to save corrosion study. Please try again.",
+        description: "Failed to create corrosion study. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -188,28 +239,14 @@ const CorrosionStudiesFormPage: React.FC = () => {
                       <SelectValue placeholder="Select Asset" />
                     </SelectTrigger>
                     <SelectContent>
-                      {assetTagOptions.map((option) => (
-                        <SelectItem key={option.id} value={option.value}>
+                      {assetOptions.map((option) => (
+                        <SelectItem
+                          key={option.value}
+                          value={option.value.toString()}
+                        >
                           {option.label}
                         </SelectItem>
                       ))}
-                      {/* Fallback dummy data if no API data */}
-                      {assetTagOptions.length === 0 && (
-                        <>
-                          <SelectItem value="PV-1001">
-                            PV-1001 - Pressure Vessel
-                          </SelectItem>
-                          <SelectItem value="PP-2003">
-                            PP-2003 - Process Piping
-                          </SelectItem>
-                          <SelectItem value="HX-1002">
-                            HX-1002 - Heat Exchanger
-                          </SelectItem>
-                          <SelectItem value="TK-3001">
-                            TK-3001 - Storage Tank
-                          </SelectItem>
-                        </>
-                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -229,7 +266,10 @@ const CorrosionStudiesFormPage: React.FC = () => {
                     </SelectTrigger>
                     <SelectContent>
                       {corrosionGroupOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
+                        <SelectItem
+                          key={option.value}
+                          value={option.value.toString()}
+                        >
                           {option.label}
                         </SelectItem>
                       ))}
@@ -257,22 +297,6 @@ const CorrosionStudiesFormPage: React.FC = () => {
                           {option.label}
                         </SelectItem>
                       ))}
-                      {/* Fallback dummy data if no API data */}
-                      {materialConstructionOptions.length === 0 && (
-                        <>
-                          <SelectItem value="1">
-                            Carbon Steel - A106 Grade B
-                          </SelectItem>
-                          <SelectItem value="2">
-                            Stainless Steel - 316L
-                          </SelectItem>
-                          <SelectItem value="3">
-                            Chrome Steel - 1¼Cr½Mo
-                          </SelectItem>
-                          <SelectItem value="4">Duplex Steel - 2205</SelectItem>
-                          <SelectItem value="5">Super Duplex - 2507</SelectItem>
-                        </>
-                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -296,16 +320,6 @@ const CorrosionStudiesFormPage: React.FC = () => {
                           {option.label}
                         </SelectItem>
                       ))}
-                      {/* Fallback dummy data if no API data */}
-                      {environmentOptions.length === 0 && (
-                        <>
-                          <SelectItem value="1">Atmospheric</SelectItem>
-                          <SelectItem value="2">Buried</SelectItem>
-                          <SelectItem value="3">Immersed</SelectItem>
-                          <SelectItem value="4">Process Fluid</SelectItem>
-                          <SelectItem value="5">High Temperature</SelectItem>
-                        </>
-                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -338,7 +352,10 @@ const CorrosionStudiesFormPage: React.FC = () => {
                     </SelectTrigger>
                     <SelectContent>
                       {corrosionMonitoringOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
+                        <SelectItem
+                          key={option.value}
+                          value={option.value.toString()}
+                        >
                           {option.label}
                         </SelectItem>
                       ))}
@@ -478,7 +495,7 @@ const CorrosionStudiesFormPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="pressure">Pressure (barg)</Label>
+                  <Label htmlFor="pressure">Pressure (bar)</Label>
                   <Input
                     id="pressure"
                     name="pressure"
@@ -536,7 +553,10 @@ const CorrosionStudiesFormPage: React.FC = () => {
                     </SelectTrigger>
                     <SelectContent>
                       {baseMaterialOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
+                        <SelectItem
+                          key={option.value}
+                          value={option.value.toString()}
+                        >
                           {option.label}
                         </SelectItem>
                       ))}
