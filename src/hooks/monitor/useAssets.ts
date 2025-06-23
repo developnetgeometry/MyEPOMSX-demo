@@ -68,7 +68,7 @@ const fetchAssets = async (): Promise<AssetData[]> => {
             package:e_package(package_name),
             asset_tag:e_asset_tag(name),
             status:e_asset_status(name),
-            asset_detail:asset_detail_id(
+            asset_detail:asset_detail_id!inner(
                 *,
                 manufacturer:e_manufacturer(name),
                 category:e_asset_category(name),
@@ -80,7 +80,7 @@ const fetchAssets = async (): Promise<AssetData[]> => {
                 group_name
             )
         `)
-        .eq('asset_detail_id.is_reliability', true)
+        .eq('asset_detail.is_reliability', true)
         .order('asset_no');
 
     if (error) throw error;

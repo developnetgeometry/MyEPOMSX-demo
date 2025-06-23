@@ -52,10 +52,14 @@ const fetchAssetsWithUptimeData = async (): Promise<AssetWithUptime[]> => {
             id,
             asset_no,
             asset_name,
-            asset_detail_id
+            asset_detail_id,
+            asset_detail:asset_detail_id!inner(
+                is_reliability
+            )
         `)
         .in('asset_detail_id', uniqueAssetDetailIds)
         .not('asset_detail_id', 'is', null)
+        .eq('asset_detail.is_reliability', true)
         .order('asset_no');
 
     if (error) throw error;
