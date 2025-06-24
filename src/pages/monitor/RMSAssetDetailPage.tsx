@@ -147,6 +147,12 @@ const RMSAssetDetailPage: React.FC = () => {
     error: workOrdersError,
   } = userWorkOrderDataByAsset(parseInt(id || "0"));
 
+  const {
+    data: workOrders = [],
+    isLoading: workOrdersLoading,
+    error: workOrdersError,
+  } = userWorkOrderDataByAsset(parseInt(id || "0"));
+
   // Generate sample telemetry and alert data when asset loads
   useEffect(() => {
     if (asset) {
@@ -225,7 +231,6 @@ const RMSAssetDetailPage: React.FC = () => {
           <TabsTrigger value="health">Health Status</TabsTrigger>
           <TabsTrigger value="alerts">Alert Analysis</TabsTrigger>
         </TabsList> */}
-
         <TabsContent value="basic" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="col-span-1 md:col-span-2">
@@ -373,7 +378,6 @@ const RMSAssetDetailPage: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
-
             <Card className="col-span-1 md:col-span-3">
               <CardHeader>
                 <CardTitle>Work Orders</CardTitle>

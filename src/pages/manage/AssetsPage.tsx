@@ -87,6 +87,11 @@ const AssetsPage: React.FC = () => {
       setExpandedNodes(new Set(allIds));
     }
   };
+  if (assetHierarchy && assetHierarchy.facilities) {
+    const allIds = collectIds(assetHierarchy.facilities);
+    setExpandedNodes(new Set(allIds));
+  }
+};
 
   const handleCollapseAll = () => {
     setExpandedNodes(new Set());
@@ -172,6 +177,7 @@ const AssetsPage: React.FC = () => {
   if (isError) {
     return <div>Error loading assets: {error?.message}</div>;
   }
+
 };
 
 export default AssetsPage;

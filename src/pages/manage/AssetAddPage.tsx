@@ -539,6 +539,9 @@ const AssetAddPage: React.FC = () => {
       // Invalidate queries to refresh asset data
       await queryClient.invalidateQueries({ queryKey: ["assets"] });
 
+      // Invalidate queries to refresh asset data
+      await queryClient.invalidateQueries({ queryKey: ["assets"] });
+
       // Navigate back to asset list
       navigate("/manage/assets");
     } catch (error) {
