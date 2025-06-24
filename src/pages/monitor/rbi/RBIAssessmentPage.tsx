@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { ShieldAlertIcon } from "lucide-react";
-import { useImsGeneralData } from "./hooks/use-ims-general-data";
 import Loading from "@/components/shared/Loading";
+import { useImsRbiGeneralData } from "./hooks/use-ims-rbi-general-data";
 
 const RBIAssessmentPage: React.FC = () => {
   const navigate = useNavigate();
-  const { data: rbiData, isLoading, error } = useImsGeneralData();
+  const { data: rbiData, isLoading, error } = useImsRbiGeneralData();
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleAddNew = () => {
@@ -58,9 +58,26 @@ const RBIAssessmentPage: React.FC = () => {
   }, [rbiData, searchQuery]);
 
   const columns: Column[] = [
-    { id: "asset_no", header: "Asset No", accessorKey: "asset_detail.asset.asset_no" },
-    { id: "asset_name", header: "Asset Name", accessorKey: "asset_detail.asset.asset_name" },
-    { id: "type_name", header: "Type Name", accessorKey: "asset_detail.type.name" },
+    { id: "rbi_no", header: "RBI No", accessorKey: "rbi_no" },
+    {
+      id: "created_at",
+      header: "Created At",
+      accessorKey: "created_at",
+      cell: (value) =>
+        value
+          ? new Date(value).toLocaleString("en-MY", {
+            timeZone: "Asia/Kuala_Lumpur",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+          : "-",
+    },
+    { id: "asset_no", header: "Asset No", accessorKey: "asset_detail_id.e_asset.asset_no" },
+    { id: "asset_name", header: "Asset Name", accessorKey: "asset_detail_id.e_asset.asset_name" },
+    { id: "type_name", header: "Type Name", accessorKey: "asset_detail_id.type_id.name" },
     { id: "PoF", header: "PoF", accessorKey: "PoF" },
     { id: "CoF", header: "CoF", accessorKey: "CoF" },
     { id: "Risk", header: "Risk", accessorKey: "Risk" },
