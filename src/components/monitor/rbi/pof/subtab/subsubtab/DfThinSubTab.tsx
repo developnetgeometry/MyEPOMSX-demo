@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -6,9 +7,26 @@ import { useDataConfidenceData } from "@/hooks/lookup/lookup-data-confidence";
 
 const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelectChange: any }> = ({ formData, handleInputChange, handleSelectChange }) => {
   const { data: dataConfidences } = useDataConfidenceData();
+  const [precision, setPrecision] = useState<2 | 8>(2);
+
+  const formatNumber = (val: number | null) => {
+    if (val === null || val === undefined) return "";
+    return parseFloat(Number(val).toFixed(precision)).toString();
+  };
 
   return (
     <div className="space-y-6">
+      {/* Toggle precision */}
+      <div className="flex justify-end">
+        <Button
+          type="button"
+          onClick={() => setPrecision((prev) => (prev === 2 ? 8 : 2))}
+          variant="outline"
+          size="sm"
+        >
+          Accuracy: {precision} decimals
+        </Button>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         <div>
           <Label htmlFor="last_inspection_date_thin">Last Inspection Date</Label>
@@ -47,7 +65,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="agetk_thin"
             name="agetk_thin"
             type="number"
-            value={formData?.agetk_thin || 0}
+            value={formatNumber(formData?.agetk_thin) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -70,7 +88,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="crexp_thin"
             name="crexp_thin"
             type="number"
-            value={formData?.crexp_thin || 0}
+            value={formatNumber(formData?.crexp_thin) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -82,6 +100,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="cract_thin"
             name="cract_thin"
             type="number"
+            step="any"
             value={formData?.cract_thin || 0}
             onChange={handleInputChange}
             className="mt-1"
@@ -93,7 +112,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="crcm_thin"
             name="crcm_thin"
             type="number"
-            value={formData?.crcm_thin || 0}
+            value={formatNumber(formData?.crcm_thin) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -107,7 +126,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="ca_thin"
             name="ca_thin"
             type="number"
-            value={formData?.ca_thin || 0}
+            value={formatNumber(formData?.ca_thin) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -119,7 +138,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="art_thin"
             name="art_thin"
             type="number"
-            value={formData?.art_thin || 0}
+            value={formatNumber(formData?.art_thin) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -131,7 +150,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="fsthin_thin"
             name="fsthin_thin"
             type="number"
-            value={formData?.fsthin_thin || 0}
+            value={formatNumber(formData?.fsthin_thin) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -144,7 +163,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="srthin_thin"
             name="srthin_thin"
             type="number"
-            value={formData?.srthin_thin || 0}
+            value={formatNumber(formData?.srthin_thin) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -158,7 +177,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="nthin_a_thin"
             name="nthin_a_thin"
             type="number"
-            value={formData?.nthin_a_thin || 0}
+            value={formatNumber(formData?.nthin_a_thin) || 0}
             onChange={handleInputChange}
             className="mt-1"
           />
@@ -169,7 +188,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="nthin_b_thin"
             name="nthin_b_thin"
             type="number"
-            value={formData?.nthin_b_thin || 0}
+            value={formatNumber(formData?.nthin_b_thin) || 0}
             onChange={handleInputChange}
             className="mt-1"
           />
@@ -180,7 +199,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="nthin_c_thin"
             name="nthin_c_thin"
             type="number"
-            value={formData?.nthin_c_thin || 0}
+            value={formatNumber(formData?.nthin_c_thin) || 0}
             onChange={handleInputChange}
             className="mt-1"
           />
@@ -191,7 +210,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="nthin_d_thin"
             name="nthin_d_thin"
             type="number"
-            value={formData?.nthin_d_thin || 0}
+            value={formatNumber(formData?.nthin_d_thin) || 0}
             onChange={handleInputChange}
             className="mt-1"
           />
@@ -204,7 +223,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="ithin1_thin"
             name="ithin1_thin"
             type="number"
-            value={formData?.ithin1_thin || 0}
+            value={formatNumber(formData?.ithin1_thin) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -216,7 +235,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="ithin2_thin"
             name="ithin2_thin"
             type="number"
-            value={formData?.ithin2_thin || 0}
+            value={formatNumber(formData?.ithin2_thin) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -228,7 +247,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="ithin3_thin"
             name="ithin3_thin"
             type="number"
-            value={formData?.ithin3_thin || 0}
+            value={formatNumber(formData?.ithin3_thin) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -242,7 +261,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="pothin1_thin"
             name="pothin1_thin"
             type="number"
-            value={formData?.pothin1_thin || 0}
+            value={formatNumber(formData?.pothin1_thin) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -254,7 +273,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="pothin2_thin"
             name="pothin2_thin"
             type="number"
-            value={formData?.pothin2_thin || 0}
+            value={formatNumber(formData?.pothin2_thin) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -266,7 +285,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="pothin3_thin"
             name="pothin3_thin"
             type="number"
-            value={formData?.pothin3_thin || 0}
+            value={formatNumber(formData?.pothin3_thin) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -280,7 +299,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="bthin1_thin"
             name="bthin1_thin"
             type="number"
-            value={formData?.bthin1_thin || 0}
+            value={formatNumber(formData?.bthin1_thin) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -292,7 +311,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="bthin2_thin"
             name="bthin2_thin"
             type="number"
-            value={formData?.bthin2_thin || 0}
+            value={formatNumber(formData?.bthin2_thin) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -304,7 +323,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="bthin3_thin"
             name="bthin3_thin"
             type="number"
-            value={formData?.bthin3_thin || 0}
+            value={formatNumber(formData?.bthin3_thin) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -318,7 +337,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="dfthinfb_thin"
             name="dfthinfb_thin"
             type="number"
-            value={formData?.dfthinfb_thin || 0}
+            value={formatNumber(formData?.dfthinfb_thin) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -330,24 +349,12 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="dthinf_thin"
             name="dthinf_thin"
             type="number"
-            value={formData?.dthinf_thin || 0}
+            value={formatNumber(formData?.dthinf_thin) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
           />
         </div>
-        {/* <div>
-          <Label htmlFor="remaininglife_thin">Remaining Life</Label>
-          <Input
-            id="remaininglife_thin"
-            name="remaininglife_thin"
-            type="number"
-            value={formData?.remaininglife_thin || 0}
-            onChange={handleInputChange}
-            className="mt-1"
-            disabled
-          />
-        </div> */}
       </div>
     </div>
   );

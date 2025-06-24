@@ -7150,6 +7150,7 @@ export type Database = {
           geometry_id: number | null
           id: number
           ims_asset_type_id: number | null
+          ims_general_id: number | null
           internal_diameter: number | null
           length: number | null
           mix_point: boolean | null
@@ -7175,6 +7176,7 @@ export type Database = {
           geometry_id?: number | null
           id?: number
           ims_asset_type_id?: number | null
+          ims_general_id?: number | null
           internal_diameter?: number | null
           length?: number | null
           mix_point?: boolean | null
@@ -7200,6 +7202,7 @@ export type Database = {
           geometry_id?: number | null
           id?: number
           ims_asset_type_id?: number | null
+          ims_general_id?: number | null
           internal_diameter?: number | null
           length?: number | null
           mix_point?: boolean | null

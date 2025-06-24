@@ -10,44 +10,60 @@ import PofTab from "@/components/monitor/rbi/pof/PofTab";
 import CofTab from "@/components/monitor/rbi/cof/CofTab";
 import RiskIrpTab from "@/components/monitor/rbi/risk/RiskIrpTab";
 import Loading from "@/components/shared/Loading";
-
-import {
-  calcIThinAndProportions,
-  calculateAge,
-  calculateAgeCoat,
-  calculateAgeTk,
-  calculateArt,
-  calculateBThins,
-  calculateCoatAdj,
-  calculateCrAct,
-  calculateCrCm,
-  calculateCrExp,
-  calculateCrExpExt,
-  calculateDFThinFb,
-  calculateFsThin,
-  calculateSrThin,
-} from "./hooks/formula";
 import { useAverageMtsMpaMysMpaByName } from "./hooks/use-average-mts_mpa-mys_mpa-by-name";
+import { useImsGeneralDataByAssetDetailId } from "./hooks/use-ims-general-data";
+import { useImsDesignByAssetDetailId } from "./hooks/use-ims-design-by-asset-detail-id";
+import { calculateAgeTk, calculateCrAct, calculateCrExp } from "./hooks/formula-df-thin";
+
 
 const RBIAssessmentCreatePage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState<any | null>({
-    // *** i_ims_pof_assessment_general
+    // ims_general
     asset_detail_id: null,
     ims_asset_type: null,
-    coating_quality_id: null,
-    data_confidence_id: null,
+    line_no: "",
+    pipe_schedule_id: null,
+    pressure_rating: 0,
+    year_in_service: "",
+    normal_wall_thickness: 0,
+    tmin: 0,
+    material_construction_id: null,
+    description: "",
+    circuit_id: null,
+    nominal_bore_diameter: null,
+    insulation: false,
+    line_h2s: false,
+    internal_lining: false,
+    pwht: false,
     cladding: false,
+    ims_asset_type_id: null,
+    clad_thickness: 0,
+    pipe_class_id: null,
+    // ims_design
+    internal_diameter: 0,
+    welding_efficiency: 0,
+    design_pressure: 0,
+    corrosion_allowance: 0,
+    outer_diameter: 0,
+    design_temperature: 0,
+    operating_pressure_mpa: 0,
+    ext_env_id: null,
+    geometry_id: null,
+    length: 0,
+    operating_temperature: 0,
+    allowable_stress_mpa: 0,
+    pipe_support: false,
+    soil_water_interface: false,
+    dead_legs: false,
+    mix_point: false,
+
+    // *** i_ims_pof_assessment_general
+
     nominal_thickness: 0,
     current_thickness: 0,
-    description: "",
-    year_in_service: "",
-    tmin: 0,
-    outer_diameter: 0,
     inner_diameter: 0,
-    corrosion_allowance_thin: 0,
     spec_code: "",
     avg_mts_mpa: 0,
     avg_mys_mpa: 0,
@@ -118,11 +134,101 @@ const RBIAssessmentCreatePage: React.FC = () => {
     bextcorr3_ext: 0,
     dfextcorrf_ext: 0,
   });
+  const { data: imsGeneral, isLoading: isImsGeneralLoading } = useImsGeneralDataByAssetDetailId(formData?.asset_detail_id ?? 0);
+  const { data: imsDesign, isLoading: isImsDesignLoading } = useImsDesignByAssetDetailId(formData?.asset_detail_id ?? 0);
+
+  const allLoaded = !isImsDesignLoading && !isImsGeneralLoading;
+
+  useEffect(() => {
+    if (formData && allLoaded) {
+      setFormData((prev: any) => ({
+        ...prev,
+        // ims_general
+        line_no: imsGeneral?.line_no ?? "",
+        pipe_schedule_id: imsGeneral?.pipe_schedule_id ?? null,
+        pressure_rating: imsGeneral?.pressure_rating ?? 0,
+        year_in_service: imsGeneral?.year_in_service ?? "",
+        normal_wall_thickness: imsGeneral?.normal_wall_thickness ?? 0,
+        tmin: imsGeneral?.tmin ?? 0,
+        material_construction_id: imsGeneral?.material_construction_id ?? null,
+        description: imsGeneral?.description ?? "",
+        circuit_id: imsGeneral?.circuit_id ?? null,
+        nominal_bore_diameter: imsGeneral?.nominal_bore_diameter ?? null,
+        insulation: imsGeneral?.insulation ?? false,
+        line_h2s: imsGeneral?.line_h2s ?? false,
+        internal_lining: imsGeneral?.internal_lining ?? false,
+        pwht: imsGeneral?.pwht ?? false,
+        cladding: imsGeneral?.cladding ?? false,
+        ims_asset_type_id: imsGeneral?.ims_asset_type_id ?? null,
+        clad_thickness: imsGeneral?.clad_thickness ?? 0,
+        pipe_class_id: imsGeneral?.pipe_class_id ?? null,
+
+        // ims_design
+        internal_diameter: imsDesign?.internal_diameter ?? 0,
+        welding_efficiency: imsDesign?.welding_efficiency ?? 0,
+        design_pressure: imsDesign?.design_pressure ?? 0,
+        corrosion_allowance: imsDesign?.corrosion_allowance ?? 0,
+        outer_diameter: imsDesign?.outer_diameter ?? 0,
+        design_temperature: imsDesign?.design_temperature ?? 0,
+        operating_pressure_mpa: imsDesign?.operating_pressure_mpa ?? 0,
+        ext_env_id: imsDesign?.ext_env_id ?? null,
+        geometry_id: imsDesign?.geometry_id ?? null,
+        length: imsDesign?.length ?? 0,
+        operating_temperature: imsDesign?.operating_temperature ?? 0,
+        allowable_stress_mpa: imsDesign?.allowable_stress_mpa ?? 0,
+        pipe_support: imsDesign?.pipe_support ?? false,
+        soil_water_interface: imsDesign?.soil_water_interface ?? false,
+        dead_legs: imsDesign?.dead_legs ?? false,
+        mix_point: imsDesign?.mix_point ?? false,
+      }));
+    }
+  }, [formData?.asset_detail_id, allLoaded, imsGeneral, imsDesign]);
+
+  // Formula DfThin Start
+
+  //ageTk_thin✅
+  useEffect(() => {
+    if (formData) {
+      const ageTk = calculateAgeTk(
+        formData.last_inspection_date_thin,
+        formData.year_in_service
+      );
+      setFormData((prev: any) => ({ ...prev, agetk_thin: ageTk }));
+    }
+  }, [formData?.last_inspection_date_thin, formData?.year_in_service]);
+
+  // crexp_thin✅
+  useEffect(() => {
+    if (formData) {
+      const crExp = calculateCrExp(
+        formData.corrosion_allowance
+      );
+      setFormData((prev: any) => ({ ...prev, crexp_thin: crExp }));
+    }
+  }, [formData?.corrosion_allowance]);
+
+  // cract_thin
+  useEffect(() => {
+    if (formData) {
+      const crAct = calculateCrAct(
+        formData.nominal_thickness,
+        formData.current_thickness,
+        formData.last_inspection_date_thin,
+        formData.year_in_service
+      );
+      setFormData((prev: any) => ({ ...prev, cract_thin: crAct }));
+    }
+  }, [formData?.nominal_thickness, formData?.current_thickness, formData?.last_inspection_date_thin, formData?.year_in_service,
+  ]);
+
+
+  // Formula DfThin End
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     toast.success("RBI Assessment created successfully");
-    navigate("/monitor/rbi-assessment");
+    // navigate("/monitor/rbi-assessment");
   };
 
   return (
@@ -140,6 +246,10 @@ const RBIAssessmentCreatePage: React.FC = () => {
           <ArrowLeft className="h-4 w-4" /> Back to RBI Assessment
         </Button>
       </div>
+      <h1>{formData.tmin ?? "NA"}</h1>
+      {/* <pre>{JSON.stringify(imsGeneral, null, 2)}</pre>
+      <pre>{JSON.stringify(imsDesign, null, 2)}</pre> */}
+
       <form onSubmit={handleSubmit}>
         <Card>
           <CardContent className="pt-6">
