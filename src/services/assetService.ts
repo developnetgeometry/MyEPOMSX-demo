@@ -166,6 +166,9 @@ export const assetService = {
         `
         id,
         work_order_no,
+        description,
+        work_order_type (id, name),
+        completed_at,
         due_date,
         task:e_task!task_id(task_name),
         status:e_work_order_status!work_order_status_id(name)
