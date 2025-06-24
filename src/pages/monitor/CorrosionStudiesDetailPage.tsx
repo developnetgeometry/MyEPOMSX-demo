@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Accordion,
   AccordionContent,
@@ -21,67 +21,300 @@ import {
 } from "@/components/ui/select";
 import { ChevronLeft, Database } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
+import {
+  useAssetOptions,
+  useCorrosionStudy,
+  useCorrosionGroupOptions,
+  useCorrosionMonitoringOptions,
+  useBaseMaterialOptions,
+  useUpdateCorrosionStudy,
+} from "@/hooks/queries/useCorrosionStudy";
+
+import {
+  useMaterialConstructionOptions,
+  useExternalEnvironmentOptions,
+} from "@/hooks/queries/useCorrosionDropdownOptions";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+
+// Memoized Select Option Component to prevent unnecessary re-renders
+const SelectOption = React.memo(({ option }: { option: { value: any; label: string } }) => (
+  <SelectItem key={option.value} value={option.value.toString()}>
+    {option.label}
+  </SelectItem>
+));
+
+// Memoized Input Field Component
+const InputField = React.memo(({ 
+  id, 
+  name, 
+  label, 
+  type = "text", 
+  value, 
+  onChange, 
+  ...props 
+}: {
+  id: string;
+  name: string;
+  label: string;
+  type?: string;
+  value: any;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  [key: string]: any;
+}) => (
+  <div className="space-y-2">
+    <Label htmlFor={id}>{label}</Label>
+    <Input
+      id={id}
+      name={name}
+      type={type}
+      value={value}
+      onChange={onChange}
+      {...props}
+    />
+  </div>
+));
+
+// Memoized Select Field Component
+const SelectField = React.memo(({ 
+  name, 
+  label, 
+  value, 
+  onValueChange, 
+  placeholder, 
+  options = [],
+  isLoading = false
+}: {
+  name: string;
+  label: string;
+  value: any;
+  onValueChange: (value: string) => void;
+  placeholder: string;
+  options: Array<{ value: any; label: string }>;
+  isLoading?: boolean;
+}) => (
+  <div className="space-y-2">
+    <Label htmlFor={name}>{label}</Label>
+    <Select name={name} value={value} onValueChange={onValueChange}>
+      <SelectTrigger className="w-full">
+        <SelectValue placeholder={isLoading ? "Loading..." : placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map((option) => (
+          <SelectOption key={option.value} option={option} />
+        ))}
+      </SelectContent>
+    </Select>
+  </div>
+));
 
 const CorrosionStudiesDetailPage: React.FC = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const { user } = useAuth();
+  const updateMutation = useUpdateCorrosionStudy(Number(id));
+  const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Data queries
+  const { data: corrosionStudy, isLoading } = useCorrosionStudy(Number(id));
+  const { data: assetOptions, isLoading: isLoadingAssetOptions } = useAssetOptions();
+  const { data: corrosionGroupOptions, isLoading: isLoadingCorrosionGroupOptions } = useCorrosionGroupOptions();
+  const { data: materialConstructionOptions, isLoading: isLoadingMaterialConstructionOptions } = useMaterialConstructionOptions();
+  const { data: externalEnvironmentOptions, isLoading: isLoadingExternalEnvironmentOptions } = useExternalEnvironmentOptions();
+  const { data: corrosionMonitoringOptions, isLoading: isLoadingCorrosionMonitoringOptions } = useCorrosionMonitoringOptions();
+  const { data: baseMaterialOptions, isLoading: isLoadingBaseMaterialOptions } = useBaseMaterialOptions();
+
+  // Form state
   const [formData, setFormData] = useState({
-    asset: "",
-    corrosionGroupName: "",
-    materialConstruction: "",
-    environment: "",
+    asset_id: "",
+    corrosion_group_id: "",
+    material_construction_id: "",
+    external_environment_id: "",
     ph: "",
-    corrosionMonitoring: [] as string[],
-    internalDamageMechanism: "",
-    externalDamageMechanism: "",
-    expectedInternalCorrosionRate: "",
-    expectedExternalCorrosionRate: "",
-    h2s: false,
-    co2: false,
+    monitoring_method_id: "",
+    internal_damage_mechanism: "",
+    external_damage_mechanism: "",
+    expected_internal_corrosion_rate: "",
+    expected_external_corrosion_rate: "",
+    h2s_presence: false,
+    co2_presence: false,
     description: "",
     // Corrosion Factor
     temperature: "",
     pressure: "",
     h2sConcentration: "",
     co2Concentration: "",
-    baseMaterial: "",
-    fluidVelocity: "",
+    base_material_id: "",
+    fluid_velocity: "",
   });
 
-  const handleInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+  // Memoize loading state to prevent unnecessary re-calculations
+  const isAnyLoading = useMemo(() => 
+    isLoading ||
+    isLoadingAssetOptions ||
+    isLoadingCorrosionGroupOptions ||
+    isLoadingMaterialConstructionOptions ||
+    isLoadingCorrosionMonitoringOptions ||
+    isLoadingBaseMaterialOptions ||
+    isLoadingExternalEnvironmentOptions,
+    [
+      isLoading,
+      isLoadingAssetOptions,
+      isLoadingCorrosionGroupOptions,
+      isLoadingMaterialConstructionOptions,
+      isLoadingCorrosionMonitoringOptions,
+      isLoadingBaseMaterialOptions,
+      isLoadingExternalEnvironmentOptions
+    ]
+  );
+
+  // Initialize form data when corrosion study loads
+  useEffect(() => {
+    if (corrosionStudy) {
+      setFormData({
+        asset_id: corrosionStudy?.asset_id?.toString() || "",
+        corrosion_group_id: corrosionStudy?.corrosion_group_id?.toString() || "",
+        material_construction_id: corrosionStudy?.material_construction_id?.toString() || "",
+        external_environment_id: corrosionStudy?.external_environment_id?.toString() || "",
+        ph: corrosionStudy?.ph?.toString() || "",
+        monitoring_method_id: corrosionStudy?.monitoring_method_id?.toString() || "",
+        internal_damage_mechanism: corrosionStudy?.internal_damage_mechanism || "",
+        external_damage_mechanism: corrosionStudy?.external_damage_mechanism || "",
+        expected_internal_corrosion_rate: corrosionStudy?.expected_internal_corrosion_rate?.toString() || "",
+        expected_external_corrosion_rate: corrosionStudy?.expected_external_corrosion_rate?.toString() || "",
+        h2s_presence: corrosionStudy?.h2s_presence || false,
+        co2_presence: corrosionStudy?.co2_presence || false,
+        description: corrosionStudy?.description || "",
+        // Corrosion Factor
+        temperature: corrosionStudy?.corrosion_factor?.temperature?.toString() || "",
+        pressure: corrosionStudy?.corrosion_factor?.pressure?.toString() || "",
+        h2sConcentration: corrosionStudy?.corrosion_factor?.h2s_concentration?.toString() || "",
+        co2Concentration: corrosionStudy?.corrosion_factor?.co2_concentration?.toString() || "",
+        base_material_id: corrosionStudy?.corrosion_factor?.base_material_id?.toString() || "",
+        fluid_velocity: corrosionStudy?.corrosion_factor?.fluid_velocity?.toString() || "",
+      });
+    }
+  }, [corrosionStudy]);
+
+  // Memoized event handlers to prevent unnecessary re-renders
+  const handleInputChange = useCallback((
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
-  };
+  }, []);
 
-  const handleSwitchChange = (name: string, checked: boolean) => {
+  const handleSwitchChange = useCallback((name: string, checked: boolean) => {
     setFormData((prev) => ({
       ...prev,
       [name]: checked,
     }));
-  };
+  }, []);
 
-  const handleSelectChange = (name: string, value: string) => {
+  const handleSelectChange = useCallback((name: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
-  };
+  }, []);
 
-  const handleGoBack = () => {
+  const handleGoBack = useCallback(() => {
     navigate("/monitor/corrosion-studies");
-  };
+  }, [navigate]);
 
-  const handleSave = () => {
-    console.log("Saving corrosion study:", formData);
-    // Here you would typically make an API call to save the data
-    navigate("/monitor/corrosion-studies");
-  };
+  const handleSave = useCallback(async () => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "User not authenticated. Please login again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    
+    try {
+      // Prepare study data
+      const studyData = {
+        asset_id: formData.asset_id ? parseInt(formData.asset_id) : undefined,
+        corrosion_group_id: formData.corrosion_group_id ? parseInt(formData.corrosion_group_id) : undefined,
+        material_construction_id: formData.material_construction_id ? parseInt(formData.material_construction_id) : undefined,
+        external_environment_id: formData.external_environment_id ? parseInt(formData.external_environment_id) : undefined,
+        ph: formData.ph ? parseFloat(formData.ph) : null,
+        monitoring_method_id: formData.monitoring_method_id ? parseInt(formData.monitoring_method_id) : null,
+        internal_damage_mechanism: formData.internal_damage_mechanism || null,
+        external_damage_mechanism: formData.external_damage_mechanism || null,
+        expected_internal_corrosion_rate: formData.expected_internal_corrosion_rate 
+          ? parseFloat(formData.expected_internal_corrosion_rate) 
+          : null,
+        expected_external_corrosion_rate: formData.expected_external_corrosion_rate 
+          ? parseFloat(formData.expected_external_corrosion_rate) 
+          : null,
+        h2s_presence: formData.h2s_presence,
+        co2_presence: formData.co2_presence,
+        description: formData.description || null,
+      };
+
+      // Prepare factor data
+      const factorData = {
+        temperature: formData.temperature ? parseFloat(formData.temperature) : null,
+        pressure: formData.pressure ? parseFloat(formData.pressure) : null,
+        h2s_concentration: formData.h2sConcentration 
+          ? parseFloat(formData.h2sConcentration) 
+          : null,
+        co2_concentration: formData.co2Concentration 
+          ? parseFloat(formData.co2Concentration) 
+          : null,
+        base_material_id: formData.base_material_id 
+          ? parseInt(formData.base_material_id) 
+          : null,
+        fluid_velocity: formData.fluid_velocity 
+          ? parseFloat(formData.fluid_velocity) 
+          : null,
+      };
+
+      await updateMutation.mutateAsync({ studyData, factorData });
+
+      toast({
+        title: "Success",
+        description: "Corrosion study updated successfully!",
+      });
+
+      navigate("/monitor/corrosion-studies");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update corrosion study. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [formData, user, updateMutation, toast, navigate]);
+
+  // Memoized page header actions
+  const pageHeaderActions = useMemo(() => (
+    <Button variant="outline" onClick={handleGoBack}>
+      <ChevronLeft className="mr-2 h-4 w-4" />
+      Back to List
+    </Button>
+  ), [handleGoBack]);
+
+  if (isAnyLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2">Loading corrosion study {corrosionStudy?.study_name} details...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 pb-16">
@@ -89,12 +322,7 @@ const CorrosionStudiesDetailPage: React.FC = () => {
         title="Corrosion Study Detail"
         subtitle="View and manage corrosion study details"
         icon={<Database className="h-6 w-6" />}
-        actions={
-          <Button variant="outline" onClick={handleGoBack}>
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            Back to List
-          </Button>
-        }
+        actions={pageHeaderActions}
       />
 
       <div className="space-y-6">
@@ -110,199 +338,114 @@ const CorrosionStudiesDetailPage: React.FC = () => {
             </AccordionTrigger>
             <AccordionContent className="p-4 pt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="asset">Asset</Label>
-                  <Select
-                    name="asset"
-                    value={formData.asset}
-                    onValueChange={(value) =>
-                      handleSelectChange("asset", value)
-                    }
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select Asset" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="PV-1001">PV-1001</SelectItem>
-                      <SelectItem value="PP-2003">PP-2003</SelectItem>
-                      <SelectItem value="PV-1002">PV-1002</SelectItem>
-                      <SelectItem value="PP-2001">PP-2001</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <SelectField
+                  name="asset_id"
+                  label="Asset"
+                  value={formData.asset_id}
+                  onValueChange={(value) => handleSelectChange("asset_id", value)}
+                  placeholder="Select Asset"
+                  options={assetOptions || []}
+                  isLoading={isLoadingAssetOptions}
+                />
 
-                <div className="space-y-2">
-                  <Label htmlFor="corrosionGroupName">
-                    Corrosion Group Name
-                  </Label>
-                  <Select
-                    name="corrosionGroupName"
-                    value={formData.corrosionGroupName}
-                    onValueChange={(value) =>
-                      handleSelectChange("corrosionGroupName", value)
-                    }
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select Corrosion Group" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Group A">Group A</SelectItem>
-                      <SelectItem value="Group B">Group B</SelectItem>
-                      <SelectItem value="Group C">Group C</SelectItem>
-                      <SelectItem value="Group D">Group D</SelectItem>
-                      <SelectItem value="add_new">+ Add New Group</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <SelectField
+                  name="corrosion_group_id"
+                  label="Corrosion Group Name"
+                  value={formData.corrosion_group_id}
+                  onValueChange={(value) => handleSelectChange("corrosion_group_id", value)}
+                  placeholder="Select Corrosion Group"
+                  options={corrosionGroupOptions || []}
+                  isLoading={isLoadingCorrosionGroupOptions}
+                />
 
-                <div className="space-y-2">
-                  <Label htmlFor="materialConstruction">
-                    Material Construction
-                  </Label>
-                  <Select
-                    name="materialConstruction"
-                    value={formData.materialConstruction}
-                    onValueChange={(value) =>
-                      handleSelectChange("materialConstruction", value)
-                    }
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select Material" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Carbon Steel">Carbon Steel</SelectItem>
-                      <SelectItem value="Stainless Steel">
-                        Stainless Steel
-                      </SelectItem>
-                      <SelectItem value="Chrome Alloy">Chrome Alloy</SelectItem>
-                      <SelectItem value="High Nickel Alloy">
-                        High Nickel Alloy
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <SelectField
+                  name="material_construction_id"
+                  label="Material Construction"
+                  value={formData.material_construction_id}
+                  onValueChange={(value) => handleSelectChange("material_construction_id", value)}
+                  placeholder="Select Material"
+                  options={materialConstructionOptions || []}
+                  isLoading={isLoadingMaterialConstructionOptions}
+                />
 
-                <div className="space-y-2">
-                  <Label htmlFor="environment">Environment</Label>
-                  <Input
-                    id="environment"
-                    name="environment"
-                    value={formData.environment}
-                    onChange={handleInputChange}
-                  />
-                </div>
+                <SelectField
+                  name="external_environment_id"
+                  label="Environment"
+                  value={formData.external_environment_id}
+                  onValueChange={(value) => handleSelectChange("external_environment_id", value)}
+                  placeholder="Select Environment"
+                  options={externalEnvironmentOptions || []}
+                  isLoading={isLoadingExternalEnvironmentOptions}
+                />
 
-                <div className="space-y-2">
-                  <Label htmlFor="ph">pH</Label>
-                  <Input
-                    id="ph"
-                    name="ph"
-                    type="number"
-                    min="0"
-                    max="14"
-                    step="0.1"
-                    value={formData.ph}
-                    onChange={handleInputChange}
-                  />
-                </div>
+                <InputField
+                  id="ph"
+                  name="ph"
+                  label="pH"
+                  type="number"
+                  min="0"
+                  max="14"
+                  step="0.1"
+                  value={formData.ph}
+                  onChange={handleInputChange}
+                />
 
-                <div className="space-y-2">
-                  <Label htmlFor="corrosionMonitoring">
-                    Corrosion Monitoring
-                  </Label>
-                  <Select
-                    name="corrosionMonitoring"
-                    value={formData.corrosionMonitoring[0] || ""}
-                    onValueChange={(value) => {
-                      // This is just a simplified example, for multi-select you would
-                      // typically use a custom component or more complex state management
-                      handleSelectChange("corrosionMonitoring", value);
-                      setFormData((prev) => ({
-                        ...prev,
-                        corrosionMonitoring: [value],
-                      }));
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select Monitoring Method" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Ultrasonic Testing">
-                        Ultrasonic Testing
-                      </SelectItem>
-                      <SelectItem value="Radiography">Radiography</SelectItem>
-                      <SelectItem value="Visual Inspection">
-                        Visual Inspection
-                      </SelectItem>
-                      <SelectItem value="Coupon Testing">
-                        Coupon Testing
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <SelectField
+                  name="monitoring_method_id"
+                  label="Corrosion Monitoring"
+                  value={formData.monitoring_method_id}
+                  onValueChange={(value) => handleSelectChange("monitoring_method_id", value)}
+                  placeholder="Select Monitoring Method"
+                  options={corrosionMonitoringOptions || []}
+                  isLoading={isLoadingCorrosionMonitoringOptions}
+                />
 
-                <div className="space-y-2">
-                  <Label htmlFor="internalDamageMechanism">
-                    Internal Damage Mechanism
-                  </Label>
-                  <Input
-                    id="internalDamageMechanism"
-                    name="internalDamageMechanism"
-                    value={formData.internalDamageMechanism}
-                    onChange={handleInputChange}
-                  />
-                </div>
+                <InputField
+                  id="internalDamageMechanism"
+                  name="internal_damage_mechanism"
+                  label="Internal Damage Mechanism"
+                  value={formData.internal_damage_mechanism}
+                  onChange={handleInputChange}
+                />
 
-                <div className="space-y-2">
-                  <Label htmlFor="externalDamageMechanism">
-                    External Damage Mechanism
-                  </Label>
-                  <Input
-                    id="externalDamageMechanism"
-                    name="externalDamageMechanism"
-                    value={formData.externalDamageMechanism}
-                    onChange={handleInputChange}
-                  />
-                </div>
+                <InputField
+                  id="externalDamageMechanism"
+                  name="external_damage_mechanism"
+                  label="External Damage Mechanism"
+                  value={formData.external_damage_mechanism}
+                  onChange={handleInputChange}
+                />
 
-                <div className="space-y-2">
-                  <Label htmlFor="expectedInternalCorrosionRate">
-                    Expected Internal Corrosion Rate
-                  </Label>
-                  <Input
-                    id="expectedInternalCorrosionRate"
-                    name="expectedInternalCorrosionRate"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formData.expectedInternalCorrosionRate}
-                    onChange={handleInputChange}
-                  />
-                </div>
+                <InputField
+                  id="expectedInternalCorrosionRate"
+                  name="expected_internal_corrosion_rate"
+                  label="Expected Internal Corrosion Rate"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.expected_internal_corrosion_rate}
+                  onChange={handleInputChange}
+                />
 
-                <div className="space-y-2">
-                  <Label htmlFor="expectedExternalCorrosionRate">
-                    Expected External Corrosion Rate
-                  </Label>
-                  <Input
-                    id="expectedExternalCorrosionRate"
-                    name="expectedExternalCorrosionRate"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formData.expectedExternalCorrosionRate}
-                    onChange={handleInputChange}
-                  />
-                </div>
+                <InputField
+                  id="expectedExternalCorrosionRate"
+                  name="expected_external_corrosion_rate"
+                  label="Expected External Corrosion Rate"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.expected_external_corrosion_rate}
+                  onChange={handleInputChange}
+                />
 
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
                     <Label htmlFor="h2s">H₂S</Label>
                     <Switch
                       id="h2s"
-                      checked={formData.h2s}
+                      checked={formData.h2s_presence}
                       onCheckedChange={(checked) =>
-                        handleSwitchChange("h2s", checked)
+                        handleSwitchChange("h2s_presence", checked)
                       }
                     />
                   </div>
@@ -310,9 +453,9 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                     <Label htmlFor="co2">CO₂</Label>
                     <Switch
                       id="co2"
-                      checked={formData.co2}
+                      checked={formData.co2_presence}
                       onCheckedChange={(checked) =>
-                        handleSwitchChange("co2", checked)
+                        handleSwitchChange("co2_presence", checked)
                       }
                     />
                   </div>
@@ -341,83 +484,57 @@ const CorrosionStudiesDetailPage: React.FC = () => {
             </AccordionTrigger>
             <AccordionContent className="p-4 pt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="temperature">Temperature °C</Label>
-                  <Input
-                    id="temperature"
-                    name="temperature"
-                    type="number"
-                    value={formData.temperature}
-                    onChange={handleInputChange}
-                  />
-                </div>
+                <InputField
+                  id="temperature"
+                  name="temperature"
+                  label="Temperature °C"
+                  type="number"
+                  value={formData.temperature}
+                  onChange={handleInputChange}
+                />
 
-                <div className="space-y-2">
-                  <Label htmlFor="pressure">Pressure Barg</Label>
-                  <Input
-                    id="pressure"
-                    name="pressure"
-                    type="number"
-                    value={formData.pressure}
-                    onChange={handleInputChange}
-                  />
-                </div>
+                <InputField
+                  id="pressure"
+                  name="pressure"
+                  label="Pressure (bar)"
+                  type="number"
+                  value={formData.pressure}
+                  onChange={handleInputChange}
+                />
 
-                <div className="space-y-2">
-                  <Label htmlFor="h2sConcentration">H₂S Concentration</Label>
-                  <Input
-                    id="h2sConcentration"
-                    name="h2sConcentration"
-                    value={formData.h2sConcentration}
-                    onChange={handleInputChange}
-                  />
-                </div>
+                <InputField
+                  id="h2sConcentration"
+                  name="h2sConcentration"
+                  label="H₂S Concentration"
+                  value={formData.h2sConcentration}
+                  onChange={handleInputChange}
+                />
 
-                <div className="space-y-2">
-                  <Label htmlFor="co2Concentration">CO₂ Concentration</Label>
-                  <Input
-                    id="co2Concentration"
-                    name="co2Concentration"
-                    value={formData.co2Concentration}
-                    onChange={handleInputChange}
-                  />
-                </div>
+                <InputField
+                  id="co2Concentration"
+                  name="co2Concentration"
+                  label="CO₂ Concentration"
+                  value={formData.co2Concentration}
+                  onChange={handleInputChange}
+                />
 
-                <div className="space-y-2">
-                  <Label htmlFor="baseMaterial">Base Material</Label>
-                  <Select
-                    name="baseMaterial"
-                    value={formData.baseMaterial}
-                    onValueChange={(value) =>
-                      handleSelectChange("baseMaterial", value)
-                    }
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select Base Material" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Carbon Steel">Carbon Steel</SelectItem>
-                      <SelectItem value="Stainless Steel 304">
-                        Stainless Steel 304
-                      </SelectItem>
-                      <SelectItem value="Stainless Steel 316">
-                        Stainless Steel 316
-                      </SelectItem>
-                      <SelectItem value="Duplex Steel">Duplex Steel</SelectItem>
-                      <SelectItem value="Super Duplex">Super Duplex</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <SelectField
+                  name="base_material_id"
+                  label="Base Material"
+                  value={formData.base_material_id}
+                  onValueChange={(value) => handleSelectChange("base_material_id", value)}
+                  placeholder="Select Base Material"
+                  options={baseMaterialOptions || []}
+                  isLoading={isLoadingBaseMaterialOptions}
+                />
 
-                <div className="space-y-2">
-                  <Label htmlFor="fluidVelocity">Fluid Velocity</Label>
-                  <Input
-                    id="fluidVelocity"
-                    name="fluidVelocity"
-                    value={formData.fluidVelocity}
-                    onChange={handleInputChange}
-                  />
-                </div>
+                <InputField
+                  id="fluidVelocity"
+                  name="fluid_velocity"
+                  label="Fluid Velocity"
+                  value={formData.fluid_velocity}
+                  onChange={handleInputChange}
+                />
               </div>
             </AccordionContent>
           </AccordionItem>
@@ -429,7 +546,9 @@ const CorrosionStudiesDetailPage: React.FC = () => {
         <Button variant="outline" onClick={handleGoBack}>
           Cancel
         </Button>
-        <Button onClick={handleSave}>Save Changes</Button>
+        <Button onClick={handleSave} disabled={isSaving}>
+          {isSaving ? "Saving..." : "Save Changes"}
+        </Button>
       </div>
     </div>
   );

@@ -61,7 +61,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
         <p className="font-medium">{label}</p>
         {payload.map((entry, index) => (
           <p key={index} style={{ color: entry.color }}>
-            {entry.name}: {formatPercentage(entry.value as number)}
+            {entry.name}: {(entry.value as number).toFixed(2)}
           </p>
         ))}
       </div>
@@ -479,21 +479,21 @@ const RMSDashboardPage = () => {
                 </TableHeader>
                 <TableBody>
                   <TableRow>
-                    <TableCell className="font-medium">Availability %</TableCell>
+                    <TableCell className="font-medium">Availability</TableCell>
                     {assetPerformanceData.map((asset) => (
-                      <TableCell key={`${asset.name}-avail`}>{formatPercentage(asset.availability)}</TableCell>
+                      <TableCell key={`${asset.name}-avail`}>{(asset.availability).toFixed(2)}</TableCell>
                     ))}
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-medium">Reliability %</TableCell>
+                    <TableCell className="font-medium">Reliability</TableCell>
                     {assetPerformanceData.map((asset) => (
-                      <TableCell key={`${asset.name}-rel`}>{formatPercentage(asset.reliability)}</TableCell>
+                      <TableCell key={`${asset.name}-rel`}>{(asset.reliability).toFixed(2)}</TableCell>
                     ))}
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-medium">Utilization %</TableCell>
+                    <TableCell className="font-medium">Utilization</TableCell>
                     {assetPerformanceData.map((asset) => (
-                      <TableCell key={`${asset.name}-util`}>{formatPercentage(asset.utilization)}</TableCell>
+                      <TableCell key={`${asset.name}-util`}>{(asset.utilization).toFixed(2)}</TableCell>
                     ))}
                   </TableRow>
                   {/* <TableRow>
@@ -543,15 +543,15 @@ const RMSDashboardPage = () => {
                 <TableBody>
                   <TableRow>
                     <TableCell className="font-medium">Average Utilization</TableCell>
-                    <TableCell>{formatPercentage(averageMetricsData[0]?.utilization || 0)}</TableCell>
+                    <TableCell>{(averageMetricsData[0]?.utilization || 0).toFixed(2)}</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell className="font-medium">Average Availability</TableCell>
-                    <TableCell>{formatPercentage(averageMetricsData[0]?.availability || 0)}</TableCell>
+                    <TableCell>{(averageMetricsData[0]?.availability || 0).toFixed(2)}</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell className="font-medium">Average Reliability</TableCell>
-                    <TableCell>{formatPercentage(averageMetricsData[0]?.reliability || 0)}</TableCell>
+                    <TableCell>{(averageMetricsData[0]?.reliability || 0).toFixed(2)}</TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
@@ -593,15 +593,15 @@ const RMSDashboardPage = () => {
                 </TableHeader>
                 <TableBody>
                   <TableRow>
-                    <TableCell className="font-medium">Availability %</TableCell>
+                    <TableCell className="font-medium">Availability</TableCell>
                     {systemReliabilityData.map((system) => (
-                      <TableCell key={`${system.name}-avail`}>{formatPercentage(system.availability)}</TableCell>
+                      <TableCell key={`${system.name}-avail`}>{(system.availability).toFixed(2)}</TableCell>
                     ))}
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-medium">Reliability %</TableCell>
+                    <TableCell className="font-medium">Reliability</TableCell>
                     {systemReliabilityData.map((system) => (
-                      <TableCell key={`${system.name}-rel`}>{formatPercentage(system.reliability)}</TableCell>
+                      <TableCell key={`${system.name}-rel`}>{(system.reliability).toFixed(2)}</TableCell>
                     ))}
                   </TableRow>
                 </TableBody>
