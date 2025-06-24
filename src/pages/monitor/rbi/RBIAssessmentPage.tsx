@@ -58,9 +58,9 @@ const RBIAssessmentPage: React.FC = () => {
   }, [rbiData, searchQuery]);
 
   const columns: Column[] = [
-    { id: "asset_no", header: "Asset No", accessorKey: "asset_detail_id.asset_id.asset_no" },
-    { id: "asset_name", header: "Asset Name", accessorKey: "asset_detail_id.asset_id.asset_name" },
-    { id: "type_name", header: "Type Name", accessorKey: "asset_detail_id.type_id.name" },
+    { id: "asset_no", header: "Asset No", accessorKey: "asset_detail.asset.asset_no" },
+    { id: "asset_name", header: "Asset Name", accessorKey: "asset_detail.asset.asset_name" },
+    { id: "type_name", header: "Type Name", accessorKey: "asset_detail.type.name" },
     { id: "PoF", header: "PoF", accessorKey: "PoF" },
     { id: "CoF", header: "CoF", accessorKey: "CoF" },
     { id: "Risk", header: "Risk", accessorKey: "Risk" },

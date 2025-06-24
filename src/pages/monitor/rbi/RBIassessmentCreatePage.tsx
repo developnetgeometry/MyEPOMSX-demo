@@ -24,60 +24,51 @@ import { useImsDfSccSohicData } from "./hooks/use-df-scc-sohic";
 import { calcIThinAndProportions, calculateAge, calculateAgeCoat, calculateAgeTk, calculateArt, calculateBThins, calculateCoatAdj, calculateCrAct, calculateCrCm, calculateCrExp, calculateCrExpExt, calculateDFThinFb, calculateFsThin, calculateSrThin } from "./hooks/formula";
 import { useAverageMtsMpaMysMpaByName } from "./hooks/use-average-mts_mpa-mys_mpa-by-name";
 
-const RBIAssessmentDetailPage: React.FC = () => {
+const RBIAssessmentCreatePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  // const asset
 
-  const { data: pofData, isLoading: isPofLoading, error: pofError, refetch: pofRefetch } = useImsPofAssessmentData(Number(id));
-  const { data: cofProdData, isLoading: isCofProdLoading, error: cofProdError, refetch: codProdRefetch } = useImsCofAssessmentCofProdData(Number(id));
-  const { data: cofAreaData, isLoading: isCofAreaLoading, error: cofAreaError, refetch: codAreaRefetch } = useImsCofAssessmentCofAreaData(Number(id));
-  const { data: rbiData, isLoading: isRbiLoading, error: rbiError, refetch: rbiRefetch } = useImsRbiRiskIrpData(Number(id));
-  const { data: dfThinData, isLoading: isDfThinLoading, error: dfThinError, refetch: dfThinRefetch } = useImsDfThinData(Number(id));
-  const { data: dfExtData, isLoading: isDfExtLoading, error: dfExtError, refetch: dfExtRefetch } = useImsDfExtData(Number(id));
-  const { data: dfExtClsccData, isLoading: isDfExtClsccLoading, error: dfExtClsccError, refetch: dfExtClsccRefetch } = useImsDfExtClsccData(Number(id));
-  const { data: dfMfatData, isLoading: isDfMfatLoading, error: dfMfatError, refetch: dfMfatRefetch } = useImsDfMfatData(Number(id));
-  const { data: dfCuiData, isLoading: isDfCuiLoading, error: dfCuiError, refetch: dfCuiRefetch } = useImsDfCuiData(Number(id));
-  const { data: dfSccSccData, isLoading: isDfSccSccLoading, error: dfSccSccError, refetch: dfSccSccRefetch } = useImsDfSccSccData(Number(id));
-  const { data: dfccSohicData, isLoading: isDfccSohicLoading, error: dfccSohicError, refetch: dfccSohicRefetch } = useImsDfSccSohicData(Number(id));
-  const { data: avgs } = useAverageMtsMpaMysMpaByName(pofData?.ims_general_id?.material_construction_id?.spec_code); // Example calculation
+
+  // const { data: avgs } = useAverageMtsMpaMysMpaByName(); // Example calculation
 
 
   const [formData, setFormData] = useState<any | null>(null);
 
   /** Sync `formData` once **all** primary datasets are loaded */
   useEffect(() => {
-    const primaryLoaded =
-      !isPofLoading && !isCofProdLoading && !isCofAreaLoading && !isRbiLoading;
+    // TODO: Replace the following with actual loading checks for your primary datasets
+    const primaryLoaded = true; // Example: set to true for now, or use your actual loading logic
 
     if (primaryLoaded) {
       setFormData({
         // *** i_ims_pof_assessment_general
-        asset_detail_id: pofData?.asset_detail_id || null,
-        ims_asset_type: pofData?.ims_general_id?.ims_asset_type_id || null, // 1= preasure vessel, 2= piping
-        coating_quality_id: pofData?.coating_quality_id || null, //coating_quality_id(2), coating_quality_id(3), coating_quality_id(5)
-        data_confidence_id: pofData?.data_confidence_id || null,
-        cladding: pofData?.cladding || false, //clad(1)
-        nominal_thickness: pofData?.nominal_thickness || 0, //Tnom(1)
-        current_thickness: pofData?.current_thickness || 0, //Trd(1), Trd(2), Trd(3)
-        description: pofData?.description || "",
-        year_in_service: pofData?.ims_general_id?.year_in_service || "",
+        asset_detail_id: null,
+        ims_asset_type: null,
+        coating_quality_id: null,
+        data_confidence_id: null,
+        cladding: false,
+        nominal_thickness: 0,
+        current_thickness: 0,
+        description:"",
+        year_in_service:"",
         // tmin: 0,// Tmin(1)
-        tmin: pofData?.ims_general_id.tmin || 0,// Tmin(1)
-        outer_diameter: pofData?.ims_general_id?.outer_diameter || 0,
-        inner_diameter: pofData?.ims_general_id?.inner_diameter || 0,
-        corrosion_allowance_thin: dfThinData?.i_ims_design_id?.corrosion_allowance || 0,
-        spec_code: pofData?.ims_general_id?.material_construction_id?.spec_code || "",
-        avg_mts_mpa: avgs?.avg_mts_mpa || 0, // Average MTS/MPA
-        avg_mys_mpa: avgs?.avg_mys_mpa || 0, // Average MYS/MPA
-        composition: avgs?.composition || "", // Composition
+        tmin: 0,// Tmin(1)
+        outer_diameter:  0,
+        inner_diameter: 0,
+        corrosion_allowance_thin: 0,
+        spec_code:  "",
+        avg_mts_mpa: 0, // Average MTS/MPA
+        avg_mys_mpa: 0, // Average MYS/MPA
+        composition:  "", // Composition
 
         // i_df_thin (1)
         //clad(1)
-        last_inspection_date_thin: dfThinData?.last_inspection_date || "",
+        last_inspection_date_thin:  "",
         agetk_thin: 0,
-        agerc_thin: dfThinData?.agerc || "",
+        agerc_thin:  "",
         crexp_thin: 0,
-        cract_thin: dfThinData?.cr_act || 0,
+        cract_thin:  0,
         crcm_thin: 0,
         //Tnom(1)
         //Tmin(1)
@@ -86,11 +77,11 @@ const RBIAssessmentDetailPage: React.FC = () => {
         art_thin: 0,
         fsthin_thin: 0,
         srthin_thin: 0,
-        nthin_a_thin: dfThinData?.nthin_a || 0,
-        nthin_b_thin: dfThinData?.nthin_b || 0,
-        nthin_c_thin: dfThinData?.nthin_c || 0,
-        nthin_d_thin: dfThinData?.nthin_d || 0,
-        data_confidence_id_thin: dfThinData?.data_confidence_id || null,
+        nthin_a_thin:  0,
+        nthin_b_thin:  0,
+        nthin_c_thin:  0,
+        nthin_d_thin:  0,
+        data_confidence_id_thin:  null,
         ithin1_thin: 0,
         ithin2_thin: 0,
         ithin3_thin: 0,
@@ -100,38 +91,38 @@ const RBIAssessmentDetailPage: React.FC = () => {
         bthin1_thin: 0,
         bthin2_thin: 0,
         bthin3_thin: 0,
-        dfthinfb_thin: dfThinData?.dfthinfb || 0,
+        dfthinfb_thin: 0,
         //onlinemoitor(1)
-        mixpoint_thin: dfThinData?.i_ims_design_id?.mix_point, //mixpoint(1)
-        dead_legs_tin: dfThinData?.i_ims_design_id.dead_legs,//deadlegs(1)
+        mixpoint_thin: 0, //mixpoint(1)
+        dead_legs_tin: 0,//deadlegs(1)
         dthinf_thin: 0,
         remaininglife_thin: 0,
-        welding_efficiency_thin: dfThinData?.i_ims_design_id?.welding_efficiency || 0,
-        allowable_stress_mpa_thin: dfThinData?.i_ims_design_id?.allowable_stress_mpa || 0,
-        design_pressure_thin: dfThinData?.i_ims_design_id?.design_pressure || 0,
+        welding_efficiency_thin: 0,
+        allowable_stress_mpa_thin:  0,
+        design_pressure_thin: 0,
 
         // *** i_df_ext (2)
-        coating_quality_id_ext: dfExtData?.i_ims_protection_id?.coating_quality_id || null, //?? coating_quality_id(2)
-        new_coating_date_ext: dfExtData?.new_coating_date || "",
-        last_inspection_date_ext: dfExtData?.last_inspection_date || "",
+        coating_quality_id_ext:  null, //?? coating_quality_id(2)
+        new_coating_date_ext:"",
+        last_inspection_date_ext: "",
         //Trd(2)
         agetk_ext: 0,
         agecoat_ext: 0,
         coatadj_ext: 0,
         age_ext: 0,
-        external_environment_id_ext: dfExtData?.i_ims_design_id?.ext_env_id || null,
-        pipesupprt_ext: dfExtData?.i_ims_design_id?.pipe_support || false,
-        soilwaterinterface_ext: dfExtData?.i_ims_design_id?.soil_water_interface || false,
+        external_environment_id_ext: null,
+        pipesupprt_ext:false,
+        soilwaterinterface_ext: false,
         crexp_ext: 0,
         cract_ext: 0,
         art_ext: 0,
         fsextcorr_ext: 0,
         srextcorr_ext: 0,
-        nextcorra_ext: dfExtData?.nextcorra || 0,
-        nextcorrb_ext: dfExtData?.nextcorrb || 0,
-        nextcorrc_ext: dfExtData?.nextcorrc || 0,
-        nextcorrd_ext: dfExtData?.nextcorrd || 0,
-        data_confidence_id_ext: dfExtData?.data_confidence_id || null,
+        nextcorra_ext:  0,
+        nextcorrb_ext: 0,
+        nextcorrc_ext: 0,
+        nextcorrd_ext:  0,
+        data_confidence_id_ext: null,
         iextcorr1_ext: 0,
         iextcorr2_ext: 0,
         iextcorr3_ext: 0,
@@ -141,143 +132,14 @@ const RBIAssessmentDetailPage: React.FC = () => {
         bextcorr1_ext: 0,
         bextcorr2_ext: 0,
         bextcorr3_ext: 0,
-        dfextcorrf_ext: dfExtData?.dfextcorrf || 0,
+        dfextcorrf_ext: 0,
         //rl
 
-
-        // *** i_df_ext_clscc (3)
-        coating_quality_id_ext_clscc: dfExtClsccData?.i_ims_protection_id?.coating_quality_id || null, //?? coating_quality_id(3)
-        new_coating_date_ext_clscc: dfExtClsccData?.new_coating_date || "",
-        last_inspection_date_ext_clscc: dfExtClsccData?.last_inspection_date || "",
-        //Trd(3)
-        agecrack_ext_clscc: 0,
-        agecoat_ext_clscc: 0,
-        coatadj_ext_clscc: 0,
-        age_ext_clscc: 0,
-        external_environment_id_ext_clscc: dfExtClsccData?.i_ims_design_id?.ext_env_id || null,
-        ext_cl_scc_susc_ext_clscc: 0,
-        svi_ext_clscc: 0,
-        inspection_efficiency_id_ext_clscc: dfExtClsccData?.inspection_efficiency_id || null,
-        df_ext_cl_scc_ext_clscc: dfExtClsccData?.df_ext_cl_scc || 0,
-        df_ext_cl_scc_fb_ext_clscc: 0,
-
-        // *** i_df_mfat(4)
-        previous_failure_id_mfat: dfMfatData?.previous_failure_id || null,
-        visible_audible_shaking_id_mfat: dfMfatData?.visible_audible_shaking_id || null,
-        shaking_frequency_id_mfat: dfMfatData?.shaking_frequency_id || null,
-        cyclic_load_type_id_mfat: dfMfatData?.cyclic_load_type_id || null,
-        dmfatfb_mfat: dfMfatData?.dmfatfb || 0,
-        corrective_action_id_mfat: dfMfatData?.corrective_action_id || null,
-        pipe_complexity_id_mfat: dfMfatData?.pipe_complexity_id || null,
-        pipe_condition_id_mfat: dfMfatData?.pipe_condition_id || null,
-        joint_branch_design_id_mfat: dfMfatData?.joint_branch_design_id || null,
-        brach_diameter_id_mfat: dfMfatData?.brach_diameter_id || null,
-        dmfat_mfat: 0,
-
-        // *** i_df_cui (5)
-        coating_quality_id_cui: dfCuiData?.i_ims_protection_id?.coating_quality_id || null, //?? coating_quality_id(5)
-        last_inspection_date_cui: dfCuiData?.last_inspection_date || "",
-        new_coating_date_cui: dfCuiData?.new_coating_date || "",
-        agetk_cui: 0,
-        agecoat_cui: 0,
-        coatadj_cui: 0,
-        age_cui: 0,
-        external_environment_id_cui: dfCuiData?.i_ims_design_id?.ext_env_id || null,
-        insulation_type_id_cui: dfCuiData?.i_ims_protection_id?.insulation_type_id || null,
-        insulation_complexity_id_cui: dfCuiData?.i_ims_protection_id?.insulation_complexity_id || null,
-        insulation_condition_cui: dfCuiData?.i_ims_protection_id?.insulation_condition || "",
-        design_fabrication_id_cui: dfCuiData?.i_ims_protection_id?.design_fabrication_id || null,
-        interface_id_cui: dfCuiData?.i_ims_protection_id?.interface_id || null,
-        crexp_cui: 0,
-        cract_cui: dfCuiData?.cr_act || 0,
-        art_cui: 0,
-        fscuif_cui: 0,
-        srcuif_cui: 0,
-        ncuifa_cui: dfCuiData?.ncuifa || 0,
-        ncuifb_cui: dfCuiData?.ncuifb || 0,
-        ncuifc_cui: dfCuiData?.ncuifc || 0,
-        ncuifd_cui: dfCuiData?.ncuifd || 0,
-        data_confidence_id_cui: dfCuiData?.data_confidence_id || null,
-        icuif1_cui: 0,
-        icuif2_cui: 0,
-        icuif3_cui: 0,
-        pociufp1_cui: 0,
-        pociufp2_cui: 0,
-        pociufp3_cui: 0,
-        bcuif1_cui: 0,
-        bcuif2_cui: 0,
-        bcuif3_cui: 0,
-        dfcuiff_cui: dfCuiData?.dfcuiff || 0,
-
-        // *** i_df_scc_scc (6)
-        susceptibility_scc_scc: false, // Yes?
-        h2s_in_water_scc_scc: dfSccSccData?.h2s_in_water || 0,
-        ph_scc_scc: dfSccSccData?.ph || 0,
-        envseverity_scc_scc: "", //low?
-        pwht_scc_scc: dfSccSccData?.ims_general_id?.pwht || false,
-        hardness_brinnel_scc_scc: dfSccSccData?.hardness_brinnel || 0,
-        ssc_sucs_f_to_ht_scc_scc: "", //low?
-        svi_scc_scc: 0,
-        inspection_efficiency_id_scc_scc: dfSccSccData?.inspection_efficiency_id || null,
-        dfsccfb_scc_scc: dfSccSccData?.dfsccfb || 0,
-        last_inspection_date_scc_scc: dfSccSccData?.last_inspection_date || "",
-        df_scc_scc_scc_scc: dfSccSccData?.df_scc_scc || 0,
-
-        // *** i_df_scc_sohic (7)
-        susceptibility_scc_sohic: false, // Yes?
-        h2s_in_water_scc_sohic: dfccSohicData?.h2s_in_water || 0,
-        ph_scc_sohic: dfccSohicData?.ph || 0,
-        envseverity_scc_sohic: "", //low?
-        pwht_scc_sohic: dfccSohicData?.ims_general_id?.pwht || false,
-        steelscontent_id_scc_sohic: dfccSohicData?.steelscontent_id || null,
-        sucs_to_crack_scc_sohic: "", //low?
-        svi_scc_sohic: 0,
-        inspection_efficiency_id_scc_sohic: dfccSohicData?.inspection_efficiency_id || null,
-        dfsohicfb_scc_sohic: 0,
-        last_inspection_date_scc_sohic: dfccSohicData?.last_inspection_date || "",
-        //onlinemoitor(7)
-        dfscc_sohic_scc_sohic: dfccSohicData?.dfscc_sohic || 0,
-
-        // *** i_ims_cof_assessment_cof_prod
-        outagemult: cofProdData?.outagemult || 0,
-        injcost: cofProdData?.injcost || 0,
-        envcost: cofProdData?.envcost || 0,
-        fracevap: cofProdData?.fracevap || 0,
-        volenv: cofProdData?.volenv || 0,
-        fcenviron: cofProdData?.fcenviron || 0,
-        fc: cofProdData?.fc || 0,
-
-        // *** i_ims_cof_asssessment_cof_area
-        iso_sys_id: cofAreaData?.iso_sys_id || null,
-        det_sys_id: cofAreaData?.det_sys_id || null,
-        mitigation_system_id: cofAreaData?.mitigation_system_id || null,
-        ideal_gas_specific_heat_eq: cofAreaData?.ideal_gas_specific_heat_eq || 0,
-        ca_cmdflam: cofAreaData?.ca_cmdflam || 0,
-        ca_injflam: cofAreaData?.ca_injflam || 0,
-        ims_service_id: cofAreaData?.ims_service_id || null,
-
-        // *** i_ims_rbi_risk_irp
-        dhtha: rbiData?.dhtha || 0,
-        dbrit: rbiData?.dbrit || 0,
-        dthin: rbiData?.dthin || 0,
-        dextd: rbiData?.dextd || 0,
-        dscc: rbiData?.dscc || 0,
-        dmfat: rbiData?.dmfat || 0,
-        pof: rbiData?.pof || 0,
-        cof_financial: rbiData?.cof_financial || 0,
-        cof_area: rbiData?.cof_area || 0,
-        pof_value: rbiData?.pof_value || 0,
-        risk_level: rbiData?.risk_level || "",
-        risk_ranking: rbiData?.risk_ranking || "",
       });
     }
 
   }, [
-    isPofLoading,
-    isCofProdLoading,
-    isCofAreaLoading,
-    isRbiLoading,
-    pofData,
+
   ]);
 
   /** Calculate agetk_thin when last_inspection_date_thin or year_in_service changes */
@@ -478,27 +340,10 @@ const RBIAssessmentDetailPage: React.FC = () => {
     }
   }, [formData?.agetk_ext, formData?.coatadj_ext]);
 
-// CrExp_Ext, forumula piping vs preasure vevssele lain
-// piping, check metal type (kalau carbon steel, ada formula, else 0.01)
-// preasure vessel,
-  // useEffect(() => {
-  //   if (formData) {
-  //     const crExpExt = calculateCrExpExt(
-  //       formData.ims_asst_type,
-  //       formData.composition,
-  //       formData.external_environment_id_ext,
-  //       formData.pipesupprt_ext,
-  //       formData.soilwaterinterface_ext,
-
-  //     );
-  //     setFormData((prev: any) => ({ ...prev, crexp_ext: crExpExt }));
-  //   }
-  // }, [formData?.external_environment_id_ext]);
-
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("RBI Assessment updated successfully");
+    toast.success("RBI Assessment created successfully");
     navigate("/monitor/rbi-assessment");
   };
 
@@ -517,7 +362,7 @@ const RBIAssessmentDetailPage: React.FC = () => {
           <ArrowLeft className="h-4 w-4" /> Back to RBI Assessment
         </Button>
       </div>
-      {(formData && isPofLoading && isCofProdLoading && isCofAreaLoading && isRbiLoading) ? (
+      {(formData) ? (
         <Loading />
       ) : (
         <form onSubmit={handleSubmit}>
@@ -553,7 +398,7 @@ const RBIAssessmentDetailPage: React.FC = () => {
             >
               Cancel
             </Button>
-            <Button type="submit">Save Changes
+            <Button type="submit">Create RBI
             </Button>
           </div>
         </form>
@@ -562,4 +407,4 @@ const RBIAssessmentDetailPage: React.FC = () => {
   );
 };
 
-export default RBIAssessmentDetailPage;
+export default RBIAssessmentCreatePage;

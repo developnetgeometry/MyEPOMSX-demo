@@ -80,16 +80,16 @@ const GeneralSubTab: React.FC<{
                 <div className="space-y-2">
                     <Label>Cladding</Label>
                     <RadioGroup
-                        value={formData?.cladding ? "yes" : "no"}
+                        value={formData?.cladding ? "true" : "false"}
                         onValueChange={(value) => handleRadioChange("cladding", value)}
                         className="flex flex-row space-x-4"
                     >
                         <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="yes" id="cladding-yes" />
+                            <RadioGroupItem value="true" id="cladding-yes" />
                             <Label htmlFor="cladding-yes">Yes</Label>
                         </div>
                         <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="no" id="cladding-no" />
+                            <RadioGroupItem value="false" id="cladding-no" />
                             <Label htmlFor="cladding-no">No</Label>
                         </div>
                     </RadioGroup>

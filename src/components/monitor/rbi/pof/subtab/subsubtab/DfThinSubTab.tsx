@@ -311,7 +311,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
           />
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         <div>
           <Label htmlFor="dfthinfb_thin">DFThinFB</Label>
           <Input
@@ -336,7 +336,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             disabled
           />
         </div>
-        <div>
+        {/* <div>
           <Label htmlFor="remaininglife_thin">Remaining Life</Label>
           <Input
             id="remaininglife_thin"
@@ -347,7 +347,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             className="mt-1"
             disabled
           />
-        </div>
+        </div> */}
       </div>
     </div>
   );

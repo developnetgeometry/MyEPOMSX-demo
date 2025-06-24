@@ -49,31 +49,39 @@ export const useImsGeneralData = () => {
       const { data, error } = await supabase
         .from("i_ims_general")
         .select(`
-          id,
-          line_no,
-          pipe_schedule_id,
-          pressure_rating,
-          year_in_service,
-          normal_wall_thickness,
-          tmin,
-          material_construction_id,
-          description,
-          circuit_id,
-          nominal_bore_diameter,
-          insulation,
-          line_h2s,
-          internal_lining,
-          pwht,
-          cladding,
-          asset_detail_id (
-            asset_id (id, asset_no, asset_name),
-            type_id (id, name)
-          ),
-          ims_asset_type_id,
-          inner_diameter,
-          clad_thickness,
-          pipe_class_id
-        `)
+    id,
+    line_no,
+    pipe_schedule_id,
+    pressure_rating,
+    year_in_service,
+    normal_wall_thickness,
+    tmin,
+    material_construction_id,
+    description,
+    circuit_id,
+    nominal_bore_diameter,
+    insulation,
+    line_h2s,
+    internal_lining,
+    pwht,
+    cladding,
+
+    asset_detail:e_asset_detail!i_ims_general_e_asset_detail_fk (
+      id,
+      type:type_id (id, name),
+
+      asset:e_asset!e_asset_detail_asset_id_key (
+        id,
+        asset_no,
+        asset_name
+      )
+    ),
+
+    ims_asset_type_id,
+    inner_diameter,
+    clad_thickness,
+    pipe_class_id
+  `)
         .order("id", { ascending: false });
 
       if (error) {

@@ -6781,6 +6781,7 @@ export type Database = {
           cr_act: number | null
           data_confidence_id: number | null
           dfthinfb: number | null
+          i_ims_design_id: number | null
           id: number
           ims_general_id: number | null
           ims_pof_assessment_id: number | null
@@ -6795,6 +6796,7 @@ export type Database = {
           cr_act?: number | null
           data_confidence_id?: number | null
           dfthinfb?: number | null
+          i_ims_design_id?: number | null
           id?: number
           ims_general_id?: number | null
           ims_pof_assessment_id?: number | null
@@ -6809,6 +6811,7 @@ export type Database = {
           cr_act?: number | null
           data_confidence_id?: number | null
           dfthinfb?: number | null
+          i_ims_design_id?: number | null
           id?: number
           ims_general_id?: number | null
           ims_pof_assessment_id?: number | null
@@ -6824,6 +6827,13 @@ export type Database = {
             columns: ["data_confidence_id"]
             isOneToOne: false
             referencedRelation: "i_data_confidence"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_df_thin_i_ims_design_id_fkey"
+            columns: ["i_ims_design_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_design"
             referencedColumns: ["id"]
           },
           {
@@ -7248,6 +7258,7 @@ export type Database = {
           material_construction_id: number | null
           nominal_bore_diameter: number | null
           normal_wall_thickness: number | null
+          outer_diameter: number | null
           pipe_class_id: number | null
           pipe_schedule_id: number | null
           pressure_rating: number | null
@@ -7275,6 +7286,7 @@ export type Database = {
           material_construction_id?: number | null
           nominal_bore_diameter?: number | null
           normal_wall_thickness?: number | null
+          outer_diameter?: number | null
           pipe_class_id?: number | null
           pipe_schedule_id?: number | null
           pressure_rating?: number | null
@@ -7302,6 +7314,7 @@ export type Database = {
           material_construction_id?: number | null
           nominal_bore_diameter?: number | null
           normal_wall_thickness?: number | null
+          outer_diameter?: number | null
           pipe_class_id?: number | null
           pipe_schedule_id?: number | null
           pressure_rating?: number | null
