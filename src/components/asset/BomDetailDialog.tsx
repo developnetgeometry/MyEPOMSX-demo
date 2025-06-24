@@ -56,7 +56,7 @@ const BomDetailDialog: React.FC<BomDetailDialogProps> = ({ isOpen, onClose, bomI
               </div>
                <div>
                 <h3 className="font-medium text-gray-500">Spare Part</h3>
-                <p>{bom.items.item_name}</p>
+                <p>{bom.items?.item_name}</p>
               </div>
               <div className="col-span-2">
                 <h3 className="font-medium text-gray-500">Description</h3>
@@ -64,7 +64,7 @@ const BomDetailDialog: React.FC<BomDetailDialogProps> = ({ isOpen, onClose, bomI
               </div>
             </div>
             
-            {bom.items && bom.items.length > 0 && (
+            {bom.items && bom.items?.length > 0 && (
               <div>
                 <h3 className="font-medium text-lg mb-3">BOM Items</h3>
                 <div className="border rounded-md overflow-hidden">
@@ -78,7 +78,7 @@ const BomDetailDialog: React.FC<BomDetailDialogProps> = ({ isOpen, onClose, bomI
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {bom.items.map((item: any) => (
+                      {bom.items?.map((item: any) => (
                         <TableRow key={item.id}>
                           <TableCell>{item.item_master?.item_name || '-'}</TableCell>
                           <TableCell>{item.item_master?.part_number || '-'}</TableCell>
