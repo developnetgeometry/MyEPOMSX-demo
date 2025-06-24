@@ -19,7 +19,6 @@ interface BomDetailDialogProps {
 
 const BomDetailDialog: React.FC<BomDetailDialogProps> = ({ isOpen, onClose, bomId }) => {
   const { data: bom, isLoading, error } = useBomAssemblyById(bomId);
-  console.log(bom);
   
   
 

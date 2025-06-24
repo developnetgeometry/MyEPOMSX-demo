@@ -41,6 +41,10 @@ import { useLoadingState } from "@/hooks/use-loading-state";
 import { AddBomDialog } from "@/components/asset/AddBomDialog";
 import BomDetailDialog from "@/components/asset/BomDetailDialog";
 import BomFormDialog from "@/components/asset/BomFormDialog";
+import WorkOrderFormDialog from "@/components/manage/WorkOrderFormDialog";
+import WorkOrderDetailDialog from "@/components/manage/WorkOrderDetailDialog";
+import AttachmentDetailDialog from "@/components/manage/AttachmentDetailDialog";
+import AttachmentFormDialog from "@/components/manage/AttachmentFormDialog";
 
 // Dummy data for IoT Tab
 const iotData = [
@@ -98,6 +102,12 @@ const AssetDetailPage: React.FC = () => {
   const [isBomFormOpen, setIsBomFormOpen] = useState(false);
   const [selectedBom, setSelectedBom] = useState<any>(null);
 
+  // Work Order Dialogs
+  const [isWorkOrderFormOpen, setIsWorkOrderFormOpen] = useState(false);
+  const [isWorkOrderDetailOpen, setIsWorkOrderDetailOpen] = useState(false);
+  const [selectedWorkOrder, setSelectedWorkOrder] = useState<any>(null);
+  const [isEditingWorkOrder, setIsEditingWorkOrder] = useState(false);
+
   // Form validation state
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formSubmissionError, setFormSubmissionError] = useState<string | null>(
@@ -142,6 +152,12 @@ const AssetDetailPage: React.FC = () => {
   const [isEditingInstallation, setIsEditingInstallation] = useState(false);
   const [isAddChildDialogOpen, setIsAddChildDialogOpen] = useState(false);
   const [isAddBomDialogOpen, setIsAddBomDialogOpen] = useState(false);
+
+  // Attachment Dialogs
+  const [isAttachmentFormOpen, setIsAttachmentFormOpen] = useState(false);
+  const [isAttachmentDetailOpen, setIsAttachmentDetailOpen] = useState(false);
+  const [selectedAttachment, setSelectedAttachment] = useState<any>(null);
+  const [isEditingAttachment, setIsEditingAttachment] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -442,7 +458,7 @@ const AssetDetailPage: React.FC = () => {
     }
   };
 
-    const handleWorkRequest = (assetId: number) => {
+  const handleWorkRequest = (assetId: number) => {
     navigate("/work-orders/work-request/new", {
       state: { asset_id: assetId },
     });
@@ -784,12 +800,57 @@ const AssetDetailPage: React.FC = () => {
     });
   };
 
+  // Add these handlers to your AssetDetailPage component
+
   const handleAddAttachment = () => {
-    toast({
-      title: "Success",
-      description: "Attachment added successfully",
-      variant: "default",
-    });
+    setSelectedAttachment(null);
+    setIsEditingAttachment(false);
+    setIsAttachmentFormOpen(true);
+  };
+
+  const handleViewAttachment = (attachment: any) => {
+    setSelectedAttachment(attachment);
+    setIsAttachmentDetailOpen(true);
+  };
+
+  const handleEditAttachment = (attachment: any) => {
+    setSelectedAttachment(attachment);
+    setIsEditingAttachment(true);
+    setIsAttachmentFormOpen(true);
+  };
+
+  const handleDeleteAttachment = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this attachment?"))
+      return;
+
+    try {
+      // Delete from database
+      const { error } = await supabase
+        .from("e_asset_attachment")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Attachment deleted successfully",
+      });
+
+      // Refresh attachments
+      refetchAttachments();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete attachment",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAttachmentSuccess = () => {
+    // Refresh attachments
+    refetchAttachments();
   };
 
   const handleViewBom = (bomId: any) => {
@@ -841,10 +902,52 @@ const AssetDetailPage: React.FC = () => {
   };
 
   const handleAddWorkOrder = () => {
-    toast({
-      title: "Success",
-      description: "Work Order added successfully",
-      variant: "default",
+    setSelectedWorkOrder(null);
+    setIsEditingWorkOrder(false);
+    setIsWorkOrderFormOpen(true);
+  };
+
+  const handleViewWorkOrder = (workOrder: any) => {
+    setSelectedWorkOrder(workOrder);
+    setIsWorkOrderDetailOpen(true);
+  };
+
+  const handleEditWorkOrder = (workOrder: any) => {
+    setSelectedWorkOrder(workOrder);
+    setIsEditingWorkOrder(true);
+    setIsWorkOrderFormOpen(true);
+  };
+
+  const handleRemoveWorkOrder = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this work order?"))
+      return;
+
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      toast({
+        title: "Success",
+        description: "Work order deleted successfully",
+      });
+
+      // Refresh work orders
+      queryClient.invalidateQueries({
+        queryKey: assetKeys.workOrdersByAsset(Number(id)),
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete work order",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleWorkOrderSuccess = () => {
+    // Refresh work orders
+    queryClient.invalidateQueries({
+      queryKey: assetKeys.workOrdersByAsset(Number(id)),
     });
   };
 
@@ -1328,8 +1431,14 @@ const AssetDetailPage: React.FC = () => {
           handleRemoveBom={handleRemoveBom}
           workOrder={workOrder}
           handleAddWorkOrder={handleAddWorkOrder}
+          handleViewWorkOrder={handleViewWorkOrder}
+          handleEditWorkOrder={handleEditWorkOrder}
+          handleRemoveWorkOrder={handleRemoveWorkOrder}
           attachments={attachments}
           handleAddAttachment={handleAddAttachment}
+          handleViewAttachment={handleViewAttachment}
+          handleEditAttachment={handleEditAttachment}
+          handleDeleteAttachment={handleDeleteAttachment}
           iotData={iotData}
           handleAddIOT={handleAddIOT}
         />
@@ -1407,6 +1516,38 @@ const AssetDetailPage: React.FC = () => {
         isOpen={isInstallationDetailOpen}
         onClose={() => setIsInstallationDetailOpen(false)}
         installationData={selectedInstallation}
+      />
+
+      {/* Work Order Dialogs */}
+      <WorkOrderFormDialog
+        isOpen={isWorkOrderFormOpen}
+        onClose={() => setIsWorkOrderFormOpen(false)}
+        onSuccess={handleWorkOrderSuccess}
+        assetId={Number(id)}
+        workOrderData={selectedWorkOrder}
+        isEditMode={isEditingWorkOrder}
+      />
+
+      <WorkOrderDetailDialog
+        isOpen={isWorkOrderDetailOpen}
+        onClose={() => setIsWorkOrderDetailOpen(false)}
+        workOrderData={selectedWorkOrder}
+      />
+
+      {/* Attachment Dialogs */}
+      <AttachmentFormDialog
+        isOpen={isAttachmentFormOpen}
+        onClose={() => setIsAttachmentFormOpen(false)}
+        onSuccess={handleAttachmentSuccess}
+        assetId={Number(id)}
+        attachmentData={selectedAttachment}
+        isEditMode={isEditingAttachment}
+      />
+
+      <AttachmentDetailDialog
+        isOpen={isAttachmentDetailOpen}
+        onClose={() => setIsAttachmentDetailOpen(false)}
+        attachmentData={selectedAttachment}
       />
     </div>
   );

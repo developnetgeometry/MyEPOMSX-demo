@@ -4,68 +4,16 @@ import PageHeader from "@/components/shared/PageHeader";
 import DataTable, { Column } from "@/components/shared/DataTable";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileCodeIcon } from "lucide-react";
+import { useCorrosionStudies } from "@/hooks/queries/useCorrosionStudy";
+import { formatDate } from "@/utils/formatters";
 
-// Sample data for corrosion studies
-const initialCorrosionStudies = [
-  {
-    id: "1",
-    studyId: "CS-001",
-    system: "Cooling Water System",
-    asset: "HX-1001",
-    studyName: "Heat Exchanger Tube Corrosion Analysis",
-    dateConducted: "2025-02-15",
-    corrosionRate: 0.12,
-    notes:
-      "Found localized pitting on tube sheets. Recommended increased inhibitor concentration.",
-  },
-  {
-    id: "2",
-    studyId: "CS-002",
-    system: "Process Line",
-    asset: "PP-2001",
-    studyName: "Pipeline Internal Corrosion Assessment",
-    dateConducted: "2025-03-10",
-    corrosionRate: 0.08,
-    notes:
-      "Uniform corrosion detected. Within acceptable limits. Monitor in 6 months.",
-  },
-  {
-    id: "3",
-    studyId: "CS-003",
-    system: "Storage Tank",
-    asset: "TK-3001",
-    studyName: "Tank Floor Corrosion Study",
-    dateConducted: "2025-01-25",
-    corrosionRate: 0.22,
-    notes:
-      "Significant floor plate thinning detected. Scheduled for repair during next maintenance window.",
-  },
-  {
-    id: "4",
-    studyId: "CS-004",
-    system: "Overhead Condenser",
-    asset: "CD-4001",
-    studyName: "Condensate Corrosion Analysis",
-    dateConducted: "2025-02-28",
-    corrosionRate: 0.05,
-    notes: "Minimal corrosion detected. No immediate action required.",
-  },
-  {
-    id: "5",
-    studyId: "CS-005",
-    system: "Flare System",
-    asset: "FL-5001",
-    studyName: "Flare Tip Erosion Study",
-    dateConducted: "2025-03-22",
-    corrosionRate: 0.31,
-    notes:
-      "Erosion rate higher than expected. Recommended replacement in next turnaround.",
-  },
-];
 
 const CorrosionStudiesPage: React.FC = () => {
   const navigate = useNavigate();
-  const [studies, setStudies] = useState(initialCorrosionStudies);
+
+  // Corrosion study page data and mutation
+  const { data: corrosionStudies, isLoading: loadingStudies } = useCorrosionStudies();
+  
 
   const handleAddNew = () => {
     navigate("/monitor/corrosion-studies/new");
@@ -84,14 +32,14 @@ const CorrosionStudiesPage: React.FC = () => {
   };
 
   const columns: Column[] = [
-    { id: "studyId", header: "Study ID", accessorKey: "studyId" },
-    { id: "system", header: "System", accessorKey: "system" },
-    { id: "asset", header: "Asset", accessorKey: "asset" },
+    { id: "studyCode", header: "Study Code", accessorKey: "studyCode" },
+    { id: "asset", header: "Asset", accessorKey: "assetName" },
     { id: "studyName", header: "Study Name", accessorKey: "studyName" },
     {
       id: "dateConducted",
       header: "Date Conducted",
       accessorKey: "dateConducted",
+      cell: (value) => formatDate(value),
     },
     {
       id: "corrosionRate",
@@ -115,6 +63,18 @@ const CorrosionStudiesPage: React.FC = () => {
     },
   ];
 
+  // If data is still loading, show a loading state
+  if (loadingStudies) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2">Loading corrosion studies...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -122,7 +82,7 @@ const CorrosionStudiesPage: React.FC = () => {
         subtitle="Management of corrosion studies and analysis"
         icon={<FileCodeIcon className="h-6 w-6" />}
         onAddNew={handleAddNew}
-        addNewLabel="+ New Study"
+        addNewLabel="New Study"
         onSearch={(query) => console.log("Search:", query)}
       />
 
@@ -130,7 +90,7 @@ const CorrosionStudiesPage: React.FC = () => {
         <CardContent className="p-6">
           <DataTable
             columns={columns}
-            data={studies}
+            data={corrosionStudies}
             onRowClick={handleRowClick}
           />
         </CardContent>

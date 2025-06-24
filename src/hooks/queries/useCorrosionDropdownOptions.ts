@@ -58,10 +58,10 @@ export const useMaterialConstructionOptions = () => {
       );
 
       // Console log the material construction options
-      console.log(
-        "Material Construction Options for Pressure Vessel:",
-        sortedMaterials
-      );
+      // console.log(
+      //   "Material Construction Options for Pressure Vessel:",
+      //   sortedMaterials
+      // );
 
       return sortedMaterials;
     },
@@ -100,18 +100,18 @@ export const useMaterialRangeOptions = (materialConstructionId?: number) => {
         })) || [];
 
       // Console log the range options for the selected material
-      console.log(
-        `Material Range Options for Material ID ${materialConstructionId}:`,
-        rangeOptions
-      );
-      console.log(
-        `Range Cell Values:`,
-        rangeOptions.map((option) => ({
-          header_id: option.header_id,
-          cell_value: option.cell_value,
-          label: option.label,
-        }))
-      );
+      // console.log(
+      //   `Material Range Options for Material ID ${materialConstructionId}:`,
+      //   rangeOptions
+      // );
+      // console.log(
+      //   `Range Cell Values:`,
+      //   rangeOptions.map((option) => ({
+      //     header_id: option.header_id,
+      //     cell_value: option.cell_value,
+      //     label: option.label,
+      //   }))
+      // );
 
       return rangeOptions;
     },
@@ -156,20 +156,20 @@ export const useAsmeViiAllowableStressLookup = (
         };
       }
 
-      console.log(`🔍 ASME VIII Allowable Stress Auto-Calculation:`, {
-        materialConstructionId,
-        designTemperature: `${designTemperature}°F`,
-      });
+      // console.log(`🔍 ASME VIII Allowable Stress Auto-Calculation:`, {
+      //   materialConstructionId,
+      //   designTemperature: `${designTemperature}°F`,
+      // });
 
       // For now, return a placeholder implementation
       // TODO: Implement proper lookup once we understand the actual data structure
       const placeholderStress = "150"; // Example stress value
 
-      console.log(`✅ Allowable Stress (MPa) Auto-Calculated:`, {
-        materialId: materialConstructionId,
-        designTemperature: `${designTemperature}°F`,
-        allowableStressMpa: placeholderStress,
-      });
+      // console.log(`✅ Allowable Stress (MPa) Auto-Calculated:`, {
+      //   materialId: materialConstructionId,
+      //   designTemperature: `${designTemperature}°F`,
+      //   allowableStressMpa: placeholderStress,
+      // });
 
       return {
         allowable_stress_mpa: placeholderStress,
@@ -230,12 +230,12 @@ export const useTminCalculation = (
         };
       }
 
-      console.log(`🔧 Tmin Auto-Calculation Started:`, {
-        designPressure: `${designPressure} MPa`,
-        allowableStress: `${allowableStress} MPa`,
-        jointEfficiency: jointEfficiency,
-        insideDiameter: `${insideDiameter} mm`,
-      });
+      // console.log(`🔧 Tmin Auto-Calculation Started:`, {
+      //   designPressure: `${designPressure} MPa`,
+      //   allowableStress: `${allowableStress} MPa`,
+      //   jointEfficiency: jointEfficiency,
+      //   insideDiameter: `${insideDiameter} mm`,
+      // });
 
       // ASME VIII Div 1 Formula: t = (P * R) / (S * E - 0.6 * P)
       // Where:

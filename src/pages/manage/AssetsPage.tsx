@@ -109,14 +109,13 @@ const AssetsPage: React.FC = () => {
     navigate(`/manage/assets/${row.id}`);
   };
 
-
   const handleCreateWorkRequest = (assetId: number) => {
     navigate("/work-orders/work-request/new", {
       state: { asset_id: assetId },
     });
   };
 
-  const handleFormSubmit = async (formData: any) => { };
+  const handleFormSubmit = async (formData: any) => {};
 
   const columns: Column[] = [
     {
@@ -167,7 +166,11 @@ const AssetsPage: React.FC = () => {
   ];
 
   if (isLoading) {
-    return <div>Loading assets...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
   }
 
   // If there was an error fetching the data
@@ -239,9 +242,10 @@ const AssetsPage: React.FC = () => {
                 <div className="md:col-span-2">
                   <h3 className="text-lg font-medium mb-4">
                     {selectedNode
-                      ? `${selectedNode.type.charAt(0).toUpperCase() +
-                      selectedNode.type.slice(1)
-                      } Details`
+                      ? `${
+                          selectedNode.type.charAt(0).toUpperCase() +
+                          selectedNode.type.slice(1)
+                        } Details`
                       : "Details"}
                   </h3>
 
@@ -274,7 +278,9 @@ const AssetsPage: React.FC = () => {
                           <div className="flex justify-end">
                             <Button
                               variant="default"
-                              onClick={() => handleCreateWorkRequest(selectedNode.id)}
+                              onClick={() =>
+                                handleCreateWorkRequest(selectedNode.id)
+                              }
                             >
                               Create Work Request
                             </Button>
@@ -351,18 +357,18 @@ const AssetsPage: React.FC = () => {
                                               <div className="grid grid-cols-2 gap-1 mt-2">
                                                 {asset.asset_detail
                                                   ?.manufacturer?.name && (
-                                                    <div>
-                                                      <span className="text-xs text-gray-500 block">
-                                                        Manufacturer
-                                                      </span>
-                                                      <span className="text-xs">
-                                                        {
-                                                          asset.asset_detail
-                                                            .manufacturer.name
-                                                        }
-                                                      </span>
-                                                    </div>
-                                                  )}
+                                                  <div>
+                                                    <span className="text-xs text-gray-500 block">
+                                                      Manufacturer
+                                                    </span>
+                                                    <span className="text-xs">
+                                                      {
+                                                        asset.asset_detail
+                                                          .manufacturer.name
+                                                      }
+                                                    </span>
+                                                  </div>
+                                                )}
                                                 {asset.asset_detail?.model && (
                                                   <div>
                                                     <span className="text-xs text-gray-500 block">
@@ -375,32 +381,32 @@ const AssetsPage: React.FC = () => {
                                                 )}
                                                 {asset.asset_detail
                                                   ?.serial_number && (
-                                                    <div>
-                                                      <span className="text-xs text-gray-500 block">
-                                                        Serial Number
-                                                      </span>
-                                                      <span className="text-xs">
-                                                        {
-                                                          asset.asset_detail
-                                                            .serial_number
-                                                        }
-                                                      </span>
-                                                    </div>
-                                                  )}
+                                                  <div>
+                                                    <span className="text-xs text-gray-500 block">
+                                                      Serial Number
+                                                    </span>
+                                                    <span className="text-xs">
+                                                      {
+                                                        asset.asset_detail
+                                                          .serial_number
+                                                      }
+                                                    </span>
+                                                  </div>
+                                                )}
                                                 {asset.asset_detail?.type
                                                   ?.name && (
-                                                    <div>
-                                                      <span className="text-xs text-gray-500 block">
-                                                        Type
-                                                      </span>
-                                                      <span className="text-xs">
-                                                        {
-                                                          asset.asset_detail.type
-                                                            .name
-                                                        }
-                                                      </span>
-                                                    </div>
-                                                  )}
+                                                  <div>
+                                                    <span className="text-xs text-gray-500 block">
+                                                      Type
+                                                    </span>
+                                                    <span className="text-xs">
+                                                      {
+                                                        asset.asset_detail.type
+                                                          .name
+                                                      }
+                                                    </span>
+                                                  </div>
+                                                )}
                                               </div>
                                             </div>
                                           )
@@ -446,19 +452,19 @@ const AssetsPage: React.FC = () => {
                                               {category}
                                             </span>
                                             <span className="text-xs font-medium">
-                                              {count}
+                                              {count as number}
                                             </span>
                                           </div>
                                         );
                                       })}
                                     {(!nodeDetails.assets ||
                                       nodeDetails.assets.length === 0) && (
-                                        <div className="p-2 bg-gray-50 rounded-md">
-                                          <span className="text-xs text-gray-500">
-                                            No category data available
-                                          </span>
-                                        </div>
-                                      )}
+                                      <div className="p-2 bg-gray-50 rounded-md">
+                                        <span className="text-xs text-gray-500">
+                                          No category data available
+                                        </span>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
 
@@ -478,22 +484,23 @@ const AssetsPage: React.FC = () => {
                                         >
                                           <div className="flex items-center">
                                             <div
-                                              className={`w-2 h-2 rounded-full mr-2 ${status === "Operational"
+                                              className={`w-2 h-2 rounded-full mr-2 ${
+                                                status === "Operational"
                                                   ? "bg-green-500"
                                                   : status ===
                                                     "Under Maintenance"
-                                                    ? "bg-orange-500"
-                                                    : status === "Out of Service"
-                                                      ? "bg-red-500"
-                                                      : "bg-gray-500"
-                                                }`}
+                                                  ? "bg-orange-500"
+                                                  : status === "Out of Service"
+                                                  ? "bg-red-500"
+                                                  : "bg-gray-500"
+                                              }`}
                                             ></div>
                                             <span className="text-xs">
                                               {status}
                                             </span>
                                           </div>
                                           <span className="text-xs font-medium">
-                                            {count}
+                                            {count as number}
                                           </span>
                                         </div>
                                       ))}
@@ -501,12 +508,12 @@ const AssetsPage: React.FC = () => {
                                       Object.keys(
                                         nodeDetails.statistics?.assetsByStatus
                                       ).length === 0) && (
-                                        <div className="p-2 bg-gray-50 rounded-md">
-                                          <span className="text-xs text-gray-500">
-                                            No status data available
-                                          </span>
-                                        </div>
-                                      )}
+                                      <div className="p-2 bg-gray-50 rounded-md">
+                                        <span className="text-xs text-gray-500">
+                                          No status data available
+                                        </span>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
 
@@ -548,12 +555,12 @@ const AssetsPage: React.FC = () => {
                                         ))}
                                     {(!nodeDetails.assets ||
                                       nodeDetails.assets.length === 0) && (
-                                        <div className="p-2 bg-gray-50 rounded-md">
-                                          <span className="text-xs text-gray-500">
-                                            No assets in this package
-                                          </span>
-                                        </div>
-                                      )}
+                                      <div className="p-2 bg-gray-50 rounded-md">
+                                        <span className="text-xs text-gray-500">
+                                          No assets in this package
+                                        </span>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               </div>
@@ -647,8 +654,8 @@ const AssetsPage: React.FC = () => {
                                     <span className="text-sm font-medium">
                                       {nodeDetails.commission_date
                                         ? new Date(
-                                          nodeDetails.commission_date
-                                        ).toLocaleDateString()
+                                            nodeDetails.commission_date
+                                          ).toLocaleDateString()
                                         : "-"}
                                     </span>
                                   </div>
@@ -776,72 +783,72 @@ const AssetsPage: React.FC = () => {
                                     <div className="grid grid-cols-2 gap-3">
                                       {nodeDetails.asset_installation
                                         .actual_installation_date && (
-                                          <div className="p-2 bg-gray-50 rounded-md">
-                                            <span className="text-xs text-gray-500 block">
-                                              Installation Date
-                                            </span>
-                                            <span className="text-sm font-medium">
-                                              {new Date(
-                                                nodeDetails.asset_installation.actual_installation_date
-                                              ).toLocaleDateString()}
-                                            </span>
-                                          </div>
-                                        )}
+                                        <div className="p-2 bg-gray-50 rounded-md">
+                                          <span className="text-xs text-gray-500 block">
+                                            Installation Date
+                                          </span>
+                                          <span className="text-sm font-medium">
+                                            {new Date(
+                                              nodeDetails.asset_installation.actual_installation_date
+                                            ).toLocaleDateString()}
+                                          </span>
+                                        </div>
+                                      )}
                                       {nodeDetails.asset_installation
                                         .actual_startup_date && (
-                                          <div className="p-2 bg-gray-50 rounded-md">
-                                            <span className="text-xs text-gray-500 block">
-                                              Startup Date
-                                            </span>
-                                            <span className="text-sm font-medium">
-                                              {new Date(
-                                                nodeDetails.asset_installation.actual_startup_date
-                                              ).toLocaleDateString()}
-                                            </span>
-                                          </div>
-                                        )}
+                                        <div className="p-2 bg-gray-50 rounded-md">
+                                          <span className="text-xs text-gray-500 block">
+                                            Startup Date
+                                          </span>
+                                          <span className="text-sm font-medium">
+                                            {new Date(
+                                              nodeDetails.asset_installation.actual_startup_date
+                                            ).toLocaleDateString()}
+                                          </span>
+                                        </div>
+                                      )}
                                       {nodeDetails.asset_installation
                                         .warranty_date && (
-                                          <div className="p-2 bg-gray-50 rounded-md">
-                                            <span className="text-xs text-gray-500 block">
-                                              Warranty Date
-                                            </span>
-                                            <span className="text-sm font-medium">
-                                              {new Date(
-                                                nodeDetails.asset_installation.warranty_date
-                                              ).toLocaleDateString()}
-                                            </span>
-                                          </div>
-                                        )}
+                                        <div className="p-2 bg-gray-50 rounded-md">
+                                          <span className="text-xs text-gray-500 block">
+                                            Warranty Date
+                                          </span>
+                                          <span className="text-sm font-medium">
+                                            {new Date(
+                                              nodeDetails.asset_installation.warranty_date
+                                            ).toLocaleDateString()}
+                                          </span>
+                                        </div>
+                                      )}
                                       {nodeDetails.asset_installation
                                         .drawing_no && (
-                                          <div className="p-2 bg-gray-50 rounded-md">
-                                            <span className="text-xs text-gray-500 block">
-                                              Drawing No
-                                            </span>
-                                            <span className="text-sm font-medium">
-                                              {
-                                                nodeDetails.asset_installation
-                                                  .drawing_no
-                                              }
-                                            </span>
-                                          </div>
-                                        )}
+                                        <div className="p-2 bg-gray-50 rounded-md">
+                                          <span className="text-xs text-gray-500 block">
+                                            Drawing No
+                                          </span>
+                                          <span className="text-sm font-medium">
+                                            {
+                                              nodeDetails.asset_installation
+                                                .drawing_no
+                                            }
+                                          </span>
+                                        </div>
+                                      )}
 
                                       {nodeDetails.asset_installation
                                         .orientation && (
-                                          <div className="p-2 bg-gray-50 rounded-md">
-                                            <span className="text-xs text-gray-500 block">
-                                              Orientation
-                                            </span>
-                                            <span className="text-sm font-medium">
-                                              {
-                                                nodeDetails.asset_installation
-                                                  .orientation
-                                              }
-                                            </span>
-                                          </div>
-                                        )}
+                                        <div className="p-2 bg-gray-50 rounded-md">
+                                          <span className="text-xs text-gray-500 block">
+                                            Orientation
+                                          </span>
+                                          <span className="text-sm font-medium">
+                                            {
+                                              nodeDetails.asset_installation
+                                                .orientation
+                                            }
+                                          </span>
+                                        </div>
+                                      )}
 
                                       {(nodeDetails.asset_installation
                                         .overall_height ||
@@ -849,29 +856,29 @@ const AssetsPage: React.FC = () => {
                                           .overall_length ||
                                         nodeDetails.asset_installation
                                           .overall_width) && (
-                                          <div className="p-2 bg-gray-50 rounded-md">
-                                            <span className="text-xs text-gray-500 block">
-                                              Dimensions (H×L×W)
-                                            </span>
-                                            <span className="text-sm font-medium">
-                                              {nodeDetails.asset_installation
-                                                .overall_height || "-"}
-                                              ×
-                                              {nodeDetails.asset_installation
-                                                .overall_length || "-"}
-                                              ×
-                                              {nodeDetails.asset_installation
-                                                .overall_width || "-"}
-                                            </span>
-                                          </div>
-                                        )}
+                                        <div className="p-2 bg-gray-50 rounded-md">
+                                          <span className="text-xs text-gray-500 block">
+                                            Dimensions (H×L×W)
+                                          </span>
+                                          <span className="text-sm font-medium">
+                                            {nodeDetails.asset_installation
+                                              .overall_height || "-"}
+                                            ×
+                                            {nodeDetails.asset_installation
+                                              .overall_length || "-"}
+                                            ×
+                                            {nodeDetails.asset_installation
+                                              .overall_width || "-"}
+                                          </span>
+                                        </div>
+                                      )}
                                     </div>
                                   </div>
                                 )}
 
                                 {nodeDetails.asset_detail?.child_assets &&
                                   nodeDetails.asset_detail.child_assets.length >
-                                  0 && (
+                                    0 && (
                                     <div className="mt-4">
                                       <h5 className="text-xs font-medium text-gray-500 mb-2">
                                         Child Assets (
@@ -898,13 +905,13 @@ const AssetsPage: React.FC = () => {
                                                 </span>
                                                 {childAsset.asset
                                                   ?.asset_status && (
-                                                    <StatusBadge
-                                                      status={
-                                                        childAsset.asset
-                                                          .asset_status.name
-                                                      }
-                                                    />
-                                                  )}
+                                                  <StatusBadge
+                                                    status={
+                                                      childAsset.asset
+                                                        .asset_status.name
+                                                    }
+                                                  />
+                                                )}
                                               </div>
                                             </div>
                                           )
@@ -1068,7 +1075,7 @@ const AssetsPage: React.FC = () => {
                       </span>
                       <span className="text-sm font-medium">
                         {selectedAsset.asset_sce &&
-                          selectedAsset.asset_sce.length > 0
+                        selectedAsset.asset_sce.length > 0
                           ? selectedAsset.asset_sce[0].sce_code
                           : "-"}
                       </span>
@@ -1104,7 +1111,6 @@ const AssetsPage: React.FC = () => {
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
-
     </div>
   );
 };
