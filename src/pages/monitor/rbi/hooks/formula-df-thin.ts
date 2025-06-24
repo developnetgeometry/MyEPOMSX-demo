@@ -53,9 +53,13 @@ export function calculateCrAct(
   nominal_thickness: number,
   current_thickness: number,
   last_inspection_date: Date | string,
-  year_in_service_date: Date | string | null
+  year_in_service_date: Date | string | null,
+  ims_asset_type: number // 1 for VESSEL, 2 for PIPING
 ): number {
   try {
+    // ✅ Return 0 immediately if asset type is VESSEL
+    if (ims_asset_type === 1) return 0;
+
     const parsedDate = new Date(last_inspection_date);
     const referenceDate = new Date(year_in_service_date);
 
@@ -84,20 +88,61 @@ export function calculateArt(
   crExp: number,
   ageTk: number,
   trd: number,
-  tNom: number
+  tNom: number,
+  assetType: number, // 1 for VESSEL, 2 for PIPING
+  cladding: boolean,
+  crCm: number,
+  ageRc: Date | string, // can be Date or ""
+  yearInServiceDate: Date
 ): number {
   try {
-    const numerator = crAct > 0 ? crAct * ageTk : crExp * ageTk;
-    const denominator = trd === 0 ? tNom : trd;
+    const today = new Date();
 
-    if (denominator === 0) return 0; // avoid division by 0
-    const final = numerator / denominator
-    return parseFloat(final.toFixed(6));
+    // Determine ageRcYears:
+    let ageRcDate: Date;
+    if (typeof ageRc === "string" && ageRc.trim() === "") {
+      // Use yearInServiceDate if ageRc is empty
+      ageRcDate = yearInServiceDate;
+    } else {
+      ageRcDate = new Date(ageRc);
+    }
+
+    const ageRcYears =
+      (today.getTime() - ageRcDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+
+    if (isNaN(ageRcYears) || ageRcYears < 0) return 0; // invalid or future date check
+
+    if (assetType === 2) {
+      // For PIPING
+      const numerator = crAct > 0 ? crAct * ageTk : crExp * ageTk;
+      const denominator = trd === 0 ? tNom : trd;
+
+      if (denominator === 0) return 0;
+      return parseFloat((numerator / denominator).toFixed(6));
+    }
+
+    // For VESSEL
+    if (!cladding) {
+      if (crAct > 0) {
+        if (trd === 0) return 0;
+        return parseFloat(((crExp * ageTk) / trd).toFixed(6));
+      } else {
+        if (tNom === 0) return 0;
+        return parseFloat(((crExp * ageTk) / tNom).toFixed(6));
+      }
+    } else {
+      // Cladding is TRUE
+      if (tNom === 0) return 0;
+
+      const ageTkMinusAgeRc = ageTk - ageRcYears;
+      return parseFloat(
+        ((crCm * ageRcYears * crExp * ageTkMinusAgeRc) / tNom).toFixed(6)
+      );
+    }
   } catch {
     return 0;
   }
 }
-
 
 export function calculateFsThin(
   assetType: number,         // "PIPING" or "VESSEL"
@@ -228,7 +273,10 @@ export interface BThinOutput {
   bThin3: number;
 }
 
-export function calculateBThins(art: number, srThin: number): BThinOutput {
+export function calculateBThins(
+  art: number,
+  srThin: number
+): BThinOutput {
   try {
     const zFactor = 0.2;
     const srFactor = 0.05;
@@ -259,7 +307,6 @@ export function calculateBThins(art: number, srThin: number): BThinOutput {
 
 // Standard Normal Cumulative Distribution Function (Φ(-β))
 function normSDist(z: number): number {
-  // Approximation of standard normal CDF using Abramowitz & Stegun formula
   const t = 1 / (1 + 0.2316419 * Math.abs(z));
   const d = 0.3989423 * Math.exp(-z * z / 2);
   const prob =
@@ -270,22 +317,47 @@ function normSDist(z: number): number {
 }
 
 // Main function
-export function calculateDFThinFb(
+export function calculateDFThinFDFThinFB(
   poThinP1: number,
   poThinP2: number,
   poThinP3: number,
   bThin1: number,
   bThin2: number,
-  bThin3: number
-): number {
+  bThin3: number,
+  mixPoint: boolean,
+  deadLegs: boolean,
+  monitorName: string
+): { dfThinFb: number; dfThinF: number } {
   try {
     const failure1 = poThinP1 * normSDist(-bThin1);
     const failure2 = poThinP2 * normSDist(-bThin2);
     const failure3 = poThinP3 * normSDist(-bThin3);
     const totalFailure = failure1 + failure2 + failure3;
 
-    return totalFailure / 0.000156;
+    const dfThinFb = totalFailure / 0.000156;
+
+    // Table 1: multiplier if true = 3, else = 1
+    const mixPointFactor = mixPoint ? 3 : 1;
+    const deadLegsFactor = deadLegs ? 3 : 1;
+
+    // Table 2: monitorName mapping
+    const monitorFactor = (() => {
+      switch (monitorName?.toUpperCase()) {
+        case "KPV":
+          return 20;
+        case "ERP":
+          return 10;
+        case "CC":
+          return 2;
+        default:
+          return 1;
+      }
+    })();
+
+    const dfThinF = (dfThinFb * mixPointFactor * deadLegsFactor) / monitorFactor;
+
+    return { dfThinFb: parseFloat(dfThinFb.toFixed(6)), dfThinF: parseFloat(dfThinF.toFixed(6)) };
   } catch {
-    return 0;
+    return { dfThinFb: 0, dfThinF: 0 };
   }
 }

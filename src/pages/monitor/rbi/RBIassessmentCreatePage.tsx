@@ -12,8 +12,9 @@ import RiskIrpTab from "@/components/monitor/rbi/risk/RiskIrpTab";
 import Loading from "@/components/shared/Loading";
 import { useAverageMtsMpaMysMpaByName } from "./hooks/use-average-mts_mpa-mys_mpa-by-name";
 import { useImsGeneralDataByAssetDetailId } from "./hooks/use-ims-general-data";
+import { useImsProtectionByAssetDetailId } from "./hooks/use-ims-protection-by-asset-detail-id";
 import { useImsDesignByAssetDetailId } from "./hooks/use-ims-design-by-asset-detail-id";
-import { calculateAgeTk, calculateCrAct, calculateCrExp } from "./hooks/formula-df-thin";
+import { calcIThinAndProportions, calculateAgeTk, calculateArt, calculateBThins, calculateCrAct, calculateCrCm, calculateCrExp, calculateDFThinFDFThinFB, calculateFsThin, calculateSrThin } from "./hooks/formula-df-thin";
 
 
 const RBIAssessmentCreatePage: React.FC = () => {
@@ -22,14 +23,14 @@ const RBIAssessmentCreatePage: React.FC = () => {
   const [formData, setFormData] = useState<any | null>({
     // ims_general
     asset_detail_id: null,
-    ims_asset_type: null,
     line_no: "",
     pipe_schedule_id: null,
     pressure_rating: 0,
     year_in_service: "",
-    normal_wall_thickness: 0,
-    tmin: 0,
+    normal_wall_thickness: 0, // Nominal Thickness Tnom nominal_thickness
+    tmin: 0, // Tmin
     material_construction_id: null,
+    spec_code: "", // Spec Code
     description: "",
     circuit_id: null,
     nominal_bore_diameter: null,
@@ -58,18 +59,33 @@ const RBIAssessmentCreatePage: React.FC = () => {
     soil_water_interface: false,
     dead_legs: false,
     mix_point: false,
-
-    // *** i_ims_pof_assessment_general
-
-    nominal_thickness: 0,
-    current_thickness: 0,
-    inner_diameter: 0,
-    spec_code: "",
+    // ims_protection
+    coating_quality_id: null,
+    isolation_system_id: null,
+    online_monitor_id: null,
+    online_monitor_name: "",
+    minimum_thickness: 0,
+    post_weld_heat_treatment: 0,
+    line_description: "",
+    replacement_line: "",
+    detection_system_id: null,
+    mitigation_system_id: null,
+    design_fabrication_id: null,
+    insulation_type_id: null,
+    interface_id: null,
+    insulation_complexity_id: null,
+    insulation_condition: "",
+    lining_type: "",
+    lining_condition: "",
+    lining_monitoring: "",
+    // useAverageMtsMpaMysMpaByName
     avg_mts_mpa: 0,
     avg_mys_mpa: 0,
     composition: "",
+
     // i_df_thin (1)
     last_inspection_date_thin: "",
+    current_thickness_thin: 0, //Trd
     agetk_thin: 0,
     agerc_thin: "",
     crexp_thin: 0,
@@ -94,13 +110,7 @@ const RBIAssessmentCreatePage: React.FC = () => {
     bthin2_thin: 0,
     bthin3_thin: 0,
     dfthinfb_thin: 0,
-    mixpoint_thin: 0,
-    dead_legs_tin: 0,
     dthinf_thin: 0,
-    remaininglife_thin: 0,
-    welding_efficiency_thin: 0,
-    allowable_stress_mpa_thin: 0,
-    design_pressure_thin: 0,
 
     // *** i_df_ext (2)
     coating_quality_id_ext: null,
@@ -136,8 +146,10 @@ const RBIAssessmentCreatePage: React.FC = () => {
   });
   const { data: imsGeneral, isLoading: isImsGeneralLoading } = useImsGeneralDataByAssetDetailId(formData?.asset_detail_id ?? 0);
   const { data: imsDesign, isLoading: isImsDesignLoading } = useImsDesignByAssetDetailId(formData?.asset_detail_id ?? 0);
+  const { data: imsProtection, isLoading: isImsProtectionLoading } = useImsProtectionByAssetDetailId(formData?.asset_detail_id ?? 0);
+  const { data: avgs, isLoading: isAvgsLoading } = useAverageMtsMpaMysMpaByName(formData?.spec_code ?? ""); // Example calculation
 
-  const allLoaded = !isImsDesignLoading && !isImsGeneralLoading;
+  const allLoaded = !isImsDesignLoading && !isImsGeneralLoading && !isImsProtectionLoading;
 
   useEffect(() => {
     if (formData && allLoaded) {
@@ -150,7 +162,8 @@ const RBIAssessmentCreatePage: React.FC = () => {
         year_in_service: imsGeneral?.year_in_service ?? "",
         normal_wall_thickness: imsGeneral?.normal_wall_thickness ?? 0,
         tmin: imsGeneral?.tmin ?? 0,
-        material_construction_id: imsGeneral?.material_construction_id ?? null,
+        material_construction_id: imsGeneral?.material_construction_id?.id ?? null,
+        spec_code: imsGeneral?.material_construction_id?.spec_code ?? null,
         description: imsGeneral?.description ?? "",
         circuit_id: imsGeneral?.circuit_id ?? null,
         nominal_bore_diameter: imsGeneral?.nominal_bore_diameter ?? null,
@@ -180,9 +193,42 @@ const RBIAssessmentCreatePage: React.FC = () => {
         soil_water_interface: imsDesign?.soil_water_interface ?? false,
         dead_legs: imsDesign?.dead_legs ?? false,
         mix_point: imsDesign?.mix_point ?? false,
+
+        // ims_protection
+        coating_quality_id: imsProtection?.coating_quality_id ?? null,
+        isolation_system_id: imsProtection?.isolation_system_id ?? null,
+        online_monitor_id: imsProtection?.online_monitor?.id ?? null,
+        online_monitor_name: imsProtection?.online_monitor?.name ?? null,
+        minimum_thickness: imsProtection?.minimum_thickness ?? 0,
+        post_weld_heat_treatment: imsProtection?.post_weld_heat_treatment ?? 0,
+        line_description: imsProtection?.line_description ?? "",
+        replacement_line: imsProtection?.replacement_line ?? "",
+        detection_system_id: imsProtection?.detection_system_id ?? null,
+        mitigation_system_id: imsProtection?.mitigation_system_id ?? null,
+        design_fabrication_id: imsProtection?.design_fabrication_id ?? null,
+        insulation_type_id: imsProtection?.insulation_type_id ?? null,
+        interface_id: imsProtection?.interface_id ?? null,
+        insulation_complexity_id: imsProtection?.insulation_complexity_id ?? null,
+        insulation_condition: imsProtection?.insulation_condition ?? "",
+        lining_type: imsProtection?.lining_type ?? "",
+        lining_condition: imsProtection?.lining_condition ?? "",
+        lining_monitoring: imsProtection?.lining_monitoring ?? ""
+
       }));
     }
-  }, [formData?.asset_detail_id, allLoaded, imsGeneral, imsDesign]);
+  }, [formData?.asset_detail_id, allLoaded, imsGeneral, imsDesign, imsProtection]);
+
+  // for average mts_mpa, mys_mpa and composition
+  useEffect(() => {
+    if (formData && allLoaded) {
+      setFormData((prev: any) => ({
+        ...prev,
+        avg_mts_mpa: avgs?.avg_mts_mpa ?? 0,
+        avg_mys_mpa: avgs?.avg_mys_mpa ?? 0,
+        composition: avgs?.composition ?? "",
+      }));
+    }
+  }, [formData?.spec_code, avgs, !isAvgsLoading]);
 
   // Formula DfThin Start
 
@@ -207,20 +253,147 @@ const RBIAssessmentCreatePage: React.FC = () => {
     }
   }, [formData?.corrosion_allowance]);
 
-  // cract_thin
+  // cract_thin✅
   useEffect(() => {
     if (formData) {
       const crAct = calculateCrAct(
-        formData.nominal_thickness,
-        formData.current_thickness,
+        formData.normal_wall_thickness,
+        formData.current_thickness_thin,
         formData.last_inspection_date_thin,
-        formData.year_in_service
+        formData.year_in_service,
+        formData.ims_asset_type_id
       );
       setFormData((prev: any) => ({ ...prev, cract_thin: crAct }));
     }
-  }, [formData?.nominal_thickness, formData?.current_thickness, formData?.last_inspection_date_thin, formData?.year_in_service,
-  ]);
+  }, [formData?.normal_wall_thickness, formData?.current_thickness_thin, formData?.last_inspection_date_thin, formData?.year_in_service, formData?.ims_asset_type_id]);
 
+  // crcm_thin✅
+  useEffect(() => {
+    if (formData) {
+      const crcm = calculateCrCm(formData.cladding);
+      setFormData((prev: any) => ({ ...prev, crcm_thin: crcm }));
+    }
+  }, [formData?.cladding]);
+
+  // ca_thin✅
+  useEffect(() => {
+    if (formData) {
+      const cathin = formData.corrosion_allowance;
+      setFormData((prev: any) => ({ ...prev, ca_thin: cathin }));
+    }
+  }, [formData?.corrosion_allowance]);
+
+  // art_thin✅
+  useEffect(() => {
+    if (formData) {
+      const artThin = calculateArt(
+        formData.cract_thin,
+        formData.crexp_thin,
+        formData.agethk_thin,
+        formData.current_thickness_thin,
+        formData.normal_wall_thickness,
+        formData.ims_asset_type_id,
+        formData.cladding,
+        formData.crcm_thin,
+        formData.agerc_thin,
+        formData.year_in_service
+      );
+      setFormData((prev: any) => ({ ...prev, art_thin: artThin }));
+    }
+  }, [formData?.cract_thin, formData?.crexp_thin, formData?.agethk_thin, formData?.current_thickness_thin, formData?.normal_wall_thickness]);
+
+  // fsthin_thin☑️not check for ims_asset_type_id = 2
+  useEffect(() => {
+    if (formData) {
+      const fsThin = calculateFsThin(
+        formData.ims_asset_type_id,
+        1,
+        formData.avg_mts_mpa,
+        formData.avg_mys_mpa
+      );
+      setFormData((prev: any) => ({ ...prev, fsthin_thin: fsThin }));
+    }
+  }, [formData?.avg_mts_mpa, formData?.avg_mys_mpa, formData?.ims_asset_type_id, formData?.welding_efficiency]);
+
+  // srthin_thin☑️not check for ims_asset_type_id = 2 AND 1
+  useEffect(() => {
+    if (formData) {
+      const srThin = calculateSrThin(
+        formData.ims_asset_type_id,
+        formData.allowable_stress_mpa,
+        formData.welding_efficiency,
+        formData.fsthin_thin,
+        formData.tmin,
+        formData.normal_wall_thickness,
+        formData.current_thickness_thin,
+        formData.design_pressure,
+        formData.outer_diameter,
+        formData.internal_diameter
+      );
+      setFormData((prev: any) => ({ ...prev, srthin_thin: srThin }));
+    }
+  }, [formData?.allowable_stress_mpa, formData?.welding_efficiency, formData?.fsthin_thin, formData?.tmin, formData?.normal_wall_thickness, formData?.current_thickness_thin, formData?.design_pressure, formData?.outer_diameter, formData?.internal_diameter, formData?.ims_asset_type_id]);
+
+  // ithins and pothins☑️not check for ims_asset_type_id = 2 AND 1
+  useEffect(() => {
+    if (formData) {
+      const scores = calcIThinAndProportions(
+        formData.data_confidence_id_thin,   // Medium confidence
+        formData.nthin_a_thin,
+        formData.nthin_b_thin,
+        formData.nthin_c_thin,
+        formData.nthin_d_thin
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        ithin1_thin: scores.iThin1,
+        ithin2_thin: scores.iThin2,
+        ithin3_thin: scores.iThin3,
+        pothin1_thin: scores.p1,
+        pothin2_thin: scores.p2,
+        pothin3_thin: scores.p3
+      }));
+    }
+  }, [formData?.data_confidence_id_thin, formData?.nthin_a_thin, formData?.nthin_b_thin, formData?.nthin_c_thin, formData?.nthin_d_thin]);
+
+  // bthins☑️not check for ims_asset_type_id = 2 AND 1
+  useEffect(() => {
+    if (formData) {
+      const bThins = calculateBThins(
+        formData.art_thin,
+        formData.srthin_thin
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        bthin1_thin: bThins.bThin1,
+        bthin2_thin: bThins.bThin2,
+        bthin3_thin: bThins.bThin3
+      }));
+    }
+  }, [formData?.art_thin, formData?.srthin_thin]);
+
+
+  // dfthinfb_thin☑️not check for ims_asset_type_id = 2 AND 1
+  useEffect(() => {
+    if (formData) {
+      const dfThins = calculateDFThinFDFThinFB(
+        formData.pothin1_thin,
+        formData.pothin2_thin,
+        formData.pothin3_thin,
+        formData.bthin1_thin,
+        formData.bthin2_thin,
+        formData.bthin3_thin,
+        formData.mix_point,
+        formData.dead_legs,
+        formData.online_monitor_name
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        dfthinfb_thin: dfThins.dfThinFb,
+        dfthinf_thin: dfThins.dfThinF
+      }));
+    }
+  }, [formData?.pothin1_thin, formData?.pothin2_thin, formData?.pothin3_thin, formData?.bthin1_thin, formData?.bthin2_thin, formData?.bthin3_thin, formData?.mix_point, formData?.dead_legs, formData?.online_monitor_name]);
 
   // Formula DfThin End
 

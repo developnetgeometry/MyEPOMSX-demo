@@ -116,7 +116,7 @@ export const useImsGeneralDataByAssetDetailId = (assetDetailId: number) => {
           year_in_service,
           normal_wall_thickness,
           tmin,
-          material_construction_id,
+          material_construction_id (id, spec_code),
           description,
           circuit_id,
           nominal_bore_diameter,

@@ -27,7 +27,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
           Accuracy: {precision} decimals
         </Button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
         <div>
           <Label htmlFor="last_inspection_date_thin">Last Inspection Date</Label>
           <Input
@@ -56,6 +56,18 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
               ))}
             </SelectContent>
           </Select>
+        </div>
+        <div>
+          <Label htmlFor="current_thickness_thin">Current thickness (mm)</Label>
+          <Input
+            id="current_thickness_thin"
+            name="current_thickness_thin"
+            type="number"
+            step="any"
+            value={formData?.current_thickness_thin || ""}
+            onChange={handleInputChange}
+            className="mt-1"
+          />
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
@@ -344,12 +356,12 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
           />
         </div>
         <div>
-          <Label htmlFor="dthinf_thin">DFThinF</Label>
+          <Label htmlFor="dfthinf_thin">DFThinF</Label>
           <Input
-            id="dthinf_thin"
-            name="dthinf_thin"
+            id="dfthinf_thin"
+            name="dfthinf_thin"
             type="number"
-            value={formatNumber(formData?.dthinf_thin) || 0}
+            value={formatNumber(formData?.dfthinf_thin) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled

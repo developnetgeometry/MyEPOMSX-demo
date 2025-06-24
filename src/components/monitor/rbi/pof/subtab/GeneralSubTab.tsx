@@ -80,14 +80,14 @@ const GeneralSubTab: React.FC<{
                     </RadioGroup>
                 </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <div>
-                    <Label htmlFor="nominal_thickness">Nominal Thickness (MM)</Label>
+                    <Label htmlFor="normal_wall_thickness">Nominal Thickness (MM)</Label>
                     <Input
-                        id="nominal_thickness"
-                        name="nominal_thickness"
+                        id="normal_wall_thickness"
+                        name="normal_wall_thickness"
                         type="number"
-                        value={formatNumber(formData?.nominal_thickness) || 0}
+                        value={formatNumber(formData?.normal_wall_thickness) || 0}
                         onChange={handleInputChange}
                         className="mt-1"
                         disabled
@@ -104,18 +104,6 @@ const GeneralSubTab: React.FC<{
                         className="mt-1 bg-gray-50"
                     />
                 </div>
-                <div>
-                    <Label htmlFor="current_thickness">Current Thickness (mm)</Label>
-                    <Input
-                        id="current_thickness"
-                        name="current_thickness"
-                        type="number"
-                        step="any"
-                        value={formData?.current_thickness || 0}
-                        onChange={handleInputChange}
-                        className="mt-1"
-                    />
-                </div>
                 <div className="col-span-full">
                     <Label htmlFor="description">Description</Label>
                     <Textarea
@@ -125,6 +113,7 @@ const GeneralSubTab: React.FC<{
                         onChange={handleInputChange}
                         className="mt-1 min-h-[100px]"
                         placeholder="Enter description"
+                        disabled
                     />
                 </div>
             </div>
@@ -133,6 +122,16 @@ const GeneralSubTab: React.FC<{
             {/* General & Design Fields */}
             <div className="grid grid-cols-1 md:grid-cols-6 gap-2">
                 {/* ims_general */}
+                <InputBlock
+                    label="Asset Type"
+                    value={
+                        formData?.ims_asset_type_id === 1
+                            ? "1 - Pressure Vessel"
+                            : formData?.ims_asset_type_id === 2
+                                ? "2 - Piping"
+                                : "N/A"
+                    }
+                />
                 <InputBlock label="Line No" value={formData?.line_no} />
                 <InputBlock label="Pipe Schedule ID" value={formData?.pipe_schedule_id} />
                 <InputBlock label="Pressure Rating" value={formatNumber(formData?.pressure_rating)} />
@@ -140,6 +139,10 @@ const GeneralSubTab: React.FC<{
                 <InputBlock label="Normal Wall Thickness" value={formatNumber(formData?.normal_wall_thickness)} />
                 <InputBlock label="TMin" value={formatNumber(formData?.tmin)} />
                 <InputBlock label="Material Construction ID" value={formData?.material_construction_id} />
+                <InputBlock label="Spec Code" value={formData?.spec_code} />
+                <InputBlock label="Avg mts" value={formData?.avg_mts_mpa} />
+                <InputBlock label="Avg Mpa" value={formData?.avg_mys_mpa} />
+                <InputBlock label="Composition" value={formData?.composition} />
                 <InputBlock label="Circuit ID" value={formData?.circuit_id} />
                 <InputBlock label="Nominal Bore Diameter" value={formData?.nominal_bore_diameter} />
                 <InputBlock label="Pipe Class ID" value={formData?.pipe_class_id} />
@@ -159,6 +162,26 @@ const GeneralSubTab: React.FC<{
                 <InputBlock label="Length" value={formatNumber(formData?.length)} />
                 <InputBlock label="Ext Env ID" value={formData?.ext_env_id} />
                 <InputBlock label="Geometry ID" value={formData?.geometry_id} />
+
+                {/* ims_protection */}
+                <InputBlock label="Coating Quality ID" value={formData?.coating_quality_id} />
+                <InputBlock label="Isolation System ID" value={formData?.isolation_system_id} />
+                <InputBlock label="Online Monitor ID" value={formData?.online_monitor_id} />
+                <InputBlock label="Online Monitor Name" value={formData?.online_monitor_name} />
+                <InputBlock label="Minimum Thickness" value={formatNumber(formData?.minimum_thickness)} />
+                <InputBlock label="Post Weld Heat Treatment" value={formatNumber(formData?.post_weld_heat_treatment)} />
+                <InputBlock label="Line Description" value={formData?.line_description} />
+                <InputBlock label="Replacement Line" value={formData?.replacement_line} />
+                <InputBlock label="Detection System ID" value={formData?.detection_system_id} />
+                <InputBlock label="Mitigation System ID" value={formData?.mitigation_system_id} />
+                <InputBlock label="Design Fabrication ID" value={formData?.design_fabrication_id} />
+                <InputBlock label="Insulation Type ID" value={formData?.insulation_type_id} />
+                <InputBlock label="Interface ID" value={formData?.interface_id} />
+                <InputBlock label="Insulation Complexity ID" value={formData?.insulation_complexity_id} />
+                <InputBlock label="Insulation Condition" value={formData?.insulation_condition} />
+                <InputBlock label="Lining Type" value={formData?.lining_type} />
+                <InputBlock label="Lining Condition" value={formData?.lining_condition} />
+                <InputBlock label="Lining Monitoring" value={formData?.lining_monitoring} />
             </div>
 
             {/* Booleans */}
