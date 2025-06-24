@@ -29,6 +29,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { formatDateTime } from "@/utils/formatters";
 
 interface CmReportsTabProps {
   cmGeneralId: number; // Passed as a prop to this page
@@ -155,10 +156,10 @@ const CmReportsTab: React.FC<CmReportsTabProps> = ({ cmGeneralId }) => {
                       <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.alarm_trigger?.trim() || "-"}</div>
 
                       <div className="font-medium text-gray-600">Time Failed</div>
-                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.time_failed?.trim() || "-"}</div>
+                      <div className="text-gray-800 break-words whitespace-pre-wrap">{formatDateTime(report?.time_failed?.trim()) || "-"}</div>
 
                       <div className="font-medium text-gray-600">Time Resume</div>
-                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.time_resume?.trim() || "-"}</div>
+                      <div className="text-gray-800 break-words whitespace-pre-wrap">{formatDateTime(report?.time_resume?.trim()) || "-"}</div>
 
                       <div className="font-medium text-gray-600">Shift</div>
                       <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.shift?.trim() || "-"}</div>
@@ -182,16 +183,16 @@ const CmReportsTab: React.FC<CmReportsTabProps> = ({ cmGeneralId }) => {
                       <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.service_asset?.trim() || "-"}</div>
 
                       <div className="font-medium text-gray-600">Pressure</div>
-                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.pressure?.trim() || "-"}</div>
+                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.pressure?.toFixed(1).trim() || "-"}</div>
 
                       <div className="font-medium text-gray-600">Temperature</div>
-                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.temp?.trim() || "-"}</div>
+                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.temp?.toFixed(1).trim() || "-"}</div>
 
                       <div className="font-medium text-gray-600">Operating History</div>
-                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.operating_history?.trim() || "-"}</div>
+                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.operating_history?.toFixed(1).trim() || "-"}</div>
 
                       <div className="font-medium text-gray-600">Time in Service (hr)</div>
-                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.time_in_servicehr?.trim() || "-"}</div>
+                      <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.time_in_servicehr?.toFixed(1).trim() || "-"}</div>
 
                       <div className="font-medium text-gray-600">Material Class</div>
                       <div className="text-gray-800 break-words whitespace-pre-wrap">{report?.material_class_id?.name?.trim() || "-"}</div>

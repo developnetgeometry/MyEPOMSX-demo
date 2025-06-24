@@ -430,8 +430,8 @@ const RMSAssetDetailPage: React.FC = () => {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {workOrder.cm_work_order_id?.downtime
-                              ? `${workOrder.cm_work_order_id.downtime}`
+                            {workOrder.cm_work_order_id?.downtime?.toFixed(1)
+                              ? `${workOrder.cm_work_order_id.downtime?.toFixed(1)}`
                               : "N/A"}
                           </TableCell>
                         </TableRow>
