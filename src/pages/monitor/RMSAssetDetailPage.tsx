@@ -147,12 +147,6 @@ const RMSAssetDetailPage: React.FC = () => {
     error: workOrdersError,
   } = userWorkOrderDataByAsset(parseInt(id || "0"));
 
-  const {
-    data: workOrders = [],
-    isLoading: workOrdersLoading,
-    error: workOrdersError,
-  } = userWorkOrderDataByAsset(parseInt(id || "0"));
-
   // Generate sample telemetry and alert data when asset loads
   useEffect(() => {
     if (asset) {
@@ -435,7 +429,9 @@ const RMSAssetDetailPage: React.FC = () => {
                           </TableCell>
                           <TableCell>
                             {workOrder.cm_work_order_id?.downtime?.toFixed(1)
-                              ? `${workOrder.cm_work_order_id.downtime?.toFixed(1)}`
+                              ? `${workOrder.cm_work_order_id.downtime?.toFixed(
+                                  1
+                                )}`
                               : "N/A"}
                           </TableCell>
                         </TableRow>
