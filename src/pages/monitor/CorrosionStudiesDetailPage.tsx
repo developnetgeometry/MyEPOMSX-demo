@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Accordion,
   AccordionContent,
@@ -21,31 +21,91 @@ import {
 } from "@/components/ui/select";
 import { ChevronLeft, Database } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
+import {
+  useAssetOptions,
+  useCorrosionStudy,
+  useCorrosionGroupOptions,
+  useMaterialConstructionOptions,
+  useCorrosionMonitoringOptions,
+  useBaseMaterialOptions,
+} from "@/hooks/queries/useCorrosionStudy";
 
 const CorrosionStudiesDetailPage: React.FC = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const { data: corrosionStudy, isLoading } = useCorrosionStudy(Number(id));
+  const { data: assetOptions, isLoading: isLoadingAssetOptions } =
+    useAssetOptions();
+  const {
+    data: corrosionGroupOptions,
+    isLoading: isLoadingCorrosionGroupOptions,
+  } = useCorrosionGroupOptions();
+  const {
+    data: materialConstructionOptions,
+    isLoading: isLoadingMaterialConstructionOptions,
+  } = useMaterialConstructionOptions();
+  const {
+    data: corrosionMonitoringOptions,
+    isLoading: isLoadingCorrosionMonitoringOptions,
+  } = useCorrosionMonitoringOptions();
+  const { data: baseMaterialOptions, isLoading: isLoadingBaseMaterialOptions } =
+    useBaseMaterialOptions();
   const [formData, setFormData] = useState({
-    asset: "",
-    corrosionGroupName: "",
-    materialConstruction: "",
+    asset_id: null,
+    corrosion_group_id: null,
+    material_construction_id: null,
     environment: "",
-    ph: "",
-    corrosionMonitoring: [] as string[],
-    internalDamageMechanism: "",
-    externalDamageMechanism: "",
-    expectedInternalCorrosionRate: "",
-    expectedExternalCorrosionRate: "",
-    h2s: false,
-    co2: false,
+    ph: 0,
+    monitoring_method_id: null,
+    internal_damage_mechanism: "",
+    external_damage_mechanism: "",
+    expected_internal_corrosion_rate: "",
+    expected_external_corrosion_rate: "",
+    h2s_presence: false,
+    co2_presence: false,
     description: "",
     // Corrosion Factor
     temperature: "",
     pressure: "",
     h2sConcentration: "",
     co2Concentration: "",
-    baseMaterial: "",
-    fluidVelocity: "",
+    base_material_id: "",
+    fluid_velocity: "",
   });
+
+  useEffect(() => {
+    if (corrosionStudy) {
+      setFormData({
+        asset_id: corrosionStudy?.asset_id.toString(),
+        corrosion_group_id: corrosionStudy?.corrosion_group_id.toString(),
+        material_construction_id:
+          corrosionStudy?.material_construction_id.toString(),
+        environment: corrosionStudy?.environment,
+        ph: corrosionStudy?.ph,
+        monitoring_method_id: corrosionStudy?.monitoring_method_id.toString(),
+        internal_damage_mechanism: corrosionStudy?.internal_damage_mechanism,
+        external_damage_mechanism: corrosionStudy?.external_damage_mechanism,
+        expected_internal_corrosion_rate:
+          corrosionStudy?.expected_internal_corrosion_rate.toString(),
+        expected_external_corrosion_rate:
+          corrosionStudy?.expected_external_corrosion_rate.toString(),
+        h2s_presence: corrosionStudy?.h2s_presence,
+        co2_presence: corrosionStudy?.co2_presence,
+        description: corrosionStudy?.description,
+        // Corrosion Factor
+        temperature: corrosionStudy?.corrosion_factor?.temperature.toString(),
+        pressure: corrosionStudy?.corrosion_factor?.pressure.toString(),
+        h2sConcentration:
+          corrosionStudy?.corrosion_factor?.h2s_concentration.toString(),
+        co2Concentration:
+          corrosionStudy?.corrosion_factor?.co2_concentration.toString(),
+        base_material_id:
+          corrosionStudy?.corrosion_factor?.base_material_id.toString(),
+        fluid_velocity:
+          corrosionStudy?.corrosion_factor?.fluid_velocity.toString(),
+      });
+    }
+  }, [corrosionStudy]);
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -83,6 +143,23 @@ const CorrosionStudiesDetailPage: React.FC = () => {
     navigate("/monitor/corrosion-studies");
   };
 
+  if (
+    isLoading ||
+    isLoadingAssetOptions ||
+    isLoadingCorrosionGroupOptions ||
+    isLoadingMaterialConstructionOptions ||
+    isLoadingCorrosionMonitoringOptions ||
+    isLoadingBaseMaterialOptions
+  )
+    return(
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2">Loading corrosion study {corrosionStudy?.study_name} details... </p>
+        </div>
+      </div>
+    )
+
   return (
     <div className="space-y-6 pb-16">
       <PageHeader
@@ -113,20 +190,26 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                 <div className="space-y-2">
                   <Label htmlFor="asset">Asset</Label>
                   <Select
-                    name="asset"
-                    value={formData.asset}
+                    name="asset_id"
+                    value={formData.asset_id}
                     onValueChange={(value) =>
-                      handleSelectChange("asset", value)
+                      handleSelectChange("asset_id", value)
                     }
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select Asset" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="PV-1001">PV-1001</SelectItem>
-                      <SelectItem value="PP-2003">PP-2003</SelectItem>
-                      <SelectItem value="PV-1002">PV-1002</SelectItem>
-                      <SelectItem value="PP-2001">PP-2001</SelectItem>
+                      {assetOptions?.map((option) => {
+                        return (
+                          <SelectItem
+                            key={option.value}
+                            value={option.value.toString()}
+                          >
+                            {option.label}
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
@@ -137,7 +220,7 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                   </Label>
                   <Select
                     name="corrosionGroupName"
-                    value={formData.corrosionGroupName}
+                    value={formData.corrosion_group_id}
                     onValueChange={(value) =>
                       handleSelectChange("corrosionGroupName", value)
                     }
@@ -146,11 +229,16 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                       <SelectValue placeholder="Select Corrosion Group" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Group A">Group A</SelectItem>
-                      <SelectItem value="Group B">Group B</SelectItem>
-                      <SelectItem value="Group C">Group C</SelectItem>
-                      <SelectItem value="Group D">Group D</SelectItem>
-                      <SelectItem value="add_new">+ Add New Group</SelectItem>
+                      {corrosionGroupOptions?.map((option) => {
+                        return (
+                          <SelectItem
+                            key={option.value}
+                            value={option.value.toString()}
+                          >
+                            {option.label}
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
@@ -161,7 +249,7 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                   </Label>
                   <Select
                     name="materialConstruction"
-                    value={formData.materialConstruction}
+                    value={formData.material_construction_id}
                     onValueChange={(value) =>
                       handleSelectChange("materialConstruction", value)
                     }
@@ -170,14 +258,16 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                       <SelectValue placeholder="Select Material" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Carbon Steel">Carbon Steel</SelectItem>
-                      <SelectItem value="Stainless Steel">
-                        Stainless Steel
-                      </SelectItem>
-                      <SelectItem value="Chrome Alloy">Chrome Alloy</SelectItem>
-                      <SelectItem value="High Nickel Alloy">
-                        High Nickel Alloy
-                      </SelectItem>
+                      {materialConstructionOptions?.map((option) => {
+                        return (
+                          <SelectItem
+                            key={option.value}
+                            value={option.value.toString()}
+                          >
+                            {option.label}
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
@@ -212,7 +302,7 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                   </Label>
                   <Select
                     name="corrosionMonitoring"
-                    value={formData.corrosionMonitoring[0] || ""}
+                    value={formData.corrosion_group_id || ""}
                     onValueChange={(value) => {
                       // This is just a simplified example, for multi-select you would
                       // typically use a custom component or more complex state management
@@ -227,16 +317,16 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                       <SelectValue placeholder="Select Monitoring Method" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Ultrasonic Testing">
-                        Ultrasonic Testing
-                      </SelectItem>
-                      <SelectItem value="Radiography">Radiography</SelectItem>
-                      <SelectItem value="Visual Inspection">
-                        Visual Inspection
-                      </SelectItem>
-                      <SelectItem value="Coupon Testing">
-                        Coupon Testing
-                      </SelectItem>
+                      {corrosionMonitoringOptions?.map((option) => {
+                        return (
+                          <SelectItem
+                            key={option.value}
+                            value={option.value.toString()}
+                          >
+                            {option.label}
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
@@ -248,7 +338,7 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                   <Input
                     id="internalDamageMechanism"
                     name="internalDamageMechanism"
-                    value={formData.internalDamageMechanism}
+                    value={formData.internal_damage_mechanism}
                     onChange={handleInputChange}
                   />
                 </div>
@@ -260,7 +350,7 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                   <Input
                     id="externalDamageMechanism"
                     name="externalDamageMechanism"
-                    value={formData.externalDamageMechanism}
+                    value={formData.external_damage_mechanism}
                     onChange={handleInputChange}
                   />
                 </div>
@@ -275,7 +365,7 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                     type="number"
                     min="0"
                     step="0.01"
-                    value={formData.expectedInternalCorrosionRate}
+                    value={formData.expected_internal_corrosion_rate}
                     onChange={handleInputChange}
                   />
                 </div>
@@ -290,7 +380,7 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                     type="number"
                     min="0"
                     step="0.01"
-                    value={formData.expectedExternalCorrosionRate}
+                    value={formData.expected_external_corrosion_rate}
                     onChange={handleInputChange}
                   />
                 </div>
@@ -300,7 +390,7 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                     <Label htmlFor="h2s">H₂S</Label>
                     <Switch
                       id="h2s"
-                      checked={formData.h2s}
+                      checked={formData.h2s_presence}
                       onCheckedChange={(checked) =>
                         handleSwitchChange("h2s", checked)
                       }
@@ -310,7 +400,7 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                     <Label htmlFor="co2">CO₂</Label>
                     <Switch
                       id="co2"
-                      checked={formData.co2}
+                      checked={formData.co2_presence}
                       onCheckedChange={(checked) =>
                         handleSwitchChange("co2", checked)
                       }
@@ -387,7 +477,7 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                   <Label htmlFor="baseMaterial">Base Material</Label>
                   <Select
                     name="baseMaterial"
-                    value={formData.baseMaterial}
+                    value={formData.base_material_id}
                     onValueChange={(value) =>
                       handleSelectChange("baseMaterial", value)
                     }
@@ -396,15 +486,14 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                       <SelectValue placeholder="Select Base Material" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Carbon Steel">Carbon Steel</SelectItem>
-                      <SelectItem value="Stainless Steel 304">
-                        Stainless Steel 304
-                      </SelectItem>
-                      <SelectItem value="Stainless Steel 316">
-                        Stainless Steel 316
-                      </SelectItem>
-                      <SelectItem value="Duplex Steel">Duplex Steel</SelectItem>
-                      <SelectItem value="Super Duplex">Super Duplex</SelectItem>
+                      {baseMaterialOptions?.map((material) => (
+                        <SelectItem
+                          key={material.value}
+                          value={material.value.toString()}
+                        >
+                          {material.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -414,7 +503,7 @@ const CorrosionStudiesDetailPage: React.FC = () => {
                   <Input
                     id="fluidVelocity"
                     name="fluidVelocity"
-                    value={formData.fluidVelocity}
+                    value={formData.fluid_velocity}
                     onChange={handleInputChange}
                   />
                 </div>

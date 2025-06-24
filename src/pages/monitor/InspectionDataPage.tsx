@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable, { Column } from "@/components/shared/DataTable";
@@ -13,99 +13,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ClipboardList, Search, Filter } from "lucide-react";
-
-// Sample data for inspection records
-const initialInspectionData = [
-  {
-    id: "1",
-    assetNo: "PV-1001",
-    assetName: "Pressure Vessel - Main Reactor",
-    ltcr: 0.15,
-    stcr: 0.12,
-    inspectionStrategy: "Visual + UT Thickness",
-    remainingLife: 8.5,
-    isActive: true,
-  },
-  {
-    id: "2",
-    assetNo: "PP-2003",
-    assetName: "Process Piping - Feed Line",
-    ltcr: 0.08,
-    stcr: 0.06,
-    inspectionStrategy: "Radiographic Testing",
-    remainingLife: 12.3,
-    isActive: true,
-  },
-  {
-    id: "3",
-    assetNo: "HX-1002",
-    assetName: "Heat Exchanger - Shell & Tube",
-    ltcr: 0.22,
-    stcr: 0.18,
-    inspectionStrategy: "Eddy Current + Visual",
-    remainingLife: 6.7,
-    isActive: true,
-  },
-  {
-    id: "4",
-    assetNo: "TK-3001",
-    assetName: "Storage Tank - Crude Oil",
-    ltcr: 0.11,
-    stcr: 0.09,
-    inspectionStrategy: "Magnetic Particle Testing",
-    remainingLife: 9.8,
-    isActive: false,
-  },
-  {
-    id: "5",
-    assetNo: "CD-4001",
-    assetName: "Condenser - Overhead System",
-    ltcr: 0.05,
-    stcr: 0.04,
-    inspectionStrategy: "Ultrasonic Testing",
-    remainingLife: 15.2,
-    isActive: true,
-  },
-  {
-    id: "6",
-    assetNo: "PP-2004",
-    assetName: "Process Piping - Return Line",
-    ltcr: 0.18,
-    stcr: 0.15,
-    inspectionStrategy: "Visual + Dye Penetrant",
-    remainingLife: 7.1,
-    isActive: true,
-  },
-  {
-    id: "7",
-    assetNo: "PV-1002",
-    assetName: "Pressure Vessel - Secondary",
-    ltcr: 0.13,
-    stcr: 0.11,
-    inspectionStrategy: "Radiographic + UT",
-    remainingLife: 10.4,
-    isActive: true,
-  },
-  {
-    id: "8",
-    assetNo: "TK-3002",
-    assetName: "Storage Tank - Product",
-    ltcr: 0.07,
-    stcr: 0.05,
-    inspectionStrategy: "Visual Inspection",
-    remainingLife: 14.6,
-    isActive: false,
-  },
-];
+import { useInspectionDataList } from "@/hooks/queries/useInspectionData";
 
 const InspectionDataPage: React.FC = () => {
   const navigate = useNavigate();
-  const [inspectionData, setInspectionData] = useState(initialInspectionData);
-  const [filteredData, setFilteredData] = useState(initialInspectionData);
+  const { data: inspectionDataList, isLoading } = useInspectionDataList();
+  
+  const [inspectionData, setInspectionData] = useState(inspectionDataList || []);
+  const [filteredData, setFilteredData] = useState(inspectionDataList || []);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
+  useEffect(() => {
+    if (inspectionDataList) {
+      setInspectionData(inspectionDataList);
+      setFilteredData(inspectionDataList);
+    }
+  }, [inspectionDataList]);
 
   const handleAddNew = () => {
     navigate("/monitor/inspection-data/new");
@@ -224,6 +150,17 @@ const InspectionDataPage: React.FC = () => {
   const endIndex = startIndex + itemsPerPage;
   const currentData = filteredData.slice(startIndex, endIndex);
 
+  if(isLoading){
+    return(
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2">Loading inspection data...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -231,7 +168,7 @@ const InspectionDataPage: React.FC = () => {
         subtitle="View and manage asset inspection records and findings"
         icon={<ClipboardList className="h-6 w-6" />}
         onAddNew={handleAddNew}
-        addNewLabel="+ Add Inspection Data"
+        addNewLabel="Add Inspection Data"
       />
 
       {/* Filters */}
