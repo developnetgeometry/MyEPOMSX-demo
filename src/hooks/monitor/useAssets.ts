@@ -68,7 +68,7 @@ const fetchAssets = async (): Promise<AssetData[]> => {
             package:e_package(package_name),
             asset_tag:e_asset_tag(name),
             status:e_asset_status(name),
-            asset_detail:e_asset_detail!inner(
+            asset_detail:asset_detail_id!inner(
                 *,
                 manufacturer:e_manufacturer(name),
                 category:e_asset_category(name),
@@ -101,7 +101,7 @@ const fetchAssetById = async (id: number): Promise<AssetData> => {
             package:e_package(package_name),
             asset_tag:e_asset_tag(name),
             status:e_asset_status(name),
-            asset_detail:e_asset_detail(
+            asset_detail:asset_detail_id(
                 *,
                 manufacturer:e_manufacturer(name),
                 category:e_asset_category(name),

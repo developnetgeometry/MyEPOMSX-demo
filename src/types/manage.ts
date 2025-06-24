@@ -176,7 +176,7 @@ export interface AssetInstallation {
   isolation_service_class_id: number | null;
   isolation_system_desc: string;
   detection_system_desc: string;
-  detection_service_class_id: number | null;
+  detection_service_class_id?: number | null;
   orientation: string | null;
   overall_height: number | null;
   overall_length: number | null;

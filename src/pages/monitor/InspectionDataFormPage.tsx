@@ -15,15 +15,22 @@ import {
 import PageHeader from "@/components/shared/PageHeader";
 import { ChevronLeft, Database, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAssetTagOptions } from "@/hooks/queries/useAssetDropdownOptions";
+import {
+  useAssetDetailOptionsWithAssetName,
+  useCreateInspectionData,
+} from "@/hooks/queries/useInspectionData";
+import { useAuth } from "@/contexts/AuthContext";
 
 const InspectionDataFormPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Dropdown options hooks
-  const { data: assetTagOptions = [] } = useAssetTagOptions();
+  const { data: assetDetailOptionsWithAssetName = [], isLoading } =
+    useAssetDetailOptionsWithAssetName();
+  const createInspectionDataMutation = useCreateInspectionData();
 
   const [formData, setFormData] = useState({
     asset: "",
@@ -67,6 +74,17 @@ const InspectionDataFormPage: React.FC = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
+    const transformedData = {
+      asset_detail_id: Number(formData.asset),
+      ltcr: formData.ltcr,
+      stcr: formData.stcr,
+      inspection_strategy: formData.inspectionStrategy,
+      remaining_life: formData.remainingLife,
+      inspection_request: formData.inspectionRequest,
+      is_active: formData.isActive,
+      created_by: user?.id,
+    };
+
     try {
       // Validate required fields
       if (!formData.asset) {
@@ -78,11 +96,7 @@ const InspectionDataFormPage: React.FC = () => {
         return;
       }
 
-      // Here you would typically make an API call to save the data
-      console.log("Saving inspection data:", formData);
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await createInspectionDataMutation.mutateAsync(transformedData);
 
       toast({
         title: "Success",
@@ -100,6 +114,17 @@ const InspectionDataFormPage: React.FC = () => {
       setIsSubmitting(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 pb-16">
@@ -134,31 +159,14 @@ const InspectionDataFormPage: React.FC = () => {
                     <SelectValue placeholder="Select Asset" />
                   </SelectTrigger>
                   <SelectContent>
-                    {assetTagOptions.map((option) => (
-                      <SelectItem key={option.id} value={option.value}>
+                    {assetDetailOptionsWithAssetName.map((option) => (
+                      <SelectItem
+                        key={option.value}
+                        value={option.value.toString()}
+                      >
                         {option.label}
                       </SelectItem>
                     ))}
-                    {/* Fallback dummy data if no API data */}
-                    {assetTagOptions.length === 0 && (
-                      <>
-                        <SelectItem value="PV-1001">
-                          PV-1001 - Pressure Vessel Main Reactor
-                        </SelectItem>
-                        <SelectItem value="PP-2003">
-                          PP-2003 - Process Piping Feed Line
-                        </SelectItem>
-                        <SelectItem value="HX-1002">
-                          HX-1002 - Heat Exchanger Shell & Tube
-                        </SelectItem>
-                        <SelectItem value="TK-3001">
-                          TK-3001 - Storage Tank Crude Oil
-                        </SelectItem>
-                        <SelectItem value="CD-4001">
-                          CD-4001 - Condenser Overhead System
-                        </SelectItem>
-                      </>
-                    )}
                   </SelectContent>
                 </Select>
               </div>

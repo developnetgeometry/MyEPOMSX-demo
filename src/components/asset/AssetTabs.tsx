@@ -40,8 +40,14 @@ const AssetTabs = ({
   handleRemoveBom,
   workOrder,
   handleAddWorkOrder,
+  handleViewWorkOrder,
+  handleEditWorkOrder,
+  handleRemoveWorkOrder,
   attachments,
   handleAddAttachment,
+  handleViewAttachment,
+  handleEditAttachment,
+  handleDeleteAttachment,
   iotData,
   handleAddIOT,
 }) => (
@@ -346,7 +352,7 @@ const AssetTabs = ({
               bomData.map((item) => (
                 <TableRow key={item.id} className="hover:bg-muted/30">
                   <TableCell className="p-3">
-                    {(item.bom.bom_name) || "-"}
+                    {item.bom.bom_name || "-"}
                   </TableCell>
                   <TableCell className="p-3">
                     {item.bom.bom_code || "-"}
@@ -437,9 +443,9 @@ const AssetTabs = ({
               <TableHead className="text-left p-3 font-medium">
                 Finished On
               </TableHead>
-              <TableHead className="text-left p-3 font-medium">
+              {/* <TableHead className="text-left p-3 font-medium">
                 Assigned To
-              </TableHead>
+              </TableHead> */}
               <TableHead className="text-left p-3 font-medium">
                 Status
               </TableHead>
@@ -454,18 +460,48 @@ const AssetTabs = ({
                 <TableRow key={item.id} className="hover:bg-muted/30">
                   <TableCell className="p-3">{item.work_order_no}</TableCell>
                   <TableCell className="p-3">
-                    {item.task?.task_name || "N/A"}
+                    {formatDate(item.due_date)}
+                  </TableCell>
+                  <TableCell className="p-3">
+                    {item.description || "-"}
+                  </TableCell>
+                  <TableCell className="p-3">
+                    {item.work_order_type?.name || "N/A"}
+                  </TableCell>
+                  <TableCell className="p-3">
+                    {item.completed_at || "In Progress"}
                   </TableCell>
                   <TableCell className="p-3">
                     <StatusBadge status={item.status?.name || "Unknown"} />
                   </TableCell>
+
                   <TableCell className="p-3">
-                    {formatDate(item.due_date)}
-                  </TableCell>
-                  <TableCell className="p-3">
-                    <Button variant="ghost" size="sm">
-                      <Settings className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleViewWorkOrder(item)}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        View
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditWorkOrder(item)}
+                        className="text-green-600 hover:text-green-800"
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveWorkOrder(item.id)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        Delete
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -529,21 +565,64 @@ const AssetTabs = ({
             {attachments && attachments.length > 0 ? (
               attachments.map((item) => (
                 <TableRow key={item.id} className="hover:bg-muted/30">
-                  <TableCell className="p-3">{item.type}</TableCell>
                   <TableCell className="p-3">
-                    {formatDate(item.created_at)}
+                    {item.type || "General"}
                   </TableCell>
-                  <TableCell className="p-3">{item.notes}</TableCell>
+                  <TableCell className="p-3">
+                    {item.created_at ? formatDate(item.created_at) : "-"}
+                  </TableCell>
+                  <TableCell className="p-3 max-w-[200px] truncate">
+                    {item.notes || "-"}
+                  </TableCell>
                   <TableCell className="p-3">
                     <div className="flex items-center gap-2">
-                      <File className="h-4 w-4" />
-                      <span>{getFileNameFromPath(item.file_path)}</span>
+                      {item.file_path &&
+                      item.file_type?.startsWith("image/") ? (
+                        <div className="flex items-center gap-2">
+                          <div className="bg-gray-200 w-8 h-8 rounded overflow-hidden flex items-center justify-center">
+                            <img
+                              src={item.file_path}
+                              alt="Thumbnail"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <span>{getFileNameFromPath(item.file_path)}</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <File className="h-4 w-4 text-gray-500" />
+                          <span>{getFileNameFromPath(item.file_path)}</span>
+                        </div>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell className="p-3">
-                    <Button variant="ghost" size="sm">
-                      <Settings className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleViewAttachment(item)}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        View
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditAttachment(item)}
+                        className="text-green-600 hover:text-green-800"
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteAttachment(item.id)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        Delete
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))

@@ -225,7 +225,6 @@ const RMSAssetDetailPage: React.FC = () => {
           <TabsTrigger value="health">Health Status</TabsTrigger>
           <TabsTrigger value="alerts">Alert Analysis</TabsTrigger>
         </TabsList> */}
-
         <TabsContent value="basic" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="col-span-1 md:col-span-2">
@@ -373,7 +372,6 @@ const RMSAssetDetailPage: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
-
             <Card className="col-span-1 md:col-span-3">
               <CardHeader>
                 <CardTitle>Work Orders</CardTitle>
@@ -430,8 +428,10 @@ const RMSAssetDetailPage: React.FC = () => {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {workOrder.cm_work_order_id?.downtime
-                              ? `${workOrder.cm_work_order_id.downtime}`
+                            {workOrder.cm_work_order_id?.downtime?.toFixed(1)
+                              ? `${workOrder.cm_work_order_id.downtime?.toFixed(
+                                  1
+                                )}`
                               : "N/A"}
                           </TableCell>
                         </TableRow>
