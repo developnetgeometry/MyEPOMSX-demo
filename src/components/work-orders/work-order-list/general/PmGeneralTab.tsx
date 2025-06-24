@@ -26,6 +26,8 @@ interface PmGeneralTabProps {
 
 const PmGeneralTab: React.FC<PmGeneralTabProps> = ({ pmWoId }) => {
   const { data: pmWorkOrder, isLoading, refetch } = usePmWorkOrderDataById(pmWoId);
+  console.log(pmWorkOrder);
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 

@@ -114,10 +114,10 @@ const CmGeneralTab: React.FC<CmGeneralTabProps> = ({ cmGeneralId }) => {
                 />
               </div>
               <div>
-                <Label className="block text-sm font-medium text-gray-700">Downtime</Label>
+                <Label className="block text-sm font-medium text-gray-700">Downtime (hour/s)</Label>
                 <Input
                   className="cursor-default focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                  value={cmGeneral.downtime?.toString() ?? "N/A"}
+                  value={cmGeneral.downtime?.toFixed(1) ?? "N/A"}
                   readOnly
                 />
               </div>

@@ -9,7 +9,17 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "../ui/button";
-import { AlertCircle, ArrowLeft, Check, Edit, FileText, FileUp, Loader2, Save, X } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  Check,
+  Edit,
+  FileText,
+  FileUp,
+  Loader2,
+  Save,
+  X,
+} from "lucide-react";
 import { getFileNameFromPath } from "@/utils/formatters";
 import { Alert, AlertTitle, AlertDescription } from "../ui/alert";
 
@@ -461,9 +471,7 @@ const AssetDetailsCard = ({
                     className="relative border rounded-md p-2"
                   >
                     {attachment.file_path &&
-                    attachment.file_path.match(
-                      /\.(jpeg|jpg|png|gif|webp)$/i
-                    ) ? (
+                    attachment.file_type?.startsWith("image/") ? (
                       <img
                         src={attachment.file_path}
                         alt={attachment.file_name || "Asset image"}
