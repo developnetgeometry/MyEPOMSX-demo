@@ -6009,10 +6009,10 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           description: string | null
-          environment: string | null
           expected_external_corrosion_rate: number | null
           expected_internal_corrosion_rate: number | null
           external_damage_mechanism: string | null
+          external_environment_id: number | null
           h2s_presence: boolean | null
           id: number
           internal_damage_mechanism: string | null
@@ -6021,7 +6021,6 @@ export type Database = {
           ph: number | null
           study_code: string | null
           study_name: string | null
-          system_id: number | null
           updated_at: string | null
           updated_by: string | null
         }
@@ -6033,10 +6032,10 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           description?: string | null
-          environment?: string | null
           expected_external_corrosion_rate?: number | null
           expected_internal_corrosion_rate?: number | null
           external_damage_mechanism?: string | null
+          external_environment_id?: number | null
           h2s_presence?: boolean | null
           id?: number
           internal_damage_mechanism?: string | null
@@ -6045,7 +6044,6 @@ export type Database = {
           ph?: number | null
           study_code?: string | null
           study_name?: string | null
-          system_id?: number | null
           updated_at?: string | null
           updated_by?: string | null
         }
@@ -6057,10 +6055,10 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           description?: string | null
-          environment?: string | null
           expected_external_corrosion_rate?: number | null
           expected_internal_corrosion_rate?: number | null
           external_damage_mechanism?: string | null
+          external_environment_id?: number | null
           h2s_presence?: boolean | null
           id?: number
           internal_damage_mechanism?: string | null
@@ -6069,7 +6067,6 @@ export type Database = {
           ph?: number | null
           study_code?: string | null
           study_name?: string | null
-          system_id?: number | null
           updated_at?: string | null
           updated_by?: string | null
         }
@@ -6096,10 +6093,17 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "i_corrosion_study_external_environment_id_fkey"
+            columns: ["external_environment_id"]
+            isOneToOne: false
+            referencedRelation: "e_ext_env"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "i_corrosion_study_material_construction_id_fkey"
             columns: ["material_construction_id"]
             isOneToOne: false
-            referencedRelation: "i_material_construction"
+            referencedRelation: "i_spec_master"
             referencedColumns: ["id"]
           },
           {
@@ -6107,13 +6111,6 @@ export type Database = {
             columns: ["monitoring_method_id"]
             isOneToOne: false
             referencedRelation: "i_corrosion_monitoring"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "i_corrosion_study_system_id_fkey"
-            columns: ["system_id"]
-            isOneToOne: false
-            referencedRelation: "e_system"
             referencedColumns: ["id"]
           },
         ]

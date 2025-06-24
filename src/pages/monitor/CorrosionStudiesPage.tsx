@@ -33,7 +33,6 @@ const CorrosionStudiesPage: React.FC = () => {
 
   const columns: Column[] = [
     { id: "studyCode", header: "Study Code", accessorKey: "studyCode" },
-    { id: "system", header: "System", accessorKey: "system" },
     { id: "asset", header: "Asset", accessorKey: "assetName" },
     { id: "studyName", header: "Study Name", accessorKey: "studyName" },
     {
