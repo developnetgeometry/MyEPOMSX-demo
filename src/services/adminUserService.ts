@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 // Create a separate client for admin operations
 // Note: You'll need to set up service role key in environment variables
 const getAdminClient = () => {
-  const supabaseUrl = "https://tkkvtfrpujxkznatclpq.supabase.co";
+  const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const serviceRoleKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
 
   if (!serviceRoleKey) {

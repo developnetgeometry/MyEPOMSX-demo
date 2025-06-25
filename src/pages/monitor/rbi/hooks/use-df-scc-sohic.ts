@@ -10,7 +10,8 @@ export const useImsDfSccSohicData = (imsGeneralId: number) => {
         .select(
           `id, inspection_efficiency_id, steelscontent_id, harness_brinnel,
           dfscc_sohic, ims_pof_assessment_id, h2s_in_water, ph,
-          last_inspection_date, i_ims_protection_id, ims_general_id, ims_pof_assessment_id`
+          last_inspection_date, i_ims_protection_id, ims_general_id (id, pwht),
+          ims_pof_assessment_id`
         )
         .eq("ims_general_id", imsGeneralId) // Fetch records based on ims_pof_assessment_id
         .single(); // Use single() to get a single record

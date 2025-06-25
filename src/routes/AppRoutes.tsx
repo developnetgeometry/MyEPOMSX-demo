@@ -108,6 +108,7 @@ import NewPipingPage from "@/pages/monitor/NewPipingPage";
 import FormulaTestingPage from "@/pages/monitor/FormulaTestingPage";
 import InventoryGroupsPage from "@/pages/monitor/InventoryGroupsPage";
 import RBIAssessmentPage from "@/pages/monitor/rbi/RBIAssessmentPage";
+import RBIAssessmentCreatePage from "@/pages/monitor/rbi/RBIassessmentCreatePage";
 import RBIAssessmentDetailPage from "@/pages/monitor/rbi/RBIAssessmentDetailPage";
 // import RBIAssessmentPVDetailPage from "@/pages/monitor/RBIAssessmentPVDetailPage";
 import RMSAssetListPage from "@/pages/monitor/RMSAssetListPage";
@@ -1055,6 +1056,16 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <Layout>
               <RBIAssessmentPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/monitor/rbi-assessment/new"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <RBIAssessmentCreatePage />
             </Layout>
           </ProtectedRoute>
         }

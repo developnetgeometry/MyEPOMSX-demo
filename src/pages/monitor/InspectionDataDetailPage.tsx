@@ -1,50 +1,24 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import PageHeader from "@/components/shared/PageHeader";
-import { ChevronLeft, Edit, ClipboardList } from "lucide-react";
-
-// This would typically come from an API call based on the ID
-const getInspectionDataById = (id: string) => {
-  const sampleData = {
-    "1": {
-      id: "1",
-      assetNo: "PV-1001",
-      assetName: "Pressure Vessel - Main Reactor",
-      ltcr: 0.15,
-      stcr: 0.12,
-      inspectionStrategy: "Visual + UT Thickness",
-      remainingLife: 8.5,
-      inspectionRequest: "Annual thickness survey due to corrosion concerns",
-      isActive: true,
-      createdAt: "2024-01-15",
-      lastUpdated: "2024-06-10",
-    },
-    "2": {
-      id: "2",
-      assetNo: "PP-2003",
-      assetName: "Process Piping - Feed Line",
-      ltcr: 0.08,
-      stcr: 0.06,
-      inspectionStrategy: "Radiographic Testing",
-      remainingLife: 12.3,
-      inspectionRequest: "Routine inspection for pipeline integrity",
-      isActive: true,
-      createdAt: "2024-02-20",
-      lastUpdated: "2024-06-08",
-    },
-  };
-
-  return sampleData[id as keyof typeof sampleData] || null;
-};
+import { ChevronLeft, Edit, ClipboardList, Loader2 } from "lucide-react";
+import {
+  useInspectionData,
+  useUpdateInspectionData,
+} from "@/hooks/queries/useInspectionData";
+import { formatDate } from "@/utils/formatters";
+import InspectionDataEditModal from "@/components/inspection/InspectionDataEditModal";
 
 const InspectionDataDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const inspectionData = getInspectionDataById(id || "");
+  const { data: inspectionData, isLoading } = useInspectionData(Number(id));
+  const updateInspectionDataMutation = useUpdateInspectionData();
 
   if (!inspectionData) {
     return (
@@ -77,8 +51,18 @@ const InspectionDataDetailPage: React.FC = () => {
   };
 
   const handleEdit = () => {
-    // This would navigate to an edit page when implemented
-    console.log("Edit inspection data:", id);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSave = async (formData: any) => {
+    
+    const { asset_detail, ...formDataWithoutAssetDetail } = formData;
+    
+    if (!id) return;
+    await updateInspectionDataMutation.mutateAsync({
+      id: Number(id),
+      formData: formDataWithoutAssetDetail,
+    });
   };
 
   const getRemainingLifeColor = (life: number) => {
@@ -96,17 +80,28 @@ const InspectionDataDetailPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`Inspection Data - ${inspectionData.assetNo}`}
-        subtitle={inspectionData.assetName}
+        title={isLoading ? "Loading..." : `Inspection Data - ${inspectionData?.asset_detail?.asset?.asset_no}`}
+        subtitle={isLoading ? "" : inspectionData?.asset_detail?.asset?.asset_name}
         icon={<ClipboardList className="h-6 w-6" />}
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handleGoBack}>
+            <Button 
+              variant="outline" 
+              onClick={handleGoBack} 
+              disabled={updateInspectionDataMutation.isPending}
+            >
               <ChevronLeft className="mr-2 h-4 w-4" />
               Back to List
             </Button>
-            <Button onClick={handleEdit}>
-              <Edit className="mr-2 h-4 w-4" />
+            <Button 
+              onClick={handleEdit} 
+              disabled={updateInspectionDataMutation.isPending || isLoading}
+            >
+              {updateInspectionDataMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Edit className="mr-2 h-4 w-4" />
+              )}
               Edit
             </Button>
           </div>
@@ -124,13 +119,17 @@ const InspectionDataDetailPage: React.FC = () => {
               <label className="text-sm font-medium text-gray-600">
                 Asset Number
               </label>
-              <p className="text-lg font-semibold">{inspectionData.assetNo}</p>
+              <p className="text-lg font-semibold">
+                {inspectionData?.asset_detail?.asset?.asset_no}
+              </p>
             </div>
             <div>
               <label className="text-sm font-medium text-gray-600">
                 Asset Name
               </label>
-              <p className="text-lg">{inspectionData.assetName}</p>
+              <p className="text-lg">
+                {inspectionData?.asset_detail?.asset?.asset_name}
+              </p>
             </div>
             <div>
               <label className="text-sm font-medium text-gray-600">
@@ -138,9 +137,9 @@ const InspectionDataDetailPage: React.FC = () => {
               </label>
               <div className="mt-1">
                 <Badge
-                  variant={inspectionData.isActive ? "default" : "secondary"}
+                  variant={inspectionData.is_active ? "default" : "secondary"}
                 >
-                  {inspectionData.isActive ? "Active" : "Inactive"}
+                  {inspectionData.is_active ? "Active" : "Inactive"}
                 </Badge>
               </div>
             </div>
@@ -148,7 +147,7 @@ const InspectionDataDetailPage: React.FC = () => {
               <label className="text-sm font-medium text-gray-600">
                 Inspection Strategy
               </label>
-              <p className="text-lg">{inspectionData.inspectionStrategy}</p>
+              <p className="text-lg">{inspectionData.inspection_strategy}</p>
             </div>
           </CardContent>
         </Card>
@@ -189,9 +188,9 @@ const InspectionDataDetailPage: React.FC = () => {
               </label>
               <div className="mt-1">
                 <Badge
-                  variant={getRemainingLifeColor(inspectionData.remainingLife)}
+                  variant={getRemainingLifeColor(inspectionData.remaining_life)}
                 >
-                  {inspectionData.remainingLife.toFixed(1)} years
+                  {inspectionData.remaining_life.toFixed(1)} years
                 </Badge>
               </div>
             </div>
@@ -205,7 +204,7 @@ const InspectionDataDetailPage: React.FC = () => {
           </CardHeader>
           <CardContent>
             <p className="text-gray-700">
-              {inspectionData.inspectionRequest ||
+              {inspectionData.inspection_request ||
                 "No inspection request details provided."}
             </p>
           </CardContent>
@@ -223,7 +222,9 @@ const InspectionDataDetailPage: React.FC = () => {
                   Created Date
                 </label>
                 <p className="text-lg">
-                  {new Date(inspectionData.createdAt).toLocaleDateString()}
+                  {formatDate(
+                    new Date(inspectionData.created_at).toLocaleDateString()
+                  )}
                 </p>
               </div>
               <div>
@@ -231,13 +232,24 @@ const InspectionDataDetailPage: React.FC = () => {
                   Last Updated
                 </label>
                 <p className="text-lg">
-                  {new Date(inspectionData.lastUpdated).toLocaleDateString()}
+                  {formatDate(
+                    new Date(inspectionData.updated_at).toLocaleDateString()
+                  )}
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {inspectionData && (
+        <InspectionDataEditModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          inspectionData={inspectionData}
+          onSave={handleSave}
+        />
+      )}
     </div>
   );
 };

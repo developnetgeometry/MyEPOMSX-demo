@@ -106,7 +106,6 @@ const AddChildAssetDialog: React.FC<AddChildAssetDialogProps> = ({
             <TabsTrigger value="existing">Select Existing</TabsTrigger>
             <TabsTrigger value="new">Create New</TabsTrigger>
           </TabsList>
-
           <TabsContent value="existing">
             <div className="space-y-4">
               <div className="relative">
@@ -118,7 +117,6 @@ const AddChildAssetDialog: React.FC<AddChildAssetDialogProps> = ({
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-
               {isLoading ? (
                 <div className="flex justify-center py-4">
                   <Loader2 className="h-6 w-6 animate-spin" />
@@ -156,7 +154,6 @@ const AddChildAssetDialog: React.FC<AddChildAssetDialogProps> = ({
                   </Button>
                 </div>
               )}
-
               <Button
                 onClick={handleAssignExisting}
                 disabled={!selectedAsset || isAssigning}

@@ -25,13 +25,6 @@ import {
 } from "@/hooks/queries/useAssets";
 import HierarchyNode from "@/components/ui/hierarchy";
 import { Loader2 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 
 const AssetsPage: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<any | null>(null);
