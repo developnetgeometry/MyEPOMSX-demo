@@ -10,7 +10,8 @@ export const useImsPofAssessmentData = (imsGeneralId: number) => {
         .select(
           `id, asset_detail_id, coating_quality_id, cladding,
           nominal_thickness, current_thickness, description,
-          ims_general_id, data_confidence_id`
+          ims_general_id (id, year_in_service, ims_asset_type_id, outer_diameter, inner_diameter, tmin, material_construction_id (spec_code)),
+          data_confidence_id`
         )
         .eq("ims_general_id", imsGeneralId)
         .single(); // Fetch a single record based on imsGeneralId

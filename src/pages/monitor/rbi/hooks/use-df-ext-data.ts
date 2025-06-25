@@ -9,7 +9,8 @@ export const useImsDfExtData = (imsGeneralId: number) => {
         .from("i_df_ext")
         .select(
           `id, last_inspection_date, new_coating_date, ims_pof_assessment_id,
-          data_confidence_id, dfextcorrf, i_ims_protection_id, i_ims_design_id,
+          data_confidence_id, dfextcorrf, i_ims_protection_id(coating_quality_id),
+          i_ims_design_id (ext_env_id, pipe_support, soil_water_interface, operating_temperature ),
           nextcorra, nextcorrb, nextcorrc, nextcorrd, ims_general_id`
         )
         .eq("ims_general_id", imsGeneralId) // Fetch records based on ims_por_assessment_id

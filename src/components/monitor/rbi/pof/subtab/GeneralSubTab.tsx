@@ -1,12 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
-import { useAssetData } from "@/pages/work-orders/hooks/use-apsf-by-project-data";
+import { useAssetIntegrityData } from "@/pages/work-orders/hooks/use-apsf-by-project-data";
 import { useCoatingQualityData } from "@/hooks/lookup/lookup-coating-quality";
 import { useDataConfidenceData } from "@/hooks/lookup/lookup-data-confidence";
+import { InputBlock } from "@/components/ui/input-block";
+import { Button } from "@/components/ui/button";
 
 const GeneralSubTab: React.FC<{
     formData: any;
@@ -14,14 +16,32 @@ const GeneralSubTab: React.FC<{
     handleSelectChange: any;
     handleRadioChange: any;
 }> = ({ formData, handleInputChange, handleSelectChange, handleRadioChange }) => {
+    const [precision, setPrecision] = useState<2 | 8>(2);
 
-    const { data: assets } = useAssetData();
+    const formatNumber = (val: number | null) => {
+        if (val === null || val === undefined) return "";
+        return parseFloat(Number(val).toFixed(precision)).toString();
+    };
+
+
+    const { data: assets } = useAssetIntegrityData();
     const { data: coatingQualities } = useCoatingQualityData();
     const { data: dataConfidences } = useDataConfidenceData();
 
 
     return (
         <div className="space-y-6">
+            {/* Toggle precision */}
+            <div className="flex justify-end">
+                <Button
+                    type="button"
+                    onClick={() => setPrecision((prev) => (prev === 2 ? 8 : 2))}
+                    variant="outline"
+                    size="sm"
+                >
+                    Accuracy: {precision} decimals
+                </Button>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
                 <div>
                     <Label htmlFor="asset">Asset</Label>
@@ -41,71 +61,36 @@ const GeneralSubTab: React.FC<{
                         </SelectContent>
                     </Select>
                 </div>
-                <div>
-                    <Label htmlFor="coating_quality_id">Coating Quality</Label>
-                    <Select
-                        value={formData?.coating_quality_id?.toString() || ""}
-                        onValueChange={(value) => handleSelectChange("coating_quality_id", parseInt(value))}
-                    >
-                        <SelectTrigger className="mt-1">
-                            <SelectValue placeholder="Select Coating Quality" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {coatingQualities?.map((quality) => (
-                                <SelectItem key={quality.id} value={quality.id.toString()}>
-                                    {quality.name} - {quality.value}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div>
-                    <Label htmlFor="data_confidence_id">Data Confidence</Label>
-                    <Select
-                        value={formData?.data_confidence_id?.toString() || ""}
-                        onValueChange={(value) => handleSelectChange("data_confidence_id", value)}
-                    >
-                        <SelectTrigger className="mt-1">
-                            <SelectValue placeholder="Select Data Confidence" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {dataConfidences?.map((confidence) => (
-                                <SelectItem key={confidence.id} value={confidence.id.toString()}>
-                                    {confidence.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
                 <div className="space-y-2">
                     <Label>Cladding</Label>
                     <RadioGroup
-                        value={formData?.cladding ? "yes" : "no"}
+                        value={formData?.cladding ? "true" : "false"}
                         onValueChange={(value) => handleRadioChange("cladding", value)}
                         className="flex flex-row space-x-4"
+                        disabled
                     >
                         <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="yes" id="cladding-yes" />
+                            <RadioGroupItem value="true" id="cladding-yes" />
                             <Label htmlFor="cladding-yes">Yes</Label>
                         </div>
                         <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="no" id="cladding-no" />
+                            <RadioGroupItem value="false" id="cladding-no" />
                             <Label htmlFor="cladding-no">No</Label>
                         </div>
                     </RadioGroup>
                 </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <div>
-                    <Label htmlFor="nominal_thickness">Nominal Thickness (MM)</Label>
+                    <Label htmlFor="normal_wall_thickness">Nominal Thickness (MM)</Label>
                     <Input
-                        id="nominal_thickness"
-                        name="nominal_thickness"
+                        id="normal_wall_thickness"
+                        name="normal_wall_thickness"
                         type="number"
-                        value={formData?.nominal_thickness || 0}
+                        value={formatNumber(formData?.normal_wall_thickness) || 0}
                         onChange={handleInputChange}
                         className="mt-1"
+                        disabled
                     />
                 </div>
                 <div>
@@ -114,20 +99,9 @@ const GeneralSubTab: React.FC<{
                         id="tmin"
                         name="tmin"
                         type="number"
-                        value={formData?.tmin || 0}
+                        value={formatNumber(formData?.tmin) || 0}
                         disabled
                         className="mt-1 bg-gray-50"
-                    />
-                </div>
-                <div>
-                    <Label htmlFor="current_thickness">Current Thickness (mm)</Label>
-                    <Input
-                        id="current_thickness"
-                        name="current_thickness"
-                        type="number"
-                        value={formData?.current_thickness || 0}
-                        onChange={handleInputChange}
-                        className="mt-1"
                     />
                 </div>
                 <div className="col-span-full">
@@ -139,8 +113,87 @@ const GeneralSubTab: React.FC<{
                         onChange={handleInputChange}
                         className="mt-1 min-h-[100px]"
                         placeholder="Enter description"
+                        disabled
                     />
                 </div>
+            </div>
+
+
+            {/* General & Design Fields */}
+            <div className="grid grid-cols-1 md:grid-cols-6 gap-2">
+                {/* ims_general */}
+                <InputBlock
+                    label="Asset Type"
+                    value={
+                        formData?.ims_asset_type_id === 1
+                            ? "1 - Pressure Vessel"
+                            : formData?.ims_asset_type_id === 2
+                                ? "2 - Piping"
+                                : "N/A"
+                    }
+                />
+                <InputBlock label="Line No" value={formData?.line_no} />
+                <InputBlock label="Pipe Schedule ID" value={formData?.pipe_schedule_id} />
+                <InputBlock label="Pressure Rating" value={formatNumber(formData?.pressure_rating)} />
+                <InputBlock label="Year in Service" value={formData?.year_in_service} />
+                <InputBlock label="Normal Wall Thickness" value={formatNumber(formData?.normal_wall_thickness)} />
+                <InputBlock label="TMin" value={formatNumber(formData?.tmin)} />
+                <InputBlock label="Material Construction ID" value={formData?.material_construction_id} />
+                <InputBlock label="Spec Code" value={formData?.spec_code} />
+                <InputBlock label="Avg mts" value={formData?.avg_mts_mpa} />
+                <InputBlock label="Avg Mpa" value={formData?.avg_mys_mpa} />
+                <InputBlock label="Composition" value={formData?.composition} />
+                <InputBlock label="Circuit ID" value={formData?.circuit_id} />
+                <InputBlock label="Nominal Bore Diameter" value={formData?.nominal_bore_diameter} />
+                <InputBlock label="Pipe Class ID" value={formData?.pipe_class_id} />
+                <InputBlock label="IMS Asset Type ID" value={formData?.ims_asset_type_id} />
+                <InputBlock label="Clad Thickness" value={formatNumber(formData?.clad_thickness)} />
+
+                {/* ims_design */}
+                <InputBlock label="Internal Diameter" value={formatNumber(formData?.internal_diameter)} />
+                <InputBlock label="Outer Diameter" value={formatNumber(formData?.outer_diameter)} />
+                <InputBlock label="Welding Efficiency" value={formatNumber(formData?.welding_efficiency)} />
+                <InputBlock label="Design Pressure" value={formatNumber(formData?.design_pressure)} />
+                <InputBlock label="Design Temperature" value={formatNumber(formData?.design_temperature)} />
+                <InputBlock label="Operating Pressure (MPa)" value={formatNumber(formData?.operating_pressure_mpa)} />
+                <InputBlock label="Operating Temperature" value={formatNumber(formData?.operating_temperature)} />
+                <InputBlock label="Corrosion Allowance" value={formatNumber(formData?.corrosion_allowance)} />
+                <InputBlock label="Allowable Stress (MPa)" value={formatNumber(formData?.allowable_stress_mpa)} />
+                <InputBlock label="Length" value={formatNumber(formData?.length)} />
+                <InputBlock label="Ext Env ID" value={formData?.ext_env_id} />
+                <InputBlock label="Geometry ID" value={formData?.geometry_id} />
+
+                {/* ims_protection */}
+                <InputBlock label="Coating Quality ID" value={formData?.coating_quality_id} />
+                <InputBlock label="Isolation System ID" value={formData?.isolation_system_id} />
+                <InputBlock label="Online Monitor ID" value={formData?.online_monitor_id} />
+                <InputBlock label="Online Monitor Name" value={formData?.online_monitor_name} />
+                <InputBlock label="Minimum Thickness" value={formatNumber(formData?.minimum_thickness)} />
+                <InputBlock label="Post Weld Heat Treatment" value={formatNumber(formData?.post_weld_heat_treatment)} />
+                <InputBlock label="Line Description" value={formData?.line_description} />
+                <InputBlock label="Replacement Line" value={formData?.replacement_line} />
+                <InputBlock label="Detection System ID" value={formData?.detection_system_id} />
+                <InputBlock label="Mitigation System ID" value={formData?.mitigation_system_id} />
+                <InputBlock label="Design Fabrication ID" value={formData?.design_fabrication_id} />
+                <InputBlock label="Insulation Type ID" value={formData?.insulation_type_id} />
+                <InputBlock label="Interface ID" value={formData?.interface_id} />
+                <InputBlock label="Insulation Complexity ID" value={formData?.insulation_complexity_id} />
+                <InputBlock label="Insulation Condition" value={formData?.insulation_condition} />
+                <InputBlock label="Lining Type" value={formData?.lining_type} />
+                <InputBlock label="Lining Condition" value={formData?.lining_condition} />
+                <InputBlock label="Lining Monitoring" value={formData?.lining_monitoring} />
+            </div>
+
+            {/* Booleans */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <InputBlock label="Insulation" value={formData?.insulation ? "Yes" : "No"} />
+                <InputBlock label="Line H2S" value={formData?.line_h2s ? "Yes" : "No"} />
+                <InputBlock label="Internal Lining" value={formData?.internal_lining ? "Yes" : "No"} />
+                <InputBlock label="PWHT" value={formData?.pwht ? "Yes" : "No"} />
+                <InputBlock label="Pipe Support" value={formData?.pipe_support ? "Yes" : "No"} />
+                <InputBlock label="Soil Water Interface" value={formData?.soil_water_interface ? "Yes" : "No"} />
+                <InputBlock label="Dead Legs" value={formData?.dead_legs ? "Yes" : "No"} />
+                <InputBlock label="Mix Point" value={formData?.mix_point ? "Yes" : "No"} />
             </div>
         </div>
     );
