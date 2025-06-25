@@ -667,7 +667,7 @@ const RBIAssessmentCreatePage: React.FC = () => {
     }
   }, [formData?.svi_ext_clscc, formData?.inspection_efficiency_name_ext_clscc]);
 
-  // DfExtClscc
+  // DfExtClscc❌tak test lansung
   useEffect(() => {
     if (formData) {
       const dfExtClscc = calculateDfExtClsccFinal(
