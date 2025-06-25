@@ -17,7 +17,7 @@ const PofTab: React.FC<{ formData: any; setFormData: any }> = ({ formData, setFo
   };
 
   const handleRadioChange = (name: string, value: string) => {
-    setFormData((prev: any) => ({ ...prev, [name]: value === "yes" }));
+    setFormData((prev: any) => ({ ...prev, [name]: value === "true" }));
   };
 
   return (

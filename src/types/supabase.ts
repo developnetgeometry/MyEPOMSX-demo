@@ -6184,6 +6184,7 @@ export type Database = {
           id: number
           ims_general_id: number | null
           ims_pof_assessment_id: number | null
+          ims_rbi_general_id: number | null
           last_inspection_date: string | null
           ncuifa: number | null
           ncuifb: number | null
@@ -6204,6 +6205,7 @@ export type Database = {
           id?: number
           ims_general_id?: number | null
           ims_pof_assessment_id?: number | null
+          ims_rbi_general_id?: number | null
           last_inspection_date?: string | null
           ncuifa?: number | null
           ncuifb?: number | null
@@ -6224,6 +6226,7 @@ export type Database = {
           id?: number
           ims_general_id?: number | null
           ims_pof_assessment_id?: number | null
+          ims_rbi_general_id?: number | null
           last_inspection_date?: string | null
           ncuifa?: number | null
           ncuifb?: number | null
@@ -6269,6 +6272,13 @@ export type Database = {
             referencedRelation: "i_ims_general"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "i_df_cui_ims_rbi_general_id_fkey"
+            columns: ["ims_rbi_general_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_rbi_general"
+            referencedColumns: ["id"]
+          },
         ]
       }
       i_df_ext: {
@@ -6282,6 +6292,7 @@ export type Database = {
           id: number
           ims_general_id: number | null
           ims_pof_assessment_id: number | null
+          ims_rbi_general_id: number | null
           last_inspection_date: string | null
           new_coating_date: string | null
           nextcorra: number | null
@@ -6301,6 +6312,7 @@ export type Database = {
           id?: number
           ims_general_id?: number | null
           ims_pof_assessment_id?: number | null
+          ims_rbi_general_id?: number | null
           last_inspection_date?: string | null
           new_coating_date?: string | null
           nextcorra?: number | null
@@ -6320,6 +6332,7 @@ export type Database = {
           id?: number
           ims_general_id?: number | null
           ims_pof_assessment_id?: number | null
+          ims_rbi_general_id?: number | null
           last_inspection_date?: string | null
           new_coating_date?: string | null
           nextcorra?: number | null
@@ -6365,6 +6378,13 @@ export type Database = {
             referencedRelation: "i_ims_pof_assessment_general"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "i_df_ext_ims_rbi_general_id_fkey"
+            columns: ["ims_rbi_general_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_rbi_general"
+            referencedColumns: ["id"]
+          },
         ]
       }
       i_df_ext_clscc: {
@@ -6378,6 +6398,7 @@ export type Database = {
           id: number
           ims_general_id: number | null
           ims_pof_asessment_id: number | null
+          ims_rbi_general_id: number | null
           inspection_efficiency_id: number | null
           last_inspection_date: string | null
           new_coating_date: string | null
@@ -6394,6 +6415,7 @@ export type Database = {
           id?: number
           ims_general_id?: number | null
           ims_pof_asessment_id?: number | null
+          ims_rbi_general_id?: number | null
           inspection_efficiency_id?: number | null
           last_inspection_date?: string | null
           new_coating_date?: string | null
@@ -6410,6 +6432,7 @@ export type Database = {
           id?: number
           ims_general_id?: number | null
           ims_pof_asessment_id?: number | null
+          ims_rbi_general_id?: number | null
           inspection_efficiency_id?: number | null
           last_inspection_date?: string | null
           new_coating_date?: string | null
@@ -6453,6 +6476,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "i_df_ext_clscc_ims_rbi_general_id_fkey"
+            columns: ["ims_rbi_general_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_rbi_general"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "i_df_ext_clscc_inspection_efficiency_id_fkey"
             columns: ["inspection_efficiency_id"]
             isOneToOne: false
@@ -6473,6 +6503,7 @@ export type Database = {
           id: number
           ims_general_id: number | null
           ims_pof_assessment_id: number | null
+          ims_rbi_general_id: number | null
           joint_branch_design_id: number | null
           pipe_complexity_id: number | null
           pipe_condition_id: number | null
@@ -6493,6 +6524,7 @@ export type Database = {
           id?: number
           ims_general_id?: number | null
           ims_pof_assessment_id?: number | null
+          ims_rbi_general_id?: number | null
           joint_branch_design_id?: number | null
           pipe_complexity_id?: number | null
           pipe_condition_id?: number | null
@@ -6513,6 +6545,7 @@ export type Database = {
           id?: number
           ims_general_id?: number | null
           ims_pof_assessment_id?: number | null
+          ims_rbi_general_id?: number | null
           joint_branch_design_id?: number | null
           pipe_complexity_id?: number | null
           pipe_condition_id?: number | null
@@ -6607,6 +6640,13 @@ export type Database = {
             referencedRelation: "i_ims_general"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "i_df_mfat_ims_rbi_general_id_fkey"
+            columns: ["ims_rbi_general_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_rbi_general"
+            referencedColumns: ["id"]
+          },
         ]
       }
       i_df_scc_scc: {
@@ -6620,6 +6660,7 @@ export type Database = {
           id: number
           ims_general_id: number | null
           ims_pof_assessment_id: number | null
+          ims_rbi_general_id: number | null
           inspection_efficiency_id: number | null
           last_inspection_date: string | null
           ph: number | null
@@ -6636,6 +6677,7 @@ export type Database = {
           id?: number
           ims_general_id?: number | null
           ims_pof_assessment_id?: number | null
+          ims_rbi_general_id?: number | null
           inspection_efficiency_id?: number | null
           last_inspection_date?: string | null
           ph?: number | null
@@ -6652,6 +6694,7 @@ export type Database = {
           id?: number
           ims_general_id?: number | null
           ims_pof_assessment_id?: number | null
+          ims_rbi_general_id?: number | null
           inspection_efficiency_id?: number | null
           last_inspection_date?: string | null
           ph?: number | null
@@ -6680,6 +6723,13 @@ export type Database = {
             referencedRelation: "i_ims_pof_assessment_general"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "i_df_scc_scc_ims_rbi_general_id_fkey"
+            columns: ["ims_rbi_general_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_rbi_general"
+            referencedColumns: ["id"]
+          },
         ]
       }
       i_df_scc_sohic: {
@@ -6693,6 +6743,7 @@ export type Database = {
           id: number
           ims_general_id: number | null
           ims_pof_assessment_id: number | null
+          ims_rbi_general_id: number | null
           inspection_efficiency_id: number | null
           last_inspection_date: string | null
           ph: number | null
@@ -6710,6 +6761,7 @@ export type Database = {
           id?: number
           ims_general_id?: number | null
           ims_pof_assessment_id?: number | null
+          ims_rbi_general_id?: number | null
           inspection_efficiency_id?: number | null
           last_inspection_date?: string | null
           ph?: number | null
@@ -6727,6 +6779,7 @@ export type Database = {
           id?: number
           ims_general_id?: number | null
           ims_pof_assessment_id?: number | null
+          ims_rbi_general_id?: number | null
           inspection_efficiency_id?: number | null
           last_inspection_date?: string | null
           ph?: number | null
@@ -6770,6 +6823,13 @@ export type Database = {
             referencedRelation: "i_ims_general"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "i_df_scc_sohic_ims_rbi_general_id_fkey"
+            columns: ["ims_rbi_general_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_rbi_general"
+            referencedColumns: ["id"]
+          },
         ]
       }
       i_df_thin: {
@@ -6782,6 +6842,7 @@ export type Database = {
           id: number
           ims_general_id: number | null
           ims_pof_assessment_id: number | null
+          ims_rbi_general_id: number | null
           last_inspection_date: string | null
           nthin_a: number | null
           nthin_b: number | null
@@ -6797,6 +6858,7 @@ export type Database = {
           id?: number
           ims_general_id?: number | null
           ims_pof_assessment_id?: number | null
+          ims_rbi_general_id?: number | null
           last_inspection_date?: string | null
           nthin_a?: number | null
           nthin_b?: number | null
@@ -6812,6 +6874,7 @@ export type Database = {
           id?: number
           ims_general_id?: number | null
           ims_pof_assessment_id?: number | null
+          ims_rbi_general_id?: number | null
           last_inspection_date?: string | null
           nthin_a?: number | null
           nthin_b?: number | null
@@ -6845,6 +6908,13 @@ export type Database = {
             columns: ["ims_general_id"]
             isOneToOne: false
             referencedRelation: "i_ims_general"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_df_thin_ims_rbi_general_id_fkey"
+            columns: ["ims_rbi_general_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_rbi_general"
             referencedColumns: ["id"]
           },
         ]
@@ -6987,6 +7057,7 @@ export type Database = {
           id: number
           ideal_gas_specific_heat_eq: number | null
           ims_general_id: number | null
+          ims_rbi_general_id: number | null
           ims_service_id: number | null
           iso_sys_id: number | null
           mitigation_system_id: number | null
@@ -7003,6 +7074,7 @@ export type Database = {
           id?: number
           ideal_gas_specific_heat_eq?: number | null
           ims_general_id?: number | null
+          ims_rbi_general_id?: number | null
           ims_service_id?: number | null
           iso_sys_id?: number | null
           mitigation_system_id?: number | null
@@ -7019,6 +7091,7 @@ export type Database = {
           id?: number
           ideal_gas_specific_heat_eq?: number | null
           ims_general_id?: number | null
+          ims_rbi_general_id?: number | null
           ims_service_id?: number | null
           iso_sys_id?: number | null
           mitigation_system_id?: number | null
@@ -7026,6 +7099,13 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "i_ims_cof_assessment_cof_area_ims_rbi_general_id_fkey"
+            columns: ["ims_rbi_general_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_rbi_general"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "i_ims_cof_asssessment_cof_area_e_asset_detail_fk"
             columns: ["asset_detail_id"]
@@ -7081,6 +7161,7 @@ export type Database = {
           fracevap: number | null
           id: number
           ims_general_id: number | null
+          ims_rbi_general_id: number | null
           injcost: number | null
           outagemult: number | null
           updated_at: string | null
@@ -7097,6 +7178,7 @@ export type Database = {
           fracevap?: number | null
           id?: number
           ims_general_id?: number | null
+          ims_rbi_general_id?: number | null
           injcost?: number | null
           outagemult?: number | null
           updated_at?: string | null
@@ -7113,6 +7195,7 @@ export type Database = {
           fracevap?: number | null
           id?: number
           ims_general_id?: number | null
+          ims_rbi_general_id?: number | null
           injcost?: number | null
           outagemult?: number | null
           updated_at?: string | null
@@ -7134,6 +7217,13 @@ export type Database = {
             referencedRelation: "i_ims_general"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "i_ims_cof_assessment_cof_prod_ims_rbi_general_id_fkey"
+            columns: ["ims_rbi_general_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_rbi_general"
+            referencedColumns: ["id"]
+          },
         ]
       }
       i_ims_design: {
@@ -7150,6 +7240,7 @@ export type Database = {
           geometry_id: number | null
           id: number
           ims_asset_type_id: number | null
+          ims_general_id: number | null
           internal_diameter: number | null
           length: number | null
           mix_point: boolean | null
@@ -7175,6 +7266,7 @@ export type Database = {
           geometry_id?: number | null
           id?: number
           ims_asset_type_id?: number | null
+          ims_general_id?: number | null
           internal_diameter?: number | null
           length?: number | null
           mix_point?: boolean | null
@@ -7200,6 +7292,7 @@ export type Database = {
           geometry_id?: number | null
           id?: number
           ims_asset_type_id?: number | null
+          ims_general_id?: number | null
           internal_diameter?: number | null
           length?: number | null
           mix_point?: boolean | null
@@ -7464,6 +7557,7 @@ export type Database = {
           description: string | null
           id: number
           ims_general_id: number | null
+          ims_rbi_general_id: number | null
           nominal_thickness: number | null
           updated_at: string | null
           updated_by: string | null
@@ -7479,6 +7573,7 @@ export type Database = {
           description?: string | null
           id?: number
           ims_general_id?: number | null
+          ims_rbi_general_id?: number | null
           nominal_thickness?: number | null
           updated_at?: string | null
           updated_by?: string | null
@@ -7494,6 +7589,7 @@ export type Database = {
           description?: string | null
           id?: number
           ims_general_id?: number | null
+          ims_rbi_general_id?: number | null
           nominal_thickness?: number | null
           updated_at?: string | null
           updated_by?: string | null
@@ -7527,6 +7623,13 @@ export type Database = {
             referencedRelation: "i_ims_general"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "i_ims_pof_assessment_general_ims_rbi_general_id_fkey"
+            columns: ["ims_rbi_general_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_rbi_general"
+            referencedColumns: ["id"]
+          },
         ]
       }
       i_ims_protection: {
@@ -7539,6 +7642,7 @@ export type Database = {
           detection_system_id: number | null
           id: number
           ims_asset_type_id: number | null
+          ims_general_id: number | null
           insulation_complexity_id: number | null
           insulation_condition: string | null
           insulation_type_id: number | null
@@ -7565,6 +7669,7 @@ export type Database = {
           detection_system_id?: number | null
           id?: number
           ims_asset_type_id?: number | null
+          ims_general_id?: number | null
           insulation_complexity_id?: number | null
           insulation_condition?: string | null
           insulation_type_id?: number | null
@@ -7591,6 +7696,7 @@ export type Database = {
           detection_system_id?: number | null
           id?: number
           ims_asset_type_id?: number | null
+          ims_general_id?: number | null
           insulation_complexity_id?: number | null
           insulation_condition?: string | null
           insulation_type_id?: number | null
@@ -7681,6 +7787,55 @@ export type Database = {
           },
         ]
       }
+      i_ims_rbi_general: {
+        Row: {
+          asset_detail_id: number | null
+          created_at: string
+          i_ims_design: number | null
+          i_ims_general_id: number | null
+          id: number
+          rbi_no: string | null
+        }
+        Insert: {
+          asset_detail_id?: number | null
+          created_at?: string
+          i_ims_design?: number | null
+          i_ims_general_id?: number | null
+          id?: number
+          rbi_no?: string | null
+        }
+        Update: {
+          asset_detail_id?: number | null
+          created_at?: string
+          i_ims_design?: number | null
+          i_ims_general_id?: number | null
+          id?: number
+          rbi_no?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "i_ims_rbi_general_asset_detail_id_fkey"
+            columns: ["asset_detail_id"]
+            isOneToOne: false
+            referencedRelation: "e_asset_detail"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_rbi_general_i_ims_design_fkey"
+            columns: ["i_ims_design"]
+            isOneToOne: false
+            referencedRelation: "i_ims_design"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_rbi_general_i_ims_general_id_fkey"
+            columns: ["i_ims_general_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_general"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       i_ims_rbi_risk_irp: {
         Row: {
           asset_detail_id: number | null
@@ -7696,6 +7851,7 @@ export type Database = {
           dthin: number | null
           id: number
           ims_general_id: number | null
+          ims_rbi_general_id: number | null
           pof: number | null
           pof_value: number | null
           risk_level: number | null
@@ -7717,6 +7873,7 @@ export type Database = {
           dthin?: number | null
           id?: number
           ims_general_id?: number | null
+          ims_rbi_general_id?: number | null
           pof?: number | null
           pof_value?: number | null
           risk_level?: number | null
@@ -7738,6 +7895,7 @@ export type Database = {
           dthin?: number | null
           id?: number
           ims_general_id?: number | null
+          ims_rbi_general_id?: number | null
           pof?: number | null
           pof_value?: number | null
           risk_level?: number | null
@@ -7758,6 +7916,13 @@ export type Database = {
             columns: ["ims_general_id"]
             isOneToOne: false
             referencedRelation: "i_ims_general"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_rbi_risk_irp_ims_rbi_general_id_fkey"
+            columns: ["ims_rbi_general_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_rbi_general"
             referencedColumns: ["id"]
           },
         ]

@@ -10,7 +10,7 @@ export const useImsDfExtClsccData = (imsGeneralId: number) => {
         .select(
           `id, last_inspection_date, new_coating_date, inspection_efficiency_id,
           ims_pof_asessment_id, data_confidence_id, df_ext_cl_scc,
-          i_ims_protection_id, i_ims_design_id, ims_general_id`
+          i_ims_protection_id (coating_quality_id), i_ims_design_id (ext_env_id), ims_general_id`
         )
         .eq("ims_general_id", imsGeneralId) // Fetch records based on ims_pof_asessment_id
         .single(); // Use single() to get a single record
