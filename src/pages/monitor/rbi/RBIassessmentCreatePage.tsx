@@ -14,7 +14,9 @@ import { useAverageMtsMpaMysMpaByName } from "./hooks/use-average-mts_mpa-mys_mp
 import { useImsGeneralDataByAssetDetailId } from "./hooks/use-ims-general-data";
 import { useImsProtectionByAssetDetailId } from "./hooks/use-ims-protection-by-asset-detail-id";
 import { useImsDesignByAssetDetailId } from "./hooks/use-ims-design-by-asset-detail-id";
-import { calcIThinAndProportions, calculateAgeTk, calculateArt, calculateBThins, calculateCrAct, calculateCrCm, calculateCrExp, calculateDFThinFDFThinFB, calculateFsThin, calculateSrThin } from "./hooks/formula-df-thin";
+import { calcIThinAndProportions, calculateArt, calculateBThins, calculateCrAct, calculateCrCm, calculateCrExp, calculateDFThinFDFThinFB, calculateFsThin, calculateSrThin } from "./hooks/formula-df-thin";
+import { calculateAgeTk } from "./hooks/formula";
+import { calculateAge, calculateAgeCoat, calculateArtExt, calculateBetaExtcorrs, calculateCoatAdj, calculateCrActExt, calculateCrExpExt, calculateDFextcorrF, calculateFSextcorr, calculateIextCorrsAndPoExtcorrs, calculateSRextcorr } from "./hooks/formula-df-ext";
 
 
 const RBIAssessmentCreatePage: React.FC = () => {
@@ -51,6 +53,7 @@ const RBIAssessmentCreatePage: React.FC = () => {
     design_temperature: 0,
     operating_pressure_mpa: 0,
     ext_env_id: null,
+    ext_env_name: "",
     geometry_id: null,
     length: 0,
     operating_temperature: 0,
@@ -113,6 +116,7 @@ const RBIAssessmentCreatePage: React.FC = () => {
     dthinf_thin: 0,
 
     // *** i_df_ext (2)
+    current_thickness_ext: 0, //Trd
     coating_quality_id_ext: null,
     new_coating_date_ext: "",
     last_inspection_date_ext: "",
@@ -120,9 +124,6 @@ const RBIAssessmentCreatePage: React.FC = () => {
     agecoat_ext: 0,
     coatadj_ext: 0,
     age_ext: 0,
-    external_environment_id_ext: null,
-    pipesupprt_ext: false,
-    soilwaterinterface_ext: false,
     crexp_ext: 0,
     cract_ext: 0,
     art_ext: 0,
@@ -184,7 +185,8 @@ const RBIAssessmentCreatePage: React.FC = () => {
         outer_diameter: imsDesign?.outer_diameter ?? 0,
         design_temperature: imsDesign?.design_temperature ?? 0,
         operating_pressure_mpa: imsDesign?.operating_pressure_mpa ?? 0,
-        ext_env_id: imsDesign?.ext_env_id ?? null,
+        ext_env_id: imsDesign?.ext_env_id?.id ?? null,
+        ext_env_name: imsDesign?.ext_env_id?.name ?? null,
         geometry_id: imsDesign?.geometry_id ?? null,
         length: imsDesign?.length ?? 0,
         operating_temperature: imsDesign?.operating_temperature ?? 0,
@@ -372,7 +374,6 @@ const RBIAssessmentCreatePage: React.FC = () => {
     }
   }, [formData?.art_thin, formData?.srthin_thin]);
 
-
   // dfthinfb_thin☑️not check for ims_asset_type_id = 2 AND 1
   useEffect(() => {
     if (formData) {
@@ -398,6 +399,187 @@ const RBIAssessmentCreatePage: React.FC = () => {
   // Formula DfThin End
 
 
+  // Formula DfExt Start
+
+  // AgeTk_ext✅
+  useEffect(() => {
+    if (formData) {
+      const ageExt = calculateAgeTk(
+        formData.last_inspection_date_ext,
+        formData.year_in_service
+      );
+      setFormData((prev: any) => ({ ...prev, agetk_ext: ageExt }));
+    }
+  }, [formData?.last_inspection_date_ext, formData?.year_in_service]);
+
+  // Agecoat_ext✅
+  useEffect(() => {
+    if (formData) {
+      const ageCoat = calculateAgeCoat(
+        formData.new_coating_date_ext
+      );
+      setFormData((prev: any) => ({ ...prev, agecoat_ext: ageCoat }));
+    }
+  }, [formData?.new_coating_date_ext]);
+
+  // CoatAdj_ext✅
+  useEffect(() => {
+    if (formData) {
+      const coatAdj = calculateCoatAdj(
+        formData.coating_quality_id_ext,
+        formData.agetk_ext,
+        formData.agecoat_ext
+      );
+      setFormData((prev: any) => ({ ...prev, coatadj_ext: coatAdj }));
+    }
+  }, [formData?.coating_quality_id_ext, formData?.agetk_ext, formData?.agecoat_ext]);
+
+  // Age_ext✅
+  useEffect(() => {
+    if (formData) {
+      const ageExt = calculateAge(
+        formData.agetk_ext,
+        formData.coatadj_ext
+      );
+      setFormData((prev: any) => ({ ...prev, age_ext: ageExt }));
+    }
+  }, [formData?.agetk_ext, formData?.coatadj_ext]);
+
+  // CrExp_ext❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const crExpExt = calculateCrExpExt(
+        formData.ims_asset_type_id,
+        formData.composition,
+        formData.ext_env_id,
+        formData.pipe_support,
+        formData.soil_water_interface,
+        formData.operating_temperature,
+        formData.design_pressure
+
+      );
+      setFormData((prev: any) => ({ ...prev, crexp_ext: crExpExt }));
+    }
+  }, [formData?.ims_asset_type_id, formData?.composition, formData?.ext_env_id, formData?.pipe_support, formData?.soil_water_interface, formData?.operating_temperature, formData?.design_pressure]);
+
+  // CrAct_ext✅
+  useEffect(() => {
+    if (formData) {
+      const crAct = calculateCrActExt(
+        formData.last_inspection_date_ext,
+        formData.new_coating_date_ext
+      );
+      setFormData((prev: any) => ({ ...prev, cract_ext: crAct }));
+    }
+  }, [formData?.last_inspection_date_ext, formData?.new_coating_date_ext]);
+
+  // Art_ext❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const artExt = calculateArtExt(
+        formData.cract_ext,
+        formData.crexp_ext,
+        formData.age_ext,
+        formData.current_thickness_ext,
+        formData.normal_wall_thickness,
+        formData.ims_asset_type_id
+      );
+      setFormData((prev: any) => ({ ...prev, art_ext: artExt }));
+    }
+  }, [formData?.cract_ext, formData?.crexp_ext, formData?.age_ext, formData?.current_thickness_ext, formData?.normal_wall_thickness, formData?.ims_asset_type_id]);
+
+  // FSExtCorr_ext❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const fsExtCorr = calculateFSextcorr(
+        formData.avg_mts_mpa,
+        formData.avg_mys_mpa,
+        formData.welding_efficiency,
+        formData.ims_asset_type_id
+      );
+      setFormData((prev: any) => ({ ...prev, fsextcorr_ext: fsExtCorr }));
+    }
+  }, [formData?.avg_mts_mpa, formData?.avg_mys_mpa, formData?.welding_efficiency, formData?.ims_asset_type_id]);
+
+  // SRExtCorr_ext❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const srExtCorr = calculateSRextcorr(
+        formData.allowable_stress_mpa,
+        formData.welding_efficiency,
+        formData.fsextcorr_ext,
+        formData.tmin,
+        formData.current_thickness_ext,
+        formData.normal_wall_thickness,
+        formData.design_pressure,
+        formData.internal_diameter,
+        formData.outer_diameter,
+        formData.ims_asset_type_id
+      );
+      setFormData((prev: any) => ({ ...prev, srextcorr_ext: srExtCorr }));
+    }
+  }, [formData?.allowable_stress_mpa, formData?.welding_efficiency, formData?.fsextcorr_ext, formData?.tmin, formData?.current_thickness_ext, formData?.normal_wall_thickness, formData?.design_pressure, formData?.internal_diameter, formData?.outer_diameter, formData?.ims_asset_type_id]);
+
+  // IExtCorrs and PoExtCorrs❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const scores = calculateIextCorrsAndPoExtcorrs(
+        formData.data_confidence_id_ext,   // Medium confidence
+        formData.nextcorra_ext,
+        formData.nextcorrb_ext,
+        formData.nextcorrc_ext,
+        formData.nextcorrd_ext
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        iextcorr1_ext: scores.lextcorr1,
+        iextcorr2_ext: scores.lextcorr2,
+        iextcorr3_ext: scores.lextcorr3,
+        poextcorrp1_ext: scores.poextcorrP1,
+        poextcorrp2_ext: scores.poextcorrP2,
+        poextcorrp3_ext: scores.poextcorrP3
+      }));
+    }
+  }, [formData?.data_confidence_id_ext, formData?.nextcorra_ext, formData?.nextcorrb_ext, formData?.nextcorrc_ext, formData?.nextcorrd_ext]);
+
+  // BExtCorrs❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const bExtCorrs = calculateBetaExtcorrs(
+        formData.art_ext,
+        formData.srextcorr_ext
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        bextcorr1_ext: bExtCorrs.betaExtcorr1,
+        bextcorr2_ext: bExtCorrs.betaExtcorr2,
+        bextcorr3_ext: bExtCorrs.betaExtcorr3
+      }));
+    }
+  }, [formData?.art_ext, formData?.srextcorr_ext]);
+
+  // DFExtCorrF and DfExtCorrFB❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const dfExtCorrs = calculateDFextcorrF(
+        formData.poextcorrp1_ext,
+        formData.poextcorrp2_ext,
+        formData.poextcorrp3_ext,
+        formData.bextcorr1_ext,
+        formData.bextcorr2_ext,
+        formData.bextcorr3_ext
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        dfextcorrf_ext: dfExtCorrs,
+      }));
+    }
+  }, []);
+
+
+  // Formula DfExt End
+
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     toast.success("RBI Assessment created successfully");
@@ -419,7 +601,8 @@ const RBIAssessmentCreatePage: React.FC = () => {
           <ArrowLeft className="h-4 w-4" /> Back to RBI Assessment
         </Button>
       </div>
-      <h1>{formData.tmin ?? "NA"}</h1>
+      {/* <h1>last {formData.last_inspection_date_ext ?? "NA"}</h1>
+      <h1>coat {formData.new_coating_date_ext ?? "NA"}</h1> */}
       {/* <pre>{JSON.stringify(imsGeneral, null, 2)}</pre>
       <pre>{JSON.stringify(imsDesign, null, 2)}</pre> */}
 

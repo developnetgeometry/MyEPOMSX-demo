@@ -17,6 +17,7 @@ const GeneralSubTab: React.FC<{
     handleRadioChange: any;
 }> = ({ formData, handleInputChange, handleSelectChange, handleRadioChange }) => {
     const [precision, setPrecision] = useState<2 | 8>(2);
+    const [isCollapsed, setIsCollapsed] = useState(false);
 
     const formatNumber = (val: number | null) => {
         if (val === null || val === undefined) return "";
@@ -118,83 +119,99 @@ const GeneralSubTab: React.FC<{
                 </div>
             </div>
 
-
+            {/* Toggle Collapse Button */}
+            <div className="flex justify-end">
+                <Button
+                    type="button"
+                    onClick={() => setIsCollapsed((prev) => !prev)}
+                    variant="outline"
+                    size="sm"
+                >
+                    {isCollapsed ? "Expand Section" : "Collapse Section"}
+                </Button>
+            </div>
             {/* General & Design Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-6 gap-2">
-                {/* ims_general */}
-                <InputBlock
-                    label="Asset Type"
-                    value={
-                        formData?.ims_asset_type_id === 1
-                            ? "1 - Pressure Vessel"
-                            : formData?.ims_asset_type_id === 2
-                                ? "2 - Piping"
-                                : "N/A"
-                    }
-                />
-                <InputBlock label="Line No" value={formData?.line_no} />
-                <InputBlock label="Pipe Schedule ID" value={formData?.pipe_schedule_id} />
-                <InputBlock label="Pressure Rating" value={formatNumber(formData?.pressure_rating)} />
-                <InputBlock label="Year in Service" value={formData?.year_in_service} />
-                <InputBlock label="Normal Wall Thickness" value={formatNumber(formData?.normal_wall_thickness)} />
-                <InputBlock label="TMin" value={formatNumber(formData?.tmin)} />
-                <InputBlock label="Material Construction ID" value={formData?.material_construction_id} />
-                <InputBlock label="Spec Code" value={formData?.spec_code} />
-                <InputBlock label="Avg mts" value={formData?.avg_mts_mpa} />
-                <InputBlock label="Avg Mpa" value={formData?.avg_mys_mpa} />
-                <InputBlock label="Composition" value={formData?.composition} />
-                <InputBlock label="Circuit ID" value={formData?.circuit_id} />
-                <InputBlock label="Nominal Bore Diameter" value={formData?.nominal_bore_diameter} />
-                <InputBlock label="Pipe Class ID" value={formData?.pipe_class_id} />
-                <InputBlock label="IMS Asset Type ID" value={formData?.ims_asset_type_id} />
-                <InputBlock label="Clad Thickness" value={formatNumber(formData?.clad_thickness)} />
+            {!isCollapsed && (
 
-                {/* ims_design */}
-                <InputBlock label="Internal Diameter" value={formatNumber(formData?.internal_diameter)} />
-                <InputBlock label="Outer Diameter" value={formatNumber(formData?.outer_diameter)} />
-                <InputBlock label="Welding Efficiency" value={formatNumber(formData?.welding_efficiency)} />
-                <InputBlock label="Design Pressure" value={formatNumber(formData?.design_pressure)} />
-                <InputBlock label="Design Temperature" value={formatNumber(formData?.design_temperature)} />
-                <InputBlock label="Operating Pressure (MPa)" value={formatNumber(formData?.operating_pressure_mpa)} />
-                <InputBlock label="Operating Temperature" value={formatNumber(formData?.operating_temperature)} />
-                <InputBlock label="Corrosion Allowance" value={formatNumber(formData?.corrosion_allowance)} />
-                <InputBlock label="Allowable Stress (MPa)" value={formatNumber(formData?.allowable_stress_mpa)} />
-                <InputBlock label="Length" value={formatNumber(formData?.length)} />
-                <InputBlock label="Ext Env ID" value={formData?.ext_env_id} />
-                <InputBlock label="Geometry ID" value={formData?.geometry_id} />
+                <>
+                    <div className="grid grid-cols-1 md:grid-cols-6 gap-2">
+                        {/* ims_general */}
+                        <InputBlock
+                            label="Asset Type"
+                            value={
+                                formData?.ims_asset_type_id === 1
+                                    ? "1 - Pressure Vessel"
+                                    : formData?.ims_asset_type_id === 2
+                                        ? "2 - Piping"
+                                        : "N/A"
+                            }
+                        />
+                        <InputBlock label="Line No" value={formData?.line_no} />
+                        <InputBlock label="Pipe Schedule ID" value={formData?.pipe_schedule_id} />
+                        <InputBlock label="Pressure Rating" value={formatNumber(formData?.pressure_rating)} />
+                        <InputBlock label="Year in Service" value={formData?.year_in_service} />
+                        <InputBlock label="Normal Wall Thickness" value={formatNumber(formData?.normal_wall_thickness)} />
+                        <InputBlock label="TMin" value={formatNumber(formData?.tmin)} />
+                        <InputBlock label="Material Construction ID" value={formData?.material_construction_id} />
+                        <InputBlock label="Spec Code" value={formData?.spec_code} />
+                        <InputBlock label="Avg mts" value={formData?.avg_mts_mpa} />
+                        <InputBlock label="Avg Mpa" value={formData?.avg_mys_mpa} />
+                        <InputBlock label="Composition" value={formData?.composition} />
+                        <InputBlock label="Circuit ID" value={formData?.circuit_id} />
+                        <InputBlock label="Nominal Bore Diameter" value={formData?.nominal_bore_diameter} />
+                        <InputBlock label="Pipe Class ID" value={formData?.pipe_class_id} />
+                        <InputBlock label="IMS Asset Type ID" value={formData?.ims_asset_type_id} />
+                        <InputBlock label="Clad Thickness" value={formatNumber(formData?.clad_thickness)} />
 
-                {/* ims_protection */}
-                <InputBlock label="Coating Quality ID" value={formData?.coating_quality_id} />
-                <InputBlock label="Isolation System ID" value={formData?.isolation_system_id} />
-                <InputBlock label="Online Monitor ID" value={formData?.online_monitor_id} />
-                <InputBlock label="Online Monitor Name" value={formData?.online_monitor_name} />
-                <InputBlock label="Minimum Thickness" value={formatNumber(formData?.minimum_thickness)} />
-                <InputBlock label="Post Weld Heat Treatment" value={formatNumber(formData?.post_weld_heat_treatment)} />
-                <InputBlock label="Line Description" value={formData?.line_description} />
-                <InputBlock label="Replacement Line" value={formData?.replacement_line} />
-                <InputBlock label="Detection System ID" value={formData?.detection_system_id} />
-                <InputBlock label="Mitigation System ID" value={formData?.mitigation_system_id} />
-                <InputBlock label="Design Fabrication ID" value={formData?.design_fabrication_id} />
-                <InputBlock label="Insulation Type ID" value={formData?.insulation_type_id} />
-                <InputBlock label="Interface ID" value={formData?.interface_id} />
-                <InputBlock label="Insulation Complexity ID" value={formData?.insulation_complexity_id} />
-                <InputBlock label="Insulation Condition" value={formData?.insulation_condition} />
-                <InputBlock label="Lining Type" value={formData?.lining_type} />
-                <InputBlock label="Lining Condition" value={formData?.lining_condition} />
-                <InputBlock label="Lining Monitoring" value={formData?.lining_monitoring} />
-            </div>
+                        {/* ims_design */}
+                        <InputBlock label="Internal Diameter" value={formatNumber(formData?.internal_diameter)} />
+                        <InputBlock label="Outer Diameter" value={formatNumber(formData?.outer_diameter)} />
+                        <InputBlock label="Welding Efficiency" value={formatNumber(formData?.welding_efficiency)} />
+                        <InputBlock label="Design Pressure" value={formatNumber(formData?.design_pressure)} />
+                        <InputBlock label="Design Temperature" value={formatNumber(formData?.design_temperature)} />
+                        <InputBlock label="Operating Pressure (MPa)" value={formatNumber(formData?.operating_pressure_mpa)} />
+                        <InputBlock label="Operating Temperature" value={formatNumber(formData?.operating_temperature)} />
+                        <InputBlock label="Corrosion Allowance" value={formatNumber(formData?.corrosion_allowance)} />
+                        <InputBlock label="Allowable Stress (MPa)" value={formatNumber(formData?.allowable_stress_mpa)} />
+                        <InputBlock label="Length" value={formatNumber(formData?.length)} />
+                        <InputBlock label="Ext Env ID" value={formData?.ext_env_id} />
+                        <InputBlock label="Ext Env Name" value={formData?.ext_env_name} />
+                        <InputBlock label="Geometry ID" value={formData?.geometry_id} />
 
-            {/* Booleans */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <InputBlock label="Insulation" value={formData?.insulation ? "Yes" : "No"} />
-                <InputBlock label="Line H2S" value={formData?.line_h2s ? "Yes" : "No"} />
-                <InputBlock label="Internal Lining" value={formData?.internal_lining ? "Yes" : "No"} />
-                <InputBlock label="PWHT" value={formData?.pwht ? "Yes" : "No"} />
-                <InputBlock label="Pipe Support" value={formData?.pipe_support ? "Yes" : "No"} />
-                <InputBlock label="Soil Water Interface" value={formData?.soil_water_interface ? "Yes" : "No"} />
-                <InputBlock label="Dead Legs" value={formData?.dead_legs ? "Yes" : "No"} />
-                <InputBlock label="Mix Point" value={formData?.mix_point ? "Yes" : "No"} />
-            </div>
+                        {/* ims_protection */}
+                        <InputBlock label="Coating Quality ID" value={formData?.coating_quality_id} />
+                        <InputBlock label="Isolation System ID" value={formData?.isolation_system_id} />
+                        <InputBlock label="Online Monitor ID" value={formData?.online_monitor_id} />
+                        <InputBlock label="Online Monitor Name" value={formData?.online_monitor_name} />
+                        <InputBlock label="Minimum Thickness" value={formatNumber(formData?.minimum_thickness)} />
+                        <InputBlock label="Post Weld Heat Treatment" value={formatNumber(formData?.post_weld_heat_treatment)} />
+                        <InputBlock label="Line Description" value={formData?.line_description} />
+                        <InputBlock label="Replacement Line" value={formData?.replacement_line} />
+                        <InputBlock label="Detection System ID" value={formData?.detection_system_id} />
+                        <InputBlock label="Mitigation System ID" value={formData?.mitigation_system_id} />
+                        <InputBlock label="Design Fabrication ID" value={formData?.design_fabrication_id} />
+                        <InputBlock label="Insulation Type ID" value={formData?.insulation_type_id} />
+                        <InputBlock label="Interface ID" value={formData?.interface_id} />
+                        <InputBlock label="Insulation Complexity ID" value={formData?.insulation_complexity_id} />
+                        <InputBlock label="Insulation Condition" value={formData?.insulation_condition} />
+                        <InputBlock label="Lining Type" value={formData?.lining_type} />
+                        <InputBlock label="Lining Condition" value={formData?.lining_condition} />
+                        <InputBlock label="Lining Monitoring" value={formData?.lining_monitoring} />
+                    </div>
+
+                    {/* Booleans */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <InputBlock label="Insulation" value={formData?.insulation ? "Yes" : "No"} />
+                        <InputBlock label="Line H2S" value={formData?.line_h2s ? "Yes" : "No"} />
+                        <InputBlock label="Internal Lining" value={formData?.internal_lining ? "Yes" : "No"} />
+                        <InputBlock label="PWHT" value={formData?.pwht ? "Yes" : "No"} />
+                        <InputBlock label="Pipe Support" value={formData?.pipe_support ? "Yes" : "No"} />
+                        <InputBlock label="Soil Water Interface" value={formData?.soil_water_interface ? "Yes" : "No"} />
+                        <InputBlock label="Dead Legs" value={formData?.dead_legs ? "Yes" : "No"} />
+                        <InputBlock label="Mix Point" value={formData?.mix_point ? "Yes" : "No"} />
+                    </div>
+                </>
+            )}
         </div>
     );
 };

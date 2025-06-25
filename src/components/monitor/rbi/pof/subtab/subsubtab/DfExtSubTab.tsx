@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,10 +10,27 @@ import { useExtEnvData } from "@/hooks/lookup/lookup-ext-env";
 const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelectChange: any; handleRadioChange: any }> = ({ formData, handleInputChange, handleSelectChange, handleRadioChange }) => {
   const { data: dataConfidences } = useDataConfidenceData();
   const { data: extEnvs } = useExtEnvData();
+  const [precision, setPrecision] = useState<2 | 8>(2);
+
+  const formatNumber = (val: number | null) => {
+    if (val === null || val === undefined) return "";
+    return parseFloat(Number(val).toFixed(precision)).toString();
+  };
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+      {/* Toggle precision */}
+      <div className="flex justify-end">
+        <Button
+          type="button"
+          onClick={() => setPrecision((prev) => (prev === 2 ? 8 : 2))}
+          variant="outline"
+          size="sm"
+        >
+          Accuracy: {precision} decimals
+        </Button>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
         <div>
           <Label htmlFor="last_inspection_date_ext">Last Inspection Date</Label>
           <Input
@@ -53,6 +71,18 @@ const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             </SelectContent>
           </Select>
         </div>
+        <div>
+          <Label htmlFor="current_thickness_ext">Current thickness (mm)</Label>
+          <Input
+            id="current_thickness_ext"
+            name="current_thickness_ext"
+            type="number"
+            step="any"
+            value={formData?.current_thickness_ext || 0}
+            onChange={handleInputChange}
+            className="mt-1"
+          />
+        </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
         <div>
@@ -61,7 +91,7 @@ const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="agetk_ext"
             name="agetk_ext"
             type="number"
-            value={formData?.agetk_ext || 0}
+            value={formatNumber(formData?.agetk_ext) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -73,7 +103,7 @@ const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="agecoat_ext"
             name="agecoat_ext"
             type="number"
-            value={formData?.agecoat_ext || 0}
+            value={formatNumber(formData?.agecoat_ext) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -85,7 +115,7 @@ const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="coatadj_ext"
             name="coatadj_ext"
             type="number"
-            value={formData?.coatadj_ext || 0}
+            value={formatNumber(formData?.coatadj_ext) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -97,65 +127,11 @@ const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="age_ext"
             name="age_ext"
             type="number"
-            value={formData?.age_ext || 0}
+            value={formatNumber(formData?.age_ext) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
           />
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-        <div>
-          <Label htmlFor="external_environment_id_ext">External Environment</Label>
-          <Select
-            value={formData?.external_environment_id_ext?.toString() || ""}
-            onValueChange={(value) => handleSelectChange("external_environment_id_ext", parseInt(value))}
-          >
-            <SelectTrigger className="mt-1">
-              <SelectValue placeholder="Select External Environment" />
-            </SelectTrigger>
-            <SelectContent>
-              {extEnvs?.map((extEnv) => (
-                <SelectItem key={extEnv.id} value={extEnv.id.toString()}>
-                  {extEnv.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label>Pipe Support</Label>
-          <RadioGroup
-            value={formData?.pipesupprt_ext ? "yes" : "no"}
-            onValueChange={(value) => handleRadioChange("pipesupprt_ext", value)}
-            className="flex flex-row space-x-4"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="yes" id="pipesupprt_ext-yes" />
-              <Label htmlFor="pipesupprt_ext-yes">Yes</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="no" id="pipesupprt_ext-no" />
-              <Label htmlFor="pipesupprt_ext-no">No</Label>
-            </div>
-          </RadioGroup>
-        </div>
-        <div className="space-y-2">
-          <Label>Soil/Water Interface</Label>
-          <RadioGroup
-            value={formData?.soilwaterinterface_ext ? "yes" : "no"}
-            onValueChange={(value) => handleRadioChange("soilwaterinterface_ext", value)}
-            className="flex flex-row space-x-4"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="yes" id="soilwaterinterface_ext-yes" />
-              <Label htmlFor="soilwaterinterface_ext-yes">Yes</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="no" id="soilwaterinterface_ext-no" />
-              <Label htmlFor="soilwaterinterface_ext-no">No</Label>
-            </div>
-          </RadioGroup>
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
@@ -165,7 +141,7 @@ const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="crexp_ext"
             name="crexp_ext"
             type="number"
-            value={formData?.crexp_ext || 0}
+            value={formatNumber(formData?.crexp_ext) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -177,7 +153,7 @@ const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="cract_ext"
             name="cract_ext"
             type="number"
-            value={formData?.cract_ext || 0}
+            value={formatNumber(formData?.cract_ext) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -189,7 +165,7 @@ const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="art_ext"
             name="art_ext"
             type="number"
-            value={formData?.art_ext || 0}
+            value={formatNumber(formData?.art_ext) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -201,7 +177,7 @@ const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="fsextcorr_ext"
             name="fsextcorr_ext"
             type="number"
-            value={formData?.fsextcorr_ext || 0}
+            value={formatNumber(formData?.fsextcorr_ext) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -213,7 +189,7 @@ const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="srextcorr_ext"
             name="srextcorr_ext"
             type="number"
-            value={formData?.srextcorr_ext || 0}
+            value={formatNumber(formData?.srextcorr_ext) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -273,7 +249,7 @@ const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="iextcorr1_ext"
             name="iextcorr1_ext"
             type="number"
-            value={formData?.iextcorr1_ext || 0}
+            value={formatNumber(formData?.iextcorr1_ext) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -285,7 +261,7 @@ const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="iextcorr2_ext"
             name="iextcorr2_ext"
             type="number"
-            value={formData?.iextcorr2_ext || 0}
+            value={formatNumber(formData?.iextcorr2_ext) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -297,7 +273,7 @@ const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="iextcorr3_ext"
             name="iextcorr3_ext"
             type="number"
-            value={formData?.iextcorr3_ext || 0}
+            value={formatNumber(formData?.iextcorr3_ext) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -311,7 +287,7 @@ const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="poextcorrp1_ext"
             name="poextcorrp1_ext"
             type="number"
-            value={formData?.poextcorrp1_ext || 0}
+            value={formatNumber(formData?.poextcorrp1_ext) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -323,7 +299,7 @@ const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="poextcorrp2_ext"
             name="poextcorrp2_ext"
             type="number"
-            value={formData?.poextcorrp2_ext || 0}
+            value={formatNumber(formData?.poextcorrp2_ext) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -335,7 +311,7 @@ const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="poextcorrp3_ext"
             name="poextcorrp3_ext"
             type="number"
-            value={formData?.poextcorrp3_ext || 0}
+            value={formatNumber(formData?.poextcorrp3_ext) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -349,7 +325,7 @@ const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="bextcorpp1_ext"
             name="bextcorpp1_ext"
             type="number"
-            value={formData?.bextcorpp1_ext || 0}
+            value={formatNumber(formData?.bextcorpp1_ext) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -361,7 +337,7 @@ const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="bextcorpp2_ext"
             name="bextcorpp2_ext"
             type="number"
-            value={formData?.bextcorpp2_ext || 0}
+            value={formatNumber(formData?.bextcorpp2_ext) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -373,7 +349,7 @@ const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="bextcorpp3_ext"
             name="bextcorpp3_ext"
             type="number"
-            value={formData?.bextcorpp3_ext || 0}
+            value={formatNumber(formData?.bextcorpp3_ext) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -387,7 +363,7 @@ const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="dfextcorrf_ext"
             name="dfextcorrf_ext"
             type="number"
-            value={formData?.dfextcorrf_ext || 0}
+            value={formatNumber(formData?.dfextcorrf_ext) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
