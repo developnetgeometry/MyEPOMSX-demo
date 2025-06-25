@@ -1,3 +1,40 @@
+export function calculateAgeTk(
+  lastInspectionDate: Date | string | null,
+  yearInServiceDate: Date
+): number {
+  try {
+    const today = new Date();
+
+    const toValidDate = (value: Date | string | null): Date | null => {
+      if (!value) return null;
+
+      if (value instanceof Date) {
+        return isNaN(value.getTime()) ? null : value;
+      }
+
+      if (typeof value === "string" && value.trim()) {
+        const parsed = new Date(value);
+        return isNaN(parsed.getTime()) ? null : parsed;
+      }
+
+      return null;
+    };
+
+    const inspectionDate = toValidDate(lastInspectionDate);
+    const inServiceDate = toValidDate(yearInServiceDate);
+    const referenceDate = inspectionDate ?? inServiceDate;
+
+    if (!referenceDate) return 0;
+
+    const millisecondsPerYear = 1000 * 60 * 60 * 24 * 365.25; // more accurate with leap years
+    const ageYears = (today.getTime() - referenceDate.getTime()) / millisecondsPerYear;
+
+    return ageYears < 0 ? 0 : parseFloat(ageYears.toFixed(6));
+  } catch {
+    return 0;
+  }
+}
+
 export function calculateCrExp(
   corrAllow: number | string | null | undefined
 ): number {
@@ -16,13 +53,9 @@ export function calculateCrAct(
   nominal_thickness: number,
   current_thickness: number,
   last_inspection_date: Date | string,
-  year_in_service_date: Date | string | null,
-  ims_asset_type: number // 1 for VESSEL, 2 for PIPING
+  year_in_service_date: Date | string | null
 ): number {
   try {
-    // ✅ Return 0 immediately if asset type is VESSEL
-    if (ims_asset_type === 1) return 0;
-
     const parsedDate = new Date(last_inspection_date);
     const referenceDate = new Date(year_in_service_date);
 
@@ -51,61 +84,20 @@ export function calculateArt(
   crExp: number,
   ageTk: number,
   trd: number,
-  tNom: number,
-  assetType: number, // 1 for VESSEL, 2 for PIPING
-  cladding: boolean,
-  crCm: number,
-  ageRc: Date | string, // can be Date or ""
-  yearInServiceDate: Date
+  tNom: number
 ): number {
   try {
-    const today = new Date();
+    const numerator = crAct > 0 ? crAct * ageTk : crExp * ageTk;
+    const denominator = trd === 0 ? tNom : trd;
 
-    // Determine ageRcYears:
-    let ageRcDate: Date;
-    if (typeof ageRc === "string" && ageRc.trim() === "") {
-      // Use yearInServiceDate if ageRc is empty
-      ageRcDate = yearInServiceDate;
-    } else {
-      ageRcDate = new Date(ageRc);
-    }
-
-    const ageRcYears =
-      (today.getTime() - ageRcDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
-
-    if (isNaN(ageRcYears) || ageRcYears < 0) return 0; // invalid or future date check
-
-    if (assetType === 2) {
-      // For PIPING
-      const numerator = crAct > 0 ? crAct * ageTk : crExp * ageTk;
-      const denominator = trd === 0 ? tNom : trd;
-
-      if (denominator === 0) return 0;
-      return parseFloat((numerator / denominator).toFixed(6));
-    }
-
-    // For VESSEL
-    if (!cladding) {
-      if (crAct > 0) {
-        if (trd === 0) return 0;
-        return parseFloat(((crExp * ageTk) / trd).toFixed(6));
-      } else {
-        if (tNom === 0) return 0;
-        return parseFloat(((crExp * ageTk) / tNom).toFixed(6));
-      }
-    } else {
-      // Cladding is TRUE
-      if (tNom === 0) return 0;
-
-      const ageTkMinusAgeRc = ageTk - ageRcYears;
-      return parseFloat(
-        ((crCm * ageRcYears * crExp * ageTkMinusAgeRc) / tNom).toFixed(6)
-      );
-    }
+    if (denominator === 0) return 0; // avoid division by 0
+    const final = numerator / denominator
+    return parseFloat(final.toFixed(6));
   } catch {
     return 0;
   }
 }
+
 
 export function calculateFsThin(
   assetType: number,         // "PIPING" or "VESSEL"
@@ -236,10 +228,7 @@ export interface BThinOutput {
   bThin3: number;
 }
 
-export function calculateBThins(
-  art: number,
-  srThin: number
-): BThinOutput {
+export function calculateBThins(art: number, srThin: number): BThinOutput {
   try {
     const zFactor = 0.2;
     const srFactor = 0.05;
@@ -270,6 +259,7 @@ export function calculateBThins(
 
 // Standard Normal Cumulative Distribution Function (Φ(-β))
 function normSDist(z: number): number {
+  // Approximation of standard normal CDF using Abramowitz & Stegun formula
   const t = 1 / (1 + 0.2316419 * Math.abs(z));
   const d = 0.3989423 * Math.exp(-z * z / 2);
   const prob =
@@ -280,47 +270,160 @@ function normSDist(z: number): number {
 }
 
 // Main function
-export function calculateDFThinFDFThinFB(
+export function calculateDFThinFb(
   poThinP1: number,
   poThinP2: number,
   poThinP3: number,
   bThin1: number,
   bThin2: number,
-  bThin3: number,
-  mixPoint: boolean,
-  deadLegs: boolean,
-  monitorName: string
-): { dfThinFb: number; dfThinF: number } {
+  bThin3: number
+): number {
   try {
     const failure1 = poThinP1 * normSDist(-bThin1);
     const failure2 = poThinP2 * normSDist(-bThin2);
     const failure3 = poThinP3 * normSDist(-bThin3);
     const totalFailure = failure1 + failure2 + failure3;
 
-    const dfThinFb = totalFailure / 0.000156;
-
-    // Table 1: multiplier if true = 3, else = 1
-    const mixPointFactor = mixPoint ? 3 : 1;
-    const deadLegsFactor = deadLegs ? 3 : 1;
-
-    // Table 2: monitorName mapping
-    const monitorFactor = (() => {
-      switch (monitorName?.toUpperCase()) {
-        case "KPV":
-          return 20;
-        case "ERP":
-          return 10;
-        case "CC":
-          return 2;
-        default:
-          return 1;
-      }
-    })();
-
-    const dfThinF = (dfThinFb * mixPointFactor * deadLegsFactor) / monitorFactor;
-
-    return { dfThinFb: parseFloat(dfThinFb.toFixed(6)), dfThinF: parseFloat(dfThinF.toFixed(6)) };
+    return totalFailure / 0.000156;
   } catch {
-    return { dfThinFb: 0, dfThinF: 0 };
+    return 0;
   }
 }
+
+export function calculateAgeCoat(inputDate: Date | string): number {
+  try {
+    const past = new Date(inputDate);
+    const today = new Date();
+
+    // Calculate the difference in milliseconds
+    const diffMs = today.getTime() - past.getTime();
+
+    // Convert ms → days → years
+    const diffYears = diffMs / (1000 * 60 * 60 * 24 * 365);
+
+    return diffYears;
+  } catch {
+    return 0;
+  }
+}
+
+export function calculateAge(
+  ageTk: number,
+  coarAdj: number
+): number {
+  try {
+
+    const final = ageTk - coarAdj;
+    return parseFloat(final.toFixed(6));   // e.g. 138.95 MPa
+  } catch {
+    return 0;
+  }
+}
+
+export function calculateCoatAdj(
+  coatingQuality: number, // Expecting a number like 1, 2, 3
+  ageTk: number,
+  ageCoat: number
+): number {
+  try {
+    const lookupTable: Record<number, number> = {
+      1: 0,
+      2: 5,
+      3: 15
+    };
+
+    const lookupVal = lookupTable[coatingQuality];
+    if (lookupVal === undefined) return 0;
+
+    if (ageTk >= ageCoat) {
+      return lookupVal;
+    } else {
+      const min1 = Math.min(lookupVal, ageCoat);
+      const min2 = Math.min(lookupVal, ageCoat - ageTk);
+      return min1 - min2;
+    }
+  } catch {
+    return 0;
+  }
+}
+
+
+export function calculateCrExpExt(
+  assetType: number,            // 1 = Pressure Vessel, 2 = Piping
+  composition: string,          // e.g. "Carbon steel"
+  externalEnvId: number,        // 1 = Marine, 2 = Temperate, etc.
+  pipeSupport: boolean,         // Table 2: pipe support = true → 2, false → 1
+  soilWaterInterface: boolean,  // Table 2: soil interface = true → 2, false → 1
+  temp: number,                 // operating temperature (°C)
+  pressure: number              // design pressure (MPa)
+): number {
+  try {
+    const isCarbonSteel = composition.toLowerCase() === "carbon steel";
+    const maxSupportFactor = Math.max(
+      pipeSupport ? 2 : 1,
+      soilWaterInterface ? 2 : 1
+    );
+
+    // Table 1 values (Env x Temp)
+    const corrosionEnvTable: { temp: number; factors: number[] }[] = [
+      { temp: -12, factors: [0, 0, 0, 0] },
+      { temp: -8, factors: [0.025, 0, 0, 0] },
+      { temp: 6, factors: [0.127, 0.076, 0.025, 0.254] },
+      { temp: 32, factors: [0.127, 0.076, 0.025, 0.254] },
+      { temp: 71, factors: [0.127, 0.051, 0.025, 0.254] },
+      { temp: 107, factors: [0.025, 0, 0, 0.051] },
+      { temp: 121, factors: [0, 0, 0, 0] },
+    ];
+
+    const getCorrosionRate = (
+      value: number,
+      isTemp: boolean,
+      envId: number
+    ): number => {
+      const index = Math.max(1, Math.min(4, envId)) - 1;
+
+      const sorted = [...corrosionEnvTable].sort((a, b) =>
+        isTemp ? a.temp - b.temp : a.temp - b.temp // same sort logic
+      );
+
+      const lower = sorted.filter(r => r.temp <= value).pop();
+      const upper = sorted.find(r => r.temp > value);
+
+      if (lower && upper) {
+        const ratio = (value - lower.temp) / (upper.temp - lower.temp);
+        const lowerVal = lower.factors[index];
+        const upperVal = upper.factors[index];
+        return lowerVal + ratio * (upperVal - lowerVal);
+      } else if (lower) {
+        return lower.factors[index];
+      }
+
+      return 0;
+    };
+
+    if (assetType === 1 && isCarbonSteel) {
+      // Pressure Vessel
+      const rate = getCorrosionRate(temp, true, externalEnvId);
+      return rate * maxSupportFactor;
+    }
+
+    if (assetType === 2) {
+      // Piping (assumes CS is part of EQ. ID externally)
+      const rate = getCorrosionRate(pressure, false, externalEnvId);
+      return rate * maxSupportFactor;
+    }
+
+    return 0.01;
+  } catch {
+    return 0.01;
+  }
+}
+
+
+
+
+
+
+
+
+
