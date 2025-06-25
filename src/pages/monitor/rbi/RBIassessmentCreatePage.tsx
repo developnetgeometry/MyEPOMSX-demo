@@ -17,6 +17,7 @@ import { useImsDesignByAssetDetailId } from "./hooks/use-ims-design-by-asset-det
 import { calcIThinAndProportions, calculateArt, calculateBThins, calculateCrAct, calculateCrCm, calculateCrExp, calculateDFThinFDFThinFB, calculateFsThin, calculateSrThin } from "./hooks/formula-df-thin";
 import { calculateAgeTk } from "./hooks/formula";
 import { calculateAge, calculateAgeCoat, calculateArtExt, calculateBetaExtcorrs, calculateCoatAdj, calculateCrActExt, calculateCrExpExt, calculateDFextcorrF, calculateFSextcorr, calculateIextCorrsAndPoExtcorrs, calculateSRextcorr } from "./hooks/formula-df-ext";
+import { calculateAgeCrackExtClscc, calculateAgeCoatExtClscc, calculateCoatAdjExtClscc, calculateAgeExtClscc, calculateClSccSuscAndSviExtClscc, calculateExtClsccFb, calculateDfExtClsccFinal } from "./hooks/formula-df-ext-clscc";
 
 
 const RBIAssessmentCreatePage: React.FC = () => {
@@ -144,6 +145,22 @@ const RBIAssessmentCreatePage: React.FC = () => {
     bextcorr2_ext: 0,
     bextcorr3_ext: 0,
     dfextcorrf_ext: 0,
+
+    // *** i_df_ext_clscc (3)
+    coating_quality_id_ext_clscc: null,
+    new_coating_date_ext_clscc: "",
+    last_inspection_date_ext_clscc: "",
+    agecrack_ext_clscc: 0,
+    agecoat_ext_clscc: 0,
+    coatadj_ext_clscc: 0,
+    age_ext_clscc: 0,
+    external_environment_id_ext_clscc: null,
+    ext_cl_scc_susc_ext_clscc: 0,
+    svi_ext_clscc: 0,
+    inspection_efficiency_id_ext_clscc: null,
+    inspection_efficiency_name_ext_clscc: "",
+    df_ext_cl_scc_ext_clscc: 0,
+    df_ext_cl_scc_fb_ext_clscc: 0,
   });
   const { data: imsGeneral, isLoading: isImsGeneralLoading } = useImsGeneralDataByAssetDetailId(formData?.asset_detail_id ?? 0);
   const { data: imsDesign, isLoading: isImsDesignLoading } = useImsDesignByAssetDetailId(formData?.asset_detail_id ?? 0);
@@ -576,8 +593,93 @@ const RBIAssessmentCreatePage: React.FC = () => {
     }
   }, []);
 
-
   // Formula DfExt End
+
+  // Formula DFExtClscc Start
+
+  // AgeCrack_ext_clscc✅
+  useEffect(() => {
+    if (formData) {
+      const ageCrack = calculateAgeCrackExtClscc(
+        formData.last_inspection_date_ext_clscc
+      );
+      setFormData((prev: any) => ({ ...prev, agecrack_ext_clscc: ageCrack }));
+    }
+  }, [formData?.last_inspection_date_ext_clscc]);
+
+  // AgeCoat_ext_clscc✅
+  useEffect(() => {
+    if (formData) {
+      const ageCoat = calculateAgeCoatExtClscc(
+        formData.new_coating_date_ext_clscc,
+        formData.year_in_service,
+        formData.ims_asset_type_id // 1 = Pressure Vessel (use newCoatDate), 2 = Piping (use serviceDate)
+      );
+      setFormData((prev: any) => ({ ...prev, agecoat_ext_clscc: ageCoat }));
+    }
+  }, [formData?.new_coating_date_ext_clscc, formData?.year_in_service, formData?.ims_asset_type_id]);
+
+  // CoatAdj_ext_clscc✅
+  useEffect(() => {
+    if (formData) {
+      const coatAdj = calculateCoatAdjExtClscc(
+        formData.agecrack_ext_clscc,
+        formData.agecoat_ext_clscc,
+        formData.coating_quality_id_ext_clscc
+      );
+      setFormData((prev: any) => ({ ...prev, coatadj_ext_clscc: coatAdj }));
+    }
+  }, [formData?.coating_quality_id_ext_clscc, formData?.agecrack_ext_clscc, formData?.agecoat_ext_clscc]);
+
+  // Age_ext_clscc✅
+  useEffect(() => {
+    if (formData) {
+      const ageExtClscc = calculateAgeExtClscc(
+        formData.agecrack_ext_clscc,
+        formData.coatadj_ext_clscc
+      );
+      setFormData((prev: any) => ({ ...prev, age_ext_clscc: ageExtClscc }));
+    }
+  }, [formData?.agecrack_ext_clscc, formData?.coatadj_ext_clscc]);
+
+  // ExtClSccSusceptibility_ext_clscc And RVI_ext_clscc✅
+  useEffect(() => {
+    if (formData) {
+      const datas = calculateClSccSuscAndSviExtClscc(
+        formData.operating_temperature,
+        formData.external_environment_id_ext_clscc
+      );
+      setFormData((prev: any) => ({ ...prev,
+        ext_cl_scc_susc_ext_clscc: datas.susceptibility,
+        svi_ext_clscc: datas.svi
+       }));
+    }
+  }, [formData?.operating_temperature, formData?.external_environment_id_ext_clscc]);
+
+  // DfExtClsccFb✅
+  useEffect(() => {
+    if (formData) {
+      const dfExtClsccFb = calculateExtClsccFb(
+        50,
+        formData.inspection_efficiency_name_ext_clscc
+      );
+      setFormData((prev: any) => ({ ...prev, df_ext_cl_scc_fb_ext_clscc: dfExtClsccFb }));
+    }
+  }, [formData?.svi_ext_clscc, formData?.inspection_efficiency_name_ext_clscc]);
+
+  // DfExtClscc
+  useEffect(() => {
+    if (formData) {
+      const dfExtClscc = calculateDfExtClsccFinal(
+        formData.df_ext_cl_scc_fb_ext_clscc,
+        formData.age_ext_clscc,
+        formData.ims_asset_type_id
+      );
+      setFormData((prev: any) => ({ ...prev, df_ext_cl_scc_ext_clscc: dfExtClscc }));
+    }
+  }, [formData?.df_ext_cl_scc_fb_ext_clscc, formData?.age_ext_clscc, formData?.ims_asset_type_id]);
+
+  // Formula DFExtClscc End
 
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -601,8 +703,8 @@ const RBIAssessmentCreatePage: React.FC = () => {
           <ArrowLeft className="h-4 w-4" /> Back to RBI Assessment
         </Button>
       </div>
-      {/* <h1>last {formData.last_inspection_date_ext ?? "NA"}</h1>
-      <h1>coat {formData.new_coating_date_ext ?? "NA"}</h1> */}
+      {/* <h1>last {formData.inspection_efficiency_id_ext_clscc ?? "NA"}</h1>
+      <h1>coat {formData.inspection_efficiency_name_ext_clscc ?? "NA"}</h1> */}
       {/* <pre>{JSON.stringify(imsGeneral, null, 2)}</pre>
       <pre>{JSON.stringify(imsDesign, null, 2)}</pre> */}
 
