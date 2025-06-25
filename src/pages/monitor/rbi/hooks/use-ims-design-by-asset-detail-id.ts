@@ -35,7 +35,7 @@ export const useImsDesignByAssetDetailId = (assetDetailId: number) => {
           outer_diameter,
           design_temperature,
           operating_pressure_mpa,
-          ext_env_id,
+          ext_env_id (id, name),
           geometry_id,
           length,
           operating_temperature,

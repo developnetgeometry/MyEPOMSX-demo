@@ -21,7 +21,7 @@ import { useImsDfMfatData } from "./hooks/use-df-mfat-data";
 import { useImsDfCuiData } from "./hooks/use-df-cui-data";
 import { useImsDfSccSccData } from "./hooks/use-df-scc-scc";
 import { useImsDfSccSohicData } from "./hooks/use-df-scc-sohic";
-import { calcIThinAndProportions, calculateAge, calculateAgeCoat, calculateAgeTk, calculateArt, calculateBThins, calculateCoatAdj, calculateCrAct, calculateCrCm, calculateCrExp, calculateCrExpExt, calculateDFThinFb, calculateFsThin, calculateSrThin } from "./hooks/formula";
+import { calcIThinAndProportions, calculateAge, calculateAgeCoat, calculateAgeTk, calculateArt, calculateBThins, calculateCoatAdj, calculateCrAct, calculateCrCm, calculateCrExp, calculateCrExpExt, calculateDFThinFb, calculateFsThin, calculateSrThin } from "./hooks/formula-lama";
 import { useAverageMtsMpaMysMpaByName } from "./hooks/use-average-mts_mpa-mys_mpa-by-name";
 
 const RBIAssessmentDetailPage: React.FC = () => {
