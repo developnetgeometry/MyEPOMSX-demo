@@ -7,7 +7,7 @@ export const useJointBranchDesignData = () => {
         queryFn: async () => {
             const { data, error } = await supabase
                 .from("i_joint_branch_design")
-                .select("id, name")
+                .select("id, name, value")
                 .order("id");
 
             if (error) {

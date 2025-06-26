@@ -7,7 +7,7 @@ export const usePipeComplexityData = () => {
         queryFn: async () => {
             const { data, error } = await supabase
                 .from("i_pipe_complexity")
-                .select("id, name")
+                .select("id, name, value")
                 .order("id");
 
             if (error) {

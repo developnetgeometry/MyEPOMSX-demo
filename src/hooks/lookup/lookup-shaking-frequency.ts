@@ -7,7 +7,7 @@ export const useShakingFrequencyData = () => {
         queryFn: async () => {
             const { data, error } = await supabase
                 .from("i_shaking_frequency")
-                .select("id, name")
+                .select("id, name, value")
                 .order("id");
 
             if (error) {

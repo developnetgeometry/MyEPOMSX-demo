@@ -7,7 +7,7 @@ export const useCorrectiveActionData = () => {
         queryFn: async () => {
             const { data, error } = await supabase
                 .from("i_corrective_action")
-                .select("id, name")
+                .select("id, name, value")
                 .order("id");
 
             if (error) {

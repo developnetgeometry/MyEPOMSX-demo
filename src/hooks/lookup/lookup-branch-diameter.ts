@@ -7,7 +7,7 @@ export const useBranchDiameterData = () => {
         queryFn: async () => {
             const { data, error } = await supabase
                 .from("i_branch_diameter")
-                .select("id, name")
+                .select("id, name, value")
                 .order("id");
 
             if (error) {

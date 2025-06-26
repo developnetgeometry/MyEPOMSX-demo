@@ -7,7 +7,7 @@ export const useCyclicLoadTypeData = () => {
         queryFn: async () => {
             const { data, error } = await supabase
                 .from("i_cyclic_load_type")
-                .select("id, name")
+                .select("id, name, value")
                 .order("id");
 
             if (error) {

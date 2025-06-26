@@ -7,7 +7,7 @@ export const usePreviousFailureData = () => {
         queryFn: async () => {
             const { data, error } = await supabase
                 .from("i_previous_failure")
-                .select("id, name")
+                .select("id, name, value")
                 .order("id");
 
             if (error) {

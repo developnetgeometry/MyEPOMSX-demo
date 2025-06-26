@@ -17,7 +17,7 @@ const GeneralSubTab: React.FC<{
     handleRadioChange: any;
 }> = ({ formData, handleInputChange, handleSelectChange, handleRadioChange }) => {
     const [precision, setPrecision] = useState<2 | 8>(2);
-    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(true);
 
     const formatNumber = (val: number | null) => {
         if (val === null || val === undefined) return "";

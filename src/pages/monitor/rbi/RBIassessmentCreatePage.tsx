@@ -18,6 +18,7 @@ import { calcIThinAndProportions, calculateArt, calculateBThins, calculateCrAct,
 import { calculateAgeTk } from "./hooks/formula";
 import { calculateAge, calculateAgeCoat, calculateArtExt, calculateBetaExtcorrs, calculateCoatAdj, calculateCrActExt, calculateCrExpExt, calculateDFextcorrF, calculateFSextcorr, calculateIextCorrsAndPoExtcorrs, calculateSRextcorr } from "./hooks/formula-df-ext";
 import { calculateAgeCrackExtClscc, calculateAgeCoatExtClscc, calculateCoatAdjExtClscc, calculateAgeExtClscc, calculateClSccSuscAndSviExtClscc, calculateExtClsccFb, calculateDfExtClsccFinal } from "./hooks/formula-df-ext-clscc";
+import { calculateDfMfat, calculateDmFatFb } from "./hooks/formula-df-mfat";
 
 
 const RBIAssessmentCreatePage: React.FC = () => {
@@ -161,6 +162,59 @@ const RBIAssessmentCreatePage: React.FC = () => {
     inspection_efficiency_name_ext_clscc: "",
     df_ext_cl_scc_ext_clscc: 0,
     df_ext_cl_scc_fb_ext_clscc: 0,
+
+    // *** i_df_mfat(4)
+    previous_failure_id_mfat: null,
+    visible_audible_shaking_id_mfat: null,
+    shaking_frequency_id_mfat: null,
+    cyclic_load_type_id_mfat: null,
+    previous_failure_value_mfat: 0,
+    visible_audible_shaking_value_mfat: 0,
+    shaking_frequency_value_mfat: 0,
+    cyclic_load_type_value_mfat: 0,
+    dmfatfb_mfat: 0,
+    corrective_action_id_mfat: null,
+    pipe_complexity_id_mfat: null,
+    pipe_condition_id_mfat: null,
+    joint_branch_design_id_mfat: null,
+    brach_diameter_id_mfat: null,
+    corrective_action_value_mfat: 0,
+    pipe_complexity_value_mfat: 0,
+    pipe_condition_value_mfat: 0,
+    joint_branch_design_value_mfat: 0,
+    branch_diameter_value_mfat: 0,
+    dmfat_mfat: 0,
+
+    // *** i_df_cui (5)
+    coating_quality_id_cui:  null, //?? coating_quality_id(5)
+    last_inspection_date_cui:  "",
+    new_coating_date_cui:  "",
+    agetk_cui: 0,
+    agecoat_cui: 0,
+    coatadj_cui: 0,
+    age_cui: 0,
+    external_environment_id_cui:  null,
+    crexp_cui: 0,
+    cract_cui:  0,
+    art_cui: 0,
+    fscuif_cui: 0,
+    srcuif_cui: 0,
+    ncuifa_cui:  0,
+    ncuifb_cui:  0,
+    ncuifc_cui:  0,
+    ncuifd_cui:  0,
+    data_confidence_id_cui:  null,
+    icuif1_cui: 0,
+    icuif2_cui: 0,
+    icuif3_cui: 0,
+    pociufp1_cui: 0,
+    pociufp2_cui: 0,
+    pociufp3_cui: 0,
+    bcuif1_cui: 0,
+    bcuif2_cui: 0,
+    bcuif3_cui: 0,
+    dfcuiff_cui: 0
+
   });
   const { data: imsGeneral, isLoading: isImsGeneralLoading } = useImsGeneralDataByAssetDetailId(formData?.asset_detail_id ?? 0);
   const { data: imsDesign, isLoading: isImsDesignLoading } = useImsDesignByAssetDetailId(formData?.asset_detail_id ?? 0);
@@ -649,10 +703,11 @@ const RBIAssessmentCreatePage: React.FC = () => {
         formData.operating_temperature,
         formData.external_environment_id_ext_clscc
       );
-      setFormData((prev: any) => ({ ...prev,
+      setFormData((prev: any) => ({
+        ...prev,
         ext_cl_scc_susc_ext_clscc: datas.susceptibility,
         svi_ext_clscc: datas.svi
-       }));
+      }));
     }
   }, [formData?.operating_temperature, formData?.external_environment_id_ext_clscc]);
 
@@ -681,6 +736,43 @@ const RBIAssessmentCreatePage: React.FC = () => {
 
   // Formula DFExtClscc End
 
+  // Formula DFMfat Start
+
+  // DmfatFb_mfat☑️tak check lagi
+  useEffect(() => {
+    if (formData) {
+      const dmfatFb = calculateDmFatFb(
+        formData.previous_failure_value_mfat,
+        formData.visible_audible_shaking_value_mfat,
+        formData.shaking_frequency_value_mfat,
+        formData.cyclic_load_type_value_mfat
+      );
+      setFormData((prev: any) => ({ ...prev, dmfatfb_mfat: dmfatFb }));
+    }
+  }, [formData?.previous_failure_value_mfat, formData?.visible_audible_shaking_value_mfat, formData?.shaking_frequency_value_mfat, formData?.cyclic_load_type_value_mfat]);
+
+  // Dmfat_mfat☑️tak check lagi
+  useEffect(() => {
+    if (formData) {
+      const dmfat = calculateDfMfat(
+        formData.dmfatfb_mfat,
+        formData.corrective_action_value_mfat,
+        formData.pipe_complexity_value_mfat,
+        formData.pipe_condition_value_mfat,
+        formData.joint_branch_design_value_mfat,
+        formData.branch_diameter_value_mfat
+      );
+      setFormData((prev: any) => ({ ...prev, dmfat_mfat: dmfat }));
+    }
+  }, [formData?.dmfatfb_mfat, formData?.corrective_action_value_mfat, formData?.pipe_complexity_value_mfat, formData?.pipe_condition_value_mfat, formData?.joint_branch_design_value_mfat, formData?.branch_diameter_value_mfat]);
+
+  // Formula DFMfat End
+
+  // Formula DfCui Start
+
+
+
+  // Formula DfCui End
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
