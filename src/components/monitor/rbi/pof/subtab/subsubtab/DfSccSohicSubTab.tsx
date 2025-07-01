@@ -6,10 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useInspectionEfficiencyData } from "@/hooks/lookup/lookup-inspection-efficiency";
 import { useSteelsContentData } from "@/hooks/lookup/lookup-steels-content";
+import { useOnlineMonitorDfSccSohicData } from "@/hooks/lookup/lookup-online-monitor-df-scc-sohic";
 
 const DfSccSohicSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelectChange: any; handleRadioChange: any }> = ({ formData, handleInputChange, handleSelectChange, handleRadioChange }) => {
   const { data: inspectionEfficiencies } = useInspectionEfficiencyData();
   const { data: steelsContents } = useSteelsContentData();
+  const { data: onlineMonitorDfSccSohics } = useOnlineMonitorDfSccSohicData();
   const [precision, setPrecision] = useState<2 | 8>(2);
 
   const formatNumber = (val: number | null) => {
@@ -117,7 +119,7 @@ const DfSccSohicSubTab: React.FC<{ formData: any; handleInputChange: any; handle
           />
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div>
           <Label htmlFor="steelscontent_id_scc_sohic">Steel S Content</Label>
           <Select
@@ -159,6 +161,30 @@ const DfSccSohicSubTab: React.FC<{ formData: any; handleInputChange: any; handle
             className="mt-1"
             disabled
           />
+        </div>
+        <div>
+          <Label htmlFor="online_monitor_id_scc_sohic">Online Monitor</Label>
+          <Select
+            value={formData?.online_monitor_id_scc_sohic?.toString() || ""}
+            onValueChange={(value) => {
+              const selectedMonitor = onlineMonitorDfSccSohics?.find(
+                (monitor) => monitor.id.toString() === value
+              );
+              handleSelectChange("online_monitor_id_scc_sohic", parseInt(value));
+              handleSelectChange("online_monitor_value_scc_sohic", selectedMonitor?.value || 0);
+            }}
+          >
+            <SelectTrigger className="mt-1">
+              <SelectValue placeholder="Select Online Monitor" />
+            </SelectTrigger>
+            <SelectContent>
+              {onlineMonitorDfSccSohics?.map((monitor) => (
+                <SelectItem key={monitor.id} value={monitor.id.toString()}>
+                  {monitor.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

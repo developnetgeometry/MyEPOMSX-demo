@@ -3439,6 +3439,27 @@ export type Database = {
         }
         Relationships: []
       }
+      e_online_monitor_df_scc_sohic: {
+        Row: {
+          created_at: string
+          id: number
+          name: string | null
+          value: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          name?: string | null
+          value?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          name?: string | null
+          value?: number | null
+        }
+        Relationships: []
+      }
       e_package: {
         Row: {
           created_at: string | null
