@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,7 +9,6 @@ import { Facility } from "@/types/manage";
 import ManageDialog from "@/components/manage/ManageDialog";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useLoadingState } from "@/hooks/use-loading-state";
 import {
   useFacilities,
@@ -17,8 +16,37 @@ import {
   useUpdateFacility,
 } from "@/hooks/queries/useFacilities";
 import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/hooks/use-toast";
+import SearchFilters from "@/components/shared/SearchFilters";
+import useDebounce from "@/hooks/use-debounce";
+
+// Memoized form schema
+const formSchema = z.object({
+  code: z.string().min(1, "Facility Location Code is required"),
+  name: z.string().min(1, "Facility Location is required"),
+  is_active: z.boolean().default(true),
+});
+
+// Static form fields
+const formFields = [
+  {
+    name: "code",
+    label: "Facility Location Code",
+    type: "text" as const,
+    readonly: true,
+    disabled: true,
+  },
+  {
+    name: "name",
+    label: "Facility Location",
+    type: "text" as const,
+  },
+  {
+    name: "is_active",
+    label: "Active",
+    type: "checkbox" as const,
+  },
+];
 
 const FacilitiesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -30,7 +58,7 @@ const FacilitiesPage: React.FC = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentItem, setCurrentItem] = useState<Facility | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredData, setFilteredData] = useState<Facility[]>([]);
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   // Custom hooks
   const { isLoading: isProcessing, withLoading } = useLoadingState();
@@ -40,46 +68,47 @@ const FacilitiesPage: React.FC = () => {
   const addFacilityMutation = useAddFacility();
   const updateFacilityMutation = useUpdateFacility();
 
-  // Update filtered data when facilities data changes or search term is applied
-  useEffect(() => {
-    if (!facilities) return;
+  // Memoized columns
+  const columns = useMemo<Column[]>(() => [
+    {
+      id: "location_code",
+      header: "Facility Location Code",
+      accessorKey: "location_code",
+    },
+    {
+      id: "location_name",
+      header: "Facility Location",
+      accessorKey: "location_name",
+    },
+  ], []);
 
-    if (!searchTerm.trim()) {
-      setFilteredData(facilities);
-      return;
-    }
+  // Memoized filtered data
+  const filteredData = useMemo(() => {
+    if (!facilities) return [];
+    if (!debouncedSearchTerm.trim()) return facilities;
 
-    const filtered = facilities.filter(
+    const lowerSearch = debouncedSearchTerm.toLowerCase();
+    return facilities.filter(
       (item) =>
-        item.location_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        false ||
-        item.location_code.toLowerCase().includes(searchTerm.toLowerCase())
+        item.location_name?.toLowerCase().includes(lowerSearch) ||
+        item.location_code.toLowerCase().includes(lowerSearch)
     );
+  }, [facilities, debouncedSearchTerm]);
 
-    setFilteredData(filtered);
-
-    if (filtered.length === 0 && searchTerm.trim() !== "") {
-      toast({
-        title: "No matching facilities found",
-        description: "Please try a different search term.",
-        variant: "destructive",
-      });
-    }
-  }, [facilities, searchTerm]);
-
-  const handleAddNew = () => {
+  // Callbacks
+  const handleAddNew = useCallback(() => {
     setIsEditMode(false);
     setCurrentItem(null);
     setIsDialogOpen(true);
-  };
+  }, []);
 
-  const handleEdit = (item: Facility) => {
+  const handleEdit = useCallback((item: Facility) => {
     setIsEditMode(true);
     setCurrentItem(item);
     setIsDialogOpen(true);
-  };
+  }, []);
 
-  const handleSubmit = (values: any) => {
+  const handleSubmit = useCallback((values: any) => {
     withLoading(async () => {
       try {
         if (isEditMode && currentItem) {
@@ -115,75 +144,13 @@ const FacilitiesPage: React.FC = () => {
         });
       }
     });
-  };
+  }, [currentItem, isEditMode, withLoading]);
 
-  const handleSearch = () => {
-    // The filtering happens in the useEffect
-    // This is just to trigger immediate search on button click
-    if (!facilities) return;
+  const handleSearch = useCallback(() => {
+    // Already handled in memoized filteredData
+  }, []);
 
-    if (!searchTerm.trim()) {
-      setFilteredData(facilities);
-      return;
-    }
-
-    const filtered = facilities.filter(
-      (item) =>
-        item.location_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        false ||
-        item.location_code.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    setFilteredData(filtered);
-
-    if (filtered.length === 0) {
-      toast({
-        title: "No matching facilities found",
-        description: "Please try a different search term.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const columns: Column[] = [
-    {
-      id: "location_code",
-      header: "Facility Location Code",
-      accessorKey: "location_code",
-    },
-    {
-      id: "location_name",
-      header: "Facility Location",
-      accessorKey: "location_name",
-    },
-  ];
-
-  const formSchema = z.object({
-    code: z.string().min(1, "Facility Location Code is required"),
-    name: z.string().min(1, "Facility Location is required"),
-    is_active: z.boolean().default(true),
-  });
-
-  const formFields = [
-    {
-      name: "code",
-      label: "Facility Location Code",
-      type: "text" as const,
-      readonly: isEditMode,
-      disabled: isEditMode,
-    },
-    {
-      name: "name",
-      label: "Facility Location",
-      type: "text" as const,
-    },
-    {
-      name: "is_active",
-      label: "Active",
-      type: "checkbox" as const,
-    },
-  ];
-
+  // Loading state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -195,6 +162,7 @@ const FacilitiesPage: React.FC = () => {
     );
   }
 
+  // Error state
   if (error) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -217,25 +185,20 @@ const FacilitiesPage: React.FC = () => {
     <div className="space-y-6">
       <PageHeader
         title="Facilities"
+        subtitle="Manage facilities"
         icon={<Building className="h-6 w-6" />}
         onAddNew={handleAddNew}
+        addNewLabel="Add Facility"
       />
 
       <Card>
         <CardContent className="pt-6">
-          <div className="flex items-center mb-4">
-            <div className="flex-1">
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Search facilities..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                />
-                {/* <Button onClick={handleSearch}>Search</Button> */}
-              </div>
-            </div>
-          </div>
+          <SearchFilters
+            text="Facility"
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            handleSearch={handleSearch}
+          />
 
           <DataTable
             data={filteredData}
@@ -247,9 +210,7 @@ const FacilitiesPage: React.FC = () => {
 
       <ManageDialog
         open={isDialogOpen}
-        onOpenChange={(open) => {
-          if (!isProcessing) setIsDialogOpen(open);
-        }}
+        onOpenChange={setIsDialogOpen}
         title={isEditMode ? "Edit Facility" : "Add New Facility"}
         formSchema={formSchema}
         defaultValues={
@@ -278,4 +239,4 @@ const FacilitiesPage: React.FC = () => {
   );
 };
 
-export default FacilitiesPage;
+export default React.memo(FacilitiesPage);

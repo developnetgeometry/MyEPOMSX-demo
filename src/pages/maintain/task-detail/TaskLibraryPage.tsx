@@ -11,6 +11,7 @@ import {
   Search,
   Copy,
   Loader2,
+  Trash,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -44,6 +45,7 @@ const TaskLibraryPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("templates");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
 
@@ -55,10 +57,6 @@ const taskFormSchema = z.object({
   taskCode: z.string().min(1, "Task code is required"),
   taskName: z.string().min(1, "Task name is required"),
   discipline: z.string().min(1, "Discipline is required"),
-  // counter: z.number().min(0, "Counter must be positive"),
-  // noManPower: z.number().min(0, "Man power must be positive"),
-  // manHour: z.number().min(0, "Man hour must be positive"),
-  // totalHourRequire: z.number().min(0, "Total hours must be positive"),
   is_active: z.string(),
 });
 
@@ -71,14 +69,6 @@ const taskFormFields = [
     required: true,
     section: "main" as const,
   },
-  // {
-  //   name: "counter",
-  //   label: "Counter",
-  //   type: "number" as const,
-  //   required: true,
-  //   section: "main" as const,
-  //   width: "half" as const,
-  // },
   {
     name: "taskName",
     label: "Task Name",
@@ -99,29 +89,6 @@ const taskFormFields = [
       })) || [],
     section: "main" as const,
   },
-  // {
-  //   name: "noManPower",
-  //   label: "No Man Power",
-  //   type: "number" as const,
-  //   required: true,
-  //   section: "main" as const,
-  //   width: "half" as const,
-  // },
-  // {
-  //   name: "manHour",
-  //   label: "Man Hour",
-  //   type: "number" as const,
-  //   required: true,
-  //   section: "main" as const,
-  //   width: "half" as const,
-  // },
-  // {
-  //   name: "totalHourRequire",
-  //   label: "Total Hour Require",
-  //   type: "number" as const,
-  //   required: true,
-  //   section: "main" as const,
-  // },
   {
     name: "is_active",
     label: "Active",
@@ -240,75 +207,12 @@ const taskFormFields = [
     }
   };
 
-  const renderTaskCard = (task: Task) => (
-    <Card
-      key={task.id}
-      className="w-full hover:shadow-md transition-shadow duration-300 cursor-pointer"
-      onClick={() => handleRowClick(task)}
-    >
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <div>
-            <div className="text-sm text-gray-500 mb-1">
-              {task?.discipline?.name ?? "N/A"}
-            </div>
-            <CardTitle className="text-lg font-medium">
-              {task?.task_name ?? "N/A"}
-            </CardTitle>
-          </div>
-          <div className="bg-gray-100 text-gray-700 text-xs font-medium px-2.5 py-1 rounded">
-            {task?.task_code ?? "N/A"}
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="text-xs text-gray-400">
-          Last updated: {new Date(task.updated_at || "").toLocaleDateString()}
-        </div>
-        <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-100">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 px-2 text-gray-600 hover:text-gray-900"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEdit(task);
-            }}
-          >
-            <Pencil className="h-4 w-4 mr-1" />
-            Edit
-          </Button>
-
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 px-2 text-gray-600 hover:text-gray-900"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDuplicate(task);
-              }}
-            >
-              <Copy className="h-4 w-4 mr-1" />
-              Duplicate
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 px-2 text-red-600 hover:text-red-800 hover:bg-red-50"
-              onClick={(e) => {
-                e.stopPropagation();
-                confirmDelete(String(task.id));
-              }}
-            >
-              <X className="h-4 w-4 mr-1" />
-              Delete
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  // Filter tasks based on search term
+  const filteredTasks = tasks?.filter(task => 
+    task.task_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    task.task_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    task.discipline?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  ) || [];
 
   if (isLoading) {
     return (
@@ -334,13 +238,18 @@ const taskFormFields = [
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="relative w-full max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input placeholder="Search checklists..." className="pl-9 w-full" />
+          <Input 
+            placeholder="Search tasks..." 
+            className="pl-9 w-full" 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
 
         <div className="flex items-center gap-3">
           <Button onClick={handleAddNew} className="whitespace-nowrap">
             <Plus className="mr-2 h-4 w-4" />
-            Create Tasklist
+            Create New Task
           </Button>
         </div>
       </div>
@@ -354,37 +263,136 @@ const taskFormFields = [
         <TabsList className="mb-6">
           <TabsTrigger value="templates" className="flex items-center">
             <List className="mr-2 h-4 w-4" />
-            Checklist Templates
+            Task Templates
           </TabsTrigger>
           <TabsTrigger value="active" className="flex items-center">
             <Check className="mr-2 h-4 w-4" />
-            Active Checklists
+            Active Tasks
           </TabsTrigger>
-          <TabsTrigger value="completed" className="flex items-center">
-            <Check className="mr-2 h-4 w-4" />
-            Completed
+          <TabsTrigger value="archived" className="flex items-center">
+            <X className="mr-2 h-4 w-4" />
+            Archived
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="templates" className="mt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tasks?.map((task) => (
-              <div key={task.id}>
-                {renderTaskCard(task)}
+          <div className="border rounded-lg overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                    Task Code
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                    Task Name
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                    Discipline
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                    Status
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                    Last Updated
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredTasks.map((task) => (
+                  <tr 
+                    key={task.id} 
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() => handleRowClick(task)}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{task.task_code}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900">{task.task_name}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-500">{task.discipline?.name || "N/A"}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        task.is_active 
+                          ? "bg-green-100 text-green-800" 
+                          : "bg-red-100 text-red-800"
+                      }`}>
+                        {task.is_active ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {task.updated_at ? new Date(task.updated_at).toLocaleDateString() : "N/A"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex justify-end space-x-2">
+                        {/* <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEdit(task);
+                          }}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button> */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDuplicate(task);
+                          }}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            confirmDelete(String(task.id));
+                          }}
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            
+            {filteredTasks.length === 0 && (
+              <div className="text-center py-10">
+                <div className="text-gray-500">No tasks found</div>
+                {searchTerm && (
+                  <Button 
+                    variant="ghost" 
+                    className="mt-2"
+                    onClick={() => setSearchTerm("")}
+                  >
+                    Clear search
+                  </Button>
+                )}
               </div>
-            ))}
+            )}
           </div>
         </TabsContent>
 
         <TabsContent value="active" className="mt-0">
           <div className="text-center py-10 text-gray-500">
-            No active checklists found.
+            No active tasks found.
           </div>
         </TabsContent>
 
-        <TabsContent value="completed" className="mt-0">
+        <TabsContent value="archived" className="mt-0">
           <div className="text-center py-10 text-gray-500">
-            No completed checklists found.
+            No archived tasks found.
           </div>
         </TabsContent>
       </Tabs>
@@ -399,14 +407,14 @@ const taskFormFields = [
             taskCode: currentTask.task_code,
             taskName: currentTask.task_name,
             discipline: String(currentTask.discipline_id),
-            is_active: String(currentTask.is_active,)
+            is_active: String(currentTask.is_active)
           }
           :
           {
           taskCode: "",
           taskName: "",
           discipline: "1",
-          is_active: undefined,
+          is_active: "true",
         }}
         formFields={taskFormFields}
         onSubmit={handleSubmit}
