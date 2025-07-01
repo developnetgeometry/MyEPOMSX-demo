@@ -14,7 +14,7 @@ interface TableFiltersProps {
 const TableFilters: React.FC<TableFiltersProps> = ({
   onSearch,
   onAddNew,
-  addNewLabel = "Add New",
+  addNewLabel = "Bulk Load",
   placeholder = "Search..."
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
