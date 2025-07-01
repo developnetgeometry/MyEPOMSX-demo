@@ -42,7 +42,7 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
           Accuracy: {precision} decimals
         </Button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div>
           <Label htmlFor="last_inspection_date_cui">Last Inspection Date</Label>
           <Input
@@ -82,6 +82,19 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
               ))}
             </SelectContent>
           </Select>
+        </div>
+        <div>
+          <Label htmlFor="current_thickness_cui">Current Thickness (mm)</Label>
+          <Input
+            id="current_thickness_cui"
+            name="current_thickness_cui"
+            type="number"
+            step="any"
+            value={formData?.current_thickness_cui ?? ""}
+            onChange={handleInputChange}
+            className="mt-1"
+            placeholder="Enter Current Thickness (mm)"
+          />
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -191,9 +204,11 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="cract_cui"
             name="cract_cui"
             type="number"
-            value={formData?.cract_cui || 0}
+            step="any"
+            value={formData?.cract_cui ?? ""}
             onChange={handleInputChange}
             className="mt-1"
+            placeholder="Enter CR Act"
           />
         </div>
         <div>
@@ -240,10 +255,11 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="ncuifa_cui"
             name="ncuifa_cui"
             type="number"
-            value={formatNumber(formData?.ncuifa_cui) || 0}
+            step="any"
+            value={formData?.ncuifa_cui || ""}
             onChange={handleInputChange}
             className="mt-1"
-            disabled
+            placeholder="Enter NCUIF A"
           />
         </div>
         <div>
@@ -252,10 +268,11 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="ncuifb_cui"
             name="ncuifb_cui"
             type="number"
-            value={formatNumber(formData?.ncuifb_cui) || 0}
+            step="any"
+            value={formData?.ncuifb_cui || ""}
             onChange={handleInputChange}
             className="mt-1"
-            disabled
+            placeholder="Enter NCUIF B"
           />
         </div>
         <div>
@@ -264,10 +281,11 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="ncuifc_cui"
             name="ncuifc_cui"
             type="number"
-            value={formatNumber(formData?.ncuifc_cui) || 0}
+            step="any"
+            value={formData?.ncuifc_cui || ""}
             onChange={handleInputChange}
             className="mt-1"
-            disabled
+            placeholder="Enter NCUIF C"
           />
         </div>
         <div>
@@ -276,10 +294,11 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="ncuifd_cui"
             name="ncuifd_cui"
             type="number"
-            value={formatNumber(formData?.ncuifd_cui) || 0}
+            step="any"
+            value={formData?.ncuifd_cui || ""}
             onChange={handleInputChange}
             className="mt-1"
-            disabled
+            placeholder="Enter NCUIF D"
           />
         </div>
       </div>

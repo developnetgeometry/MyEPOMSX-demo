@@ -1615,6 +1615,7 @@ export type Database = {
           name: string
           updated_at: string | null
           updated_by: string | null
+          value: number | null
         }
         Insert: {
           created_at?: string | null
@@ -1623,6 +1624,7 @@ export type Database = {
           name: string
           updated_at?: string | null
           updated_by?: string | null
+          value?: number | null
         }
         Update: {
           created_at?: string | null
@@ -1631,6 +1633,7 @@ export type Database = {
           name?: string
           updated_at?: string | null
           updated_by?: string | null
+          value?: number | null
         }
         Relationships: []
       }
@@ -7644,7 +7647,7 @@ export type Database = {
           ims_asset_type_id: number | null
           ims_general_id: number | null
           insulation_complexity_id: number | null
-          insulation_condition: string | null
+          insulation_condition_id: number | null
           insulation_type_id: number | null
           interface_id: number | null
           isolation_system_id: number | null
@@ -7671,7 +7674,7 @@ export type Database = {
           ims_asset_type_id?: number | null
           ims_general_id?: number | null
           insulation_complexity_id?: number | null
-          insulation_condition?: string | null
+          insulation_condition_id?: number | null
           insulation_type_id?: number | null
           interface_id?: number | null
           isolation_system_id?: number | null
@@ -7698,7 +7701,7 @@ export type Database = {
           ims_asset_type_id?: number | null
           ims_general_id?: number | null
           insulation_complexity_id?: number | null
-          insulation_condition?: string | null
+          insulation_condition_id?: number | null
           insulation_type_id?: number | null
           interface_id?: number | null
           isolation_system_id?: number | null
@@ -7783,6 +7786,13 @@ export type Database = {
             columns: ["insulation_complexity_id"]
             isOneToOne: false
             referencedRelation: "i_insulation_complexity"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_protection_insulation_condition_id_fkey"
+            columns: ["insulation_condition_id"]
+            isOneToOne: false
+            referencedRelation: "i_insulation_condition"
             referencedColumns: ["id"]
           },
         ]
@@ -8197,6 +8207,7 @@ export type Database = {
           name: string | null
           updated_at: string | null
           updated_by: string | null
+          value: number | null
         }
         Insert: {
           created_at?: string | null
@@ -8205,6 +8216,7 @@ export type Database = {
           name?: string | null
           updated_at?: string | null
           updated_by?: string | null
+          value?: number | null
         }
         Update: {
           created_at?: string | null
@@ -8213,6 +8225,7 @@ export type Database = {
           name?: string | null
           updated_at?: string | null
           updated_by?: string | null
+          value?: number | null
         }
         Relationships: []
       }

@@ -19,6 +19,7 @@ import { calculateAgeTk } from "./hooks/formula";
 import { calculateAge, calculateAgeCoat, calculateArtExt, calculateBetaExtcorrs, calculateCoatAdj, calculateCrActExt, calculateCrExpExt, calculateDFextcorrF, calculateFSextcorr, calculateIextCorrsAndPoExtcorrs, calculateSRextcorr } from "./hooks/formula-df-ext";
 import { calculateAgeCrackExtClscc, calculateAgeCoatExtClscc, calculateCoatAdjExtClscc, calculateAgeExtClscc, calculateClSccSuscAndSviExtClscc, calculateExtClsccFb, calculateDfExtClsccFinal } from "./hooks/formula-df-ext-clscc";
 import { calculateDfMfat, calculateDmFatFb } from "./hooks/formula-df-mfat";
+import { calculateAgeCoatCui, calculateAgeCui, calculateArtCui, calculateBCuiFsCui, calculateCoatAdjCui, calculateCrExpCui, calculateDFCuiFFCui, calculateFSCUIFCui, calculateICuiFsAndPoCuiFsCui, calculateSRCUIFCui } from "./hooks/formula-df-cui";
 
 
 const RBIAssessmentCreatePage: React.FC = () => {
@@ -76,10 +77,20 @@ const RBIAssessmentCreatePage: React.FC = () => {
     detection_system_id: null,
     mitigation_system_id: null,
     design_fabrication_id: null,
+    design_fabrication_name: "",
+    design_fabrication_value: 0,
     insulation_type_id: null,
+    insulation_type_name: "",
+    insulation_type_value: 0,
     interface_id: null,
+    interface_name: "",
+    interface_value: 0,
     insulation_complexity_id: null,
-    insulation_condition: "",
+    insulation_complexity_name: "",
+    insulation_complexity_value: 0,
+    insulation_condition_id: null,
+    insulation_condition_name: "",
+    insulation_condition_value: 0,
     lining_type: "",
     lining_condition: "",
     lining_monitoring: "",
@@ -186,24 +197,25 @@ const RBIAssessmentCreatePage: React.FC = () => {
     dmfat_mfat: 0,
 
     // *** i_df_cui (5)
-    coating_quality_id_cui:  null, //?? coating_quality_id(5)
-    last_inspection_date_cui:  "",
-    new_coating_date_cui:  "",
+    current_thickness_cui: 0, //Trd
+    coating_quality_id_cui: null, //?? coating_quality_id(5)
+    last_inspection_date_cui: "",
+    new_coating_date_cui: "",
     agetk_cui: 0,
     agecoat_cui: 0,
     coatadj_cui: 0,
     age_cui: 0,
-    external_environment_id_cui:  null,
+    external_environment_id_cui: null,
     crexp_cui: 0,
-    cract_cui:  0,
+    cract_cui: 0,
     art_cui: 0,
     fscuif_cui: 0,
     srcuif_cui: 0,
-    ncuifa_cui:  0,
-    ncuifb_cui:  0,
-    ncuifc_cui:  0,
-    ncuifd_cui:  0,
-    data_confidence_id_cui:  null,
+    ncuifa_cui: 0,
+    ncuifb_cui: 0,
+    ncuifc_cui: 0,
+    ncuifd_cui: 0,
+    data_confidence_id_cui: null,
     icuif1_cui: 0,
     icuif2_cui: 0,
     icuif3_cui: 0,
@@ -278,11 +290,21 @@ const RBIAssessmentCreatePage: React.FC = () => {
         replacement_line: imsProtection?.replacement_line ?? "",
         detection_system_id: imsProtection?.detection_system_id ?? null,
         mitigation_system_id: imsProtection?.mitigation_system_id ?? null,
-        design_fabrication_id: imsProtection?.design_fabrication_id ?? null,
-        insulation_type_id: imsProtection?.insulation_type_id ?? null,
-        interface_id: imsProtection?.interface_id ?? null,
-        insulation_complexity_id: imsProtection?.insulation_complexity_id ?? null,
-        insulation_condition: imsProtection?.insulation_condition ?? "",
+        design_fabrication_id: imsProtection?.design_fabrication_id?.id ?? null,
+        design_fabrication_name: imsProtection?.design_fabrication_id?.name ?? "",
+        design_fabrication_value: imsProtection?.design_fabrication_id?.value ?? 0,
+        insulation_type_id: imsProtection?.insulation_type_id?.id ?? null,
+        insulation_type_name: imsProtection?.insulation_type_id?.name ?? null,
+        insulation_type_value: imsProtection?.insulation_type_id?.value ?? null,
+        interface_id: imsProtection?.interface_id?.id ?? null,
+        interface_name: imsProtection?.interface_id?.name ?? "",
+        interface_value: imsProtection?.interface_id?.value ?? 0,
+        insulation_complexity_id: imsProtection?.insulation_complexity_id?.id ?? null,
+        insulation_complexity_name: imsProtection?.insulation_complexity_id?.name ?? "",
+        insulation_complexity_value: imsProtection?.insulation_complexity_id?.value ?? 0,
+        insulation_condition_id: imsProtection?.insulation_condition_id?.id ?? null,
+        insulation_condition_name: imsProtection?.insulation_condition_id?.name ?? "",
+        insulation_condition_value: imsProtection?.insulation_condition_id?.value ?? 0,
         lining_type: imsProtection?.lining_type ?? "",
         lining_condition: imsProtection?.lining_condition ?? "",
         lining_monitoring: imsProtection?.lining_monitoring ?? ""
@@ -303,7 +325,7 @@ const RBIAssessmentCreatePage: React.FC = () => {
     }
   }, [formData?.spec_code, avgs, !isAvgsLoading]);
 
-  // Formula DfThin Start
+  //*****************  Formula DfThin Start
 
   //ageTk_thin✅
   useEffect(() => {
@@ -467,10 +489,9 @@ const RBIAssessmentCreatePage: React.FC = () => {
     }
   }, [formData?.pothin1_thin, formData?.pothin2_thin, formData?.pothin3_thin, formData?.bthin1_thin, formData?.bthin2_thin, formData?.bthin3_thin, formData?.mix_point, formData?.dead_legs, formData?.online_monitor_name]);
 
-  // Formula DfThin End
+  //*****************  Formula DfThin End
 
-
-  // Formula DfExt Start
+  //*****************  Formula DfExt Start
 
   // AgeTk_ext✅
   useEffect(() => {
@@ -647,9 +668,9 @@ const RBIAssessmentCreatePage: React.FC = () => {
     }
   }, []);
 
-  // Formula DfExt End
+  //*****************  Formula DfExt End
 
-  // Formula DFExtClscc Start
+  //*****************  Formula DFExtClscc Start
 
   // AgeCrack_ext_clscc✅
   useEffect(() => {
@@ -734,9 +755,9 @@ const RBIAssessmentCreatePage: React.FC = () => {
     }
   }, [formData?.df_ext_cl_scc_fb_ext_clscc, formData?.age_ext_clscc, formData?.ims_asset_type_id]);
 
-  // Formula DFExtClscc End
+  //*****************  Formula DFExtClscc End
 
-  // Formula DFMfat Start
+  //***************** Formula DFMfat Start
 
   // DmfatFb_mfat☑️tak check lagi
   useEffect(() => {
@@ -766,13 +787,190 @@ const RBIAssessmentCreatePage: React.FC = () => {
     }
   }, [formData?.dmfatfb_mfat, formData?.corrective_action_value_mfat, formData?.pipe_complexity_value_mfat, formData?.pipe_condition_value_mfat, formData?.joint_branch_design_value_mfat, formData?.branch_diameter_value_mfat]);
 
-  // Formula DFMfat End
+  //*****************  Formula DFMfat End
 
-  // Formula DfCui Start
+  //*****************  Formula DfCui Start
+
+  // AgeTk_cui✅
+  useEffect(() => {
+    if (formData) {
+      const ageTkCui = calculateAgeTk(
+        formData.last_inspection_date_cui,
+        formData.year_in_service
+      );
+      setFormData((prev: any) => ({ ...prev, agetk_cui: ageTkCui }));
+    }
+  }, [formData?.last_inspection_date_cui, formData?.year_in_service]);
+
+  // Agecoat_cui✅sama macam extclscc
+  useEffect(() => {
+    if (formData) {
+      const ageCoatCui = calculateAgeCoatCui(
+        formData.new_coating_date_cui,
+        formData.year_in_service,
+        formData.ims_asset_type_id // 1 = Pressure Vessel (use newCoatDate), 2 = Piping (use serviceDate)
+      );
+      setFormData((prev: any) => ({ ...prev, agecoat_cui: ageCoatCui }));
+    }
+  }, [formData?.new_coating_date_cui, formData?.year_in_service, formData?.ims_asset_type_id]);
+
+  // CoatAdj_cui✅
+  useEffect(() => {
+    if (formData) {
+      const coatAdjCui = calculateCoatAdjCui(
+        formData.coating_quality_id_cui,
+        formData.agetk_cui,
+        formData.agecoat_cui
+      );
+      setFormData((prev: any) => ({ ...prev, coatadj_cui: coatAdjCui }));
+    }
+  }, [formData?.coating_quality_id_cui, formData?.agetk_cui, formData?.agecoat_cui]);
+
+  // Age_cui✅
+  useEffect(() => {
+    if (formData) {
+      const ageCui = calculateAgeCui(
+        formData.agetk_cui,
+        formData.coatadj_cui
+      );
+      setFormData((prev: any) => ({ ...prev, age_cui: ageCui }));
+    }
+  }, [formData?.agetk_cui, formData?.coatadj_cui]);
+
+  // CrExp_cui✅
+  useEffect(() => {
+    if (formData) {
+      const crExpCui = calculateCrExpCui(
+        formData.composition,
+        formData.operating_temperature,
+        formData.external_environment_id_cui,
+        formData.insulation_type_value,
+        formData.insulation_complexity_value,
+        formData.insulation_condition_value,
+        formData.design_fabrication_value,
+        formData.interface_value
+      );
+      setFormData((prev: any) => ({ ...prev, crexp_cui: crExpCui }));
+    }
+  }, [formData?.composition, formData?.operating_temperature, formData?.external_environment_id_cui, formData?.insulation_type_value, formData?.insulation_complexity_value, formData?.insulation_condition_value, formData?.design_fabrication_value, formData?.interface_value]);
+
+  //Art_cui☑️tak check lagi
+  useEffect(() => {
+    if (formData) {
+      const artCui = calculateArtCui(
+        formData.cract_cui,
+        formData.crexp_cui,
+        formData.age_cui,
+        formData.current_thickness_cui,
+        formData.normal_wall_thickness
+      );
+      setFormData((prev: any) => ({ ...prev, art_cui: artCui }));
+    }
+  }, [formData?.cract_cui, formData?.crexp_cui, formData?.age_cui, formData?.current_thickness_cui, formData?.normal_wall_thickness]);
+
+  // FsCuiF☑️tak check lagi
+  useEffect(() => {
+    if (formData) {
+      const fsCuiF = calculateFSCUIFCui(
+        formData.avg_mts_mpa,
+        formData.avg_mys_mpa,
+        formData.welding_efficiency
+      );
+      setFormData((prev: any) => ({ ...prev, fscuif_cui: fsCuiF }));
+    }
+  }, [formData?.avg_mts_mpa, formData?.avg_mys_mpa, formData?.welding_efficiency]);
+
+  // SrCuiF☑️tak check lagi
+  useEffect(() => {
+    if (formData) {
+      const srCuiF = calculateSRCUIFCui(
+        formData.welding_efficiency,
+        formData.allowable_stress_mpa,
+        formData.fscuif_cui,
+        formData.tmin,
+        formData.current_thickness_cui,
+        formData.normal_wall_thickness,
+        formData.design_pressure,
+        formData.internal_diameter
+
+      );
+      setFormData((prev: any) => ({ ...prev, srcuif_cui: srCuiF }));
+    }
+  }, [formData?.welding_efficiency, formData?.allowable_stress_mpa, formData?.fscuif_cui, formData?.tmin, formData?.current_thickness_cui, formData?.normal_wall_thickness, formData?.design_pressure, formData?.internal_diameter]);
+
+  // ICuiFs and PoCuiFs✅
+  useEffect(() => {
+    if (formData) {
+      const scores = calculateICuiFsAndPoCuiFsCui(
+        formData.data_confidence_id_cui,   // Medium confidence
+        formData.ncuifa_cui,
+        formData.ncuifb_cui,
+        formData.ncuifc_cui,
+        formData.ncuifd_cui
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        icuif1_cui: scores.icuif1,
+        icuif2_cui: scores.icuif2,
+        icuif3_cui: scores.icuif3,
+        pociufp1_cui: scores.poCUIFP1,
+        pociufp2_cui: scores.poCUIFP2,
+        pociufp3_cui: scores.poCUIFP3
+      }));
+    }
+  }, [formData?.data_confidence_id_cui, formData?.ncuifa_cui, formData?.ncuifb_cui, formData?.ncuifc_cui, formData?.ncuifd_cui]);
+
+  // BCuiFs✅
+  useEffect(() => {
+    if (formData) {
+      const bCuiFs = calculateBCuiFsCui(
+        formData.art_cui,
+        formData.srcuif_cui
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        bcuif1_cui: bCuiFs.bCUIF1,
+        bcuif2_cui: bCuiFs.bCUIF2,
+        bcuif3_cui: bCuiFs.bCUIF3
+      }));
+    }
+  }, [formData?.art_cui, formData?.srcuif_cui]);
+
+  // DfCuiFF☑️tak check lagi
+  useEffect(() => {
+    if (formData) {
+      const dfCuiFF = calculateDFCuiFFCui(
+        formData.insulation,
+        formData.composition,
+        formData.bcuif1_cui,
+        formData.bcuif2_cui,
+        formData.bcuif3_cui,
+        formData.pociufp1_cui,
+        formData.pociufp2_cui,
+        formData.pociufp3_cui
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        dfcuiff_cui: dfCuiFF
+      }));
+    }
+  }, [formData?.insulation, formData?.composition, formData?.bcuif1_cui, formData?.bcuif2_cui, formData?.bcuif3_cui, formData?.pociufp1_cui, formData?.pociufp2_cui, formData?.pociufp3_cui]);
+
+  //*****************  Formula DfCui End
+
+  //*****************  Formula DfSccScc Start
+
+  
 
 
 
-  // Formula DfCui End
+
+
+  //*****************  Formula DfSccScc End
+
+
+
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -784,7 +982,7 @@ const RBIAssessmentCreatePage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <PageHeader
-          title="RBI Assessment Detail"
+          title="Create New RBI Assessment"
           icon={<ShieldAlert className="h-6 w-6" />}
         />
         <Button
@@ -795,8 +993,8 @@ const RBIAssessmentCreatePage: React.FC = () => {
           <ArrowLeft className="h-4 w-4" /> Back to RBI Assessment
         </Button>
       </div>
-      {/* <h1>last {formData.inspection_efficiency_id_ext_clscc ?? "NA"}</h1>
-      <h1>coat {formData.inspection_efficiency_name_ext_clscc ?? "NA"}</h1> */}
+      <h1>last {formData.data_confidence_id_cui ?? "NA"}</h1>
+      {/* <h1>coat {formData.ncuifb_cui ?? "NA"}</h1> */}
       {/* <pre>{JSON.stringify(imsGeneral, null, 2)}</pre>
       <pre>{JSON.stringify(imsDesign, null, 2)}</pre> */}
 
