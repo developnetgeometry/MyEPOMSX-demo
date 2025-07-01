@@ -22,7 +22,7 @@ const DfMainSubTab: React.FC<{ formData: any; setFormData: any }> = ({ formData,
   };
 
   return (
-    <Tabs defaultValue="dfSccScc">
+    <Tabs defaultValue="dfSccSohic">
       <TabsList className="mb-4">
         <TabsTrigger value="dfThin">DF THIN.</TabsTrigger>
         <TabsTrigger value="dfExt">DF EXT.</TabsTrigger>

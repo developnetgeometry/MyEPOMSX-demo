@@ -1,46 +1,6 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 
-// export const useImsGeneralData = () => {
-//   return useQuery({
-//     queryKey: ["i-ims-general-data"],
-//     queryFn: async () => {
-//       const { data, error } = await supabase
-//         .from("i_ims_general")
-//         .select(`
-//           id,
-//           line_no,
-//           pipe_schedule_id,
-//           pressure_rating,
-//           year_in_service,
-//           normal_wall_thickness,
-//           tmin,
-//           material_construction_id,
-//           description,
-//           circuit_id,
-//           nominal_bore_diameter,
-//           insulation,
-//           line_h2s,
-//           internal_lining,
-//           pwht,
-//           cladding,
-//           asset_detail_id (asset_id (id, asset_no, asset_name), type_id (id, name)),
-//           ims_asset_type_id,
-//           inner_diameter,
-//           clad_thickness,
-//           pipe_class_id
-//         `)
-//         .order("id", { ascending: false });
-
-//       if (error) {
-//         console.error("Error fetching i_ims_general data:", error);
-//         throw error;
-//       }
-
-//       return data;
-//     },
-//   });
-// };
 
 export const useImsGeneralData = () => {
   return useQuery({

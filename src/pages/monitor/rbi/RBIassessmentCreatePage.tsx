@@ -20,6 +20,7 @@ import { calculateAge, calculateAgeCoat, calculateArtExt, calculateBetaExtcorrs,
 import { calculateAgeCrackExtClscc, calculateAgeCoatExtClscc, calculateCoatAdjExtClscc, calculateAgeExtClscc, calculateClSccSuscAndSviExtClscc, calculateExtClsccFb, calculateDfExtClsccFinal } from "./hooks/formula-df-ext-clscc";
 import { calculateDfMfat, calculateDmFatFb } from "./hooks/formula-df-mfat";
 import { calculateAgeCoatCui, calculateAgeCui, calculateArtCui, calculateBCuiFsCui, calculateCoatAdjCui, calculateCrExpCui, calculateDFCuiFFCui, calculateFSCUIFCui, calculateICuiFsAndPoCuiFsCui, calculateSRCUIFCui } from "./hooks/formula-df-cui";
+import { calculateDfSccFbSccScc, calculateDfSccScc, calculateEnvSeveritySccScc, calculateSscSucsFToHtSccScc, calculateSusceptibilitySccScc, calculateSviSccScc } from "./hooks/formula-df-scc-scc";
 
 
 const RBIAssessmentCreatePage: React.FC = () => {
@@ -225,7 +226,39 @@ const RBIAssessmentCreatePage: React.FC = () => {
     bcuif1_cui: 0,
     bcuif2_cui: 0,
     bcuif3_cui: 0,
-    dfcuiff_cui: 0
+    dfcuiff_cui: 0,
+
+    // *** i_df_scc_scc (6)
+    last_inspection_date_scc_scc: "",
+    inspection_efficiency_id_scc_scc: null,
+    inspection_efficiency_name_scc_scc: "",
+    susceptibility_scc_scc: "", // Yes?
+    h2s_in_water_scc_scc: 0,
+    ph_scc_scc: 0,
+    envseverity_scc_scc: "", //low?
+    hardness_brinnel_scc_scc: 0,
+    ssc_sucs_f_to_ht_scc_scc: "", //low?
+    svi_scc_scc: 0,
+    dfsccfb_scc_scc: 0,
+    df_scc_scc_scc_scc: 0,
+
+    // *** i_df_scc_sohic (7)
+    last_inspection_date_scc_sohic: "",
+    inspection_efficiency_id_scc_sohic: null,
+    inspection_efficiency_name_scc_sohic: "",
+    susceptibility_scc_sohic: "", // Yes?
+    h2s_in_water_scc_sohic: 0,
+    ph_scc_sohic: 0,
+    envseverity_scc_sohic: "", //low?
+    steelscontent_id_scc_sohic: null,
+    sucs_to_crack_scc_sohic: "", //low?
+    svi_scc_sohic: 0,
+    dfsohicfb_scc_sohic: 0,
+    dfscc_sohic_scc_sohic: 0,
+
+
+
+
 
   });
   const { data: imsGeneral, isLoading: isImsGeneralLoading } = useImsGeneralDataByAssetDetailId(formData?.asset_detail_id ?? 0);
@@ -960,11 +993,91 @@ const RBIAssessmentCreatePage: React.FC = () => {
 
   //*****************  Formula DfSccScc Start
 
-  
+  // sussceptibility_scc_scc✅
+  useEffect(() => {
+    if (formData) {
+      const susceptibility = calculateSusceptibilitySccScc(
+        formData.ims_asset_type_id,
+        formData.composition,
+        formData.cladding
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        susceptibility_scc_scc: susceptibility
+      }));
+    }
+  }, [formData?.ims_asset_type_id, formData?.composition, formData?.cladding]);
 
+  // EnvSeverity_scc_scc✅
+  useEffect(() => {
+    if (formData) {
+      const envSeverity = calculateEnvSeveritySccScc(
+        formData.susceptibility_scc_scc,
+        formData.ph_scc_scc,
+        formData.h2s_in_water_scc_scc
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        envseverity_scc_scc: envSeverity
+      }));
+    }
+  }, [formData?.susceptibility_scc_scc, formData?.ph_scc_scc, formData?.h2s_in_water_scc_scc]);
 
+  // SscSucsFToHt_scc_scc✅
+  useEffect(() => {
+    if (formData) {
+      const sscSucsFToHt = calculateSscSucsFToHtSccScc(
+        formData.pwht,
+        formData.envseverity_scc_scc,
+        formData.hardness_brinnel_scc_scc
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        ssc_sucs_f_to_ht_scc_scc: sscSucsFToHt
+      }));
+    }
+  }, [formData?.pwht, formData?.envseverity_scc_scc, formData?.hardness_brinnel_scc_scc]);
 
+  // Svi_scc_scc✅
+  useEffect(() => {
+    if (formData) {
+      const svi = calculateSviSccScc(
+        formData.ssc_sucs_f_to_ht_scc_scc
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        svi_scc_scc: svi
+      }));
+    }
+  }, []);
 
+  // DfSccSccFb_scc_scc✅
+  useEffect(() => {
+    if (formData) {
+      const dfSccSccFb = calculateDfSccFbSccScc(
+        formData.svi_scc_scc,
+        formData.inspection_efficiency_name_scc_scc
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        dfsccfb_scc_scc: dfSccSccFb
+      }));
+    }
+  }, [formData?.svi_scc_scc, formData?.inspection_efficiency_name_scc_scc]);
+
+  // DfSccScc_scc_scc✅
+  useEffect(() => {
+    if (formData) {
+      const dfSccScc = calculateDfSccScc(
+        1,
+        formData.last_inspection_date_scc_scc
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        df_scc_scc_scc_scc: dfSccScc
+      }));
+    }
+  }, [formData?.dfsccfb_scc_scc, formData?.last_inspection_date_scc_scc]);
 
   //*****************  Formula DfSccScc End
 
@@ -993,7 +1106,8 @@ const RBIAssessmentCreatePage: React.FC = () => {
           <ArrowLeft className="h-4 w-4" /> Back to RBI Assessment
         </Button>
       </div>
-      <h1>last {formData.data_confidence_id_cui ?? "NA"}</h1>
+      {/* <h1>last {formData.inspection_efficiency_id_scc_sohic ?? "NA"}</h1>
+      <h1>last {formData.inspection_efficiency_name_scc_sohic ?? "NA"}</h1> */}
       {/* <h1>coat {formData.ncuifb_cui ?? "NA"}</h1> */}
       {/* <pre>{JSON.stringify(imsGeneral, null, 2)}</pre>
       <pre>{JSON.stringify(imsDesign, null, 2)}</pre> */}
