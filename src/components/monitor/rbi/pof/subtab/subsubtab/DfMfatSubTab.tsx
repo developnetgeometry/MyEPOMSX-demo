@@ -281,7 +281,7 @@ const DfMfatSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
           />
         </div>
         <div>
-          <Label htmlFor="dmfat_mfat">D MFATT</Label>
+          <Label htmlFor="dmfat_mfat">D MFAT</Label>
           <Input
             id="dmfat_mfat"
             name="dmfat_mfat"

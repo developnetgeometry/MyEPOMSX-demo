@@ -201,7 +201,7 @@ const DfSccSohicSubTab: React.FC<{ formData: any; handleInputChange: any; handle
           />
         </div>
         <div>
-          <Label htmlFor="dfscc_sohic_scc_sohic">DF SCC</Label>
+          <Label htmlFor="dfscc_sohic_scc_sohic">DF SCC SOHIC</Label>
           <Input
             id="dfscc_sohic_scc_sohic"
             name="dfscc_sohic_scc_sohic"

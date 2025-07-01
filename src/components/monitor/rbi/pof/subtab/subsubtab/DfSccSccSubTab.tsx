@@ -169,7 +169,7 @@ const DfSccSccSubTab: React.FC<{ formData: any; handleInputChange: any; handleSe
           />
         </div>
         <div>
-          <Label htmlFor="df_scc_scc_scc_scc">DF SCC</Label>
+          <Label htmlFor="df_scc_scc_scc_scc">DF SCC SCC</Label>
           <Input
             id="df_scc_scc_scc_scc"
             name="df_scc_scc_scc_scc"

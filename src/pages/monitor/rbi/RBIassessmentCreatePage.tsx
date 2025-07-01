@@ -259,7 +259,14 @@ const RBIAssessmentCreatePage: React.FC = () => {
     dfsohicfb_scc_sohic: 0,
     dfscc_sohic_scc_sohic: 0,
 
-
+    // i_ims_cof_assessment_cof_prod
+    outagemult_cof_prod: 0,
+    injcost_cof_prod: 0,
+    envcost_cof_prod:  0,
+    fracevap_cof_prod:  0,
+    volenv: 0,
+    fcenviron_cof_prod: 0,
+    fc_cof_prod: 0,
 
 
 
@@ -1213,7 +1220,7 @@ const RBIAssessmentCreatePage: React.FC = () => {
       <form onSubmit={handleSubmit}>
         <Card>
           <CardContent className="pt-6">
-            <Tabs defaultValue="pof" className="w-full">
+            <Tabs defaultValue="cof" className="w-full">
               <TabsList className="mb-4">
                 <TabsTrigger value="pof">POF Assessment</TabsTrigger>
                 <TabsTrigger value="cof">COF Assessment</TabsTrigger>
