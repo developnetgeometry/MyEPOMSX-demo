@@ -55,11 +55,14 @@ export const useAddFacility = () => {
         .select()
         .single();
 
-      if (error.code === '23505') {
-        throw new Error('Facility with this code already exists');
+      // FIX: Check if error exists before accessing its properties
+      if (error) {
+        if (error.code === '23505') {
+          throw new Error('Facility with this code already exists');
+        }
+        throw error;
       }
-        
-      if (error) throw error;
+      
       return data as Facility;
     },
     onSuccess: (_, variables) => {
@@ -91,7 +94,14 @@ export const useUpdateFacility = () => {
         .select()
         .single();
         
-      if (error) throw error;
+      // FIX: Check if error exists before accessing its properties
+      if (error) {
+        if (error.code === '23505') {
+          throw new Error('Facility with this code already exists');
+        }
+        throw error;
+      }
+      
       return data as Facility;
     },
     onSuccess: (updatedFacility) => {

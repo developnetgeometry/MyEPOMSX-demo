@@ -1,4 +1,10 @@
-import React, { useState, useMemo } from "react";
+import React, {
+  useState,
+  useMemo,
+  useEffect,
+  useCallback,
+  useRef,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -19,6 +25,8 @@ import {
   useStoreOptions,
 } from "@/hooks/queries/useInventory";
 import DataTable, { Column } from "@/components/shared/DataTable";
+import SearchFilters from "@/components/shared/SearchFilters";
+import useDebounce from "@/hooks/use-debounce";
 
 interface InventoryPageProps {
   hideHeader?: boolean;
@@ -32,9 +40,13 @@ const InventoryPage: React.FC<InventoryPageProps> = ({
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 300); // Increase debounce time to 500ms
   const [selectedStore, setSelectedStore] = useState<string>("all");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Track if this is the initial load
+  const hasLoadedOnce = useRef(false);
 
   // Fetch stores for dropdown
   const { data: storeOptions = [], isLoading: loadingStores } =
@@ -48,31 +60,90 @@ const InventoryPage: React.FC<InventoryPageProps> = ({
     }, {});
   }, [storeOptions]);
 
-  // Fetch inventory with store filter
   const {
     data: inventoryData = { items: [], totalCount: 0 },
     isLoading: loadingInventory,
+    isFetching: isFetchingInventory,
   } = useInventoryList({
     storeId: selectedStore === "all" ? undefined : selectedStore,
-    page,
-    pageSize,
-    searchQuery: searchQuery || undefined,
+    page: 1,
+    pageSize: 500, // fetch a large enough number for frontend filtering
   });
-  console.log(inventoryData);
+
+  const filteredItems = useMemo(() => {
+    if (!debouncedSearchQuery) return inventoryData.items;
+    const q = debouncedSearchQuery.toLowerCase();
+    return inventoryData.items.filter((item) => {
+      const itemName = item.item_master?.item_name?.toLowerCase() || "";
+      const itemNo = item.item_master?.item_no?.toLowerCase() || "";
+      const manuPartNo =
+        item.item_master?.manufacturer_part_no?.toLowerCase() || "";
+      return (
+        itemName.includes(q) || itemNo.includes(q) || manuPartNo.includes(q)
+      );
+    });
+  }, [inventoryData.items, debouncedSearchQuery]);
+
+  const paginatedItems = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredItems.slice(start, start + pageSize);
+  }, [filteredItems, page, pageSize]);
+
+  const totalPages = Math.ceil(filteredItems.length / pageSize);
+
+  // Mark as loaded once we have data
+  useEffect(() => {
+    if (
+      inventoryData.items.length > 0 ||
+      (!loadingInventory && hasLoadedOnce.current === false)
+    ) {
+      hasLoadedOnce.current = true;
+    }
+  }, [inventoryData.items, loadingInventory]);
+
+  // Reset to first page when store or search term changes
+  useEffect(() => {
+    setPage(1);
+  }, [selectedStore, debouncedSearchQuery]);
+
   // Memoized columns configuration
   const columns = useMemo<Column[]>(
     () => [
       { id: "rackNo", header: "Rack No.", accessorKey: "rack.name" },
       { id: "itemNo", header: "Item No.", accessorKey: "item_master.item_no" },
-      { id: "itemName", header: "Item Name", accessorKey: "item_master.item_name" },
-      { id: "manufacturerPartsNo", header: "Manufacturer Parts No.", accessorKey: "item_master.manufacturer_part_no" },
-      { id: "manufacturerName", header: "Manufacturer", accessorKey: "item_master.manu.name" },
+      {
+        id: "itemName",
+        header: "Item Name",
+        accessorKey: "item_master.item_name",
+      },
+      {
+        id: "manufacturerPartsNo",
+        header: "Manufacturer Parts No.",
+        accessorKey: "item_master.manufacturer_part_no",
+      },
+      {
+        id: "manufacturerName",
+        header: "Manufacturer",
+        accessorKey: "item_master.manu.name",
+      },
       { id: "type", header: "Type", accessorKey: "item_master.type.name" },
-      { id: "category", header: "Category", accessorKey: "item_master.category.name" },
-      { id: "itemSpec", header: "Item Specification", accessorKey: "item_master.specification" },
+      {
+        id: "category",
+        header: "Category",
+        accessorKey: "item_master.category.name",
+      },
+      {
+        id: "itemSpec",
+        header: "Item Specification",
+        accessorKey: "item_master.specification",
+      },
       { id: "minLevel", header: "Min Level", accessorKey: "min_level" },
       { id: "maxLevel", header: "Max Level", accessorKey: "max_level" },
-      { id: "reorderLevel", header: "Reorder Level", accessorKey: "reorder_table" },
+      {
+        id: "reorderLevel",
+        header: "Reorder Level",
+        accessorKey: "reorder_table",
+      },
       {
         id: "storeId",
         header: "Store",
@@ -102,17 +173,28 @@ const InventoryPage: React.FC<InventoryPageProps> = ({
   );
 
   // Handle store change
-  const handleStoreChange = (value: string) => {
+  const handleStoreChange = useCallback((value: string) => {
     setSelectedStore(value);
-    setPage(1); // Reset to first page when store changes
-  };
+  }, []);
 
-  const handleRowClick = (row: any) => {
-    navigate(`/manage/inventory/${row.id}`);
-  };
+  const handleRowClick = useCallback(
+    (row: any) => {
+      if (onRowClick) {
+        onRowClick(row);
+      } else {
+        navigate(`/manage/inventory/${row.id}`);
+      }
+    },
+    [navigate, onRowClick]
+  );
 
-  // Pagination controls
-  const totalPages = Math.ceil(inventoryData.totalCount / pageSize);
+  // Handle search - no-op since filtering is automatic
+  const handleSearch = useCallback(() => {
+    // Already handled by debouncedSearchQuery
+  }, []);
+
+  // Determine if we should show skeleton (only on initial load)
+  const shouldShowSkeleton = loadingInventory && !hasLoadedOnce.current;
 
   return (
     <div className="space-y-6">
@@ -130,16 +212,6 @@ const InventoryPage: React.FC<InventoryPageProps> = ({
 
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="flex gap-2">
-              <Input
-                placeholder="Search items..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setPage(1); // Reset to first page when searching
-                }}
-                className="max-w-[200px]"
-              />
-
               <Select
                 value={selectedStore}
                 onValueChange={handleStoreChange}
@@ -172,28 +244,41 @@ const InventoryPage: React.FC<InventoryPageProps> = ({
 
       <Card>
         <CardContent className="p-0">
-          {loadingInventory ? (
+          {/* Show loading skeleton only on initial load */}
+          {shouldShowSkeleton ? (
             <div className="p-6 space-y-4">
               {[...Array(5)].map((_, i) => (
                 <Skeleton key={i} className="h-12 w-full" />
               ))}
             </div>
           ) : (
-            <>
+            <div className="space-y-4">
+              <div className="p-4 border-b">
+                <SearchFilters
+                  text="Search by item name, item number, or manufacturer part number"
+                  searchTerm={searchQuery}
+                  setSearchTerm={setSearchQuery}
+                  handleSearch={handleSearch}
+                />
+              </div>
+
+              {/* Show small loading indicator during searches */}
+              {isFetchingInventory && (
+                <div className="h-1 w-full bg-blue-500 animate-pulse"></div>
+              )}
+
               <DataTable
                 columns={columns}
-                data={inventoryData.items}
+                data={paginatedItems}
                 onRowClick={handleRowClick}
-                // emptyMessage="No inventory items found"
               />
 
-              {/* Pagination */}
-              {inventoryData.totalCount > 0 && (
+              {filteredItems.length > 0 && (
                 <div className="flex items-center justify-between px-6 py-4 border-t">
                   <div className="text-sm text-muted-foreground">
                     Showing {(page - 1) * pageSize + 1} to{" "}
-                    {Math.min(page * pageSize, inventoryData.totalCount)} of{" "}
-                    {inventoryData.totalCount} items
+                    {Math.min(page * pageSize, filteredItems.length)} of{" "}
+                    {filteredItems.length} items
                   </div>
                   <div className="flex items-center space-x-2">
                     <Button
@@ -217,7 +302,7 @@ const InventoryPage: React.FC<InventoryPageProps> = ({
                   </div>
                 </div>
               )}
-            </>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -225,4 +310,4 @@ const InventoryPage: React.FC<InventoryPageProps> = ({
   );
 };
 
-export default InventoryPage;
+export default React.memo(InventoryPage);
