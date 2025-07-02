@@ -14,11 +14,13 @@ import {
   useFacilities,
   useAddFacility,
   useUpdateFacility,
+  facilityKeys,
 } from "@/hooks/queries/useFacilities";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import SearchFilters from "@/components/shared/SearchFilters";
 import useDebounce from "@/hooks/use-debounce";
+import { useProject } from "@/contexts/ProjectContext";
 
 // Memoized form schema
 const formSchema = z.object({
@@ -33,8 +35,6 @@ const formFields = [
     name: "code",
     label: "Facility Location Code",
     type: "text" as const,
-    readonly: true,
-    disabled: true,
   },
   {
     name: "name",
@@ -52,6 +52,9 @@ const FacilitiesPage: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { currentProject } = useProject();
+  const projectId = currentProject?.id;
+  
 
   // State
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -112,31 +115,31 @@ const FacilitiesPage: React.FC = () => {
     withLoading(async () => {
       try {
         if (isEditMode && currentItem) {
-          await updateFacilityMutation.mutateAsync({
-            id: Number(currentItem.id),
-            location_code: values.code,
-            location_name: values.name,
-            is_active: values.is_active,
-            project_id: currentItem.project_id,
-          });
-          toast({
-            title: "Facility updated successfully",
-            variant: "default",
-          });
-        } else {
-          await addFacilityMutation.mutateAsync({
-            location_code: values.code,
-            location_name: values.name,
-            is_active: values.is_active,
-            project_id: null,
-          });
-          toast({
-            title: "Facility added successfully",
-            variant: "default",
-          });
-        }
+        // Edit existing
+        await updateFacilityMutation.mutateAsync({
+          id: Number(currentItem.id),
+          location_code: values.code,
+          location_name: values.name,
+          is_active: values.is_active,
+          project_id: currentItem.project_id,
+        });
+      } else if (projectId) {
+        // Add new - use currentProject directly
+        await addFacilityMutation.mutateAsync({
+          location_code: values.code,
+          location_name: values.name,
+          is_active: values.is_active,
+          project_id: Number(projectId),
+        });
+      }
+        toast({
+          title: "Facility saved successfully",
+          variant: "default",
+        });
+        queryClient.invalidateQueries({ queryKey: facilityKeys.all });
         setIsDialogOpen(false);
       } catch (error: any) {
+        console.error("Error saving facility:", error);
         toast({
           title: "Error saving facility",
           description: error.message,
@@ -145,6 +148,7 @@ const FacilitiesPage: React.FC = () => {
       }
     });
   }, [currentItem, isEditMode, withLoading]);
+
 
   const handleSearch = useCallback(() => {
     // Already handled in memoized filteredData
