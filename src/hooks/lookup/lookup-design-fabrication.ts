@@ -19,3 +19,8 @@ export const useDesignFabricationData = () => {
         },
     });
 };
+
+export const useDesignFabricationOptions = () => {
+    const { data } = useDesignFabricationData();
+    return data?.map((item) => ({ value: item.id, label: item.name }));
+};

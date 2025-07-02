@@ -1,26 +1,27 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 
-export const useInsulationTypeData = () => {
+
+export const useToxicityData = () => {
     return useQuery({
-        queryKey: ["e-insulation-type-data"],
+        queryKey: ["toxicity"],
         queryFn: async () => {
             const { data, error } = await supabase
-                .from("e_insulation_type")
+                .from("e_toxicity")
                 .select("id, name")
                 .order("id");
 
             if (error) {
-                console.error("Error fetching e_insulation_type data:", error);
+                console.error("Error fetching e_toxicity data:", error);
                 throw error;
             }
 
             return data;
         },
     });
-};
+}
 
-export const useInsulationTypeOptions = () => {
-    const { data } = useInsulationTypeData();
+export const useToxicityOptions = () => {
+    const { data } = useToxicityData();
     return data?.map((item) => ({ value: item.id, label: item.name }));
 };

@@ -46,10 +46,10 @@
  * - Equipment Tag, Area, System are reference-only fields from related tables
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -93,6 +93,43 @@ import {
   useTminCalculation,
 } from "@/hooks/queries/useCorrosionDropdownOptions";
 import { supabase } from "@/lib/supabaseClient";
+import { useInsulationConditionOptions } from "@/hooks/lookup/lookup-insulation-condition";
+import { useCoatingQualityOptions } from "@/hooks/lookup/lookup-coating-quality";
+import { useInsulationTypeOptions } from "@/hooks/lookup/lookup-insulation-type";
+import { useInsulationComplexityOptions } from "@/hooks/lookup/lookup-insulation-complexity";
+import { useDesignFabricationOptions } from "@/hooks/lookup/lookup-design-fabrication";
+import { useInterfaceOptions } from "@/hooks/lookup/lookup-interface";
+import { useOnlineMonitorOptions } from "@/hooks/lookup/lookup-online-monitoring";
+import { useFluidRepresentativeOptions } from "@/hooks/lookup/lookup-fluid-representative";
+import { useToxicityOptions } from "@/hooks/lookup/lookup-toxicity";
+import { useFluidPhaseOptions } from "@/hooks/lookup/lookup-fluid-phase";
+import { useAuth } from "@/contexts/AuthContext";
+
+// File icon mapping (moved outside component to prevent re-creation)
+const getFileIcon = (fileName: string) => {
+  const ext = fileName.split(".").pop()?.toLowerCase();
+  switch (ext) {
+    case "pdf": return <FileText className="h-5 w-5 text-red-500" />;
+    case "jpg": case "jpeg": case "png": 
+      return <FileImage className="h-5 w-5 text-green-500" />;
+    case "xls": case "xlsx": 
+      return <FileSpreadsheet className="h-5 w-5 text-green-600" />;
+    case "dwg": case "dxf": 
+      return <File className="h-5 w-5 text-blue-500" />;
+    default: return <FileText className="h-5 w-5 text-gray-500" />;
+  }
+};
+
+// File category mapping (moved outside component)
+const getFileCategory = (fileName: string) => {
+  const name = fileName.toLowerCase();
+  if (name.includes("pid") || name.includes("p&id")) return "P&ID";
+  if (name.includes("pfd")) return "PFD";
+  if (name.includes("ga") || name.includes("general")) return "GA";
+  if (name.includes("iso") || name.includes("isometric")) return "ISO";
+  if (name.includes("inspection") || name.includes("report")) return "Report";
+  return "Document";
+};
 
 const NewPressureVesselPage: React.FC = () => {
   const navigate = useNavigate();
@@ -100,123 +137,150 @@ const NewPressureVesselPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("general");
   const [activeInspectionTab, setActiveInspectionTab] = useState("plan");
+  const { user } = useAuth();
 
   // Dropdown options hooks
   const { data: assetTagOptions = [] } = useAssetTagOptions();
-  const { data: assetWithComponentTypeOptions = [] } =
+  const { data: assetWithComponentTypeOptions = [] } = 
     useAssetWithComponentTypeOptions();
-  const { data: materialConstructionOptions = [] } =
+  const { data: materialConstructionOptions = [] } = 
     useMaterialConstructionOptions();
+  const insulationConditionOptions = useInsulationConditionOptions();
+  const coatingQualityOptions = useCoatingQualityOptions();
+  const insulationTypeOptions = useInsulationTypeOptions();
+  const insulationComplexityOptions = useInsulationComplexityOptions();
+  const designFabricationOptions = useDesignFabricationOptions();
+  const interfaceOptions = useInterfaceOptions();
+  const onlineMonitorOptions = useOnlineMonitorOptions();
+  const fluidRepresentativeOptions = useFluidRepresentativeOptions();
+  const toxicityOptions = useToxicityOptions();
+  const fluidPhaseOptions = useFluidPhaseOptions();
 
   // Form data structure mapped to i_ims_general table
   const [formData, setFormData] = useState({
     // General Tab - Maps directly to i_ims_general table columns
-    asset: "", // asset_detail_id - from e_asset table, store the id
-    equipmentTag: "", // reference only (from e_asset_detail)
-    equipmentType: "Pressure Vessel", // fixed value for display
-    componentType: "", // reference only (from e_asset_detail)
-    area: "", // reference only (from e_asset)
-    system: "", // reference only (from e_asset)
-    yearInService: "", // year_in_service - store as yyyy-mm-dd format
-    materialConstruction: "", // material_construction_id - from selecting Material Construction, store the id
-    tmin: "", // tmin - from input Tmin (mm) under general tab
-    description: "", // description - from input Description under general tab
-    nominalThickness: "", // normal_wall_thickness - from input Nominal Thickness (mm) under general tab
-    insulation: "", // insulation - from radio button Insulation value (yes/no)
-    h2s: "", // line_h2s - from radio button H2S value (yes/no)
-    internalLining: "", // internal_lining - from radio button Internal Lining value (yes/no)
-    pwht: "", // pwht - from radio button PWHT value (yes/no)
-    cladding: "", // cladding - from radio button Cladding value (yes/no)
-    innerDiameter: "", // inner_diameter - from input Inner Diameter (mm) under general tab
-    cladThickness: "", // clad_thickness - from input Clad Thickness (mm) under general tab
-    // ims_asset_type_id - automatically set to 1 for Pressure Vessel, 2 for Piping
-
+    asset: "",
+    equipmentTag: "",
+    equipmentType: "Pressure Vessel",
+    componentType: "",
+    area: "",
+    system: "",
+    yearInService: "",
+    materialConstruction: "",
+    tmin: "",
+    description: "",
+    nominalThickness: "",
+    insulation: "",
+    h2s: "",
+    internalLining: "",
+    pwht: "",
+    cladding: "",
+    innerDiameter: "",
+    cladThickness: "",
+    
     // Design Tab
-    outerDiameter: "", // mm
-    length: "", // mm
-    weldJoinEfficiency: "", // unitless
-    designTemperature: "", // Degree Fahrenheit (user input)
-    operatingTemperature: "", // Degree Celsius
-    designPressure: "", // MPa
-    operatingPressure: "", // MPa
-    allowableStress: "", // MPa (auto-calculated)
-    corrosionAllowance: "", // mm
-    extEnv: "", // dropdown/text
-    geometry: "", // dropdown/text
-    pipeSupport: "", // Yes or No
-    soilWaterInterface: "", // Yes or No
-    deadleg: "", // Yes or No
-    mixpoint: "", // Yes or No
+    outerDiameter: "",
+    length: "",
+    weldJoinEfficiency: "",
+    designTemperature: "",
+    operatingTemperature: "",
+    designPressure: "",
+    operatingPressure: "",
+    allowableStress: "",
+    corrosionAllowance: "",
+    extEnv: "",
+    geometry: "",
+    pipeSupport: "",
+    soilWaterInterface: "",
+    deadleg: "",
+    mixpoint: "",
 
     // Protection Tab
-    coatingQuality: "", // from e_coating_quality table
-    insulationType: "", // from e_insulation_type table
-    insulationComplexity: "", // from i_insulation_complexity table
-    insulationCondition: "", // input
-    designFabrication: "", // from e_design_fabrication table
-    interface: "", // from e_interface table
-    liningType: "", // input
-    liningCondition: "", // input
-    liningMonitoring: "", // input
-    onlineMonitor: "", // from e_online_monitor table
+    coatingQuality: "",
+    insulationType: "",
+    insulationComplexity: "",
+    insulationCondition: "",
+    designFabrication: "",
+    interface: "",
+    liningType: "",
+    liningCondition: "",
+    liningMonitoring: "",
+    onlineMonitor: "",
 
     // Service Tab
-    fluidRepresentative: "", // from e_fluid_representative table
-    toxicity: "", // from e_toxicity table
-    fluidPhase: "", // from e_fluid_phase table
-    toxicMassFraction: "", // input form
+    fluidRepresentative: "",
+    toxicity: "",
+    fluidPhase: "",
+    toxicMassFraction: "",
 
     // Risk Tab
-    riskRanking: "", // disabled, display value
-    riskLevel: "", // disabled, display value
-    dthin: "", // disabled, display value
-    dscc: "", // disabled, display value
-    dbrit: "", // disabled, display value
-    pof: "", // disabled, display value
-    dextd: "", // disabled, display value
-    dhtha: "", // disabled, display value
-    dmfat: "", // disabled, display value
-    f1: "", // input form
-    cofDollar: "", // disabled, display value
-    cofM2: "", // disabled, display value
+    riskRanking: "",
+    riskLevel: "",
+    dthin: "",
+    dscc: "",
+    dbrit: "",
+    pof: "",
+    dextd: "",
+    dhtha: "",
+    dmfat: "",
+    f1: "",
+    cofDollar: "",
+    cofM2: "",
 
     // Inspection Tab
-    // Plan sub-tab
-    inspectionPlan: "", // WYSIWYG text editor content
+    inspectionPlan: "",
+    inspectionReports: [] as File[],
 
-    // Reports sub-tab
-    inspectionReports: [] as File[], // Multiple file upload for documentation
-
-    // Attachment Tab - Multiple file uploads
+    // Attachment Tab
     attachments: [] as File[],
-
-    // Additional fields
     notes: "",
   });
 
-  // Auto-calculating hooks for allowable stress and Tmin (now after formData is defined)
-  const { data: allowableStress, isLoading: calculatingStress } =
-    useAsmeViiAllowableStressLookup(
-      parseInt(formData.materialConstruction) || undefined,
-      parseInt(formData.designTemperature) || undefined
-    );
+  // Memoize expensive calculation inputs
+  const materialConstructionId = useMemo(() => 
+    parseInt(formData.materialConstruction) || undefined, 
+    [formData.materialConstruction]
+  );
+  
+  const designTemperature = useMemo(() => 
+    parseInt(formData.designTemperature) || undefined, 
+    [formData.designTemperature]
+  );
+  
+  const { data: allowableStress, isLoading: calculatingStress } = 
+    useAsmeViiAllowableStressLookup(materialConstructionId, designTemperature);
 
+  const designPressure = useMemo(() => 
+    parseFloat(formData.designPressure) || undefined, 
+    [formData.designPressure]
+  );
+  
+  const allowableStressValue = useMemo(() => 
+    allowableStress?.allowable_stress_mpa ? parseFloat(allowableStress.allowable_stress_mpa) : undefined, 
+    [allowableStress]
+  );
+  
+  const weldJoinEfficiency = useMemo(() => 
+    parseFloat(formData.weldJoinEfficiency) || undefined, 
+    [formData.weldJoinEfficiency]
+  );
+  
+  const innerDiameter = useMemo(() => 
+    parseFloat(formData.innerDiameter) || undefined, 
+    [formData.innerDiameter]
+  );
+  
   const { data: tminResult, isLoading: calculatingTmin } = useTminCalculation(
-    parseFloat(formData.designPressure) || undefined,
-    allowableStress?.allowable_stress_mpa
-      ? parseFloat(allowableStress.allowable_stress_mpa)
-      : undefined,
-    parseFloat(formData.weldJoinEfficiency) || undefined,
-    parseFloat(formData.innerDiameter) || undefined
+    designPressure,
+    allowableStressValue,
+    weldJoinEfficiency,
+    innerDiameter
   );
 
-  // Auto-update form data when calculations complete
+  // Optimized auto-update effects
   useEffect(() => {
-    if (
-      allowableStress?.is_valid_lookup &&
-      allowableStress.allowable_stress_mpa
-    ) {
-      setFormData((prev) => ({
+    if (allowableStress?.is_valid_lookup && allowableStress.allowable_stress_mpa) {
+      setFormData(prev => ({
         ...prev,
         allowableStress: allowableStress.allowable_stress_mpa,
       }));
@@ -225,26 +289,22 @@ const NewPressureVesselPage: React.FC = () => {
 
   useEffect(() => {
     if (tminResult?.calculation_valid && tminResult.tmin_mm) {
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
         tmin: tminResult.tmin_mm.toFixed(3),
       }));
     }
   }, [tminResult]);
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => {
-      const updatedData = {
-        ...prev,
-        [field]: value,
-      };
+  // Optimized handlers with useCallback
+  const handleInputChange = useCallback((field: string, value: string) => {
+    setFormData(prev => {
+      const updatedData = { ...prev, [field]: value };
 
-      // Auto-populate fields when asset is selected
       if (field === "asset") {
         const selectedAsset = assetWithComponentTypeOptions.find(
-          (asset) => asset.value === value
+          asset => asset.value === value
         );
-
         if (selectedAsset) {
           updatedData.componentType = selectedAsset.component_type || "";
           updatedData.area = selectedAsset.area || "";
@@ -255,41 +315,129 @@ const NewPressureVesselPage: React.FC = () => {
 
       return updatedData;
     });
-  };
+  }, [assetWithComponentTypeOptions]);
 
-  const handleFileUpload = (files: FileList | null) => {
-    if (files) {
-      const newFiles = Array.from(files);
-      setFormData((prev) => ({
-        ...prev,
-        attachments: [...prev.attachments, ...newFiles],
-      }));
-    }
-  };
+  const handleFileUpload = useCallback((files: FileList | null) => {
+    if (!files) return;
+    const newFiles = Array.from(files);
+    setFormData(prev => ({
+      ...prev,
+      attachments: [...prev.attachments, ...newFiles],
+    }));
+  }, []);
 
-  const handleInspectionReportsUpload = (files: FileList | null) => {
-    if (files) {
-      const newFiles = Array.from(files);
-      setFormData((prev) => ({
-        ...prev,
-        inspectionReports: [...prev.inspectionReports, ...newFiles],
-      }));
-    }
-  };
+  const handleInspectionReportsUpload = useCallback((files: FileList | null) => {
+    if (!files) return;
+    const newFiles = Array.from(files);
+    setFormData(prev => ({
+      ...prev,
+      inspectionReports: [...prev.inspectionReports, ...newFiles],
+    }));
+  }, []);
 
-  const removeAttachment = (index: number) => {
-    setFormData((prev) => ({
+  const removeAttachment = useCallback((index: number) => {
+    setFormData(prev => ({
       ...prev,
       attachments: prev.attachments.filter((_, i) => i !== index),
     }));
-  };
+  }, []);
 
-  const removeInspectionReport = (index: number) => {
-    setFormData((prev) => ({
+  const removeInspectionReport = useCallback((index: number) => {
+    setFormData(prev => ({
       ...prev,
       inspectionReports: prev.inspectionReports.filter((_, i) => i !== index),
     }));
-  };
+  }, []);
+
+  // Memoized file lists for rendering
+  const inspectionReportItems = useMemo(() => 
+    formData.inspectionReports.map((file, index) => (
+      <div key={index} className="flex items-center justify-between p-4 border rounded-lg bg-white shadow-sm">
+        <div className="flex items-center gap-3">
+          {getFileIcon(file.name)}
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <p className="font-medium truncate">{file.name}</p>
+              <span className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded">
+                {getFileCategory(file.name)}
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {(file.size / 1024 / 1024).toFixed(2)} MB
+            </p>
+          </div>
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => removeInspectionReport(index)}
+          className="text-red-500 hover:text-red-700"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+    )),
+    [formData.inspectionReports, removeInspectionReport]
+  );
+
+  const attachmentItems = useMemo(() => 
+    formData.attachments.map((file, index) => {
+      const getFileTypeLabel = (fileName: string) => {
+        const ext = fileName.split(".").pop()?.toLowerCase();
+        switch (ext) {
+          case "pdf": return "PDF Document";
+          case "doc": case "docx": return "Word Document";
+          case "xls": case "xlsx": return "Excel Spreadsheet";
+          case "jpg": case "jpeg": case "png": case "gif": case "bmp": 
+            return "Image File";
+          case "dwg": case "dxf": return "CAD Drawing";
+          default: return "Document";
+        }
+      };
+
+      return (
+        <div key={index} className="flex items-center justify-between p-4 border rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-4 flex-1">
+            {getFileIcon(file.name)}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <p className="font-medium truncate">{file.name}</p>
+                <span className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded">
+                  {getFileTypeLabel(file.name)}
+                </span>
+              </div>
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <span>{(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                <span>•</span>
+                <span>Uploaded {new Date().toLocaleDateString()}</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-blue-600 hover:text-blue-800"
+            >
+              Preview
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => removeAttachment(index)}
+              className="text-red-500 hover:text-red-700"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      );
+    }),
+    [formData.attachments, removeAttachment]
+  );
 
   const handleSubmit = async () => {
     setIsLoading(true);
@@ -311,40 +459,36 @@ const NewPressureVesselPage: React.FC = () => {
         return;
       }
 
-      console.log("=== Starting Pressure Vessel Save Process ===");
-
       // Get asset_detail_id from selected asset
       const selectedAsset = assetWithComponentTypeOptions.find(
         (asset) => asset.value === formData.asset
       );
 
       if (!selectedAsset) {
-        throw new Error("Selected Asset Codet found");
+        throw new Error("Selected Asset not found");
       }
 
       // Prepare main pressure vessel data for i_ims_general table insertion
       const imsGeneralData = {
-        // Core required fields - only fields that exist in i_ims_general table
-        asset_detail_id: selectedAsset.asset_detail_id, // Use asset_detail_id from the selected asset
-        year_in_service: formData.yearInService, // yyyy-mm-dd format
-        tmin: formData.tmin || null, // Store as string as expected by database
+        asset_detail_id: selectedAsset.asset_detail_id,
+        year_in_service: formData.yearInService,
+        tmin: formData.tmin || null,
         material_construction_id:
           parseInt(formData.materialConstruction) || null,
         description: formData.description,
-        normal_wall_thickness: parseFloat(formData.nominalThickness) || null, // Correct mapping for General tab
+        normal_wall_thickness: parseFloat(formData.nominalThickness) || null,
         insulation: formData.insulation === "yes",
         line_h2s: formData.h2s === "yes",
         internal_lining: formData.internalLining === "yes",
         pwht: formData.pwht === "yes",
         cladding: formData.cladding === "yes",
-        ims_asset_type_id: 1, // Automatically set to 1 for Pressure Vessel
+        ims_asset_type_id: 1,
         inner_diameter: parseFloat(formData.innerDiameter) || null,
         clad_thickness: parseFloat(formData.cladThickness) || null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        created_by: user?.id,
       };
-
-      console.log("Prepared i_ims_general data:", imsGeneralData);
 
       // Insert main record into i_ims_general table
       const { data: savedRecord, error: insertError } = await supabase
@@ -356,10 +500,10 @@ const NewPressureVesselPage: React.FC = () => {
       if (insertError) throw insertError;
       const recordId = savedRecord.id;
 
-      // Insert Design Tab data into i_ims_design table
+      // Insert Design Tab data
       const imsDesignData = {
         asset_detail_id: selectedAsset.asset_detail_id,
-        ims_asset_type_id: 1, // Pressure Vessel
+        ims_asset_type_id: 1,
         outer_diameter: parseFloat(formData.outerDiameter) || null,
         internal_diameter: parseFloat(formData.innerDiameter) || null,
         length: parseFloat(formData.length) || null,
@@ -379,9 +523,8 @@ const NewPressureVesselPage: React.FC = () => {
         mix_point: formData.mixpoint === "yes",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        created_by: user?.id,
       };
-
-      console.log("Prepared i_ims_design data:", imsDesignData);
 
       const { error: designInsertError } = await supabase
         .from("i_ims_design")
@@ -389,15 +532,15 @@ const NewPressureVesselPage: React.FC = () => {
 
       if (designInsertError) throw designInsertError;
 
-      // Insert Protection Tab data into i_ims_protection table
+      // Insert Protection Tab data
       const imsProtectionData = {
         asset_detail_id: selectedAsset.asset_detail_id,
-        ims_asset_type_id: 1, // Pressure Vessel
+        ims_asset_type_id: 1,
         coating_quality_id: parseInt(formData.coatingQuality) || null,
         insulation_type_id: parseInt(formData.insulationType) || null,
         insulation_complexity_id:
           parseInt(formData.insulationComplexity) || null,
-        insulation_condition: formData.insulationCondition || null,
+        insulation_condition_id: formData.insulationCondition || null,
         design_fabrication_id: parseInt(formData.designFabrication) || null,
         interface_id: parseInt(formData.interface) || null,
         lining_type: formData.liningType || null,
@@ -406,9 +549,9 @@ const NewPressureVesselPage: React.FC = () => {
         online_monitor: parseInt(formData.onlineMonitor) || null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        ims_general_id: recordId,
+        created_by: user?.id,
       };
-
-      console.log("Prepared i_ims_protection data:", imsProtectionData);
 
       const { error: protectionInsertError } = await supabase
         .from("i_ims_protection")
@@ -416,19 +559,19 @@ const NewPressureVesselPage: React.FC = () => {
 
       if (protectionInsertError) throw protectionInsertError;
 
-      // Insert Service Tab data into i_ims_service table
+      // Insert Service Tab data
       const imsServiceData = {
         asset_detail_id: selectedAsset.asset_detail_id,
-        ims_asset_type_id: 1, // Pressure Vessel
+        ims_asset_type_id: 1,
         fluid_representive_id: parseInt(formData.fluidRepresentative) || null,
         toxicity_id: parseInt(formData.toxicity) || null,
         fluid_phase_id: parseInt(formData.fluidPhase) || null,
         toxic_mass_fraction: parseFloat(formData.toxicMassFraction) || null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        ims_general_id: recordId,
+        created_by: user?.id,
       };
-
-      console.log("Prepared i_ims_service data:", imsServiceData);
 
       const { error: serviceInsertError } = await supabase
         .from("i_ims_service")
@@ -436,137 +579,92 @@ const NewPressureVesselPage: React.FC = () => {
 
       if (serviceInsertError) throw serviceInsertError;
 
-      // Handle Inspection Reports File Upload with proper bucket structure
-      let inspectionReportPaths: string[] = [];
-      if (formData.inspectionReports.length > 0) {
-        console.log(
-          `Uploading ${formData.inspectionReports.length} inspection report files...`
-        );
+      const imsInspectionData = {
+        asset_detail_id: selectedAsset.asset_detail_id,
+        inspection_plan: formData.inspectionPlan || null,
+        created_at: new Date().toISOString(),
+        created_by: user?.id,
+        updated_at: new Date().toISOString(),
+        ims_general_id: recordId,
+      };
 
+      const { error: inspectionInsertError } = await supabase
+        .from("i_ims_inspection")
+        .insert(imsInspectionData);
+
+      if (inspectionInsertError) throw inspectionInsertError;
+
+      // Handle Inspection Reports File Upload
+      if (formData.inspectionReports.length > 0) {
         for (const file of formData.inspectionReports) {
           try {
-            // Create bucket structure: integrity/pressure-vessel/{id}/reports/
-            const bucketPath = `integrity/pressure-vessel/${recordId}/reports/${Date.now()}_${
-              file.name
-            }`;
-
-            console.log(
-              `Uploading inspection report: ${file.name} to ${bucketPath}`
-            );
-            console.log(
-              `Uploading inspection report: ${file.name} to ${bucketPath}`
-            );
+            const bucketPath = `integrity/pressure-vessel/${selectedAsset.asset_detail_id}/reports/${Date.now()}_${file.name}`;
 
             // Upload to Supabase Storage
-            const { data: uploadData, error: uploadError } =
-              await supabase.storage
-                .from("integrity")
-                .upload(bucketPath, file, {
-                  cacheControl: "3600",
-                  upsert: false,
-                });
+            const { error: uploadError } = await supabase.storage
+              .from("integrity")
+              .upload(bucketPath, file, {
+                cacheControl: "3600",
+                upsert: false,
+              });
 
             if (uploadError) throw uploadError;
-
-            // Store file path (not full URL) for database
-            inspectionReportPaths.push(bucketPath);
 
             // Insert into i_inspection_attachment table
             const { error: attachmentError } = await supabase
               .from("i_ims_inspection_attachment")
               .insert({
-                asset_detail_id: recordId, // links to i_ims_general.id
-                file_path: bucketPath,
-                file_name: file.name,
-                file_size: file.size,
-                uploaded_at: new Date().toISOString(),
+                asset_detail_id: selectedAsset.asset_detail_id,
+                attachment_path: bucketPath,
+                created_at: new Date().toISOString(),
+                created_by: user?.id,
               });
 
             if (attachmentError) throw attachmentError;
           } catch (fileError) {
-            console.error(
-              `Error uploading inspection report ${file.name}:`,
-              fileError
-            );
-            // Continue with other files even if one fails
+            console.error(`Error uploading inspection report ${file.name}:`, fileError);
           }
         }
       }
 
-      // Handle General Attachments File Upload with proper bucket structure
-      let attachmentPaths: string[] = [];
+      // Handle General Attachments File Upload
       if (formData.attachments.length > 0) {
-        console.log(
-          `Uploading ${formData.attachments.length} attachment files...`
-        );
-
         for (const file of formData.attachments) {
           try {
-            // Create bucket structure: integrity/pressure-vessel/{id}/attachments/
-            const bucketPath = `integrity/pressure-vessel/${recordId}/attachments/${Date.now()}_${
-              file.name
-            }`;
-
-            console.log(`Uploading attachment: ${file.name} to ${bucketPath}`);
+            const bucketPath = `integrity/pressure-vessel/${recordId}/attachments/${Date.now()}_${file.name}`;
 
             // Upload to Supabase Storage
-            const { data: uploadData, error: uploadError } =
-              await supabase.storage
-                .from("integrity")
-                .upload(bucketPath, file, {
-                  cacheControl: "3600",
-                  upsert: false,
-                });
+            const { error: uploadError } = await supabase.storage
+              .from("integrity")
+              .upload(bucketPath, file, {
+                cacheControl: "3600",
+                upsert: false,
+              });
 
             if (uploadError) throw uploadError;
-
-            // Store file path (not full URL) for database
-            attachmentPaths.push(bucketPath);
 
             // Insert into i_ims_attachment table
             const { error: attachmentError } = await supabase
               .from("i_ims_attachment")
               .insert({
-                asset_detail_id: recordId, // links to i_ims_general.id
-                file_path: bucketPath,
-                file_name: file.name,
-                file_size: file.size,
-                uploaded_at: new Date().toISOString(),
+                asset_detail_id: selectedAsset.asset_detail_id,
+                attachment_path: bucketPath,
+                created_at: new Date().toISOString(),
+                created_by: user?.id,
+                remark: formData.notes,
               });
 
             if (attachmentError) throw attachmentError;
           } catch (fileError) {
-            console.error(
-              `Error uploading attachment ${file.name}:`,
-              fileError
-            );
-            // Continue with other files even if one fails
+            console.error(`Error uploading attachment ${file.name}:`, fileError);
           }
         }
       }
 
-      // Log summary for debugging
-      console.log("=== Save Summary ===");
-      console.log("i_ims_general Record ID:", recordId);
-      console.log("Inspection Reports Uploaded:", inspectionReportPaths.length);
-      console.log("Attachments Uploaded:", attachmentPaths.length);
-      console.log("Data Structure:");
-      console.log("- Main record saved to: i_ims_general table");
-      console.log("- Design data saved to: i_ims_design table");
-      console.log("- Protection data saved to: i_ims_protection table");
-      console.log("- Service data saved to: i_ims_service table");
-      console.log(
-        "- Inspection reports saved to: i_inspection_attachment table"
-      );
-      console.log("- General attachments saved to: i_ims_attachment table");
-      console.log(
-        "- File bucket structure: integrity/pressure-vessel/{id}/reports/ and /attachments/"
-      );
-
       // Success notification
       toast({
         title: "Success!",
-        description: `Pressure vessel ${formData.equipmentTag} has been created successfully with ${inspectionReportPaths.length} inspection reports and ${attachmentPaths.length} attachments.`,
+        description: `Pressure vessel ${formData.equipmentTag} has been created successfully with ${formData.inspectionReports.length} inspection reports and ${formData.attachments.length} attachments.`,
       });
 
       // Navigate back to integrity page
@@ -585,9 +683,9 @@ const NewPressureVesselPage: React.FC = () => {
     }
   };
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     navigate("/monitor/integrity");
-  };
+  }, [navigate]);
 
   return (
     <div className="space-y-6">
@@ -603,7 +701,7 @@ const NewPressureVesselPage: React.FC = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate("/monitor/integrity")}
+            onClick={handleCancel}
             className="p-0 h-auto"
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
@@ -788,7 +886,6 @@ const NewPressureVesselPage: React.FC = () => {
                                 {option.label}
                               </SelectItem>
                             ))}
-                            {/* Fallback dummy data if no API data */}
                             {materialConstructionOptions.length === 0 && (
                               <>
                                 <SelectItem value="carbon-steel-a516-gr70">
@@ -1447,12 +1544,14 @@ const NewPressureVesselPage: React.FC = () => {
                             <SelectValue placeholder="Select coating quality" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="excellent">Excellent</SelectItem>
-                            <SelectItem value="good">Good</SelectItem>
-                            <SelectItem value="fair">Fair</SelectItem>
-                            <SelectItem value="poor">Poor</SelectItem>
-                            <SelectItem value="very-poor">Very Poor</SelectItem>
-                            <SelectItem value="failed">Failed</SelectItem>
+                            {coatingQualityOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -1469,21 +1568,14 @@ const NewPressureVesselPage: React.FC = () => {
                             <SelectValue placeholder="Select insulation type" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="mineral-wool">
-                              Mineral Wool
-                            </SelectItem>
-                            <SelectItem value="calcium-silicate">
-                              Calcium Silicate
-                            </SelectItem>
-                            <SelectItem value="perlite">Perlite</SelectItem>
-                            <SelectItem value="ceramic-fiber">
-                              Ceramic Fiber
-                            </SelectItem>
-                            <SelectItem value="polyurethane-foam">
-                              Polyurethane Foam
-                            </SelectItem>
-                            <SelectItem value="aerogel">Aerogel</SelectItem>
-                            <SelectItem value="none">None</SelectItem>
+                            {insulationTypeOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value.toString()}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -1502,10 +1594,14 @@ const NewPressureVesselPage: React.FC = () => {
                             <SelectValue placeholder="Select complexity" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="low">Low</SelectItem>
-                            <SelectItem value="medium">Medium</SelectItem>
-                            <SelectItem value="high">High</SelectItem>
-                            <SelectItem value="very-high">Very High</SelectItem>
+                            {insulationComplexityOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value.toString()}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -1521,17 +1617,26 @@ const NewPressureVesselPage: React.FC = () => {
                         <Label htmlFor="insulationCondition">
                           Insulation Condition
                         </Label>
-                        <Input
-                          id="insulationCondition"
+                        <Select
                           value={formData.insulationCondition}
-                          onChange={(e) =>
-                            handleInputChange(
-                              "insulationCondition",
-                              e.target.value
-                            )
+                          onValueChange={(value) =>
+                            handleInputChange("insulationCondition", value)
                           }
-                          placeholder="Describe insulation condition"
-                        />
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select insulation condition" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {insulationConditionOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value.toString()}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       <div className="space-y-2">
@@ -1548,14 +1653,14 @@ const NewPressureVesselPage: React.FC = () => {
                             <SelectValue placeholder="Select design fabrication" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="welded">Welded</SelectItem>
-                            <SelectItem value="seamless">Seamless</SelectItem>
-                            <SelectItem value="forged">Forged</SelectItem>
-                            <SelectItem value="cast">Cast</SelectItem>
-                            <SelectItem value="rolled">Rolled</SelectItem>
-                            <SelectItem value="fabricated">
-                              Fabricated
-                            </SelectItem>
+                            {designFabricationOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value.toString()}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -1572,16 +1677,14 @@ const NewPressureVesselPage: React.FC = () => {
                             <SelectValue placeholder="Select interface" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="buried">Buried</SelectItem>
-                            <SelectItem value="soil-air">Soil-Air</SelectItem>
-                            <SelectItem value="water-air">Water-Air</SelectItem>
-                            <SelectItem value="atmospheric">
-                              Atmospheric
-                            </SelectItem>
-                            <SelectItem value="submerged">Submerged</SelectItem>
-                            <SelectItem value="splash-zone">
-                              Splash Zone
-                            </SelectItem>
+                            {interfaceOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value.toString()}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -1655,28 +1758,14 @@ const NewPressureVesselPage: React.FC = () => {
                             <SelectValue placeholder="Select online monitor" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="ultrasonic">
-                              Ultrasonic Thickness
-                            </SelectItem>
-                            <SelectItem value="radiographic">
-                              Radiographic
-                            </SelectItem>
-                            <SelectItem value="acoustic-emission">
-                              Acoustic Emission
-                            </SelectItem>
-                            <SelectItem value="corrosion-probe">
-                              Corrosion Probe
-                            </SelectItem>
-                            <SelectItem value="strain-gauge">
-                              Strain Gauge
-                            </SelectItem>
-                            <SelectItem value="vibration">
-                              Vibration Monitor
-                            </SelectItem>
-                            <SelectItem value="thermal">
-                              Thermal Monitor
-                            </SelectItem>
-                            <SelectItem value="none">None</SelectItem>
+                            {onlineMonitorOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value.toString()}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -1728,26 +1817,14 @@ const NewPressureVesselPage: React.FC = () => {
                             <SelectValue placeholder="Select fluid representative" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="crude-oil">Crude Oil</SelectItem>
-                            <SelectItem value="natural-gas">
-                              Natural Gas
-                            </SelectItem>
-                            <SelectItem value="produced-water">
-                              Produced Water
-                            </SelectItem>
-                            <SelectItem value="condensate">
-                              Condensate
-                            </SelectItem>
-                            <SelectItem value="methanol">Methanol</SelectItem>
-                            <SelectItem value="glycol">Glycol</SelectItem>
-                            <SelectItem value="seawater">Seawater</SelectItem>
-                            <SelectItem value="diesel">Diesel</SelectItem>
-                            <SelectItem value="fuel-gas">Fuel Gas</SelectItem>
-                            <SelectItem value="flare-gas">Flare Gas</SelectItem>
-                            <SelectItem value="instrument-air">
-                              Instrument Air
-                            </SelectItem>
-                            <SelectItem value="nitrogen">Nitrogen</SelectItem>
+                            {fluidRepresentativeOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value.toString()}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -1764,20 +1841,14 @@ const NewPressureVesselPage: React.FC = () => {
                             <SelectValue placeholder="Select toxicity level" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="non-toxic">Non-Toxic</SelectItem>
-                            <SelectItem value="slightly-toxic">
-                              Slightly Toxic
-                            </SelectItem>
-                            <SelectItem value="moderately-toxic">
-                              Moderately Toxic
-                            </SelectItem>
-                            <SelectItem value="highly-toxic">
-                              Highly Toxic
-                            </SelectItem>
-                            <SelectItem value="extremely-toxic">
-                              Extremely Toxic
-                            </SelectItem>
-                            <SelectItem value="lethal">Lethal</SelectItem>
+                            {toxicityOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value.toString()}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -1801,14 +1872,14 @@ const NewPressureVesselPage: React.FC = () => {
                             <SelectValue placeholder="Select fluid phase" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="gas">Gas</SelectItem>
-                            <SelectItem value="liquid">Liquid</SelectItem>
-                            <SelectItem value="two-phase">Two Phase</SelectItem>
-                            <SelectItem value="vapor">Vapor</SelectItem>
-                            <SelectItem value="steam">Steam</SelectItem>
-                            <SelectItem value="supercritical">
-                              Supercritical
-                            </SelectItem>
+                            {fluidPhaseOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value.toString()}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -1991,110 +2062,7 @@ Example content:
                                 Uploaded Documentation
                               </h3>
                               <div className="grid grid-cols-1 gap-3">
-                                {formData.inspectionReports.map(
-                                  (file, index) => {
-                                    const getFileIcon = (fileName: string) => {
-                                      const ext = fileName
-                                        .split(".")
-                                        .pop()
-                                        ?.toLowerCase();
-                                      switch (ext) {
-                                        case "pdf":
-                                          return (
-                                            <FileText className="h-5 w-5 text-red-500" />
-                                          );
-                                        case "jpg":
-                                        case "jpeg":
-                                        case "png":
-                                          return (
-                                            <FileImage className="h-5 w-5 text-green-500" />
-                                          );
-                                        case "xls":
-                                        case "xlsx":
-                                          return (
-                                            <FileSpreadsheet className="h-5 w-5 text-green-600" />
-                                          );
-                                        case "dwg":
-                                        case "dxf":
-                                          return (
-                                            <File className="h-5 w-5 text-blue-500" />
-                                          );
-                                        default:
-                                          return (
-                                            <FileText className="h-5 w-5 text-gray-500" />
-                                          );
-                                      }
-                                    };
-
-                                    const getFileCategory = (
-                                      fileName: string
-                                    ) => {
-                                      const name = fileName.toLowerCase();
-                                      if (
-                                        name.includes("pid") ||
-                                        name.includes("p&id")
-                                      )
-                                        return "P&ID";
-                                      if (name.includes("pfd")) return "PFD";
-                                      if (
-                                        name.includes("ga") ||
-                                        name.includes("general")
-                                      )
-                                        return "GA";
-                                      if (
-                                        name.includes("iso") ||
-                                        name.includes("isometric")
-                                      )
-                                        return "ISO";
-                                      if (
-                                        name.includes("inspection") ||
-                                        name.includes("report")
-                                      )
-                                        return "Report";
-                                      return "Document";
-                                    };
-
-                                    return (
-                                      <div
-                                        key={index}
-                                        className="flex items-center justify-between p-4 border rounded-lg bg-white shadow-sm"
-                                      >
-                                        <div className="flex items-center gap-3">
-                                          {getFileIcon(file.name)}
-                                          <div className="flex-1">
-                                            <div className="flex items-center gap-2">
-                                              <p className="font-medium">
-                                                {file.name}
-                                              </p>
-                                              <span className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded">
-                                                {getFileCategory(file.name)}
-                                              </span>
-                                            </div>
-                                            <p className="text-sm text-muted-foreground">
-                                              {(
-                                                file.size /
-                                                1024 /
-                                                1024
-                                              ).toFixed(2)}{" "}
-                                              MB
-                                            </p>
-                                          </div>
-                                        </div>
-                                        <Button
-                                          type="button"
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() =>
-                                            removeInspectionReport(index)
-                                          }
-                                          className="text-red-500 hover:text-red-700"
-                                        >
-                                          <X className="h-4 w-4" />
-                                        </Button>
-                                      </div>
-                                    );
-                                  }
-                                )}
+                                {inspectionReportItems}
                               </div>
                             </div>
                           )}
@@ -2195,147 +2163,7 @@ Example content:
 
                         {/* Categorized file display */}
                         <div className="grid grid-cols-1 gap-4">
-                          {formData.attachments.map((file, index) => {
-                            const getFileIcon = (fileName: string) => {
-                              const ext = fileName
-                                .split(".")
-                                .pop()
-                                ?.toLowerCase();
-                              switch (ext) {
-                                case "pdf":
-                                  return (
-                                    <FileText className="h-6 w-6 text-red-500" />
-                                  );
-                                case "doc":
-                                case "docx":
-                                  return (
-                                    <FileText className="h-6 w-6 text-blue-500" />
-                                  );
-                                case "xls":
-                                case "xlsx":
-                                  return (
-                                    <FileSpreadsheet className="h-6 w-6 text-green-600" />
-                                  );
-                                case "jpg":
-                                case "jpeg":
-                                case "png":
-                                case "gif":
-                                case "bmp":
-                                  return (
-                                    <FileImage className="h-6 w-6 text-green-500" />
-                                  );
-                                case "dwg":
-                                case "dxf":
-                                  return (
-                                    <File className="h-6 w-6 text-blue-600" />
-                                  );
-                                case "ppt":
-                                case "pptx":
-                                  return (
-                                    <FileText className="h-6 w-6 text-orange-500" />
-                                  );
-                                default:
-                                  return (
-                                    <File className="h-6 w-6 text-gray-500" />
-                                  );
-                              }
-                            };
-
-                            const getFileTypeLabel = (fileName: string) => {
-                              const ext = fileName
-                                .split(".")
-                                .pop()
-                                ?.toLowerCase();
-                              switch (ext) {
-                                case "pdf":
-                                  return "PDF Document";
-                                case "doc":
-                                case "docx":
-                                  return "Word Document";
-                                case "xls":
-                                case "xlsx":
-                                  return "Excel Spreadsheet";
-                                case "ppt":
-                                case "pptx":
-                                  return "PowerPoint";
-                                case "jpg":
-                                case "jpeg":
-                                case "png":
-                                case "gif":
-                                case "bmp":
-                                  return "Image File";
-                                case "dwg":
-                                case "dxf":
-                                  return "CAD Drawing";
-                                case "txt":
-                                  return "Text File";
-                                case "csv":
-                                  return "CSV File";
-                                default:
-                                  return "Document";
-                              }
-                            };
-
-                            const getFileSizeColor = (size: number) => {
-                              const sizeInMB = size / 1024 / 1024;
-                              if (sizeInMB > 10) return "text-red-600";
-                              if (sizeInMB > 5) return "text-orange-600";
-                              return "text-gray-600";
-                            };
-
-                            return (
-                              <div
-                                key={index}
-                                className="flex items-center justify-between p-4 border rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow"
-                              >
-                                <div className="flex items-center gap-4 flex-1">
-                                  {getFileIcon(file.name)}
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <p className="font-medium truncate">
-                                        {file.name}
-                                      </p>
-                                      <span className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded">
-                                        {getFileTypeLabel(file.name)}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                                      <span
-                                        className={getFileSizeColor(file.size)}
-                                      >
-                                        {(file.size / 1024 / 1024).toFixed(2)}{" "}
-                                        MB
-                                      </span>
-                                      <span>•</span>
-                                      <span>
-                                        Uploaded{" "}
-                                        {new Date().toLocaleDateString()}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-blue-600 hover:text-blue-800"
-                                  >
-                                    Preview
-                                  </Button>
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => removeAttachment(index)}
-                                    className="text-red-500 hover:text-red-700"
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </div>
-                            );
-                          })}
+                          {attachmentItems}
                         </div>
 
                         {/* File summary */}
@@ -2446,4 +2274,4 @@ Examples:
   );
 };
 
-export default NewPressureVesselPage;
+export default React.memo(NewPressureVesselPage);
