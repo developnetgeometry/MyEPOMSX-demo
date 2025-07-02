@@ -1387,12 +1387,14 @@ const RBIAssessmentCreatePage: React.FC = () => {
     }
   }, [formData?.fc_cmd_cof_prod, formData?.fc_affa_cof_prod, formData?.fc_prod_cof_prod, formData?.fc_inj_cost_cof_prod, formData?.fc_environ_cof_prod]);
 
-
-
-
-
-
   //*****************  Formula CofProd End
+
+
+  //*****************  Formula CofArea Start
+
+  //
+  
+  //*****************  Formula CofArea End
 
 
 

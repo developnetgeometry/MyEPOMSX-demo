@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -13,8 +14,25 @@ const CofAreaSubTab: React.FC<{ formData: any; handleSelectChange: any }> = ({
     formData,
     handleSelectChange,
 }) => {
+    const [precision, setPrecision] = useState<2 | 8>(2);
+
+    const formatNumber = (val: number | null) => {
+        if (val === null || val === undefined) return "";
+        return parseFloat(Number(val).toFixed(precision)).toString();
+    };
     return (
         <div className="space-y-6">
+            {/* Toggle precision */}
+            <div className="flex justify-end">
+                <Button
+                    type="button"
+                    onClick={() => setPrecision((prev) => (prev === 2 ? 8 : 2))}
+                    variant="outline"
+                    size="sm"
+                >
+                    Accuracy: {precision} decimals
+                </Button>
+            </div>
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                 <h3 className="text-lg font-semibold text-blue-800 mb-2">
                     Consequence of Failure, Area (CoF, m²)
