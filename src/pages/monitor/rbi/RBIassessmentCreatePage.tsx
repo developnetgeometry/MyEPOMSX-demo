@@ -14,6 +14,7 @@ import { useAverageMtsMpaMysMpaByName } from "./hooks/use-average-mts_mpa-mys_mp
 import { useImsGeneralDataByAssetDetailId } from "./hooks/use-ims-general-data";
 import { useImsProtectionByAssetDetailId } from "./hooks/use-ims-protection-by-asset-detail-id";
 import { useImsDesignByAssetDetailId } from "./hooks/use-ims-design-by-asset-detail-id";
+import { useImsServiceByAssetDetailId } from "./hooks/use-ims-service-by-asset-detail-id";
 import { calcIThinAndProportions, calculateArt, calculateBThins, calculateCrAct, calculateCrCm, calculateCrExp, calculateDFThinFDFThinFB, calculateFsThin, calculateSrThin } from "./hooks/formula-df-thin";
 import { calculateAgeTk } from "./hooks/formula";
 import { calculateAge, calculateAgeCoat, calculateArtExt, calculateBetaExtcorrs, calculateCoatAdj, calculateCrActExt, calculateCrExpExt, calculateDFextcorrF, calculateFSextcorr, calculateIextCorrsAndPoExtcorrs, calculateSRextcorr } from "./hooks/formula-df-ext";
@@ -22,6 +23,7 @@ import { calculateDfMfat, calculateDmFatFb } from "./hooks/formula-df-mfat";
 import { calculateAgeCoatCui, calculateAgeCui, calculateArtCui, calculateBCuiFsCui, calculateCoatAdjCui, calculateCrExpCui, calculateDFCuiFFCui, calculateFSCUIFCui, calculateICuiFsAndPoCuiFsCui, calculateSRCUIFCui } from "./hooks/formula-df-cui";
 import { calculateDfSccFbSccScc, calculateDfSccScc, calculateEnvSeveritySccScc, calculateSscSucsFToHtSccScc, calculateSusceptibilitySccScc, calculateSviSccScc } from "./hooks/formula-df-scc-scc";
 import { calculateDfSccSohic, calculateDfSohicFbSccSohic, calculateEnvSeveritySccSohic, calculateSuscToCrackSccSohic, calculateSviSccSohic } from "./hooks/formula-df-scc-sohic";
+import { calculateFcAffaCofProd, calculateFcCmdCofProd, calculateFcCofProd, calculateFcEnvironCofProd, calculateFcInjCostCofProd, calculateFcProdCofProd, calculateFracEvapCofProd, calculateOutageAffaCofProd, calculateOutageCmdCofProd, calculatePopDensCofProd, calculateVolEnvCofProd } from "./hooks/formula-cof-prod";
 
 
 const RBIAssessmentCreatePage: React.FC = () => {
@@ -29,7 +31,7 @@ const RBIAssessmentCreatePage: React.FC = () => {
 
   const [formData, setFormData] = useState<any | null>({
     // ims_general
-    asset_detail_id: null,
+    asset_detail_id: 54,
     line_no: "",
     pipe_schedule_id: null,
     pressure_rating: 0,
@@ -96,6 +98,8 @@ const RBIAssessmentCreatePage: React.FC = () => {
     lining_type: "",
     lining_condition: "",
     lining_monitoring: "",
+    // ims_service
+    fluid_representative_name: "",
     // useAverageMtsMpaMysMpaByName
     avg_mts_mpa: 0,
     avg_mys_mpa: 0,
@@ -263,7 +267,6 @@ const RBIAssessmentCreatePage: React.FC = () => {
     comp_type_cof: "",
 
     // cof_prod
-
     fc_cmd_cof_prod: 0,
     fc_affa_cof_prod: 0,
     outage_affa_cof_prod: 0,
@@ -271,10 +274,10 @@ const RBIAssessmentCreatePage: React.FC = () => {
     outage_cmd_cof_prod: 0,
     lra_prod_cof_prod: 0,
     fc_prod_cof_prod: 0,
-    pop_dens_cof_prod: 0,
+    pop_dens_cof_prod: calculatePopDensCofProd() ?? 0,
     inj_cost_cof_prod: 0,
     fc_inj_cost_cof_prod: 0,
-    envcose_cof_prod: 0,
+    envcost_cof_prod: 0,
     frac_evap_cof_prod: 0,
     vol_env_cof_prod: 0,
     fc_environ_cof_prod: 0,
@@ -321,9 +324,10 @@ const RBIAssessmentCreatePage: React.FC = () => {
   const { data: imsGeneral, isLoading: isImsGeneralLoading } = useImsGeneralDataByAssetDetailId(formData?.asset_detail_id ?? 0);
   const { data: imsDesign, isLoading: isImsDesignLoading } = useImsDesignByAssetDetailId(formData?.asset_detail_id ?? 0);
   const { data: imsProtection, isLoading: isImsProtectionLoading } = useImsProtectionByAssetDetailId(formData?.asset_detail_id ?? 0);
+  const { data: imsService, isLoading: isImsServiceLoading } = useImsServiceByAssetDetailId(formData?.asset_detail_id ?? 0);
   const { data: avgs, isLoading: isAvgsLoading } = useAverageMtsMpaMysMpaByName(formData?.spec_code ?? ""); // Example calculation
 
-  const allLoaded = !isImsDesignLoading && !isImsGeneralLoading && !isImsProtectionLoading;
+  const allLoaded = !isImsDesignLoading && !isImsGeneralLoading && !isImsProtectionLoading && !isImsServiceLoading;
 
   useEffect(() => {
     if (formData && allLoaded) {
@@ -347,6 +351,7 @@ const RBIAssessmentCreatePage: React.FC = () => {
         pwht: imsGeneral?.pwht ?? false,
         cladding: imsGeneral?.cladding ?? false,
         ims_asset_type_id: imsGeneral?.ims_asset_type_id ?? null,
+        comp_type_cof: imsGeneral?.asset_detail_id?.type_id?.name ?? "",
         clad_thickness: imsGeneral?.clad_thickness ?? 0,
         pipe_class_id: imsGeneral?.pipe_class_id ?? null,
 
@@ -397,7 +402,10 @@ const RBIAssessmentCreatePage: React.FC = () => {
         insulation_condition_value: imsProtection?.insulation_condition_id?.value ?? 0,
         lining_type: imsProtection?.lining_type ?? "",
         lining_condition: imsProtection?.lining_condition ?? "",
-        lining_monitoring: imsProtection?.lining_monitoring ?? ""
+        lining_monitoring: imsProtection?.lining_monitoring ?? "",
+
+        // ims_service
+        fluid_representative_name: imsService?.fluid_representive_id?.name ?? "",
 
       }));
     }
@@ -1227,11 +1235,164 @@ const RBIAssessmentCreatePage: React.FC = () => {
     }
   }, [formData?.dfsohicfb_scc_sohic, formData?.last_inspection_date_scc_sohic, formData?.online_monitor_value_scc_sohic]);
 
-
-
-
-
   //*****************  Formula DfSccSoHic End
+
+  //*****************  Formula CofProd Start
+
+  // fcCmdCofProd❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const fcCmd = calculateFcCmdCofProd(
+        formData.ims_asset_type_id,
+        formData.comp_type_cof,
+        formData.composition
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        fc_cmd_cof_prod: fcCmd
+      }));
+    }
+  }, [formData?.ims_asset_type_id, formData?.comp_type_cof, formData?.composition]);
+
+  // fcAffaCofProd❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const fcAffa = calculateFcAffaCofProd(
+        formData.ca_cmd_flam_cof_area,
+        formData.fc_cmd_cof_prod
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        fc_affa_cof_prod: fcAffa
+      }));
+    }
+  }, [formData?.ca_cmd_flam_cof_area, formData?.fc_cmd_cof_prod]);
+
+  // outage_affa_cof_prod❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const outageAffa = calculateOutageAffaCofProd(
+        formData.fc_affa_cof_prod
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        outage_affa_cof_prod: outageAffa
+      }));
+    }
+  }, [formData?.ca_cmd_flam_cof_outage, formData?.fc_affa_cof_prod]);
+
+  // outage_cmd_cof_prod❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const outageCmd = calculateOutageCmdCofProd(
+        formData.ims_asset_type_id,
+        formData.comp_type_cof,
+        formData.outage_mult_cof_prod
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        outage_cmd_cof_prod: outageCmd
+      }));
+    }
+  }, [formData?.ims_asset_type_id, formData?.comp_type_cof, formData?.outage_mult_cof_prod]);
+
+  // fc_prod_cof_prod❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const fcProd = calculateFcProdCofProd(
+        formData.outage_affa_cof_prod,
+        formData.outage_cmd_cof_prod,
+        formData.lra_prod_cof_prod
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        fc_prod_cof_prod: fcProd
+      }));
+    }
+  }, [formData?.outage_affa_cof_prod, formData?.outage_cmd_cof_prod, formData?.lra_prod_cof_prod]);
+
+  //fc_inj_cost_cof_prod❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const fcInjCost = calculateFcInjCostCofProd(
+        formData.m_release_cof_area,
+        formData.inj_cost_cof_prod,
+        formData.pop_dens_cof_prod
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        fc_inj_cost_cof_prod: fcInjCost
+      }));
+    }
+  }, [formData?.m_release_cof_area, formData?.inj_cost_cof_prod, formData?.pop_dens_cof_prod]);
+
+  //frac_evap_cof_prod⁉️Formula dari Excel may be wrong
+  useEffect(() => {
+    if (formData) {
+      const fracEvap = calculateFracEvapCofProd(
+        formData.fluid_representative_name
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        frac_evap_cof_prod: fracEvap
+      }));
+    }
+  }, [formData?.fluid_representative_name]);
+
+  //vol_env_cof_prod❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const volEnv = calculateVolEnvCofProd(
+        formData.mass_n_cof_area,
+        formData.frac_evap_cof_prod,
+        formData.fluid_representative_name
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        vol_env_cof_prod: volEnv
+      }));
+    }
+  }, [formData?.mass_n_cof_area, formData?.frac_evap_cof_prod, formData?.fluid_representative_name]);
+
+  //fc_environ_cof_prod❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const fcEnviron = calculateFcEnvironCofProd(
+        formData.comp_type_cof,
+        formData.vol_env_cof_prod,
+        formData.envcost_cof_prod
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        fc_environ_cof_prod: fcEnviron
+      }));
+    }
+  }, [formData?.comp_type_cof, formData?.vol_env_cof_prod, formData?.envcost_cof_prod]);
+
+  //fc_cof_prod❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const fcCof = calculateFcCofProd(
+        formData.fc_cmd_cof_prod,
+        formData.fc_affa_cof_prod,
+        formData.fc_prod_cof_prod,
+        formData.fc_inj_cost_cof_prod,
+        formData.fc_environ_cof_prod
+
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        fc_cof_prod: fcCof
+      }));
+    }
+  }, [formData?.fc_cmd_cof_prod, formData?.fc_affa_cof_prod, formData?.fc_prod_cof_prod, formData?.fc_inj_cost_cof_prod, formData?.fc_environ_cof_prod]);
+
+
+
+
+
+
+  //*****************  Formula CofProd End
 
 
 
@@ -1258,9 +1419,9 @@ const RBIAssessmentCreatePage: React.FC = () => {
           <ArrowLeft className="h-4 w-4" /> Back to RBI Assessment
         </Button>
       </div>
-      {/* <h1>last {formData.online_monitor_id_scc_sohic ?? "NA"}</h1>
-      <h1>last {formData.online_monitor_value_scc_sohic ?? "NA"}</h1> */}
-      {/* <h1>coat {formData.ncuifb_cui ?? "NA"}</h1> */}
+      {/* <h1>last {formData.online_monitor_id_scc_sohic ?? "NA"}</h1> */}
+      <h1>last {formData.fluid_representative_name ?? "NA"}</h1>
+      <h1>Asset Detail ID DUMMY. NNTI TUKAR KAT INITIAL : {formData.asset_detail_id ?? "NA"}</h1>
       {/* <pre>{JSON.stringify(imsGeneral, null, 2)}</pre>
       <pre>{JSON.stringify(imsDesign, null, 2)}</pre> */}
 
