@@ -484,54 +484,111 @@ export function calculatePTransCofArea(k: number): number {
     }
 }
 
+// export function calculateW1CofArea(
+//     fluidPhase: string,
+//     fluidRep: string,
+//     comp: string,
+//     psKpa: number,
+//     pTransKpa: number,
+//     k: number,
+//     opTempK: number
+// ): number {
+//     try {
+//         const Cd = 0.61;
+//         const g = 1;
+//         const R = 8.314;
+//         const factor = 0.9 / 1000;
+//         const atmPressure = 101.325;
+
+//         const fluid = fluidTable.find(f => f.fluid === fluidRep);
+//         if (!fluid) return 0;
+
+//         const component = componentAreaTable.find(c => c.comp === comp);
+//         if (!component) return 0;
+
+//         const { liqDensity, mw } = fluid;
+//         const areaMM2 = component.areaMM2;
+
+//         if (fluidPhase === "Liquid") {
+//             const area = areaMM2 / 31623;
+//             const sqrtPart = Math.sqrt((2 * g * (psKpa - 103.25)) / liqDensity);
+//             return Cd * g * liqDensity * area * sqrtPart;
+//         }
+
+//         if (psKpa > pTransKpa) {
+//             const part1 = factor * areaMM2 * psKpa;
+//             const part2 = Math.sqrt((k * mw) / (R * opTempK));
+//             const part3 = Math.pow(2 / (k + 1), (k + 1) / (k - 1));
+//             return part1 * part2 * part3;
+//         } else {
+//             const part1 = factor * areaMM2 * psKpa;
+//             const part2 = Math.sqrt(mw / (R * opTempK));
+//             const pressureRatio = atmPressure / psKpa;
+//             const part3 = (2 * k) / (k - 1);
+//             const part4 = Math.pow(pressureRatio, 2 / k);
+//             const part5 = 1 - Math.pow(pressureRatio, (k - 1) / k);
+//             return part1 * part2 * part3 * part4 * part5;
+//         }
+//     } catch {
+//         return 0;
+//     }
+// }
+
 export function calculateW1CofArea(
-    fluidPhase: string,
-    fluidRep: string,
-    comp: string,
-    psKpa: number,
-    pTransKpa: number,
-    k: number,
-    opTempK: number
+  fluidPhase: string,
+  pSKpa: number,
+  pTransKpa: number,
+  opTempK: number,
+  k: number,
+  repFluid: string,
+  compType: string
 ): number {
-    try {
-        const Cd = 0.61;
-        const g = 1;
-        const R = 8.314;
-        const factor = 0.9 / 1000;
-        const atmPressure = 101.325;
+  try {
+    const ATMOSPHERIC_KPA = 101.325;
+    const SPECIFIC_PRESSURE_REF = 103.25;
+    const GAS_CONSTANT = 8.314;
 
-        const fluid = fluidTable.find(f => f.fluid === fluidRep);
-        if (!fluid) return 0;
+    const fluid = fluidTable.find(f => f.fluid.toLowerCase() === repFluid.toLowerCase());
+    const comp = componentAreaTable.find(c => c.comp.toLowerCase() === compType.toLowerCase());
 
-        const component = componentAreaTable.find(c => c.comp === comp);
-        if (!component) return 0;
+    if (!fluid || !comp) return 0;
 
-        const { liqDensity, mw } = fluid;
-        const areaMM2 = component.areaMM2;
+    const liquidDensity = fluid.liqDensity;
+    const mW = fluid.mw;
+    const areaMM2 = comp.areaMM2;
 
-        if (fluidPhase === "Liquid") {
-            const area = areaMM2 / 31623;
-            const sqrtPart = Math.sqrt((2 * g * (psKpa - 103.25)) / liqDensity);
-            return Cd * g * liqDensity * area * sqrtPart;
-        }
+    if (fluidPhase === "Liquid ") {
+      const deltaPressure = 2 * (pSKpa - SPECIFIC_PRESSURE_REF);
+      const densityRatio = deltaPressure / liquidDensity;
+      const sqrtTerm = Math.sqrt(densityRatio);
+      const areaConversion = areaMM2 / 31623;
+      return 0.61 * liquidDensity * areaConversion * sqrtTerm;
+    } else {
+      const commonFactor = (0.9 / 1000) * areaMM2 * pSKpa;
 
-        if (psKpa > pTransKpa) {
-            const part1 = factor * areaMM2 * psKpa;
-            const part2 = Math.sqrt((k * mw) / (R * opTempK));
-            const part3 = Math.pow(2 / (k + 1), (k + 1) / (k - 1));
-            return part1 * part2 * part3;
-        } else {
-            const part1 = factor * areaMM2 * psKpa;
-            const part2 = Math.sqrt(mw / (R * opTempK));
-            const pressureRatio = atmPressure / psKpa;
-            const part3 = (2 * k) / (k - 1);
-            const part4 = Math.pow(pressureRatio, 2 / k);
-            const part5 = 1 - Math.pow(pressureRatio, (k - 1) / k);
-            return part1 * part2 * part3 * part4 * part5;
-        }
-    } catch {
-        return 0;
+      if (pSKpa > pTransKpa) {
+        const gasProperty = k * mW;
+        const tempFactor = GAS_CONSTANT * opTempK;
+        const compressibilityRatio = gasProperty / tempFactor;
+        const criticalRatio1 = 2 / (k + 1);
+        const criticalExponent = (k + 1) / (k - 1);
+        const criticalFlowValue = compressibilityRatio * Math.pow(criticalRatio1, criticalExponent);
+        return commonFactor * Math.sqrt(criticalFlowValue);
+      } else {
+        const gasProperty = mW / (GAS_CONSTANT * opTempK);
+        const gammaRatio = (2 * k) / (k - 1);
+        const pressureRatio = ATMOSPHERIC_KPA / pSKpa;
+        const pressureExponent1 = 2 / k;
+        const pressureExponent2 = (k - 1) / k;
+        const pressureTerm = Math.pow(pressureRatio, pressureExponent1);
+        const expansionTerm = 1 - Math.pow(pressureRatio, pressureExponent2);
+        const subcriticalExpression = gasProperty * gammaRatio * pressureTerm * expansionTerm;
+        return commonFactor * Math.sqrt(subcriticalExpression);
+      }
     }
+  } catch {
+    return 0;
+  }
 }
 
 export function calculateInventoryCofArea(fluidPhase: string): number {
