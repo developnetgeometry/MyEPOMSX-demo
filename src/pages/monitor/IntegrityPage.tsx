@@ -50,6 +50,7 @@ const IntegrityPage: React.FC = () => {
     } else {
       navigate(`/monitor/integrity/pressure-vessel/${row.id}`);
     }
+    
   };
 
   const handleNewAsset = () => {
@@ -80,7 +81,6 @@ const IntegrityPage: React.FC = () => {
         title="Integrity Management"
         subtitle="Asset integrity monitoring and reporting"
         icon={<ShieldIcon className="h-6 w-6" />}
-        onSearch={(query) => console.log("Search:", query)}
       />
 
       {/* Display error if any */}

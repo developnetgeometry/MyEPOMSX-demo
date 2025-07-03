@@ -19,3 +19,8 @@ export const useCoatingQualityData = () => {
         },
     });
 };
+
+export const useCoatingQualityOptions = () => {
+    const { data } = useCoatingQualityData();
+    return data?.map((item) => ({ value: item.id, label: item.name }));
+}

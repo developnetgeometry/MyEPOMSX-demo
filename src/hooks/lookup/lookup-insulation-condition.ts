@@ -19,3 +19,8 @@ export const useInsulationConditionData = () => {
         },
     });
 };
+
+export const useInsulationConditionOptions = () => {
+    const { data } = useInsulationConditionData();
+    return data?.map((item) => ({ value: item.id, label: item.name }));
+}

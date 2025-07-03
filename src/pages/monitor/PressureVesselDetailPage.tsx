@@ -23,9 +23,24 @@ import {
   X,
   FileText,
   Download,
+  Loader,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabaseClient";
+import { useMaterialConstructionOptions } from "@/hooks/queries/useCorrosionDropdownOptions";
+import { useExtEnvOptions } from "@/hooks/lookup/lookup-ext-env";
+import { useGeometryOptions } from "@/hooks/lookup/lookup-geometry";
+import { useCoatingQualityOptions } from "@/hooks/lookup/lookup-coating-quality";
+import { useDesignFabricationOptions } from "@/hooks/lookup/lookup-design-fabrication";
+import { useFluidPhaseOptions } from "@/hooks/lookup/lookup-fluid-phase";
+import { useFluidRepresentativeOptions } from "@/hooks/lookup/lookup-fluid-representative";
+import { useInsulationComplexityOptions } from "@/hooks/lookup/lookup-insulation-complexity";
+import { useInsulationTypeOptions } from "@/hooks/lookup/lookup-insulation-type";
+import { useInterfaceOptions } from "@/hooks/lookup/lookup-interface";
+import { useOnlineMonitorOptions } from "@/hooks/lookup/lookup-online-monitoring";
+import { useToxicityOptions } from "@/hooks/lookup/lookup-toxicity";
+import { useInsulationConditionOptions } from "@/hooks/lookup/lookup-insulation-condition";
+import { useUpdateVesselData, useVesselData } from "@/hooks/queries/useIntegrity";
 
 interface PressureVesselData {
   // General data from i_ims_general
@@ -71,7 +86,7 @@ interface PressureVesselData {
     coating_quality_id: number;
     insulation_type_id: number;
     insulation_complexity_id: number;
-    insulation_condition: string;
+    insulation_condition_id: number;
     design_fabrication_id: number;
     interface_id: number;
     lining_type: string;
@@ -97,6 +112,67 @@ interface PressureVesselData {
   };
 }
 
+const dummyVesselData: PressureVesselData = {
+  general: {
+    id: 1,
+    asset_detail_id: 1,
+    year_in_service: "2010-01-01",
+    tmin: "8.0",
+    material_construction_id: 72,
+    description: "Main pressure vessel for process line A.",
+    normal_wall_thickness: 12.5,
+    insulation: true,
+    line_h2s: false,
+    internal_lining: true,
+    pwht: false,
+    cladding: true,
+    inner_diameter: 1200,
+    clad_thickness: 2.5,
+  },
+  design: {
+    outer_diameter: 1250,
+    internal_diameter: 1200,
+    length: 5000,
+    welding_efficiency: 0.95,
+    design_temperature: 200,
+    operating_temperature: 180,
+    design_pressure: 2.5,
+    operating_pressure_mpa: 2.0,
+    allowable_stress_mpa: 150,
+    corrosion_allowance: 3.0,
+    ext_env_id: 1,
+    geometry_id: 2,
+    pipe_support: true,
+    soil_water_interface: false,
+    dead_legs: false,
+    mix_point: true,
+  },
+  protection: {
+    coating_quality_id: 1,
+    insulation_type_id: 2,
+    insulation_complexity_id: 3,
+    insulation_condition_id: 1,
+    design_fabrication_id: 4,
+    interface_id: 2,
+    lining_type: "Epoxy",
+    lining_condition: "Excellent",
+    lining_monitoring: "Periodic",
+    online_monitor: 1,
+  },
+  service: {
+    fluid_representive_id: 1,
+    toxicity_id: 2,
+    fluid_phase_id: 1,
+    toxic_mass_fraction: 0.002,
+  },
+  assetDetail: {
+    equipment_tag: "PV-1001",
+    component_type: "Pressure Vessel",
+    area: "Area A",
+    system: "System 1",
+  },
+};
+
 const PressureVesselDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -104,7 +180,10 @@ const PressureVesselDetailPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("general");
-  const [vesselData, setVesselData] = useState<PressureVesselData | null>(null);
+
+  const { data: vesselData, isLoading: isVesselLoading } = useVesselData(Number(id));
+  const updateVesselMutation = useUpdateVesselData(Number(id), setIsEditing);
+  
   const [formData, setFormData] = useState({
     // General Tab
     yearInService: "",
@@ -156,135 +235,157 @@ const PressureVesselDetailPage: React.FC = () => {
     toxicMassFraction: "",
   });
 
-  // Load vessel data on component mount
-  useEffect(() => {
-    if (id) {
-      loadVesselData();
-    }
-  }, [id]);
+  const { data: materialConstructionOptions = [] } =
+    useMaterialConstructionOptions();
+  const coatingQualityOptions = useCoatingQualityOptions();
+  const insulationTypeOptions = useInsulationTypeOptions();
+  const insulationComplexityOptions = useInsulationComplexityOptions();
+  const insulationConditionOptions = useInsulationConditionOptions();
+  const designFabricationOptions = useDesignFabricationOptions();
+  const interfaceOptions = useInterfaceOptions();
+  const onlineMonitorOptions = useOnlineMonitorOptions();
+  const fluidRepresentativeOptions = useFluidRepresentativeOptions();
+  const toxicityOptions = useToxicityOptions();
+  const fluidPhaseOptions = useFluidPhaseOptions();
+  const extEnvOptions = useExtEnvOptions();
+  const geometryOptions = useGeometryOptions();
 
-  const loadVesselData = async () => {
+  useEffect(() => {
+    if (!vesselData) return;
+    setFormData({
+      // General Tab
+      yearInService: vesselData.general.year_in_service || "",
+      materialConstruction:
+        vesselData.general.material_construction_id?.toString() || "",
+      tmin: vesselData.general.tmin || "",
+      description: vesselData.general.description || "",
+      nominalThickness:
+        vesselData.general.normal_wall_thickness?.toString() || "",
+      insulation: vesselData.general.insulation ? "yes" : "no",
+      h2s: vesselData.general.line_h2s ? "yes" : "no",
+      internalLining: vesselData.general.internal_lining ? "yes" : "no",
+      pwht: vesselData.general.pwht ? "yes" : "no",
+      cladding: vesselData.general.cladding ? "yes" : "no",
+      innerDiameter: vesselData.general.inner_diameter?.toString() || "",
+      cladThickness: vesselData.general.clad_thickness?.toString() || "",
+
+      // Design Tab
+      outerDiameter: vesselData.design.outer_diameter?.toString() || "",
+      length: vesselData.design.length?.toString() || "",
+      weldJoinEfficiency:
+        vesselData.design.welding_efficiency?.toString() || "",
+      designTemperature: vesselData.design.design_temperature?.toString() || "",
+      operatingTemperature:
+        vesselData.design.operating_temperature?.toString() || "",
+      designPressure: vesselData.design.design_pressure?.toFixed(1) || "",
+      operatingPressure:
+        vesselData.design.operating_pressure_mpa?.toFixed(1) || "",
+      allowableStress: vesselData.design.allowable_stress_mpa?.toFixed(1) || "",
+      corrosionAllowance:
+        vesselData.design.corrosion_allowance?.toFixed(1) || "",
+      extEnv: vesselData.design.ext_env_id?.toString() || "",
+      geometry: vesselData.design.geometry_id?.toString() || "",
+      pipeSupport: vesselData.design.pipe_support ? "yes" : "no",
+      soilWaterInterface: vesselData.design.soil_water_interface ? "yes" : "no",
+      deadleg: vesselData.design.dead_legs ? "yes" : "no",
+      mixpoint: vesselData.design.mix_point ? "yes" : "no",
+
+      // Protection Tab
+      coatingQuality:
+        vesselData.protection.coating_quality_id?.toString() || "",
+      insulationType:
+        vesselData.protection.insulation_type_id?.toString() || "",
+      insulationComplexity:
+        vesselData.protection.insulation_complexity_id?.toString() || "",
+      insulationCondition: vesselData.protection.insulation_condition_id?.toString() || "",
+      designFabrication:
+        vesselData.protection.design_fabrication_id?.toString() || "",
+      interface: vesselData.protection.interface_id?.toString() || "",
+      liningType: vesselData.protection.lining_type || "",
+      liningCondition: vesselData.protection.lining_condition || "",
+      liningMonitoring: vesselData.protection.lining_monitoring || "",
+      onlineMonitor: vesselData.protection.online_monitor?.toString() || "",
+
+      // Service Tab
+      fluidRepresentative:
+        vesselData.service.fluid_representive_id?.toString() || "",
+      toxicity: vesselData.service.toxicity_id?.toString() || "",
+      fluidPhase: vesselData.service.fluid_phase_id?.toString() || "",
+      toxicMassFraction:
+        vesselData.service.toxic_mass_fraction?.toString() || "",
+    });
+  }, [vesselData]);
+
+  const handleCancel = () => {
+    setIsEditing(false);
+  };
+
+  const handleSave = async () => {
     setIsLoading(true);
     try {
-      // Fetch general data with asset details
-      const { data: generalData, error: generalError } = await supabase
-        .from("i_ims_general")
-        .select(
-          `
-          *,
-          e_asset_detail (
-            equipment_tag,
-            component_type,
-            e_asset (
-              area,
-              system
-            )
-          )
-        `
-        )
-        .eq("id", id)
-        .single();
-
-      if (generalError) throw generalError;
-
-      // Fetch design data
-      const { data: designData, error: designError } = await supabase
-        .from("i_ims_design")
-        .select("*")
-        .eq("asset_detail_id", generalData.asset_detail_id)
-        .eq("ims_asset_type_id", 1) // Pressure Vessel
-        .single();
-
-      // Fetch protection data
-      const { data: protectionData, error: protectionError } = await supabase
-        .from("i_ims_protection")
-        .select("*")
-        .eq("asset_detail_id", generalData.asset_detail_id)
-        .eq("ims_asset_type_id", 1) // Pressure Vessel
-        .single();
-
-      // Fetch service data
-      const { data: serviceData, error: serviceError } = await supabase
-        .from("i_ims_service")
-        .select("*")
-        .eq("asset_detail_id", generalData.asset_detail_id)
-        .eq("ims_asset_type_id", 1) // Pressure Vessel
-        .single();
-
-      // Populate form data
-      setFormData({
+      // Prepare payload for update (convert formData fields as needed)
+      const payload = {
         // General Tab
-        yearInService: generalData.year_in_service || "",
-        materialConstruction:
-          generalData.material_construction_id?.toString() || "",
-        tmin: generalData.tmin || "",
-        description: generalData.description || "",
-        nominalThickness: generalData.normal_wall_thickness?.toString() || "",
-        insulation: generalData.insulation ? "yes" : "no",
-        h2s: generalData.line_h2s ? "yes" : "no",
-        internalLining: generalData.internal_lining ? "yes" : "no",
-        pwht: generalData.pwht ? "yes" : "no",
-        cladding: generalData.cladding ? "yes" : "no",
-        innerDiameter: generalData.inner_diameter?.toString() || "",
-        cladThickness: generalData.clad_thickness?.toString() || "",
-
-        // Design Tab
-        outerDiameter: designData?.outer_diameter?.toString() || "",
-        length: designData?.length?.toString() || "",
-        weldJoinEfficiency: designData?.welding_efficiency?.toString() || "",
-        designTemperature: designData?.design_temperature?.toString() || "",
-        operatingTemperature:
-          designData?.operating_temperature?.toString() || "",
-        designPressure: designData?.design_pressure?.toString() || "",
-        operatingPressure: designData?.operating_pressure_mpa?.toString() || "",
-        allowableStress: designData?.allowable_stress_mpa?.toString() || "",
-        corrosionAllowance: designData?.corrosion_allowance?.toString() || "",
-        extEnv: designData?.ext_env_id?.toString() || "",
-        geometry: designData?.geometry_id?.toString() || "",
-        pipeSupport: designData?.pipe_support ? "yes" : "no",
-        soilWaterInterface: designData?.soil_water_interface ? "yes" : "no",
-        deadleg: designData?.dead_legs ? "yes" : "no",
-        mixpoint: designData?.mix_point ? "yes" : "no",
-
-        // Protection Tab
-        coatingQuality: protectionData?.coating_quality_id?.toString() || "",
-        insulationType: protectionData?.insulation_type_id?.toString() || "",
-        insulationComplexity:
-          protectionData?.insulation_complexity_id?.toString() || "",
-        insulationCondition: protectionData?.insulation_condition || "",
-        designFabrication:
-          protectionData?.design_fabrication_id?.toString() || "",
-        interface: protectionData?.interface_id?.toString() || "",
-        liningType: protectionData?.lining_type || "",
-        liningCondition: protectionData?.lining_condition || "",
-        liningMonitoring: protectionData?.lining_monitoring || "",
-        onlineMonitor: protectionData?.online_monitor?.toString() || "",
-
-        // Service Tab
-        fluidRepresentative:
-          serviceData?.fluid_representive_id?.toString() || "",
-        toxicity: serviceData?.toxicity_id?.toString() || "",
-        fluidPhase: serviceData?.fluid_phase_id?.toString() || "",
-        toxicMassFraction: serviceData?.toxic_mass_fraction?.toString() || "",
-      });
-
-      setVesselData({
-        general: generalData,
-        design: designData || {},
-        protection: protectionData || {},
-        service: serviceData || {},
-        assetDetail: {
-          equipment_tag: generalData.e_asset_detail?.equipment_tag || "",
-          component_type: generalData.e_asset_detail?.component_type || "",
-          area: generalData.e_asset_detail?.e_asset?.area || "",
-          system: generalData.e_asset_detail?.e_asset?.system || "",
+        general: {
+          year_in_service: formData.yearInService,
+          material_construction_id: Number(formData.materialConstruction) || null,
+          tmin: formData.tmin,
+          description: formData.description,
+          normal_wall_thickness: parseFloat(formData.nominalThickness) || null,
+          insulation: formData.insulation === "yes",
+          line_h2s: formData.h2s === "yes",
+          internal_lining: formData.internalLining === "yes",
+          pwht: formData.pwht === "yes",
+          cladding: formData.cladding === "yes",
+          inner_diameter: parseFloat(formData.innerDiameter) || null,
+          clad_thickness: parseFloat(formData.cladThickness) || null,
         },
-      });
-    } catch (error) {
-      console.error("Error loading vessel data:", error);
+        // Design Tab
+        design: {
+          outer_diameter: parseFloat(formData.outerDiameter) || null,
+          length: parseFloat(formData.length) || null,
+          welding_efficiency: parseFloat(formData.weldJoinEfficiency) || null,
+          design_temperature: parseFloat(formData.designTemperature) || null,
+          operating_temperature: parseFloat(formData.operatingTemperature) || null,
+          design_pressure: parseFloat(formData.designPressure) || null,
+          operating_pressure_mpa: parseFloat(formData.operatingPressure) || null,
+          allowable_stress_mpa: parseFloat(formData.allowableStress) || null,
+          corrosion_allowance: parseFloat(formData.corrosionAllowance) || null,
+          ext_env_id: formData.extEnv ? Number(formData.extEnv) : null,
+          geometry_id: formData.geometry ? Number(formData.geometry) : null,
+          pipe_support: formData.pipeSupport === "yes",
+          soil_water_interface: formData.soilWaterInterface === "yes",
+          dead_legs: formData.deadleg === "yes",
+          mix_point: formData.mixpoint === "yes",
+        },
+        // Protection Tab
+        protection: {
+          coating_quality_id: formData.coatingQuality ? Number(formData.coatingQuality) : null,
+          insulation_type_id: formData.insulationType ? Number(formData.insulationType) : null,
+          insulation_complexity_id: formData.insulationComplexity ? Number(formData.insulationComplexity) : null,
+          insulation_condition_id: formData.insulationCondition ? Number(formData.insulationCondition) : null,
+          design_fabrication_id: formData.designFabrication ? Number(formData.designFabrication) : null,
+          interface_id: formData.interface ? Number(formData.interface) : null,
+          lining_type: formData.liningType,
+          lining_condition: formData.liningCondition,
+          lining_monitoring: formData.liningMonitoring,
+          online_monitor: formData.onlineMonitor ? Number(formData.onlineMonitor) : null,
+        },
+        // Service Tab
+        service: {
+          fluid_representive_id: formData.fluidRepresentative ? Number(formData.fluidRepresentative) : null,
+          toxicity_id: formData.toxicity ? Number(formData.toxicity) : null,
+          fluid_phase_id: formData.fluidPhase ? Number(formData.fluidPhase) : null,
+          toxic_mass_fraction: formData.toxicMassFraction ? parseFloat(formData.toxicMassFraction) : null,
+        },
+      };
+
+      await updateVesselMutation.mutateAsync(payload);
+
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to load pressure vessel data",
+        description: error.message || "Failed to update vessel data.",
         variant: "destructive",
       });
     } finally {
@@ -296,160 +397,15 @@ const PressureVesselDetailPage: React.FC = () => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
-    }));
+    }))
   };
 
-  const handleSave = async () => {
-    if (!vesselData) return;
-
-    setIsLoading(true);
-    try {
-      // Update general data
-      const { error: generalError } = await supabase
-        .from("i_ims_general")
-        .update({
-          year_in_service: formData.yearInService,
-          material_construction_id:
-            parseInt(formData.materialConstruction) || null,
-          tmin: formData.tmin,
-          description: formData.description,
-          normal_wall_thickness: parseFloat(formData.nominalThickness) || null,
-          insulation: formData.insulation === "yes",
-          line_h2s: formData.h2s === "yes",
-          internal_lining: formData.internalLining === "yes",
-          pwht: formData.pwht === "yes",
-          cladding: formData.cladding === "yes",
-          inner_diameter: parseFloat(formData.innerDiameter) || null,
-          clad_thickness: parseFloat(formData.cladThickness) || null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", id);
-
-      if (generalError) throw generalError;
-
-      // Update design data
-      const designUpdateData = {
-        outer_diameter: parseFloat(formData.outerDiameter) || null,
-        internal_diameter: parseFloat(formData.innerDiameter) || null,
-        length: parseFloat(formData.length) || null,
-        welding_efficiency: parseFloat(formData.weldJoinEfficiency) || null,
-        design_temperature: parseFloat(formData.designTemperature) || null,
-        operating_temperature:
-          parseFloat(formData.operatingTemperature) || null,
-        design_pressure: parseFloat(formData.designPressure) || null,
-        operating_pressure_mpa: parseFloat(formData.operatingPressure) || null,
-        allowable_stress_mpa: parseFloat(formData.allowableStress) || null,
-        corrosion_allowance: parseFloat(formData.corrosionAllowance) || null,
-        ext_env_id: parseInt(formData.extEnv) || null,
-        geometry_id: parseInt(formData.geometry) || null,
-        pipe_support: formData.pipeSupport === "yes",
-        soil_water_interface: formData.soilWaterInterface === "yes",
-        dead_legs: formData.deadleg === "yes",
-        mix_point: formData.mixpoint === "yes",
-        updated_at: new Date().toISOString(),
-      };
-
-      const { error: designError } = await supabase
-        .from("i_ims_design")
-        .upsert({
-          ...designUpdateData,
-          asset_detail_id: vesselData.general.asset_detail_id,
-          ims_asset_type_id: 1,
-        });
-
-      if (designError) throw designError;
-
-      // Update protection data
-      const protectionUpdateData = {
-        coating_quality_id: parseInt(formData.coatingQuality) || null,
-        insulation_type_id: parseInt(formData.insulationType) || null,
-        insulation_complexity_id:
-          parseInt(formData.insulationComplexity) || null,
-        insulation_condition: formData.insulationCondition || null,
-        design_fabrication_id: parseInt(formData.designFabrication) || null,
-        interface_id: parseInt(formData.interface) || null,
-        lining_type: formData.liningType || null,
-        lining_condition: formData.liningCondition || null,
-        lining_monitoring: formData.liningMonitoring || null,
-        online_monitor: parseInt(formData.onlineMonitor) || null,
-        updated_at: new Date().toISOString(),
-      };
-
-      const { error: protectionError } = await supabase
-        .from("i_ims_protection")
-        .upsert({
-          ...protectionUpdateData,
-          asset_detail_id: vesselData.general.asset_detail_id,
-          ims_asset_type_id: 1,
-        });
-
-      if (protectionError) throw protectionError;
-
-      // Update service data
-      const serviceUpdateData = {
-        fluid_representive_id: parseInt(formData.fluidRepresentative) || null,
-        toxicity_id: parseInt(formData.toxicity) || null,
-        fluid_phase_id: parseInt(formData.fluidPhase) || null,
-        toxic_mass_fraction: parseFloat(formData.toxicMassFraction) || null,
-        updated_at: new Date().toISOString(),
-      };
-
-      const { error: serviceError } = await supabase
-        .from("i_ims_service")
-        .upsert({
-          ...serviceUpdateData,
-          asset_detail_id: vesselData.general.asset_detail_id,
-          ims_asset_type_id: 1,
-        });
-
-      if (serviceError) throw serviceError;
-
-      toast({
-        title: "Success!",
-        description: "Pressure vessel data updated successfully",
-      });
-
-      setIsEditing(false);
-      loadVesselData(); // Reload data to show updates
-    } catch (error) {
-      console.error("Error updating vessel data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update pressure vessel data",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setIsEditing(false);
-    loadVesselData(); // Reset form data
-  };
-
-  if (isLoading && !vesselData) {
+  if(isVesselLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">
-            Loading pressure vessel data...
-          </p>
-        </div>
+      <div className="flex items-center justify-center h-full">
+        <Loader className="h-8 w-8 animate-spin" />
       </div>
-    );
-  }
-
-  if (!vesselData) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-muted-foreground">Pressure vessel not found</p>
-        <Button onClick={() => navigate("/monitor/integrity")} className="mt-4">
-          Back to Integrity Management
-        </Button>
-      </div>
-    );
+    )
   }
 
   return (
@@ -611,19 +567,28 @@ const PressureVesselDetailPage: React.FC = () => {
                         <Label htmlFor="materialConstruction">
                           Material Construction
                         </Label>
-                        <Input
-                          id="materialConstruction"
+                        <Select
+                          name="materialConstruction"
                           value={formData.materialConstruction}
-                          onChange={(e) =>
-                            handleInputChange(
-                              "materialConstruction",
-                              e.target.value
-                            )
+                          onValueChange={(value) =>
+                            handleInputChange("materialConstruction", value)
                           }
                           disabled={!isEditing}
-                          className={!isEditing ? "bg-gray-50" : ""}
-                          placeholder="Material Construction ID"
-                        />
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select material..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {materialConstructionOptions.map((material) => (
+                              <SelectItem
+                                key={material.value}
+                                value={material.value}
+                              >
+                                {material.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       <div className="space-y-2">
@@ -1026,30 +991,54 @@ const PressureVesselDetailPage: React.FC = () => {
 
                       <div className="space-y-2">
                         <Label htmlFor="extEnv">External Environment</Label>
-                        <Input
-                          id="extEnv"
+                        <Select
                           value={formData.extEnv}
-                          onChange={(e) =>
-                            handleInputChange("extEnv", e.target.value)
+                          onValueChange={(value) =>
+                            handleInputChange("extEnv", value)
                           }
                           disabled={!isEditing}
-                          className={!isEditing ? "bg-gray-50" : ""}
-                          placeholder="External Environment ID"
-                        />
+                          name="extEnv"
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select an option" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {extEnvOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value.toString()}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="geometry">Geometry</Label>
-                        <Input
-                          id="geometry"
+                        <Select
                           value={formData.geometry}
-                          onChange={(e) =>
-                            handleInputChange("geometry", e.target.value)
+                          onValueChange={(value) =>
+                            handleInputChange("geometry", value)
                           }
                           disabled={!isEditing}
-                          className={!isEditing ? "bg-gray-50" : ""}
-                          placeholder="Geometry ID"
-                        />
+                          name="geometry"
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select an option" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {geometryOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value.toString()}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       {/* Yes/No Options */}
@@ -1165,67 +1154,110 @@ const PressureVesselDetailPage: React.FC = () => {
 
                       <div className="space-y-2">
                         <Label htmlFor="coatingQuality">Coating Quality</Label>
-                        <Input
-                          id="coatingQuality"
+                        <Select
                           value={formData.coatingQuality}
-                          onChange={(e) =>
-                            handleInputChange("coatingQuality", e.target.value)
+                          onValueChange={(value) =>
+                            handleInputChange("coatingQuality", value)
                           }
                           disabled={!isEditing}
-                          className={!isEditing ? "bg-gray-50" : ""}
-                          placeholder="Coating Quality ID"
-                        />
+                          name="coatingQuality"
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select coating quality" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {coatingQualityOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value.toString()}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="insulationType">Insulation Type</Label>
-                        <Input
-                          id="insulationType"
+                        <Select
                           value={formData.insulationType}
-                          onChange={(e) =>
-                            handleInputChange("insulationType", e.target.value)
+                          onValueChange={(value) =>
+                            handleInputChange("insulationType", value)
                           }
                           disabled={!isEditing}
-                          className={!isEditing ? "bg-gray-50" : ""}
-                          placeholder="Insulation Type ID"
-                        />
+                          name="insulationType"
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select insulation type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {insulationTypeOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value.toString()}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="insulationComplexity">
                           Insulation Complexity
                         </Label>
-                        <Input
-                          id="insulationComplexity"
+                        <Select
                           value={formData.insulationComplexity}
-                          onChange={(e) =>
-                            handleInputChange(
-                              "insulationComplexity",
-                              e.target.value
-                            )
+                          onValueChange={(value) =>
+                            handleInputChange("insulationComplexity", value)
                           }
                           disabled={!isEditing}
-                          className={!isEditing ? "bg-gray-50" : ""}
-                          placeholder="Insulation Complexity ID"
-                        />
+                          name="insulationComplexity"
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select insulation complexity" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {insulationComplexityOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value.toString()}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="insulationCondition">
                           Insulation Condition
                         </Label>
-                        <Input
-                          id="insulationCondition"
+                        <Select
                           value={formData.insulationCondition}
-                          onChange={(e) =>
-                            handleInputChange(
-                              "insulationCondition",
-                              e.target.value
-                            )
+                          onValueChange={(value) =>
+                            handleInputChange("insulationCondition", value)
                           }
                           disabled={!isEditing}
-                          className={!isEditing ? "bg-gray-50" : ""}
-                        />
+                          name="insulationCondition"
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select insulation condition" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {insulationConditionOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value.toString()}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
 
@@ -1239,47 +1271,80 @@ const PressureVesselDetailPage: React.FC = () => {
                         <Label htmlFor="designFabrication">
                           Design Fabrication
                         </Label>
-                        <Input
-                          id="designFabrication"
+                        <Select
                           value={formData.designFabrication}
-                          onChange={(e) =>
-                            handleInputChange(
-                              "designFabrication",
-                              e.target.value
-                            )
-                          }
+                          onValueChange={(value) =>
+                            handleInputChange("designFabrication", value)
+                          } 
                           disabled={!isEditing}
-                          className={!isEditing ? "bg-gray-50" : ""}
-                          placeholder="Design Fabrication ID"
-                        />
+                          name="designFabrication"
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select design fabrication" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {designFabricationOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value.toString()}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="interface">Interface</Label>
-                        <Input
-                          id="interface"
+                        <Select
                           value={formData.interface}
-                          onChange={(e) =>
-                            handleInputChange("interface", e.target.value)
+                          onValueChange={(value) =>
+                            handleInputChange("interface", value)
                           }
                           disabled={!isEditing}
-                          className={!isEditing ? "bg-gray-50" : ""}
-                          placeholder="Interface ID"
-                        />
+                          name="interface"
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select interface" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {interfaceOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value.toString()}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="onlineMonitor">Online Monitor</Label>
-                        <Input
-                          id="onlineMonitor"
+                        <Select
                           value={formData.onlineMonitor}
-                          onChange={(e) =>
-                            handleInputChange("onlineMonitor", e.target.value)
+                          onValueChange={(value) =>
+                            handleInputChange("onlineMonitor", value)
                           }
                           disabled={!isEditing}
-                          className={!isEditing ? "bg-gray-50" : ""}
-                          placeholder="Online Monitor ID"
-                        />
+                          name="onlineMonitor"
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select online monitor" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {onlineMonitorOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value.toString()}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
 
@@ -1360,33 +1425,54 @@ const PressureVesselDetailPage: React.FC = () => {
                         <Label htmlFor="fluidRepresentative">
                           Fluid Representative
                         </Label>
-                        <Input
-                          id="fluidRepresentative"
+                        <Select
                           value={formData.fluidRepresentative}
-                          onChange={(e) =>
-                            handleInputChange(
-                              "fluidRepresentative",
-                              e.target.value
-                            )
+                          onValueChange={(value) =>
+                            handleInputChange("fluidRepresentative", value)
                           }
                           disabled={!isEditing}
-                          className={!isEditing ? "bg-gray-50" : ""}
-                          placeholder="Fluid Representative ID"
-                        />
+                          name="fluidRepresentative"
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select fluid representative" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {fluidRepresentativeOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value.toString()}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="fluidPhase">Fluid Phase</Label>
-                        <Input
-                          id="fluidPhase"
+                        <Select
                           value={formData.fluidPhase}
-                          onChange={(e) =>
-                            handleInputChange("fluidPhase", e.target.value)
+                          onValueChange={(value) =>
+                            handleInputChange("fluidPhase", value)
                           }
                           disabled={!isEditing}
-                          className={!isEditing ? "bg-gray-50" : ""}
-                          placeholder="Fluid Phase ID"
-                        />
+                          name="fluidPhase"
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select fluid phase" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {fluidPhaseOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value.toString()}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
 
@@ -1398,16 +1484,28 @@ const PressureVesselDetailPage: React.FC = () => {
 
                       <div className="space-y-2">
                         <Label htmlFor="toxicity">Toxicity</Label>
-                        <Input
-                          id="toxicity"
+                        <Select
                           value={formData.toxicity}
-                          onChange={(e) =>
-                            handleInputChange("toxicity", e.target.value)
+                          onValueChange={(value) =>
+                            handleInputChange("toxicity", value)
                           }
                           disabled={!isEditing}
-                          className={!isEditing ? "bg-gray-50" : ""}
-                          placeholder="Toxicity ID"
-                        />
+                          name="toxicity"
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select toxicity" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {toxicityOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value.toString()}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       <div className="space-y-2">

@@ -19,3 +19,8 @@ export const useInsulationComplexityData = () => {
         },
     });
 };
+
+export const useInsulationComplexityOptions = () => {
+    const { data } = useInsulationComplexityData();
+    return data?.map((item) => ({ value: item.id, label: item.name }));
+};

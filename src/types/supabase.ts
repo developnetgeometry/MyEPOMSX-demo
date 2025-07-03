@@ -76,6 +76,7 @@ export type Database = {
           created_by: string | null
           facility_id: number | null
           id: number
+          ims_used: boolean | null
           is_active: boolean | null
           package_id: number | null
           parent_asset_id: number | null
@@ -96,6 +97,7 @@ export type Database = {
           created_by?: string | null
           facility_id?: number | null
           id?: number
+          ims_used?: boolean | null
           is_active?: boolean | null
           package_id?: number | null
           parent_asset_id?: number | null
@@ -116,6 +118,7 @@ export type Database = {
           created_by?: string | null
           facility_id?: number | null
           id?: number
+          ims_used?: boolean | null
           is_active?: boolean | null
           package_id?: number | null
           parent_asset_id?: number | null
@@ -1615,6 +1618,7 @@ export type Database = {
           name: string
           updated_at: string | null
           updated_by: string | null
+          value: number | null
         }
         Insert: {
           created_at?: string | null
@@ -1623,6 +1627,7 @@ export type Database = {
           name: string
           updated_at?: string | null
           updated_by?: string | null
+          value?: number | null
         }
         Update: {
           created_at?: string | null
@@ -1631,6 +1636,7 @@ export type Database = {
           name?: string
           updated_at?: string | null
           updated_by?: string | null
+          value?: number | null
         }
         Relationships: []
       }
@@ -3004,6 +3010,7 @@ export type Database = {
           name: string
           updated_at: string | null
           updated_by: string | null
+          value: number | null
         }
         Insert: {
           created_at?: string | null
@@ -3012,6 +3019,7 @@ export type Database = {
           name: string
           updated_at?: string | null
           updated_by?: string | null
+          value?: number | null
         }
         Update: {
           created_at?: string | null
@@ -3020,6 +3028,7 @@ export type Database = {
           name?: string
           updated_at?: string | null
           updated_by?: string | null
+          value?: number | null
         }
         Relationships: []
       }
@@ -3433,6 +3442,27 @@ export type Database = {
           name?: string
           updated_at?: string | null
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      e_online_monitor_df_scc_sohic: {
+        Row: {
+          created_at: string
+          id: number
+          name: string | null
+          value: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          name?: string | null
+          value?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          name?: string | null
+          value?: number | null
         }
         Relationships: []
       }
@@ -7327,6 +7357,20 @@ export type Database = {
             referencedRelation: "e_geometry"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "i_ims_design_ims_asset_type_id_fkey"
+            columns: ["ims_asset_type_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_asset_type"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_design_ims_general_id_fkey"
+            columns: ["ims_general_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_general"
+            referencedColumns: ["id"]
+          },
         ]
       }
       i_ims_general: {
@@ -7465,6 +7509,7 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           id: number
+          ims_general_id: number | null
           inspection_plan: string | null
           updated_at: string | null
           updated_by: string | null
@@ -7474,6 +7519,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           id?: number
+          ims_general_id?: number | null
           inspection_plan?: string | null
           updated_at?: string | null
           updated_by?: string | null
@@ -7483,6 +7529,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           id?: number
+          ims_general_id?: number | null
           inspection_plan?: string | null
           updated_at?: string | null
           updated_by?: string | null
@@ -7493,6 +7540,13 @@ export type Database = {
             columns: ["asset_detail_id"]
             isOneToOne: false
             referencedRelation: "e_asset_detail"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_inspection_ims_general_id_fkey"
+            columns: ["ims_general_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_general"
             referencedColumns: ["id"]
           },
         ]
@@ -7644,7 +7698,7 @@ export type Database = {
           ims_asset_type_id: number | null
           ims_general_id: number | null
           insulation_complexity_id: number | null
-          insulation_condition: string | null
+          insulation_condition_id: number | null
           insulation_type_id: number | null
           interface_id: number | null
           isolation_system_id: number | null
@@ -7671,7 +7725,7 @@ export type Database = {
           ims_asset_type_id?: number | null
           ims_general_id?: number | null
           insulation_complexity_id?: number | null
-          insulation_condition?: string | null
+          insulation_condition_id?: number | null
           insulation_type_id?: number | null
           interface_id?: number | null
           isolation_system_id?: number | null
@@ -7698,7 +7752,7 @@ export type Database = {
           ims_asset_type_id?: number | null
           ims_general_id?: number | null
           insulation_complexity_id?: number | null
-          insulation_condition?: string | null
+          insulation_condition_id?: number | null
           insulation_type_id?: number | null
           interface_id?: number | null
           isolation_system_id?: number | null
@@ -7783,6 +7837,27 @@ export type Database = {
             columns: ["insulation_complexity_id"]
             isOneToOne: false
             referencedRelation: "i_insulation_complexity"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_protection_ims_asset_type_id_fkey"
+            columns: ["ims_asset_type_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_asset_type"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_protection_ims_general_id_fkey"
+            columns: ["ims_general_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_general"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_protection_insulation_condition_id_fkey"
+            columns: ["insulation_condition_id"]
+            isOneToOne: false
+            referencedRelation: "i_insulation_condition"
             referencedColumns: ["id"]
           },
         ]
@@ -8017,6 +8092,7 @@ export type Database = {
           fluid_representive_id: number | null
           id: number
           ims_asset_type_id: number | null
+          ims_general_id: number | null
           toxic_mass_fraction: number | null
           toxicity_id: number | null
           updated_at: string | null
@@ -8030,6 +8106,7 @@ export type Database = {
           fluid_representive_id?: number | null
           id?: number
           ims_asset_type_id?: number | null
+          ims_general_id?: number | null
           toxic_mass_fraction?: number | null
           toxicity_id?: number | null
           updated_at?: string | null
@@ -8043,6 +8120,7 @@ export type Database = {
           fluid_representive_id?: number | null
           id?: number
           ims_asset_type_id?: number | null
+          ims_general_id?: number | null
           toxic_mass_fraction?: number | null
           toxicity_id?: number | null
           updated_at?: string | null
@@ -8075,6 +8153,20 @@ export type Database = {
             columns: ["toxicity_id"]
             isOneToOne: false
             referencedRelation: "e_toxicity"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_service_ims_asset_type_id_fkey"
+            columns: ["ims_asset_type_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_asset_type"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_ims_service_ims_general_id_fkey"
+            columns: ["ims_general_id"]
+            isOneToOne: false
+            referencedRelation: "i_ims_general"
             referencedColumns: ["id"]
           },
         ]
@@ -8197,6 +8289,7 @@ export type Database = {
           name: string | null
           updated_at: string | null
           updated_by: string | null
+          value: number | null
         }
         Insert: {
           created_at?: string | null
@@ -8205,6 +8298,7 @@ export type Database = {
           name?: string | null
           updated_at?: string | null
           updated_by?: string | null
+          value?: number | null
         }
         Update: {
           created_at?: string | null
@@ -8213,6 +8307,7 @@ export type Database = {
           name?: string | null
           updated_at?: string | null
           updated_by?: string | null
+          value?: number | null
         }
         Relationships: []
       }
