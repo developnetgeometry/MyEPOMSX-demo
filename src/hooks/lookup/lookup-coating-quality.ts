@@ -22,8 +22,5 @@ export const useCoatingQualityData = () => {
 
 export const useCoatingQualityOptions = () => {
     const { data } = useCoatingQualityData();
-    return data?.map((item: any) => ({
-        value: item.value,
-        label: item.name,
-    }));
+    return data?.map((item) => ({ value: item.id, label: item.name }));
 }

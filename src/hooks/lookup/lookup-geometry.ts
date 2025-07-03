@@ -1,26 +1,27 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 
-export const useExtEnvData = () => {
+
+export const useGeometryData = () => {
     return useQuery({
-        queryKey: ["e-ext-env-data"],
+        queryKey: ["geometry"],
         queryFn: async () => {
             const { data, error } = await supabase
-                .from("e_ext_env")
+                .from("e_geometry")
                 .select("id, name")
                 .order("id");
 
             if (error) {
-                console.error("Error fetching e_ext_env data:", error);
+                console.error("Error fetching e_geometry data:", error);
                 throw error;
             }
 
             return data;
         },
-    });
-};
+    })
+}
 
-export const useExtEnvOptions = () => {
-    const { data } = useExtEnvData();
+export const useGeometryOptions = () => {
+    const { data } = useGeometryData();
     return data?.map((item) => ({ value: item.id, label: item.name }));
 };

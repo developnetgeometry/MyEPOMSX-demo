@@ -104,6 +104,8 @@ import { useFluidRepresentativeOptions } from "@/hooks/lookup/lookup-fluid-repre
 import { useToxicityOptions } from "@/hooks/lookup/lookup-toxicity";
 import { useFluidPhaseOptions } from "@/hooks/lookup/lookup-fluid-phase";
 import { useAuth } from "@/contexts/AuthContext";
+import { useExtEnvOptions } from "@/hooks/lookup/lookup-ext-env";
+import { useGeometryOptions } from "@/hooks/lookup/lookup-geometry";
 
 // File icon mapping (moved outside component to prevent re-creation)
 const getFileIcon = (fileName: string) => {
@@ -140,7 +142,6 @@ const NewPressureVesselPage: React.FC = () => {
   const { user } = useAuth();
 
   // Dropdown options hooks
-  const { data: assetTagOptions = [] } = useAssetTagOptions();
   const { data: assetWithComponentTypeOptions = [] } = 
     useAssetWithComponentTypeOptions();
   const { data: materialConstructionOptions = [] } = 
@@ -155,6 +156,8 @@ const NewPressureVesselPage: React.FC = () => {
   const fluidRepresentativeOptions = useFluidRepresentativeOptions();
   const toxicityOptions = useToxicityOptions();
   const fluidPhaseOptions = useFluidPhaseOptions();
+  const extEnvOptions = useExtEnvOptions();
+  const geometryOptions = useGeometryOptions();
 
   // Form data structure mapped to i_ims_general table
   const [formData, setFormData] = useState({
@@ -540,7 +543,9 @@ const NewPressureVesselPage: React.FC = () => {
         insulation_type_id: parseInt(formData.insulationType) || null,
         insulation_complexity_id:
           parseInt(formData.insulationComplexity) || null,
-        insulation_condition_id: formData.insulationCondition || null,
+        insulation_condition_id: formData.insulationCondition
+          ? parseInt(formData.insulationCondition)
+          : null,
         design_fabrication_id: parseInt(formData.designFabrication) || null,
         interface_id: parseInt(formData.interface) || null,
         lining_type: formData.liningType || null,
@@ -762,7 +767,7 @@ const NewPressureVesselPage: React.FC = () => {
                       </h3>
 
                       <div className="space-y-2">
-                        <Label htmlFor="asset">Asset*</Label>
+                        <Label htmlFor="asset">Asset<span className="text-red-500">*</span></Label>
                         <Select
                           value={formData.asset}
                           onValueChange={(value) =>
@@ -783,7 +788,7 @@ const NewPressureVesselPage: React.FC = () => {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="equipmentTag">Equipment Tag*</Label>
+                        <Label htmlFor="equipmentTag">Equipment Tag<span className="text-red-500">*</span></Label>
                         <Input
                           id="equipmentTag"
                           value={formData.equipmentTag}
@@ -811,7 +816,7 @@ const NewPressureVesselPage: React.FC = () => {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="componentType">Component Type*</Label>
+                        <Label htmlFor="componentType">Component Type<span className="text-red-500">*</span></Label>
                         <Input
                           id="componentType"
                           value={formData.componentType}
@@ -826,7 +831,7 @@ const NewPressureVesselPage: React.FC = () => {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="yearInService">Year In Service*</Label>
+                        <Label htmlFor="yearInService">Year In Service<span className="text-red-500">*</span></Label>
                         <Input
                           id="yearInService"
                           type="date"
@@ -846,7 +851,7 @@ const NewPressureVesselPage: React.FC = () => {
                       </h3>
 
                       <div className="space-y-2">
-                        <Label htmlFor="area">Area*</Label>
+                        <Label htmlFor="area">Area<span className="text-red-500">*</span></Label>
                         <Input
                           id="area"
                           value={formData.area}
@@ -857,7 +862,7 @@ const NewPressureVesselPage: React.FC = () => {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="system">System*</Label>
+                        <Label htmlFor="system">System<span className="text-red-500">*</span></Label>
                         <Input
                           id="system"
                           value={formData.system}
@@ -1385,15 +1390,14 @@ const NewPressureVesselPage: React.FC = () => {
                             <SelectValue placeholder="Select external environment" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="atmospheric">
-                              Atmospheric
-                            </SelectItem>
-                            <SelectItem value="marine">Marine</SelectItem>
-                            <SelectItem value="industrial">
-                              Industrial
-                            </SelectItem>
-                            <SelectItem value="harsh">Harsh</SelectItem>
-                            <SelectItem value="offshore">Offshore</SelectItem>
+                            {extEnvOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value.toString()}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -1410,17 +1414,14 @@ const NewPressureVesselPage: React.FC = () => {
                             <SelectValue placeholder="Select geometry" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="cylindrical">
-                              Cylindrical
-                            </SelectItem>
-                            <SelectItem value="spherical">Spherical</SelectItem>
-                            <SelectItem value="conical">Conical</SelectItem>
-                            <SelectItem value="rectangular">
-                              Rectangular
-                            </SelectItem>
-                            <SelectItem value="elliptical">
-                              Elliptical
-                            </SelectItem>
+                            {geometryOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value.toString()}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -1533,7 +1534,7 @@ const NewPressureVesselPage: React.FC = () => {
                       </h3>
 
                       <div className="space-y-2">
-                        <Label htmlFor="coatingQuality">Coating Quality*</Label>
+                        <Label htmlFor="coatingQuality">Coating Quality<span className="text-red-500">*</span></Label>
                         <Select
                           value={formData.coatingQuality}
                           onValueChange={(value) =>
@@ -1547,7 +1548,7 @@ const NewPressureVesselPage: React.FC = () => {
                             {coatingQualityOptions?.map((option) => (
                               <SelectItem
                                 key={option.value}
-                                value={option.value}
+                                value={option.value.toString()}
                               >
                                 {option.label}
                               </SelectItem>
@@ -1557,7 +1558,7 @@ const NewPressureVesselPage: React.FC = () => {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="insulationType">Insulation Type*</Label>
+                        <Label htmlFor="insulationType">Insulation Type<span className="text-red-500">*</span></Label>
                         <Select
                           value={formData.insulationType}
                           onValueChange={(value) =>
@@ -1666,7 +1667,7 @@ const NewPressureVesselPage: React.FC = () => {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="interface">Interface*</Label>
+                        <Label htmlFor="interface">Interface<span className="text-red-500">*</span></Label>
                         <Select
                           value={formData.interface}
                           onValueChange={(value) =>
@@ -1747,7 +1748,7 @@ const NewPressureVesselPage: React.FC = () => {
                       </h3>
 
                       <div className="space-y-2">
-                        <Label htmlFor="onlineMonitor">Online Monitor*</Label>
+                        <Label htmlFor="onlineMonitor">Online Monitor<span className="text-red-500">*</span></Label>
                         <Select
                           value={formData.onlineMonitor}
                           onValueChange={(value) =>
@@ -1830,7 +1831,7 @@ const NewPressureVesselPage: React.FC = () => {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="toxicity">Toxicity*</Label>
+                        <Label htmlFor="toxicity">Toxicity<span className="text-red-500">*</span></Label>
                         <Select
                           value={formData.toxicity}
                           onValueChange={(value) =>
@@ -1861,7 +1862,7 @@ const NewPressureVesselPage: React.FC = () => {
                       </h3>
 
                       <div className="space-y-2">
-                        <Label htmlFor="fluidPhase">Fluid Phase*</Label>
+                        <Label htmlFor="fluidPhase">Fluid Phase<span className="text-red-500">*</span></Label>
                         <Select
                           value={formData.fluidPhase}
                           onValueChange={(value) =>
