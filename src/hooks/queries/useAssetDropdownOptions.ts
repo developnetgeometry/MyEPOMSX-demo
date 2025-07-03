@@ -376,6 +376,7 @@ export const useAssetWithComponentTypeOptions = () => {
         `
         )
         .not("asset_detail_id", "is", null)
+        .not("ims_used", "is", true)
         .order("asset_no");
 
       if (error) throw new Error(error.message);

@@ -1,26 +1,27 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 
-export const useInsulationTypeData = () => {
+
+export const useFluidPhaseData = () => {
     return useQuery({
-        queryKey: ["e-insulation-type-data"],
+        queryKey: ["fluid-phase"],
         queryFn: async () => {
             const { data, error } = await supabase
-                .from("e_insulation_type")
+                .from("e_fluid_phase")
                 .select("id, name")
                 .order("id");
 
             if (error) {
-                console.error("Error fetching e_insulation_type data:", error);
+                console.error("Error fetching e_fluid_phase data:", error);
                 throw error;
             }
 
             return data;
-        },
-    });
-};
+        }
+    })
+}
 
-export const useInsulationTypeOptions = () => {
-    const { data } = useInsulationTypeData();
+export const useFluidPhaseOptions = () => {
+    const { data } = useFluidPhaseData();
     return data?.map((item) => ({ value: item.id, label: item.name }));
 };

@@ -373,6 +373,7 @@ const NewPipingPage: React.FC = () => {
         mix_point: formData.mixPoint === "yes",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        ims_general_id: recordId,
       };
 
       console.log("Prepared i_ims_design data:", imsDesignData);
