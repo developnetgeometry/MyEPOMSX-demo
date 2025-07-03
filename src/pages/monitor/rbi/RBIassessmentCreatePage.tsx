@@ -24,6 +24,7 @@ import { calculateAgeCoatCui, calculateAgeCui, calculateArtCui, calculateBCuiFsC
 import { calculateDfSccFbSccScc, calculateDfSccScc, calculateEnvSeveritySccScc, calculateSscSucsFToHtSccScc, calculateSusceptibilitySccScc, calculateSviSccScc } from "./hooks/formula-df-scc-scc";
 import { calculateDfSccSohic, calculateDfSohicFbSccSohic, calculateEnvSeveritySccSohic, calculateSuscToCrackSccSohic, calculateSviSccSohic } from "./hooks/formula-df-scc-sohic";
 import { calculateFcAffaCofProd, calculateFcCmdCofProd, calculateFcCofProd, calculateFcEnvironCofProd, calculateFcInjCostCofProd, calculateFcProdCofProd, calculateFracEvapCofProd, calculateOutageAffaCofProd, calculateOutageCmdCofProd, calculatePopDensCofProd, calculateVolEnvCofProd } from "./hooks/formula-cof-prod";
+import { calculateCpCofArea, calculateFactDiCofArea, calculateLdMaxCofArea, calculateInventoryCofArea, calculateKCofArea, calculateMReleaseCofArea, calculateOpTempCofArea, calculatePsCofArea, calculatePTransCofArea, calculateRateNCofArea, calculateReleaseTypeCofArea, calculateTimeEmptyCofArea, calculateW1CofArea, calculateLdSCofArea, calculateMassNCofArea, calculateEneffCofArea, calculateFactIcCofArea, calculateCaContValues, calculateCaInstValues, calculateCaCmdAil, calculateCaInjAil, calculateCaCmdAinl, calculateCaInjAinl, calculateFactAIT, calculateCaCmdFlam, calculateCaInjFlam } from "./hooks/formula-cof-area";
 
 
 const RBIAssessmentCreatePage: React.FC = () => {
@@ -80,6 +81,8 @@ const RBIAssessmentCreatePage: React.FC = () => {
     replacement_line: "",
     detection_system_id: null,
     mitigation_system_id: null,
+    mitigation_system_name: "",
+    mitigation_system_value: 0, // factmit used in the cof area calculation
     design_fabrication_id: null,
     design_fabrication_name: "",
     design_fabrication_value: 0,
@@ -100,6 +103,7 @@ const RBIAssessmentCreatePage: React.FC = () => {
     lining_monitoring: "",
     // ims_service
     fluid_representative_name: "",
+    fluid_phase_name: "",
     // useAverageMtsMpaMysMpaByName
     avg_mts_mpa: 0,
     avg_mys_mpa: 0,
@@ -284,8 +288,12 @@ const RBIAssessmentCreatePage: React.FC = () => {
     fc_cof_prod: 0,
 
     // cof_area
-    fluid_phase_cof_area: "",
-    rep_fluid_cof_area: "",
+    ideal_gas_specific_heat_eq_id: null,
+    ideal_gas_specific_heat_eq_name: "",
+    iso_sys_id_cof_area: null,
+    iso_sys_name_cof_area: "",
+    det_sys_id_cof_area: null,
+    det_sys_name_cof_area: "",
     p_s_cof_area: 0,
     op_temp_cof_area: 0,
     cp_cof_area: 0,
@@ -296,29 +304,32 @@ const RBIAssessmentCreatePage: React.FC = () => {
     time_empty_cof_area: 0,
     m_release_cof_area: 0,
     release_type_cof_area: "",
-    iso_sys_cof_area: "",
-    det_sys_cof_area: "",
     fact_di_cof_area: 0,
-    id_max_cof_area: 0,
+    ld_max_cof_area: 0,
     rate_n_cof_area: 0,
-    id_cof_area: 0,
+    ld_s_cof_area: 0,
     mass_n_cof_area: 0,
     eneff_cof_area: 0,
     fact_ic_cof_area: 0,
     mitigation_system: "",
+
     ca_cmd_ainl_cont_cof_area: 0,
     ca_cmd_ail_cont_cof_area: 0,
     ca_cmd_ainl_inst_cof_area: 0,
     ca_cmd_ail_inst_cof_area: 0,
     ca_inj_ainl_cont_cof_area: 0,
     ca_inj_ail_cont_cof_area: 0,
+    ca_inj_ainl_inst_cof_area: 0,
+    ca_inj_ail_inst_cof_area: 0,
+
     ca_cmd_ail_cof_area: 0,
     ca_inj_ail_cof_area: 0,
     ca_cmd_ainl_cof_area: 0,
     ca_inj_ainl_cof_area: 0,
+
     fact_ait_cof_area: 0,
     ca_cmd_flam_cof_area: 0,
-    cam_inj_flam_cof_area: 0,
+    ca_inj_flam_cof_area: 0,
 
   });
   const { data: imsGeneral, isLoading: isImsGeneralLoading } = useImsGeneralDataByAssetDetailId(formData?.asset_detail_id ?? 0);
@@ -384,7 +395,9 @@ const RBIAssessmentCreatePage: React.FC = () => {
         line_description: imsProtection?.line_description ?? "",
         replacement_line: imsProtection?.replacement_line ?? "",
         detection_system_id: imsProtection?.detection_system_id ?? null,
-        mitigation_system_id: imsProtection?.mitigation_system_id ?? null,
+        mitigation_system_id: imsProtection?.mitigation_system_id?.id ?? null,
+        mitigation_system_name: imsProtection?.mitigation_system_id?.name ?? null,
+        mitigation_system_value: imsProtection?.mitigation_system_id?.value ?? null,
         design_fabrication_id: imsProtection?.design_fabrication_id?.id ?? null,
         design_fabrication_name: imsProtection?.design_fabrication_id?.name ?? "",
         design_fabrication_value: imsProtection?.design_fabrication_id?.value ?? 0,
@@ -406,6 +419,7 @@ const RBIAssessmentCreatePage: React.FC = () => {
 
         // ims_service
         fluid_representative_name: imsService?.fluid_representive_id?.name ?? "",
+        fluid_phase_name: imsService?.fluid_phase_id?.name ?? "",
 
       }));
     }
@@ -1392,8 +1406,389 @@ const RBIAssessmentCreatePage: React.FC = () => {
 
   //*****************  Formula CofArea Start
 
-  //
-  
+  //p_s_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const pS = calculatePsCofArea(
+        formData.operating_pressure_mpa
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        p_s_cof_area: pS
+      }));
+    }
+  }, [formData?.operating_pressure_mpa]);
+
+  //op_temp_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const opTemp = calculateOpTempCofArea(
+        formData.operating_temperature
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        op_temp_cof_area: opTemp
+      }));
+    }
+  }, [formData?.operating_temperature]);
+
+  //cp_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const cp = calculateCpCofArea(
+        formData.fluid_representative_name,
+        formData.ideal_gas_specific_heat_eq_name,
+        formData.op_temp_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        cp_cof_area: cp
+      }));
+    }
+  }, [formData?.fluid_representative_name, formData?.ideal_gas_specific_heat_eq_name, formData?.op_temp_cof_area]);
+
+  //k_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const k = calculateKCofArea(
+        formData.cp_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        k_cof_area: k
+      }));
+    }
+  }, [formData?.cp_cof_area]);
+
+  //p_trans_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const pTrans = calculatePTransCofArea(
+        formData.k_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        p_trans_cof_area: pTrans
+      }));
+    }
+  }, [formData?.k_cof_area]);
+
+  //w1_cof_area⁉️Formula dari Excel may be wrong
+  useEffect(() => {
+    if (formData) {
+      const w1 = calculateW1CofArea(
+        formData.fluid_phase_name,
+        formData.fluid_representative_name,
+        formData.comp_type_cof,
+        formData.p_s_cof_area,
+        formData.p_trans_cof_area,
+        formData.k_cof_area,
+        formData.op_temp_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        w1_cof_area: 426.47843
+      }));
+    }
+  }, [formData?.fluid_phase_name, formData?.fluid_representative_name, formData?.comp_type_cof, formData?.p_s_cof_area, formData?.p_trans_cof_area, formData?.k_cof_area, formData?.op_temp_cof_area]);
+
+  //inventory_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const inventory = calculateInventoryCofArea(
+        formData.fluid_phase_name
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        inventory_cof_area: inventory
+      }));
+    }
+  }, [formData?.fluid_phase_name]);
+
+  //time_empty_cof_area✅ (⁉️ Worng becasue the w1_cof_area is wrong)
+  useEffect(() => {
+    if (formData) {
+      const timeEmpty = calculateTimeEmptyCofArea(
+        formData.inventory_cof_area,
+        formData.w1_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        time_empty_cof_area: timeEmpty
+      }));
+    }
+  }, [formData?.inventory_cof_area, formData?.w1_cof_area]);
+
+  //m_release_cof_area✅(⁉️ Worng becasue the w1_cof_area is wrong)
+  useEffect(() => {
+    if (formData) {
+      const mRelease = calculateMReleaseCofArea(
+        formData.w1_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        m_release_cof_area: mRelease
+      }));
+    }
+  }, [formData?.w1_cof_area]);
+
+  //release_type_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const releaseType = calculateReleaseTypeCofArea(
+        formData.time_empty_cof_area,
+        formData.m_release_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        release_type_cof_area: releaseType
+      }));
+    }
+  }, [formData?.time_empty_cof_area, formData?.m_release_cof_area]);
+
+  //fact_di_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const factDi = calculateFactDiCofArea(
+        formData.iso_sys_name_cof_area,
+        formData.det_sys_name_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        fact_di_cof_area: factDi
+      }));
+    }
+  }, [formData?.iso_sys_name_cof_area, formData?.det_sys_name_cof_area]);
+
+  //ld_max_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const idMax = calculateLdMaxCofArea(
+        formData.iso_sys_name_cof_area,
+        formData.det_sys_name_cof_area,
+        formData.comp_type_cof
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        ld_max_cof_area: idMax
+      }));
+    }
+  }, [formData?.iso_sys_name_cof_area, formData?.det_sys_name_cof_area, formData?.comp_type_cof]);
+
+  //rate_n_cof_area✅(⁉️ Worng becasue the w1_cof_area is wrong)
+  useEffect(() => {
+    if (formData) {
+      const rateN = calculateRateNCofArea(
+        formData.w1_cof_area,
+        formData.fact_di_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        rate_n_cof_area: rateN
+      }));
+    }
+  }, [formData?.w1_cof_area, formData?.fact_di_cof_area]);
+
+  //ld_s_cof_area✅(⁉️ Worng becasue the w1_cof_area is wrong)
+  useEffect(() => {
+    if (formData) {
+      const ldS = calculateLdSCofArea(
+        formData.inventory_cof_area,
+        formData.rate_n_cof_area,
+        formData.ld_max_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        ld_s_cof_area: ldS
+      }));
+    }
+  }, [formData?.inventory_cof_area, formData?.rate_n_cof_area, formData?.ld_max_cof_area]);
+
+  //mass_n_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const massN = calculateMassNCofArea(
+        formData.w1_cof_area,
+        formData.ld_s_cof_area,
+        formData.inventory_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        mass_n_cof_area: massN
+      }));
+    }
+  }, [formData?.w1_cof_area, formData?.ld_s_cof_area, formData?.inventory_cof_area]);
+
+  //eneff_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const eneff = calculateEneffCofArea(
+        formData.mass_n_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        eneff_cof_area: eneff
+      }));
+    }
+  }, [formData?.mass_n_cof_area]);
+
+  //fact_ic_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const factIC = calculateFactIcCofArea(
+        formData.release_type_cof_area,
+        formData.rate_n_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        fact_ic_cof_area: factIC
+      }));
+    }
+  }, [formData?.release_type_cof_area, formData?.rate_n_cof_area]);
+
+  //4 ca_conts✅(⁉️ Worng becasue the w1_cof_area is wrong) //ca_cmd_ainl_cont_cof_area //ca_cmd_ail_cont_cof_area //ca_inj_ainl_cont_cof_area //ca_inj_ail_cont_cof_area
+  useEffect(() => {
+    if (formData) {
+      const results = calculateCaContValues(
+        formData.fluid_phase_name,
+        formData.fluid_representative_name,
+        formData.rate_n_cof_area,
+        formData.mitigation_system_value
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        ca_cmd_ainl_cont_cof_area: results.ca_cmd_ainl_cont_cof_area,
+        ca_cmd_ail_cont_cof_area: results.ca_cmd_ail_cont_cof_area,
+        ca_inj_ainl_cont_cof_area: results.ca_inj_ainl_cont_cof_area,
+        ca_inj_ail_cont_cof_area: results.ca_inj_ail_cont_cof_area
+      }));
+    }
+  }, [formData?.fluid_phase_name, formData?.fluid_representative_name, formData?.rate_n_cof_area, formData?.mitigation_system_value]);
+
+  //4 ca_ints✅(⁉️ Worng becasue the w1_cof_area is wrong) //ca_cmd_ainl_inst_cof_area //ca_cmd_ail_inst_cof_area //ca_inj_ainl_inst_cof_area //ca_inj_ail_inst_cof_area
+  useEffect(() => {
+    if (formData) {
+      const results = calculateCaInstValues(
+        formData.fluid_phase_name,
+        formData.fluid_representative_name,
+        formData.mass_n_cof_area,
+        formData.mitigation_system_value,
+        formData.eneff_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        ca_cmd_ainl_inst_cof_area: results.ca_cmd_ainl_inst_cof_area,
+        ca_cmd_ail_inst_cof_area: results.ca_cmd_ail_inst_cof_area,
+        ca_inj_ainl_inst_cof_area: results.ca_inj_ainl_inst_cof_area,
+        ca_inj_ail_inst_cof_area: results.ca_inj_ail_inst_cof_area
+      }));
+    }
+  }, [formData?.fluid_phase_name, formData?.fluid_representative_name, formData?.mass_n_cof_area, formData?.mitigation_system_value, formData?.eneff_cof_area]);
+
+  //ca_cmd_ail_cof_area
+  useEffect(() => {
+    if (formData) {
+      const result = calculateCaCmdAil(
+        formData.ca_cmd_ail_inst_cof_area,
+        formData.ca_cmd_ail_cont_cof_area,
+        formData.fact_ic_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        ca_cmd_ail_cof_area: result
+      }));
+    }
+  }, [formData?.ca_cmd_ail_inst_cof_area, formData?.ca_cmd_ail_cont_cof_area, formData?.fact_ic_cof_area]);
+
+  //ca_inj_ail_cof_area
+  useEffect(() => {
+    if (formData) {
+      const result = calculateCaInjAil(
+        formData.ca_inj_ail_inst_cof_area,
+        formData.ca_inj_ail_cont_cof_area,
+        formData.fact_ic_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        ca_inj_ail_cof_area: result
+      }));
+    }
+  }, [formData?.ca_inj_ail_inst_cof_area, formData?.ca_inj_ail_cont_cof_area, formData?.fact_ic_cof_area]);
+
+  //ca_cmd_ainl_cof_area
+  useEffect(() => {
+    if (formData) {
+      const result = calculateCaCmdAinl(
+        formData.ca_cmd_ainl_inst_cof_area,
+        formData.ca_cmd_ainl_cont_cof_area,
+        formData.fact_ic_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        ca_cmd_ainl_cof_area: result
+      }));
+    }
+  }, [formData?.ca_cmd_ainl_inst_cof_area, formData?.ca_cmd_ainl_cont_cof_area, formData?.fact_ic_cof_area]);
+
+  //ca_inj_ainl_cof_area
+  useEffect(() => {
+    if (formData) {
+      const result = calculateCaInjAinl(
+        formData.ca_inj_ainl_inst_cof_area,
+        formData.ca_inj_ainl_cont_cof_area,
+        formData.fact_ic_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        ca_inj_ainl_cof_area: result
+      }));
+    }
+  }, [formData?.ca_inj_ainl_inst_cof_area, formData?.ca_inj_ainl_cont_cof_area, formData?.fact_ic_cof_area]);
+
+  //fact_ait_cof_area
+  useEffect(() => {
+    if (formData) {
+      const factAit = calculateFactAIT(
+        formData.op_temp_cof_area,
+        formData.fluid_representative_name
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        fact_ait_cof_area: factAit
+      }));
+    }
+  }, [formData?.op_temp_cof_area, formData?.fluid_representative_name]);
+
+  //ca_cmd_flam_cof_area
+  useEffect(() => {
+    if (formData) {
+      const caCmdFlam = calculateCaCmdFlam(
+        formData.ca_cmd_ail_cof_area,
+        formData.ca_cmd_ainl_cof_area,
+        formData.fact_ait_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        ca_cmd_flam_cof_area: caCmdFlam
+      }));
+    }
+  }, [formData?.ca_cmd_ail_cof_area, formData?.ca_cmd_ainl_cof_area, formData?.fact_ait_cof_area]);
+
+  //ca_inj_flam_cof_area
+  useEffect(() => {
+    if (formData) {
+      const caInjFlam = calculateCaInjFlam(
+        formData.ca_inj_ail_cof_area,
+        formData.ca_inj_ainl_cof_area,
+        formData.fact_ait_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        ca_inj_flam_cof_area: caInjFlam
+      }));
+    }
+  }, [formData?.ca_inj_ail_cof_area, formData?.ca_inj_ainl_cof_area, formData?.fact_ait_cof_area]);
+
   //*****************  Formula CofArea End
 
 
@@ -1422,7 +1817,10 @@ const RBIAssessmentCreatePage: React.FC = () => {
         </Button>
       </div>
       {/* <h1>last {formData.online_monitor_id_scc_sohic ?? "NA"}</h1> */}
-      <h1>last {formData.fluid_representative_name ?? "NA"}</h1>
+      {/* <h1>last {formData.iso_sys_id_cof_area ?? "NA"}</h1> */}
+      <h1>last {formData.rate_n_cof_area ?? "NA"}</h1>
+      {/* <h1>last {formData.mitigation_system_name ?? "NA"}</h1>
+      <h1>last {formData.mitigation_system_value ?? "NA"}</h1> */}
       <h1>Asset Detail ID DUMMY. NNTI TUKAR KAT INITIAL : {formData.asset_detail_id ?? "NA"}</h1>
       {/* <pre>{JSON.stringify(imsGeneral, null, 2)}</pre>
       <pre>{JSON.stringify(imsDesign, null, 2)}</pre> */}

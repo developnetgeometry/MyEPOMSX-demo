@@ -32,11 +32,15 @@ const CofProdSubTab: React.FC<{ formData: any; handleInputChange: any }> = ({
             {/* General & Design Fields */}
             {!isCollapsed && (
                 <>
-                    <div className="grid grid-cols-1 md:grid-cols-6 gap-2">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
                         <InputBlock label="Comp." value={formData?.comp_type_cof} />
                         <InputBlock label="Spec Code" value={formData?.spec_code} />
                         <InputBlock label="Composition" value={formData?.composition} />
                         <InputBlock label="Fluid Representative" value={formData?.fluid_representative_name} />
+                        <InputBlock label="Fluid Phase" value={formData?.fluid_phase_name} />
+                        <InputBlock label="Mitigation System ID" value={formData?.mitigation_system_id} />
+                        <InputBlock label="Mitigation System Name" value={formData?.mitigation_system_name} />
+                        <InputBlock label="Mitigation System Value / factmit" value={formData?.mitigation_system_value} />
                     </div>
                 </>
             )}
@@ -67,7 +71,7 @@ const CofProdSubTab: React.FC<{ formData: any; handleInputChange: any }> = ({
                         id="fc_cmd_cof_prod"
                         name="fc_cmd_cof_prod"
                         type="number"
-                        value={formatNumber(formData.fc_cmd_cof_prod) || 0}
+                        value={formatNumber(formData?.fc_cmd_cof_prod) || 0}
                         disabled
                         className="mt-1 bg-gray-50"
                         placeholder="Calculated value"
@@ -79,7 +83,7 @@ const CofProdSubTab: React.FC<{ formData: any; handleInputChange: any }> = ({
                         id="fc_affa_cof_prod"
                         name="fc_affa_cof_prod"
                         type="number"
-                        value={formatNumber(formData.fc_affa_cof_prod) || 0}
+                        value={formatNumber(formData?.fc_affa_cof_prod) || 0}
                         disabled
                         className="mt-1 bg-gray-50"
                         placeholder="Calculated value"
@@ -94,7 +98,7 @@ const CofProdSubTab: React.FC<{ formData: any; handleInputChange: any }> = ({
                         id="outage_affa_cof_prod"
                         name="outage_affa_cof_prod"
                         type="number"
-                        value={formatNumber(formData.outage_affa_cof_prod) || 0}
+                        value={formatNumber(formData?.outage_affa_cof_prod) || 0}
                         disabled
                         className="mt-1 bg-gray-50"
                         placeholder="Calculated value"
@@ -106,7 +110,7 @@ const CofProdSubTab: React.FC<{ formData: any; handleInputChange: any }> = ({
                         id="outage_mult_cof_prod"
                         name="outage_mult_cof_prod"
                         type="number"
-                        value={formData.outage_mult_cof_prod || ""}
+                        value={formData?.outage_mult_cof_prod || ""}
                         onChange={handleInputChange}
                         className="mt-1"
                         step="any"
@@ -119,7 +123,7 @@ const CofProdSubTab: React.FC<{ formData: any; handleInputChange: any }> = ({
                         id="outage_cmd_cof_prod"
                         name="outage_cmd_cof_prod"
                         type="number"
-                        value={formatNumber(formData.outage_cmd_cof_prod) || 0}
+                        value={formatNumber(formData?.outage_cmd_cof_prod) || 0}
                         disabled
                         className="mt-1 bg-gray-50"
                         placeholder="Calculated value"
@@ -131,7 +135,7 @@ const CofProdSubTab: React.FC<{ formData: any; handleInputChange: any }> = ({
                         id="lra_prod_cof_prod"
                         name="lra_prod_cof_prod"
                         type="number"
-                        value={formData.lra_prod_cof_prod || ""}
+                        value={formData?.lra_prod_cof_prod || ""}
                         onChange={handleInputChange}
                         className="mt-1"
                         step="any"
@@ -144,7 +148,7 @@ const CofProdSubTab: React.FC<{ formData: any; handleInputChange: any }> = ({
                         id="fc_prod_cof_prod"
                         name="fc_prod_cof_prod"
                         type="number"
-                        value={formatNumber(formData.fc_prod_cof_prod) || 0}
+                        value={formatNumber(formData?.fc_prod_cof_prod) || 0}
                         disabled
                         className="mt-1 bg-gray-50"
                         placeholder="Calculated value"
@@ -156,7 +160,7 @@ const CofProdSubTab: React.FC<{ formData: any; handleInputChange: any }> = ({
                         id="pop_dens_cof_prod"
                         name="pop_dens_cof_prod"
                         type="number"
-                        value={formatNumber(formData.pop_dens_cof_prod) || 0}
+                        value={formatNumber(formData?.pop_dens_cof_prod) || 0}
                         disabled
                         className="mt-1 bg-gray-50"
                         placeholder="Calculated value"
@@ -168,7 +172,7 @@ const CofProdSubTab: React.FC<{ formData: any; handleInputChange: any }> = ({
                         id="inj_cost_cof_prod"
                         name="inj_cost_cof_prod"
                         type="number"
-                        value={formData.inj_cost_cof_prod || ""}
+                        value={formData?.inj_cost_cof_prod || ""}
                         onChange={handleInputChange}
                         className="mt-1"
                         step="any"
@@ -180,7 +184,7 @@ const CofProdSubTab: React.FC<{ formData: any; handleInputChange: any }> = ({
                             id="inj_cost_cof_prod"
                             name="inj_cost_cof_prod"
                             type="number"
-                            value={formData.inj_cost_cof_prod || ""}
+                            value={formData?.inj_cost_cof_prod || ""}
                             onChange={handleInputChange}
                             step="any"
                             placeholder="Enter Inj cost"
@@ -195,7 +199,7 @@ const CofProdSubTab: React.FC<{ formData: any; handleInputChange: any }> = ({
                         id="fc_inj_cost_cof_prod"
                         name="fc_inj_cost_cof_prod"
                         type="number"
-                        value={formatNumber(formData.fc_inj_cost_cof_prod) || 0}
+                        value={formatNumber(formData?.fc_inj_cost_cof_prod) || 0}
                         disabled
                         className="mt-1 bg-gray-50"
                         placeholder="Calculated value"
@@ -208,7 +212,7 @@ const CofProdSubTab: React.FC<{ formData: any; handleInputChange: any }> = ({
                         id="envcost_cof_prod"
                         name="envcost_cof_prod"
                         type="number"
-                        value={formData.envcost_cof_prod || ""}
+                        value={formData?.envcost_cof_prod || ""}
                         onChange={handleInputChange}
                         className="mt-1"
                         step="any"
@@ -222,7 +226,7 @@ const CofProdSubTab: React.FC<{ formData: any; handleInputChange: any }> = ({
                         id="frac_evap_cof_prod"
                         name="frac_evap_cof_prod"
                         type="number"
-                        value={formatNumber(formData.frac_evap_cof_prod) || 0}
+                        value={formatNumber(formData?.frac_evap_cof_prod) || 0}
                         disabled
                         className="mt-1 bg-gray-50"
                         placeholder="Calculated value"
@@ -235,7 +239,7 @@ const CofProdSubTab: React.FC<{ formData: any; handleInputChange: any }> = ({
                         id="vol_env_cof_prod"
                         name="vol_env_cof_prod"
                         type="number"
-                        value={formatNumber(formData.vol_env_cof_prod) || 0}
+                        value={formatNumber(formData?.vol_env_cof_prod) || 0}
                         disabled
                         className="mt-1 bg-gray-50"
                         placeholder="Calculated value"
@@ -248,7 +252,7 @@ const CofProdSubTab: React.FC<{ formData: any; handleInputChange: any }> = ({
                         id="fc_environ_cof_prod"
                         name="fc_environ_cof_prod"
                         type="number"
-                        value={formatNumber(formData.fc_environ_cof_prod) || 0}
+                        value={formatNumber(formData?.fc_environ_cof_prod) || 0}
                         disabled
                         className="mt-1 bg-gray-50"
                         placeholder="Calculated value"
@@ -261,7 +265,7 @@ const CofProdSubTab: React.FC<{ formData: any; handleInputChange: any }> = ({
                         id="fc_cof_prod"
                         name="fc_cof_prod"
                         type="number"
-                        value={formatNumber(formData.fc_cof_prod) || 0}
+                        value={formatNumber(formData?.fc_cof_prod) || 0}
                         disabled
                         className="mt-1 bg-gray-50"
                         placeholder="Calculated value"

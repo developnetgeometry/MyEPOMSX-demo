@@ -36,7 +36,7 @@ export const useImsProtectionByAssetDetailId = (assetDetailId: number) => {
           line_description,
           replacement_line,
           detection_system_id,
-          mitigation_system_id,
+          mitigation_system_id (id, name, value),
           design_fabrication_id(id ,name, value),
           insulation_type_id (id, name, value),
           interface_id (id, name, value),

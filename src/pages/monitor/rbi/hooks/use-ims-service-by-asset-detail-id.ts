@@ -29,7 +29,7 @@ export const useImsServiceByAssetDetailId = (assetDetailId: number) => {
         .select(`
           id,
           fluid_representive_id (id, name),
-          fluid_phase_id,
+          fluid_phase_id (id, name),
           toxicity_id,
           toxic_mass_fraction,
           asset_detail_id
