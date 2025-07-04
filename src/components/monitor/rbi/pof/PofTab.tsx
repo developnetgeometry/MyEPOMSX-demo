@@ -5,7 +5,6 @@ import DamageFactorSubTab from "./subtab/DamageFactorSubTab";
 import DfMainSubTab from "./subtab/DfSubTab";
 
 const PofTab: React.FC<{ formData: any; setFormData: any }> = ({ formData, setFormData }) => {
-  const [activeSubTab, setActiveSubTab] = useState("general");
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -21,7 +20,7 @@ const PofTab: React.FC<{ formData: any; setFormData: any }> = ({ formData, setFo
   };
 
   return (
-    <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
+    <Tabs  defaultValue="general">
       <TabsList className="mb-4">
         <TabsTrigger value="general">General</TabsTrigger>
         <TabsTrigger value="damageFactor">Damage Factor</TabsTrigger>

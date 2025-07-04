@@ -78,9 +78,10 @@ const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             name="current_thickness_ext"
             type="number"
             step="any"
-            value={formData?.current_thickness_ext || 0}
+            value={formData?.current_thickness_ext || ""}
             onChange={handleInputChange}
             className="mt-1"
+            placeholder="Enter Current Thickness"
           />
         </div>
       </div>
@@ -203,9 +204,11 @@ const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="nextcorra_ext"
             name="nextcorra_ext"
             type="number"
-            value={formData?.nextcorra_ext || 0}
+            step="any"
+            value={formData?.nextcorra_ext || ""}
             onChange={handleInputChange}
             className="mt-1"
+            placeholder="Enter NExt Corr A"
           />
         </div>
         <div>
@@ -214,9 +217,11 @@ const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="nextcorrb_ext"
             name="nextcorrb_ext"
             type="number"
-            value={formData?.nextcorrb_ext || 0}
+            step="any"
+            value={formData?.nextcorrb_ext || ""}
             onChange={handleInputChange}
             className="mt-1"
+            placeholder="Enter NExt Corr B"
           />
         </div>
         <div>
@@ -225,9 +230,11 @@ const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="nextcorrc_ext"
             name="nextcorrc_ext"
             type="number"
-            value={formData?.nextcorrc_ext || 0}
+            step="any"
+            value={formData?.nextcorrc_ext || ""}
             onChange={handleInputChange}
             className="mt-1"
+            placeholder="Enter NExt Corr C"
           />
         </div>
         <div>
@@ -236,9 +243,11 @@ const DfExtSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="nextcorrd_ext"
             name="nextcorrd_ext"
             type="number"
-            value={formData?.nextcorrd_ext || 0}
+            step="any"
+            value={formData?.nextcorrd_ext || ""}
             onChange={handleInputChange}
             className="mt-1"
+            placeholder="Enter NExt Corr D"
           />
         </div>
       </div>

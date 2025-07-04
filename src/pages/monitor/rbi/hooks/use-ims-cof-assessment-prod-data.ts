@@ -1,16 +1,16 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 
-export const useImsCofAssessmentCofProdData = (imsGeneralId: number) => {
+export const useImsCofAssessmentCofProdData = (rbiGeneralId: number) => {
   return useQuery({
-    queryKey: ["i-ims-cof-assessment-cof-prod", imsGeneralId],
+    queryKey: ["i-ims-cof-assessment-cof-prod", rbiGeneralId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("i_ims_cof_assessment_cof_prod")
         .select(
-          "id, outagemult, injcost, envcost, fracevap, volenv, fcenviron, fc, asset_detail_id, ims_general_id"
+          "id, outagemult, injcost, envcost, fracevap, volenv, fcenviron, fc, asset_detail_id, ims_general_id, lra_prod"
         )
-        .eq("ims_general_id", imsGeneralId) // Fetch records based on ims_general_id
+        .eq("ims_rbi_general_id", rbiGeneralId) // Fetch records based on ims_general_id
         .single();
 
       if (error) {
@@ -20,7 +20,7 @@ export const useImsCofAssessmentCofProdData = (imsGeneralId: number) => {
 
       return data;
     },
-    enabled: !!imsGeneralId, // Only fetch if imsGeneralId is provided
+    enabled: !!rbiGeneralId, // Only fetch if rbiGeneralId is provided
   });
 };
 
@@ -34,6 +34,8 @@ export const insertImsCofAssessmentCofProdData = async (assessmentData: {
   fc?: number;
   asset_detail_id?: number;
   ims_general_id?: number;
+  ims_rbi_general_id?: number; // Optional, if not provided it will be set later
+  lra_prod?: number; // Optional, if not provided it will be set later
 }) => {
   try {
     const { data, error } = await supabase
@@ -64,6 +66,8 @@ export const updateImsCofAssessmentCofProdData = async (
     fc?: number;
     asset_detail_id?: number;
     ims_general_id?: number;
+    ims_rbi_general_id?: number; // Optional, if not provided it will be set later
+    lra_prod?: number; // Optional, if not provided it will be set later
   }>
 ) => {
   try {

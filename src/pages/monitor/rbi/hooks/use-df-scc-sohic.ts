@@ -1,19 +1,19 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 
-export const useImsDfSccSohicData = (imsGeneralId: number) => {
+export const useImsDfSccSohicData = (rbiGeneralId: number) => {
   return useQuery({
-    queryKey: ["i-df-scc-sohic", imsGeneralId],
+    queryKey: ["i-df-scc-sohic", rbiGeneralId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("i_df_scc_sohic")
         .select(
-          `id, inspection_efficiency_id, steelscontent_id, harness_brinnel,
+          `id, inspection_efficiency_id (id, name), steelscontent_id, harness_brinnel,
           dfscc_sohic, ims_pof_assessment_id, h2s_in_water, ph,
           last_inspection_date, i_ims_protection_id, ims_general_id (id, pwht),
-          ims_pof_assessment_id`
+          ims_pof_assessment_id, online_monitor_id (id, name, value)`
         )
-        .eq("ims_general_id", imsGeneralId) // Fetch records based on ims_pof_assessment_id
+        .eq("ims_rbi_general_id", rbiGeneralId) // Fetch records based on ims_pof_assessment_id
         .single(); // Use single() to get a single record
 
       if (error) {
@@ -23,7 +23,7 @@ export const useImsDfSccSohicData = (imsGeneralId: number) => {
 
       return data;
     },
-    enabled: !!imsGeneralId, // Only fetch if imsGeneralId is provided
+    enabled: !!rbiGeneralId, // Only fetch if rbiGeneralId is provided
   });
 };
 
@@ -35,9 +35,11 @@ export const insertImsDfSccSohicData = async (dfSccSohicData: {
   ims_pof_assessment_id?: number;
   h2s_in_water?: number;
   ph?: number;
-  i_ims_general_id?: number;
+  ims_general_id?: number;
   last_inspection_date?: string; // Use ISO string format for dates
   i_ims_protection_id?: number;
+  ims_rbi_general_id?: number; // Optional, if not provided it will be set later
+  online_monitor_id?: number; // Optional, if not provided it will be set later
 }) => {
   try {
     const { data, error } = await supabase
@@ -66,9 +68,10 @@ export const updateImsDfSccSohicData = async (
     ims_pof_assessment_id?: number;
     h2s_in_water?: number;
     ph?: number;
-    i_ims_general_id?: number;
+    ims_general_id?: number;
     last_inspection_date?: string; // Use ISO string format for dates
     i_ims_protection_id?: number;
+    online_monitor_id?: number; // Optional, if not provided it will be set later
   }>
 ) => {
   try {

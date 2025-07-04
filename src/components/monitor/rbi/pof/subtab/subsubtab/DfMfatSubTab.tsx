@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -22,16 +23,39 @@ const DfMfatSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
   const { data: pipeConditions } = usePipeConditionData();
   const { data: jointBranchDesigns } = useJointBranchDesignData();
   const { data: branchDiameters } = useBranchDiameterData();
+  const [precision, setPrecision] = useState<2 | 8>(2);
+
+  const formatNumber = (val: number | null) => {
+    if (val === null || val === undefined) return "";
+    return parseFloat(Number(val).toFixed(precision)).toString();
+  };
 
 
   return (
     <div className="space-y-6">
+      {/* Toggle precision */}
+      <div className="flex justify-end">
+        <Button
+          type="button"
+          onClick={() => setPrecision((prev) => (prev === 2 ? 8 : 2))}
+          variant="outline"
+          size="sm"
+        >
+          Accuracy: {precision} decimals
+        </Button>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div>
           <Label htmlFor="previous_failure_id_mfat">Previous Failure</Label>
           <Select
             value={formData?.previous_failure_id_mfat?.toString() || ""}
-            onValueChange={(value) => handleSelectChange("previous_failure_id_mfat", parseInt(value))}
+            onValueChange={(value) => {
+              const selectedFailure = previousFailures?.find(
+                (failure) => failure.id.toString() === value
+              );
+              handleSelectChange("previous_failure_id_mfat", parseInt(value));
+              handleSelectChange("previous_failure_value_mfat", selectedFailure?.value || 0);
+            }}
           >
             <SelectTrigger className="mt-1">
               <SelectValue placeholder="Select Previous Failure" />
@@ -49,7 +73,13 @@ const DfMfatSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
           <Label htmlFor="visible_audible_shaking_id_mfat">Visible/Audible Shake</Label>
           <Select
             value={formData?.visible_audible_shaking_id_mfat?.toString() || ""}
-            onValueChange={(value) => handleSelectChange("visible_audible_shaking_id_mfat", parseInt(value))}
+            onValueChange={(value) => {
+              const selectedShaking = visibleAudioShakings?.find(
+                (shaking) => shaking.id.toString() === value
+              );
+              handleSelectChange("visible_audible_shaking_id_mfat", parseInt(value));
+              handleSelectChange("visible_audible_shaking_value_mfat", selectedShaking?.value || 0);
+            }}
           >
             <SelectTrigger className="mt-1">
               <SelectValue placeholder="Select Visible Audible Shaking" />
@@ -67,7 +97,13 @@ const DfMfatSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
           <Label htmlFor="shaking_frequency_id_mfat">Shaking Frequency</Label>
           <Select
             value={formData?.shaking_frequency_id_mfat?.toString() || ""}
-            onValueChange={(value) => handleSelectChange("shaking_frequency_id_mfat", parseInt(value))}
+            onValueChange={(value) => {
+              const selectedFrequency = shakingFrequencies?.find(
+                (frequency) => frequency.id.toString() === value
+              );
+              handleSelectChange("shaking_frequency_id_mfat", parseInt(value));
+              handleSelectChange("shaking_frequency_value_mfat", selectedFrequency?.value || 0);
+            }}
           >
             <SelectTrigger className="mt-1">
               <SelectValue placeholder="Select Shaking Frequency" />
@@ -85,7 +121,13 @@ const DfMfatSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
           <Label htmlFor="cyclic_load_type_id_mfat">Cyclic Load Type</Label>
           <Select
             value={formData?.cyclic_load_type_id_mfat?.toString() || ""}
-            onValueChange={(value) => handleSelectChange("cyclic_load_type_id_mfat", parseInt(value))}
+            onValueChange={(value) => {
+              const selectedLoadType = cyclingLoadTypes?.find(
+                (loadType) => loadType.id.toString() === value
+              );
+              handleSelectChange("cyclic_load_type_id_mfat", parseInt(value));
+              handleSelectChange("cyclic_load_type_value_mfat", selectedLoadType?.value || 0);
+            }}
           >
             <SelectTrigger className="mt-1">
               <SelectValue placeholder="Select Cyclic Load Type" />
@@ -105,7 +147,13 @@ const DfMfatSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
           <Label htmlFor="corrective_action_id_mfat">Corrective Action</Label>
           <Select
             value={formData?.corrective_action_id_mfat?.toString() || ""}
-            onValueChange={(value) => handleSelectChange("corrective_action_id_mfat", parseInt(value))}
+            onValueChange={(value) => {
+              const selectedAction = correctiveActions?.find(
+                (action) => action.id.toString() === value
+              );
+              handleSelectChange("corrective_action_id_mfat", parseInt(value));
+              handleSelectChange("corrective_action_value_mfat", selectedAction?.value || 0);
+            }}
           >
             <SelectTrigger className="mt-1">
               <SelectValue placeholder="Select Corrective Action" />
@@ -119,12 +167,17 @@ const DfMfatSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             </SelectContent>
           </Select>
         </div>
-
         <div>
           <Label htmlFor="pipe_complexity_id_mfat">Pipe Complexity</Label>
           <Select
             value={formData?.pipe_complexity_id_mfat?.toString() || ""}
-            onValueChange={(value) => handleSelectChange("pipe_complexity_id_mfat", parseInt(value))}
+            onValueChange={(value) => {
+              const selectedComplexity = pipeCompexities?.find(
+                (complexity) => complexity.id.toString() === value
+              );
+              handleSelectChange("pipe_complexity_id_mfat", parseInt(value));
+              handleSelectChange("pipe_complexity_value_mfat", selectedComplexity?.value || 0);
+            }}
           >
             <SelectTrigger className="mt-1">
               <SelectValue placeholder="Select Pipe Complexity" />
@@ -142,7 +195,13 @@ const DfMfatSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
           <Label htmlFor="pipe_condition_id_mfat">Pipe Condition</Label>
           <Select
             value={formData?.pipe_condition_id_mfat?.toString() || ""}
-            onValueChange={(value) => handleSelectChange("pipe_condition_id_mfat", parseInt(value))}
+            onValueChange={(value) => {
+              const selectedCondition = pipeConditions?.find(
+                (condition) => condition.id.toString() === value
+              );
+              handleSelectChange("pipe_condition_id_mfat", parseInt(value));
+              handleSelectChange("pipe_condition_value_mfat", selectedCondition?.value || 0);
+            }}
           >
             <SelectTrigger className="mt-1">
               <SelectValue placeholder="Select Pipe Condition" />
@@ -158,12 +217,17 @@ const DfMfatSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
         <div>
           <Label htmlFor="joint_branch_design_id_mfat">Joint Branch Design</Label>
           <Select
             value={formData?.joint_branch_design_id_mfat?.toString() || ""}
-            onValueChange={(value) => handleSelectChange("joint_branch_design_id_mfat", parseInt(value))}
+            onValueChange={(value) => {
+              const selectedDesign = jointBranchDesigns?.find(
+                (design) => design.id.toString() === value
+              );
+              handleSelectChange("joint_branch_design_id_mfat", parseInt(value));
+              handleSelectChange("joint_branch_design_value_mfat", selectedDesign?.value || 0);
+            }}
           >
             <SelectTrigger className="mt-1">
               <SelectValue placeholder="Select Joint Branch Design" />
@@ -177,12 +241,17 @@ const DfMfatSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             </SelectContent>
           </Select>
         </div>
-
         <div>
           <Label htmlFor="brach_diameter_id_mfat">Branch Diameter</Label>
           <Select
             value={formData?.brach_diameter_id_mfat?.toString() || ""}
-            onValueChange={(value) => handleSelectChange("brach_diameter_id_mfat", parseInt(value))}
+            onValueChange={(value) => {
+              const selectedDiameter = branchDiameters?.find(
+                (diameter) => diameter.id.toString() === value
+              );
+              handleSelectChange("brach_diameter_id_mfat", parseInt(value));
+              handleSelectChange("branch_diameter_value_mfat", selectedDiameter?.value || 0);
+            }}
           >
             <SelectTrigger className="mt-1">
               <SelectValue placeholder="Select Branch Diameter" />
@@ -205,19 +274,19 @@ const DfMfatSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="dmfatfb_mfat"
             name="dmfatfb_mfat"
             type="number"
-            value={formData?.dmfatfb_mfat || 0}
+            value={formatNumber(formData?.dmfatfb_mfat) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
           />
         </div>
         <div>
-          <Label htmlFor="dmfat_mfat">D MFATT</Label>
+          <Label htmlFor="dmfat_mfat">D MFAT</Label>
           <Input
             id="dmfat_mfat"
             name="dmfat_mfat"
             type="number"
-            value={formData?.dmfat_mfat || 0}
+            value={formatNumber(formData?.dmfat_mfat) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled

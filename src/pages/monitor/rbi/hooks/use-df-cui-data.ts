@@ -1,19 +1,19 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 
-export const useImsDfCuiData = (imsGeneralId: number) => {
+export const useImsDfCuiData = (rbiGeneralId: number) => {
   return useQuery({
-    queryKey: ["i-df-cui", imsGeneralId],
+    queryKey: ["i-df-cui", rbiGeneralId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("i_df_cui")
         .select(
           `id, last_inspection_date, new_coating_date, dfcuiff,
           ims_pof_assessment_id, data_confidence_id, cr_act,
-          i_ims_protection_id(id, coating_quality_id, insulation_type_id, insulation_complexity_id, insulation_condition, design_fabrication_id, interface_id),
-          i_ims_design_id (id, ext_env_id), ncuifa, ncuifb, ncuifc, ncuifd, ims_general_id`
+          i_ims_design_id, ncuifa, ncuifb, ncuifc, ncuifd, ims_general_id,
+          coating_quality_id, current_thickness, external_environment_id`
         )
-        .eq("ims_general_id", imsGeneralId) // Fetch records based on ims_pof_assessment_id
+        .eq("ims_rbi_general_id", rbiGeneralId) // Fetch records based on ims_pof_assessment_id
         .single(); // Use single() to get a single record
 
       if (error) {
@@ -23,7 +23,7 @@ export const useImsDfCuiData = (imsGeneralId: number) => {
 
       return data;
     },
-    enabled: !!imsGeneralId, // Only fetch if imsGeneralId is provided
+    enabled: !!rbiGeneralId, // Only fetch if rbiGeneralId is provided
   });
 };
 
@@ -39,6 +39,12 @@ export const insertImsDfCuiData = async (dfCuiData: {
   ncuifb?: number;
   ncuifc?: number;
   ncuifd?: number;
+  ims_general_id?: number; // Optional, if not provided it will be set later
+  cr_act?: number; // Optional, if not provided it will be set later
+  ims_rbi_general_id?: number; // Optional, if not provided it will be set later
+  coating_quality_id?: number; // Optional, if not provided it will be set later
+  current_thickness?: number; // Optional, if you want to store the current thickness
+  external_environment_id?: number; // Optional, if you want to store the external environment
 }) => {
   try {
     const { data, error } = await supabase
@@ -71,6 +77,12 @@ export const updateImsDfCuiData = async (
     ncuifb?: number;
     ncuifc?: number;
     ncuifd?: number;
+    ims_general_id?: number; // Optional, if not provided it will be set later
+    cr_act?: number; // Optional, if not provided it will be set later
+    ims_rbi_general_id?: number; // Optional, if not provided it will be set later
+    coating_quality_id?: number; // Optional, if not provided it will be set later
+    current_thickness?: number; // Optional, if you want to store the current thickness
+    external_environment_id?: number; // Optional, if you want to store the external environment
   }>
 ) => {
   try {

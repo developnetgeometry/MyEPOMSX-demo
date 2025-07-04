@@ -1,9 +1,9 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 
-export const useImsRbiRiskIrpData = (imsGeneralId: number) => {
+export const useImsRbiRiskIrpData = (rbiGeneralId: number) => {
   return useQuery({
-    queryKey: ["i-ims-rbi-risk-irp", imsGeneralId],
+    queryKey: ["i-ims-rbi-risk-irp", rbiGeneralId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("i_ims_rbi_risk_irp")
@@ -12,7 +12,7 @@ export const useImsRbiRiskIrpData = (imsGeneralId: number) => {
           dscc, dmfat, pof, cof_financial, cof_area, pof_value,
           risk_level, risk_ranking, asset_detail_id, ims_general_id`
         )
-        .eq("ims_general_id", imsGeneralId)
+        .eq("ims_rbi_general_id", rbiGeneralId)
         .single();
 
       if (error) {
@@ -22,7 +22,7 @@ export const useImsRbiRiskIrpData = (imsGeneralId: number) => {
 
       return data;
     },
-    enabled: !!imsGeneralId, // Only fetch if imsGeneralId is provided
+    enabled: !!rbiGeneralId, // Only fetch if rbiGeneralId is provided
   });
 };
 
@@ -36,11 +36,12 @@ export const insertImsRbiRiskIrpData = async (riskIrpData: {
   pof?: number;
   cof_financial?: number;
   cof_area?: number;
-  pof_value?: number;
+  pof_value?: string;
   risk_level?: number;
   risk_ranking?: number;
   asset_detail_id?: number;
   ims_general_id?: number;
+  ims_rbi_general_id?: number; // Optional, if not provided it will be set later
 }) => {
   try {
     const { data, error } = await supabase
@@ -71,7 +72,7 @@ export const updateImsRbiRiskIrpData = async (
     pof?: number;
     cof_financial?: number;
     cof_area?: number;
-    pof_value?: number;
+    pof_value?: string;
     risk_level?: number;
     risk_ranking?: number;
     asset_detail_id?: number;

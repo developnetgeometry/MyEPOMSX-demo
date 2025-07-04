@@ -1,19 +1,18 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 
-export const useImsDfThinData = (imsGeneralId: number) => {
+export const useImsDfThinData = (rbiGeneralId: number) => {
   return useQuery({
-    queryKey: ["i-df-thin", imsGeneralId],
+    queryKey: ["i-df-thin", rbiGeneralId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("i_df_thin")
         .select(
           `id, last_inspection_date, data_confidence_id, nthin_a, nthin_b,
           nthin_c, nthin_d, agerc, ims_pof_assessment_id, dfthinfb, ims_general_id,
-          cr_act,
-          i_ims_design_id (id, corrosion_allowance, welding_efficiency, allowable_stress_mpa, design_pressure, mix_point, dead_legs)`
+          cr_act, i_ims_design_id, new_coating_date, current_thickness`
         )
-        .eq("ims_general_id", imsGeneralId) // Fetch records based on ims_pof_assessment_id
+        .eq("ims_rbi_general_id", rbiGeneralId) // Fetch records based on ims_pof_assessment_id
         .single(); // Use single() to get a single record
 
       if (error) {
@@ -23,7 +22,7 @@ export const useImsDfThinData = (imsGeneralId: number) => {
 
       return data;
     },
-    enabled: !!imsGeneralId, // Only fetch if imsGeneralId is provided
+    enabled: !!rbiGeneralId, // Only fetch if rbiGeneralId is provided
   });
 };
 
@@ -34,10 +33,14 @@ export const insertImsDfThinData = async (dfThinData: {
   nthin_b?: number;
   nthin_c?: number;
   nthin_d?: number;
-  last_coating_date?: string; // Use ISO string format for timestamps
+  new_coating_date?: string; // Use ISO string format for timestamps
   agerc?: string; // Use ISO string format for timestamps
   ims_pof_assessment_id?: number;
   dfthinfb?: number;
+  ims_general_id?: number; // Optional, if you want to associate with a specific ims_general_id
+  cr_act?: number;
+  ims_rbi_general_id?: number;
+  current_thickness?: number; // Optional, if you want to store the current thickness
 }) => {
   try {
     const { data, error } = await supabase
@@ -69,6 +72,7 @@ export const updateImsDfThinData = async (
     agerc?: string; // Use ISO string format for timestamps
     ims_pof_assessment_id?: number;
     dfthinfb?: number;
+    current_thickness?: number; // Optional, if you want to store the current thickness
   }>
 ) => {
   try {

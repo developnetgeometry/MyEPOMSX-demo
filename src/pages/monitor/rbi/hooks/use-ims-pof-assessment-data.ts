@@ -1,9 +1,9 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 
-export const useImsPofAssessmentData = (imsGeneralId: number) => {
+export const useImsPofAssessmentData = (rbiGeneralId: number) => {
   return useQuery({
-    queryKey: ["i-ims-pof-assessment-general", imsGeneralId],
+    queryKey: ["i-ims-pof-assessment-general", rbiGeneralId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("i_ims_pof_assessment_general")
@@ -13,8 +13,8 @@ export const useImsPofAssessmentData = (imsGeneralId: number) => {
           ims_general_id (id, year_in_service, ims_asset_type_id, outer_diameter, inner_diameter, tmin, material_construction_id (spec_code)),
           data_confidence_id`
         )
-        .eq("ims_general_id", imsGeneralId)
-        .single(); // Fetch a single record based on imsGeneralId
+        .eq("ims_rbi_general_id", rbiGeneralId)
+        .single(); // Fetch a single record based on rbiGeneralId
 
       if (error) {
         console.error("Error fetching i_ims_pof_assessment_general data:", error);
@@ -23,7 +23,7 @@ export const useImsPofAssessmentData = (imsGeneralId: number) => {
 
       return data;
     },
-    enabled: !!imsGeneralId, // Only fetch if imsGeneralId is provided
+    enabled: !!rbiGeneralId, // Only fetch if rbiGeneralId is provided
   });
 };
 
@@ -34,18 +34,21 @@ export const insertImsPofAssessmentData = async (assessmentData: {
   nominal_thickness?: number;
   current_thickness?: number;
   description?: string;
+  ims_general_id?: number;
+  ims_rbi_general_id?: number;
 }) => {
   try {
     const { data, error } = await supabase
       .from("i_ims_pof_assessment_general")
-      .insert([assessmentData]);
+      .insert([assessmentData])
+      .select("id"); // Return the ID of the newly created row
 
     if (error) {
       console.error("Error inserting i_ims_pof_assessment_general data:", error);
       throw error;
     }
 
-    return data;
+    return data?.[0]?.id; // Return the primary key (ID) of the newly inserted row
   } catch (err) {
     console.error("Unexpected error inserting i_ims_pof_assessment_general data:", err);
     throw err;

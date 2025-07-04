@@ -1,19 +1,19 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 
-export const useImsCofAssessmentCofAreaData = (imsGeneralId: number) => {
+export const useImsCofAssessmentCofAreaData = (rbiGeneralId: number) => {
   return useQuery({
-    queryKey: ["i-ims-cof-assessment-cof-area", imsGeneralId],
+    queryKey: ["i-ims-cof-assessment-cof-area", rbiGeneralId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("i_ims_cof_assessment_cof_area")
         .select(
-          `id, iso_sys_id, det_sys_id,
-          mitigation_system_id, ideal_gas_specific_heat_eq,
+          `id, iso_sys_id (id, name), det_sys_id (id, name),
+          mitigation_system_id, ideal_gas_specific_heat_eq (id, name),
           ca_cmdflam, ca_injflam, asset_detail_id, ims_service_id,
           ims_general_id`
         )
-        .eq("ims_general_id", imsGeneralId) // Fetch records based on ims_general_id
+        .eq("ims_rbi_general_id", rbiGeneralId) // Fetch records based on ims_general_id
         .single(); // Use single() to get a single record
 
       if (error) {
@@ -23,7 +23,7 @@ export const useImsCofAssessmentCofAreaData = (imsGeneralId: number) => {
 
       return data;
     },
-    enabled: !!imsGeneralId, // Only fetch if imsGeneralId is provided
+    enabled: !!rbiGeneralId, // Only fetch if rbiGeneralId is provided
   });
 };
 
@@ -37,6 +37,7 @@ export const insertImsCofAssessmentCofAreaData = async (assessmentData: {
   asset_detail_id?: number;
   ims_service_id?: number;
   ims_general_id?: number;
+  ims_rbi_general_id?: number; // Optional, if not provided it will be set later
 }) => {
   try {
     const { data, error } = await supabase
