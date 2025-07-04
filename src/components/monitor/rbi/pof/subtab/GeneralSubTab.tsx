@@ -48,7 +48,13 @@ const GeneralSubTab: React.FC<{
                     <Label htmlFor="asset">Asset</Label>
                     <Select
                         value={formData?.asset_detail_id?.toString() || ""}
-                        onValueChange={(value) => handleSelectChange("asset_detail_id", parseInt(value))}
+                        onValueChange={(value) => {
+                            const selectedAsset = assets?.find(
+                                (asset) => asset.asset_detail_id.toString() === value
+                            );
+                            handleSelectChange("asset_detail_id", parseInt(value));
+                            handleSelectChange("asset_name", selectedAsset?.asset_name || "");
+                        }}
                     >
                         <SelectTrigger className="mt-1">
                             <SelectValue placeholder="Select Asset" />

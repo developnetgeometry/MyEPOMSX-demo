@@ -40,6 +40,8 @@ export const insertImsDfMfatData = async (dfMfatData: {
   dmfatfb?: number;
   ims_pof_assessment_id?: number;
   data_confidence_id?: number;
+  ims_general_id?: number;
+  ims_rbi_general_id?: number;
 }) => {
   try {
     const { data, error } = await supabase

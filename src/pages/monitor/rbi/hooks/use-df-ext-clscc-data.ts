@@ -29,12 +29,14 @@ export const useImsDfExtClsccData = (imsGeneralId: number) => {
 export const insertImsDfExtClsccData = async (dfExtClsccData: {
   last_inspection_date?: string; // Use ISO string format for dates
   new_coating_date?: string; // Use ISO string format for dates
-  inspection_efficiency?: number;
+  inspection_efficiency_id?: number;
   ims_pof_asessment_id?: number;
   data_confidence_id?: number;
   df_ext_cl_scc?: number;
   i_ims_protection_id?: number;
   i_ims_design_id?: number;
+  ims_general_id?: number;
+  ims_rbi_general_id?: number;
 }) => {
   try {
     const { data, error } = await supabase

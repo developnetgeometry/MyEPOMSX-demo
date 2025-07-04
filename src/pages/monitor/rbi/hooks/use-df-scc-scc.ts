@@ -35,6 +35,8 @@ export const insertImsDfSccSccData = async (dfSccSccData: {
   ph?: number;
   i_ims_general_id?: number;
   last_inspection_date?: string; // Use ISO string format for dates
+  ims_pof_assessment_id?: number;
+  ims_rbi_general_id?: number;
 }) => {
   try {
     const { data, error } = await supabase

@@ -34,18 +34,21 @@ export const insertImsPofAssessmentData = async (assessmentData: {
   nominal_thickness?: number;
   current_thickness?: number;
   description?: string;
+  ims_general_id?: number;
+  ims_rbi_general_id?: number;
 }) => {
   try {
     const { data, error } = await supabase
       .from("i_ims_pof_assessment_general")
-      .insert([assessmentData]);
+      .insert([assessmentData])
+      .select("id"); // Return the ID of the newly created row
 
     if (error) {
       console.error("Error inserting i_ims_pof_assessment_general data:", error);
       throw error;
     }
 
-    return data;
+    return data?.[0]?.id; // Return the primary key (ID) of the newly inserted row
   } catch (err) {
     console.error("Unexpected error inserting i_ims_pof_assessment_general data:", err);
     throw err;

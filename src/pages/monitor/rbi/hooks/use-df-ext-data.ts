@@ -30,7 +30,7 @@ export const useImsDfExtData = (imsGeneralId: number) => {
 export const insertImsDfExtData = async (dfExtData: {
   last_inspection_date?: string; // Use ISO string format for dates
   new_coating_date?: string; // Use ISO string format for dates
-  ims_por_assessment_id?: number;
+  ims_pof_assessment_id?: number;
   data_confidence_id?: number;
   dfextcorrf?: number;
   i_ims_protection_id?: number;
@@ -39,6 +39,8 @@ export const insertImsDfExtData = async (dfExtData: {
   nextcorrb?: number;
   nextcorrc?: number;
   nextcorrd?: number;
+  ims_general_id?: number;
+  ims_rbi_general_id?: number;
 }) => {
   try {
     const { data, error } = await supabase

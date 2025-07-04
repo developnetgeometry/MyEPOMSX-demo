@@ -18,8 +18,7 @@ export const useImsRbiGeneralData = () => {
                 asset_no,
                 asset_name
             )
-          ),
-          i_ims_design
+          )
         `)
         .order("id", { ascending: false });
 
@@ -36,19 +35,21 @@ export const useImsRbiGeneralData = () => {
 export const insertImsRbiGeneralData = async (rbiGeneralData: {
   i_ims_general_id?: number;
   asset_detail_id?: number;
+  asset_name?: string; // Added asset_name
   i_ims_design?: number;
 }) => {
   try {
     const { data, error } = await supabase
       .from("i_ims_rbi_general")
-      .insert([rbiGeneralData]);
+      .insert([rbiGeneralData])
+      .select("id"); // Return the id of the newly inserted row
 
     if (error) {
       console.error("Error inserting i_ims_rbi_general data:", error);
       throw error;
     }
 
-    return data;
+    return data?.[0]?.id; // Return the primary key (id) of the newly inserted row
   } catch (err) {
     console.error("Unexpected error inserting i_ims_rbi_general data:", err);
     throw err;
@@ -60,6 +61,7 @@ export const updateImsRbiGeneralData = async (
   updatedData: Partial<{
     i_ims_general_id?: number;
     asset_detail_id?: number;
+    asset_name?: string; // Added asset_name
     i_ims_design?: number;
   }>
 ) => {
@@ -80,7 +82,6 @@ export const updateImsRbiGeneralData = async (
     throw err;
   }
 };
-
 export const deleteImsRbiGeneralData = async (id: number) => {
   try {
     const { data, error } = await supabase

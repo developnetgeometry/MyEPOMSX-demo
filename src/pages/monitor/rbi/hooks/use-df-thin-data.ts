@@ -34,10 +34,13 @@ export const insertImsDfThinData = async (dfThinData: {
   nthin_b?: number;
   nthin_c?: number;
   nthin_d?: number;
-  last_coating_date?: string; // Use ISO string format for timestamps
+  new_coating_date?: string; // Use ISO string format for timestamps
   agerc?: string; // Use ISO string format for timestamps
   ims_pof_assessment_id?: number;
   dfthinfb?: number;
+  ims_general_id?: number; // Optional, if you want to associate with a specific ims_general_id
+  cr_act?: number;
+  ims_rbi_general_id?: number;
 }) => {
   try {
     const { data, error } = await supabase

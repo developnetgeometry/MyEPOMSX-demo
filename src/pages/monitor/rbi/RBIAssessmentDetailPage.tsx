@@ -12,7 +12,7 @@ import RiskIrpTab from "@/components/monitor/rbi/risk/RiskIrpTab";
 import { useImsPofAssessmentData } from "./hooks/use-ims-pof-assessment-data";
 import { useImsCofAssessmentCofProdData } from "./hooks/use-ims-cof-assessment-prod-data";
 import { useImsCofAssessmentCofAreaData } from "./hooks/use-ims-cof-assessment-area-data";
-import { useImsRbiRiskIrpData } from "./hooks/use-ims-rib-risk-irp-data";
+import { useImsRbiRiskIrpData } from "./hooks/use-ims-rbi-risk-irp-data";
 import Loading from "@/components/shared/Loading";
 import { useImsDfThinData } from "./hooks/use-df-thin-data";
 import { useImsDfExtData } from "./hooks/use-df-ext-data";

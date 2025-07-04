@@ -76,6 +76,7 @@ export type Database = {
           created_by: string | null
           facility_id: number | null
           id: number
+          ims_used: boolean | null
           is_active: boolean | null
           package_id: number | null
           parent_asset_id: number | null
@@ -96,6 +97,7 @@ export type Database = {
           created_by?: string | null
           facility_id?: number | null
           id?: number
+          ims_used?: boolean | null
           is_active?: boolean | null
           package_id?: number | null
           parent_asset_id?: number | null
@@ -116,6 +118,7 @@ export type Database = {
           created_by?: string | null
           facility_id?: number | null
           id?: number
+          ims_used?: boolean | null
           is_active?: boolean | null
           package_id?: number | null
           parent_asset_id?: number | null
@@ -6871,6 +6874,7 @@ export type Database = {
           ims_pof_assessment_id: number | null
           ims_rbi_general_id: number | null
           last_inspection_date: string | null
+          new_coating_date: string | null
           nthin_a: number | null
           nthin_b: number | null
           nthin_c: number | null
@@ -6887,6 +6891,7 @@ export type Database = {
           ims_pof_assessment_id?: number | null
           ims_rbi_general_id?: number | null
           last_inspection_date?: string | null
+          new_coating_date?: string | null
           nthin_a?: number | null
           nthin_b?: number | null
           nthin_c?: number | null
@@ -6903,6 +6908,7 @@ export type Database = {
           ims_pof_assessment_id?: number | null
           ims_rbi_general_id?: number | null
           last_inspection_date?: string | null
+          new_coating_date?: string | null
           nthin_a?: number | null
           nthin_b?: number | null
           nthin_c?: number | null
@@ -7126,6 +7132,13 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "i_ims_cof_assessment_cof_area_ideal_gas_specific_heat_eq_fkey"
+            columns: ["ideal_gas_specific_heat_eq"]
+            isOneToOne: false
+            referencedRelation: "e_ideal_gas_specific_heat_eq"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "i_ims_cof_assessment_cof_area_ims_rbi_general_id_fkey"
             columns: ["ims_rbi_general_id"]
@@ -7862,24 +7875,24 @@ export type Database = {
       i_ims_rbi_general: {
         Row: {
           asset_detail_id: number | null
+          asset_name: string | null
           created_at: string
-          i_ims_design: number | null
           i_ims_general_id: number | null
           id: number
           rbi_no: string | null
         }
         Insert: {
           asset_detail_id?: number | null
+          asset_name?: string | null
           created_at?: string
-          i_ims_design?: number | null
           i_ims_general_id?: number | null
           id?: number
           rbi_no?: string | null
         }
         Update: {
           asset_detail_id?: number | null
+          asset_name?: string | null
           created_at?: string
-          i_ims_design?: number | null
           i_ims_general_id?: number | null
           id?: number
           rbi_no?: string | null
@@ -7890,13 +7903,6 @@ export type Database = {
             columns: ["asset_detail_id"]
             isOneToOne: false
             referencedRelation: "e_asset_detail"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "i_ims_rbi_general_i_ims_design_fkey"
-            columns: ["i_ims_design"]
-            isOneToOne: false
-            referencedRelation: "i_ims_design"
             referencedColumns: ["id"]
           },
           {
@@ -8804,6 +8810,21 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      rbi_asset_counter: {
+        Row: {
+          asset_name: string
+          counter: number
+        }
+        Insert: {
+          asset_name: string
+          counter?: number
+        }
+        Update: {
+          asset_name?: string
+          counter?: number
+        }
+        Relationships: []
       }
       user_projects: {
         Row: {

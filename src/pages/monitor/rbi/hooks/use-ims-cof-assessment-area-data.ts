@@ -37,6 +37,7 @@ export const insertImsCofAssessmentCofAreaData = async (assessmentData: {
   asset_detail_id?: number;
   ims_service_id?: number;
   ims_general_id?: number;
+  ims_rbi_general_id?: number; // Optional, if not provided it will be set later
 }) => {
   try {
     const { data, error } = await supabase

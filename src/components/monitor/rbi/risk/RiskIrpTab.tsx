@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -6,9 +7,16 @@ const RiskIrpTab: React.FC<{ formData: any; setFormData: any }> = ({
   formData,
   setFormData,
 }) => {
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev: any) => ({ ...prev, [name]: value }));
+  };
+
+  const [precision, setPrecision] = useState<2 | 8>(2);
+
+  const formatNumber = (val: number | null) => {
+    if (val === null || val === undefined) return "";
+    return parseFloat(Number(val).toFixed(precision)).toString();
   };
 
   return (
@@ -22,70 +30,88 @@ const RiskIrpTab: React.FC<{ formData: any; setFormData: any }> = ({
           This section calculates the overall risk assessment and incident response planning.
         </p>
       </div>
+      {/* Toggle precision */}
+      <div className="flex justify-end">
+        <Button
+          type="button"
+          onClick={() => setPrecision((prev) => (prev === 2 ? 8 : 2))}
+          variant="outline"
+          size="sm"
+        >
+          Accuracy: {precision} decimals
+        </Button>
+      </div>
 
       {/* Form Fields */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Input Fields */}
         <div>
-          <Label htmlFor="dhtha">Dhtha</Label>
+          <Label htmlFor="dhtha_risk_irp">Dhtha</Label>
           <Input
-            id="dhtha"
-            name="dhtha"
+            id="dhtha_risk_irp"
+            name="dhtha_risk_irp"
             type="number"
-            value={formData.dhtha || ""}
+            value={formData?.dhtha_risk_irp || 0}
             onChange={handleInputChange}
-            className="mt-1"
-            step="0.01"
+            className="mt-1 bg-gray-100"
+            disabled
           />
         </div>
 
         <div>
-          <Label htmlFor="dbrit">Dbrit</Label>
+          <Label htmlFor="dbrit_risk_irp">Dbrit</Label>
           <Input
-            id="dbrit"
-            name="dbrit"
+            id="dbrit_risk_irp"
+            name="dbrit_risk_irp"
             type="number"
-            value={formData.dbrit || ""}
+            value={formData?.dbrit_risk_irp || 0}
             onChange={handleInputChange}
-            className="mt-1"
-            step="0.01"
+            className="mt-1 bg-gray-100"
+            disabled
           />
         </div>
 
         <div>
-          <Label htmlFor="dextd">Dextd</Label>
+          <Label htmlFor="dextd_risk_irp">Dextd</Label>
           <Input
-            id="dextd"
-            name="dextd"
+            id="dextd_risk_irp"
+            name="dextd_risk_irp"
             type="number"
-            value={formData.dextd || ""}
+            value={formData?.dextd_risk_irp || ""}
             onChange={handleInputChange}
             className="mt-1"
-            step="0.01"
+            step="any"
+            disabled={formData?.ims_asset_type_id !== 1} // Disable unless ims_asset_type_id is 1
+            placeholder={
+              formData?.ims_asset_type_id !== 1
+                ? "Calculated value"
+                : "Enter Dextd value"
+            }
           />
         </div>
 
         {/* Disabled Fields */}
         <div>
-          <Label htmlFor="dthin">Dthin</Label>
+          <Label htmlFor="dthin_risk_irp">Dthin</Label>
           <Input
-            id="dthin"
-            name="dthin"
+            id="dthin_risk_irp"
+            name="dthin_risk_irp"
             type="number"
-            value={formData.dthinf || 0}
-            disabled
+            value={formatNumber(formData?.dthin_risk_irp) || 0}
+            onChange={handleInputChange}
             className="mt-1 bg-gray-100"
-            placeholder="Calculated from damage factors"
+            disabled
           />
         </div>
 
         <div>
-          <Label htmlFor="dscc">Dscc</Label>
+          <Label htmlFor="dscc_risk_irp">Dscc</Label>
           <Input
-            id="dscc"
-            name="dscc"
+            id="dscc_risk_irp"
+            name="dscc_risk_irp"
             type="number"
-            value={formData.dscc || 0}
+            value={formatNumber(formData?.dscc_risk_irp) || 0}
+            onChange={handleInputChange}
             disabled
             className="mt-1 bg-gray-100"
             placeholder="Calculated value"
@@ -93,25 +119,32 @@ const RiskIrpTab: React.FC<{ formData: any; setFormData: any }> = ({
         </div>
 
         <div>
-          <Label htmlFor="dmfat">Dmfat</Label>
+          <Label htmlFor="dmfat_risk_irp">Dmfat</Label>
           <Input
-            id="dmfat"
-            name="dmfat"
+            id="dmfat_risk_irp"
+            name="dmfat_risk_irp"
             type="number"
-            value={formData.dmfat || 0}
-            disabled
-            className="mt-1 bg-gray-100"
-            placeholder="From damage factors"
+            value={formData?.dmfat_risk_irp || ""}
+            onChange={handleInputChange}
+            disabled={formData?.ims_asset_type_id !== 1} // Disable unless ims_asset_type_id is 1
+            className="mt-1"
+            step="any"
+            placeholder={
+              formData?.ims_asset_type_id !== 1
+                ? "Calculated value"
+                : "Enter Dmfat value"
+            }
           />
         </div>
 
         <div>
-          <Label htmlFor="pof">Pof</Label>
+          <Label htmlFor="pof_risk_irp">Pof</Label>
           <Input
-            id="pof"
-            name="pof"
+            id="pof_risk_irp"
+            name="pof_risk_irp"
             type="number"
-            value={formData.pof || 0}
+            value={formatNumber(formData?.pof_risk_irp) || 0}
+            onChange={handleInputChange}
             disabled
             className="mt-1 bg-gray-100"
             placeholder="Calculated POF"
@@ -119,12 +152,13 @@ const RiskIrpTab: React.FC<{ formData: any; setFormData: any }> = ({
         </div>
 
         <div>
-          <Label htmlFor="cofFinancial">Cof (Financial)</Label>
+          <Label htmlFor="cofFinancial_risk_irp">Cof (Financial)</Label>
           <Input
-            id="cofFinancial"
-            name="cofFinancial"
+            id="cofFinancial_risk_irp"
+            name="cofFinancial_risk_irp"
             type="number"
-            value={formData.cofFinancial || formData.fc || 0}
+            value={formatNumber(formData?.cofFinancia_risk_irpl) || 0}
+            onChange={handleInputChange}
             disabled
             className="mt-1 bg-gray-100"
             placeholder="From COF Financial"
@@ -132,25 +166,27 @@ const RiskIrpTab: React.FC<{ formData: any; setFormData: any }> = ({
         </div>
 
         <div>
-          <Label htmlFor="cofArea">Cof (Area)</Label>
+          <Label htmlFor="cofArea_risk_irp">Cof (Area)</Label>
           <Input
-            id="cofArea"
-            name="cofArea"
+            id="cofArea_risk_irp"
+            name="cofArea_risk_irp"
             type="number"
-            value={formData.cofArea || formData.caTotal || 0}
+            value={formatNumber(formData?.cofArea_risk_irp) || 0}
+            onChange={handleInputChange}
             disabled
             className="mt-1 bg-gray-100"
             placeholder="From COF Area"
           />
         </div>
 
+{/* TEST */}
         <div>
-          <Label htmlFor="pofValue">Pof Value</Label>
+          <Label htmlFor="pof_value_risk_irp">Pof Value</Label>
           <Input
-            id="pofValue"
-            name="pofValue"
-            type="number"
-            value={formData.pofValue || 0}
+            id="pof_value_risk_irp"
+            name="pof_value_risk_irp"
+            value={formData?.pof_value_risk_irp || ""}
+            onChange={handleInputChange}
             disabled
             className="mt-1 bg-gray-100"
             placeholder="Calculated POF Value"
@@ -158,12 +194,13 @@ const RiskIrpTab: React.FC<{ formData: any; setFormData: any }> = ({
         </div>
 
         <div>
-          <Label htmlFor="riskLevel">Risk Level</Label>
+          <Label htmlFor="risk_level_risk_irp">Risk Level</Label>
           <Input
-            id="riskLevel"
-            name="riskLevel"
+            id="risk_level_risk_irp"
+            name="risk_level_risk_irp"
             type="text"
-            value={formData.riskLevel || "Low"}
+            value={formData?.risk_level_risk_irp || ""}
+            onChange={handleInputChange}
             disabled
             className="mt-1 bg-gray-100"
             placeholder="Calculated Risk Level"
@@ -171,12 +208,13 @@ const RiskIrpTab: React.FC<{ formData: any; setFormData: any }> = ({
         </div>
 
         <div>
-          <Label htmlFor="riskRanking">Risk Ranking</Label>
+          <Label htmlFor="risk_ranking_risk_irp">Risk Ranking</Label>
           <Input
-            id="riskRanking"
-            name="riskRanking"
+            id="risk_ranking_risk_irp"
+            name="risk_ranking_risk_irp"
             type="text"
-            value={formData.riskRanking || "Low"}
+            value={formData?.risk_ranking_risk_irp || ""}
+            onChange={handleInputChange}
             disabled
             className="mt-1 bg-gray-100"
             placeholder="Calculated Risk Ranking"

@@ -10,6 +10,8 @@ import PofTab from "@/components/monitor/rbi/pof/PofTab";
 import CofTab from "@/components/monitor/rbi/cof/CofTab";
 import RiskIrpTab from "@/components/monitor/rbi/risk/RiskIrpTab";
 import Loading from "@/components/shared/Loading";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from '@/hooks/use-toast';
 import { useAverageMtsMpaMysMpaByName } from "./hooks/use-average-mts_mpa-mys_mpa-by-name";
 import { useImsGeneralDataByAssetDetailId } from "./hooks/use-ims-general-data";
 import { useImsProtectionByAssetDetailId } from "./hooks/use-ims-protection-by-asset-detail-id";
@@ -25,14 +27,32 @@ import { calculateDfSccFbSccScc, calculateDfSccScc, calculateEnvSeveritySccScc, 
 import { calculateDfSccSohic, calculateDfSohicFbSccSohic, calculateEnvSeveritySccSohic, calculateSuscToCrackSccSohic, calculateSviSccSohic } from "./hooks/formula-df-scc-sohic";
 import { calculateFcAffaCofProd, calculateFcCmdCofProd, calculateFcCofProd, calculateFcEnvironCofProd, calculateFcInjCostCofProd, calculateFcProdCofProd, calculateFracEvapCofProd, calculateOutageAffaCofProd, calculateOutageCmdCofProd, calculatePopDensCofProd, calculateVolEnvCofProd } from "./hooks/formula-cof-prod";
 import { calculateCpCofArea, calculateFactDiCofArea, calculateLdMaxCofArea, calculateInventoryCofArea, calculateKCofArea, calculateMReleaseCofArea, calculateOpTempCofArea, calculatePsCofArea, calculatePTransCofArea, calculateRateNCofArea, calculateReleaseTypeCofArea, calculateTimeEmptyCofArea, calculateW1CofArea, calculateLdSCofArea, calculateMassNCofArea, calculateEneffCofArea, calculateFactIcCofArea, calculateCaContValues, calculateCaInstValues, calculateCaCmdAil, calculateCaInjAil, calculateCaCmdAinl, calculateCaInjAinl, calculateFactAIT, calculateCaCmdFlam, calculateCaInjFlam } from "./hooks/formula-cof-area";
+import { calculateCofAreaRiskIrp, calculateCofFinancialRiskIrp, calculateDextdRiskIrp, calculateDmfatRiskIrp, calculateDsccRiskIrp, calculateDthinRiskIrp, calculatePofRiskIrp, calculatePofValueRiskIrp } from "./hooks/formula-risk-irp";
+import { insertImsRbiGeneralData } from "./hooks/use-ims-rbi-general-data";
+import { insertImsPofAssessmentData } from "./hooks/use-ims-pof-assessment-data";
+import { insertImsDfThinData } from "./hooks/use-df-thin-data";
+import { insertImsDfExtData } from "./hooks/use-df-ext-data";
+import { insertImsDfExtClsccData } from "./hooks/use-df-ext-clscc-data";
+import { insertImsDfMfatData } from "./hooks/use-df-mfat-data";
+import { insertImsDfCuiData } from "./hooks/use-df-cui-data";
+import { insertImsDfSccSccData } from "./hooks/use-df-scc-scc";
+import { insertImsDfSccSohicData } from "./hooks/use-df-scc-sohic";
+import { insertImsCofAssessmentCofProdData } from "./hooks/use-ims-cof-assessment-prod-data";
+import { insertImsCofAssessmentCofAreaData } from "./hooks/use-ims-cof-assessment-area-data";
+import { insertImsRbiRiskIrpData } from "./hooks/use-ims-rbi-risk-irp-data";
 
 
 const RBIAssessmentCreatePage: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("pof");
+
 
   const [formData, setFormData] = useState<any | null>({
     // ims_general
-    asset_detail_id: 54,
+    asset_detail_id: null,
+    asset_name: "",
     line_no: "",
     pipe_schedule_id: null,
     pressure_rating: 0,
@@ -136,7 +156,7 @@ const RBIAssessmentCreatePage: React.FC = () => {
     bthin2_thin: 0,
     bthin3_thin: 0,
     dfthinfb_thin: 0,
-    dthinf_thin: 0,
+    dfthinf_thin: 0,
 
     // *** i_df_ext (2)
     current_thickness_ext: 0, //Trd
@@ -330,6 +350,20 @@ const RBIAssessmentCreatePage: React.FC = () => {
     fact_ait_cof_area: 0,
     ca_cmd_flam_cof_area: 0,
     ca_inj_flam_cof_area: 0,
+
+    // risk and IRP
+    dhtha_risk_irp: 0, // constant 0
+    dbrit_risk_irp: 0, // constant 0
+    dthin_risk_irp: 0,
+    dextd_risk_irp: 0,
+    dscc_risk_irp: 0,
+    dmfat_risk_irp: 0,
+    pof_risk_irp: 0,
+    cof_financial_risk_irp: 0,
+    cof_area_risk_irp: 0,
+    pof_value_risk_irp: "",
+    risk_level_risk_irp: "",
+    risk_ranking_risk_irp: "",
 
   });
   const { data: imsGeneral, isLoading: isImsGeneralLoading } = useImsGeneralDataByAssetDetailId(formData?.asset_detail_id ?? 0);
@@ -1483,7 +1517,7 @@ const RBIAssessmentCreatePage: React.FC = () => {
         formData.op_temp_cof_area,
         formData.k_cof_area,
         formData.fluid_representative_name,
-        formData.comp_type_cof 
+        formData.comp_type_cof
       );
       setFormData((prev: any) => ({
         ...prev,
@@ -1791,15 +1825,362 @@ const RBIAssessmentCreatePage: React.FC = () => {
 
   //*****************  Formula CofArea End
 
+  //*****************  Formula Risk Irp Start
+
+  //dthin_risk_irp✅
+  useEffect(() => {
+    if (formData) {
+      const dThin = calculateDthinRiskIrp(
+        formData.ims_asset_type_id,
+        formData.dfthinf_thin
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        dthin_risk_irp: dThin
+      }));
+    }
+  }, [formData?.ims_asset_type_id, formData?.dfthinf_thin]);
+
+  //dextd_risk_irp❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const dextd = calculateDextdRiskIrp(
+        formData.ims_asset_type_id,
+        formData.dfextcorrf_ext,
+        formData.df_ext_cl_scc_ext_clscc,
+        formData.dfcuiff_cui
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        dextd_risk_irp: dextd
+      }));
+    }
+  }, [formData?.ims_asset_type_id, formData?.dfextcorrf_ext, formData?.df_ext_cl_scc_ext_clscc, formData?.dfcuiff_cui]);
+
+  //dscc_risk_irp❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const dscc = calculateDsccRiskIrp(
+        formData.df_scc_scc_scc_scc,
+        formData.dfscc_sohic_scc_sohic
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        dscc_risk_irp: dscc
+      }));
+    }
+  }, [formData?.df_scc_scc_scc_scc, formData?.dfscc_sohic_scc_sohic]);
+
+  //dmfat_risk_irp❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const dmfat = calculateDmfatRiskIrp(
+        formData.ims_asset_type_id,
+        formData.dmfat_mfat
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        dmfat_risk_irp: dmfat
+      }));
+    }
+  }, [formData?.ims_asset_type_id, formData?.dmfat_mfat]);
+
+  //pof_risk_irp❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const pof = calculatePofRiskIrp(
+        formData.comp_type_cof,
+        formData.dthin_risk_irp,
+        formData.dextd_risk_irp,
+        formData.dscc_risk_irp,
+        formData.dhtha_risk_irp,
+        formData.dbrit_risk_irp,
+        formData.dmfat_risk_irp
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        pof_risk_irp: pof
+      }));
+    }
+  }, [formData?.comp_type_cof, formData?.dthin_risk_irp, formData?.dextd_risk_irp, formData?.dscc_risk_irp, formData?.dhtha_risk_irp, formData?.dbrit_risk_irp, formData?.dmfat_risk_irp]);
+
+  //cof_financial_risk_irp❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const cofFinancial = calculateCofFinancialRiskIrp(
+        formData.fc_cof_prod
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        cof_financial_risk_irp: cofFinancial
+      }));
+    }
+  }, [formData?.fc_cof_prod]);
+
+  //cof_area_risk_irp❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const cofArea = calculateCofAreaRiskIrp(
+        formData.ca_cmd_flam_cof_area,
+        formData.ca_inj_flam_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        cof_area_risk_irp: cofArea
+      }));
+    }
+  }, [formData?.ca_cmd_flam_cof_area, formData?.ca_inj_flam_cof_area]);
+
+  //pof_value_risk_irp❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const pofValue = calculatePofValueRiskIrp(
+        formData.pof_risk_irp
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        pof_value_risk_irp: pofValue
+      }));
+    }
+  }, [formData?.pof_risk_irp]);
 
 
 
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast.success("RBI Assessment created successfully");
-    // navigate("/monitor/rbi-assessment");
+
+  //*****************  Formula Risk Irp End
+
+
+  const [isLoadingSubmit, setIsLoadingSubmit] = useState(false);
+  const showValidationError = (description: string) => {
+    toast({
+      title: "Form Incomplete",
+      description,
+      variant: "destructive",
+    });
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+
+    if (!formData.asset_detail_id) {
+      setActiveTab("pof"); // Navigate to the "Asset Information" tab
+      return showValidationError("Asset is required");
+    }
+    setIsLoadingSubmit(true);
+    try {
+      if (formData) {
+
+        const imsGeneralId = imsGeneral.id
+        // Step 1
+        console.log("Step 1 RBI general");
+        const rbiGeneralData = {
+          i_ims_general_id: imsGeneralId,
+          asset_detail_id: formData.asset_detail_id,
+          asset_name: formData.asset_name,
+        };
+        const rbiGeneralId = await insertImsRbiGeneralData(rbiGeneralData);
+
+        // Step 2 Pof general
+        console.log("Step 2 POF general");
+        const pofGeneralData = {
+          asset_detail_id: formData.asset_detail_id,
+          cladding: formData.cladding,
+          nominal_thickness: formData.normal_wall_thickness,
+          description: formData.description,
+          ims_general_id: imsGeneralId,
+          ims_rbi_general_id: rbiGeneralId,
+        };
+        const pofGeneralId = await insertImsPofAssessmentData(pofGeneralData);
+
+        // Step 3 df thin
+        console.log("Step 3 df thin");
+        const dfThinData = {
+          last_inspection_date: formData.last_inspection_date_thin,
+          data_confidence_id: formData.data_confidence_id_thin,
+          nthin_a: formData.nthin_a_thin,
+          nthin_b: formData.nthin_b_thin,
+          nthin_c: formData.nthin_c_thin,
+          nthin_d: formData.nthin_d_thin,
+          agerc: formData.agerc_thin,
+          ims_pof_assessment_id: pofGeneralId,
+          dfthinfb: formData.dfthinfb_thin,
+          ims_general_id: imsGeneralId,
+          cr_act: formData.cract_thin,
+          ims_rbi_general_id: rbiGeneralId,
+        };
+        // await insertImsDfThinData(dfThinData);
+
+        // Step 4 df ext
+        console.log("Step 4 df ext");
+        const dfExtData = {
+          last_inspection_date: formData.last_inspection_date_ext,
+          new_coating_date: formData.new_coating_date_ext,
+          ims_pof_assessment_id: pofGeneralId,
+          data_confidence_id: formData.data_confidence_id_ext,
+          dfextcorrf: formData.dfextcorrf_ext,
+          nextcorra: formData.nextcorra_ext,
+          nextcorrb: formData.nextcorrb_ext,
+          nextcorrc: formData.nextcorrc_ext,
+          nextcorrd: formData.nextcorrd_ext,
+          ims_general_id: imsGeneralId,
+          ims_rbi_general_id: rbiGeneralId,
+        };
+        await insertImsDfExtData(dfExtData);
+
+        // Step 5 df ext clscc
+        console.log("Step 5 df ext clscc");
+        const dfExtClsccData = {
+          last_inspection_date: formData.last_inspection_date_ext_clscc,
+          new_coating_date: formData.new_coating_date_ext_clscc,
+          inspection_efficiency_id: formData.inspection_efficiency_id_ext_clscc,
+          ims_pof_asessment_id: pofGeneralId,
+          df_ext_cl_scc: formData.df_ext_cl_scc_ext_clscc,
+          ims_general_id: imsGeneralId,
+          ims_rbi_general_id: rbiGeneralId,
+        };
+        await insertImsDfExtClsccData(dfExtClsccData);
+
+        // Step 6 df mfat
+        console.log("Step 6 df mfat");
+        const dfMfatData = {
+          previous_failure_id: formData.previous_failure_id_mfat,
+          visible_audible_shaking_id: formData.visible_audible_shaking_id_mfat,
+          shaking_frequency_id: formData.shaking_frequency_id_mfat,
+          cyclic_load_type_id: formData.cyclic_load_type_id_mfat,
+          corrective_action_id: formData.corrective_action_id_mfat,
+          pipe_complexity_id: formData.pipe_complexity_id_mfat,
+          pipe_condition_id: formData.pipe_condition_id_mfat,
+          joint_branch_design_id: formData.joint_branch_design_id_mfat,
+          brach_diameter_id: formData.brach_diameter_id_mfat,
+          dmfatfb: formData.dmfatfb_mfat,
+          ims_pof_assessment_id: pofGeneralId,
+          ims_general_id: imsGeneralId,
+          ims_rbi_general_id: rbiGeneralId,
+        };
+        await insertImsDfMfatData(dfMfatData);
+
+        // Step 7 df cui
+        console.log("Step 7 df cui");
+        const dfCuiData = {
+          last_inspection_date: formData.last_inspection_date_cui,
+          new_coating_date: formData.new_coating_date_cui,
+          dfcuiff: formData.dfcuiff_cui,
+          ims_pof_assessment_id: pofGeneralId,
+          data_confidence_id: formData.data_confidence_id_cui,
+          ncuifa: formData.ncuifa_cui,
+          ncuifb: formData.ncuifb_cui,
+          ncuifc: formData.ncuifc_cui,
+          ncuifd: formData.ncuifd_cui,
+          ims_general_id: imsGeneralId,
+          cr_act: formData.cract_cui,
+          ims_rbi_general_id: rbiGeneralId,
+        };
+        await insertImsDfCuiData(dfCuiData);
+
+        // Step 8 df scc scc
+        console.log("Step 8 df scc scc");
+        const dfSccSccData = {
+          inspection_efficiency_id: formData.inspection_efficiency_id_scc_scc,
+          hardness_brinnel: formData.hardness_brinnel_scc_scc,
+          dfsccfb: formData.dfsccfb_scc_scc,
+          df_scc_scc: formData.df_scc_scc_scc_scc,
+          h2s_in_water: formData.h2s_in_water_scc_scc,
+          ph: formData.ph_scc_scc,
+          i_ims_general_id: imsGeneralId,
+          last_inspection_date: formData.last_inspection_date_scc_scc,
+          ims_pof_assessment_id: pofGeneralId,
+          ims_rbi_general_id: rbiGeneralId,
+        };
+        await insertImsDfSccSccData(dfSccSccData);
+
+        // Step 9 df scc sohic
+        console.log("Step 9 df scc sohic");
+        const dfSccSohicData = {
+          inspection_efficiency_id: formData.inspection_efficiency_id_scc_sohic,
+          steelscontent_id: formData.steelscontent_id_scc_sohic,
+          dfscc_sohic: formData.dfscc_sohic_scc_sohic,
+          ims_pof_assessment_id: pofGeneralId,
+          h2s_in_water: formData.h2s_in_water_scc_sohic,
+          ph: formData.ph_scc_sohic,
+          i_ims_general_id: imsGeneralId,
+          last_inspection_date: formData.last_inspection_date_scc_sohic,
+          ims_rbi_general_id: rbiGeneralId,
+        };
+        await insertImsDfSccSohicData(dfSccSohicData);
+
+        // Step 10 cof prod
+        console.log("Step 10 COF Prod");
+        const cofProdData = {
+          outagemult: formData.outage_mult_cof_prod,
+          injcost: formData.inj_cost_cof_prod,
+          envcost: formData.envcost_cof_prod,
+          fracevap: formData.frac_evap_cof_prod,
+          volenv: formData.vol_env_cof_prod,
+          fcenviron: formData.fc_environ_cof_prod,
+          fc: formData.fc_cof_prod,
+          ims_general_id: imsGeneralId,
+          ims_rbi_general_id: rbiGeneralId,
+        };
+        await insertImsCofAssessmentCofProdData(cofProdData);
+
+        // Step 11 cof area
+        console.log("Step 11 COF Area");
+        const cofAreaData = {
+          iso_sys_id: formData.iso_sys_id_cof_area,
+          det_sys_id: formData.det_sys_id_cof_area,
+          mitigation_system_id: formData.mitigation_system_id,
+          ideal_gas_specific_heat_eq: formData.ideal_gas_specific_heat_eq_id,
+          ca_cmdflam: formData.ca_cmd_flam_cof_area,
+          ca_injflam: formData.ca_inj_flam_cof_area,
+          ims_general_id: imsGeneralId,
+          ims_rbi_general_id: rbiGeneralId,
+        };
+        await insertImsCofAssessmentCofAreaData(cofAreaData);
+
+        // Step 12 Risk IRP
+        console.log("Step 12 Risk IRP");
+        const riskIrpData = {
+          dhtha: formData.dhtha_risk_irp,
+          dbrit: formData.dbrit_risk_irp,
+          dthin: formData.dthin_risk_irp,
+          dextd: formData.dextd_risk_irp,
+          dscc: formData.dscc_risk_irp,
+          dmfat: formData.dmfat_risk_irp,
+          pof: formData.pof_risk_irp,
+          cof_financial: formData.cof_financial_risk_irp,
+          cof_area: formData.cof_area_risk_irp,
+          pof_value: formData.pof_value_risk_irp,
+          risk_level: formData.risk_level,
+          risk_ranking: formData.risk_ranking,
+          ims_general_id: imsGeneralId,
+          ims_rbi_general_id: rbiGeneralId,
+        };
+        await insertImsRbiRiskIrpData(riskIrpData);
+
+        // Toast and invalidateQueries
+        toast({
+          title: "Success",
+          description: "RBI created successfully!",
+          variant: "default",
+        });
+        queryClient.invalidateQueries({ queryKey: ["i-ims-rbi-general-data"] });
+      }
+    } catch (error) {
+      console.error("Failed to create RBI data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create RBI data.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingSubmit(false);
+    }
+    navigate("/monitor/rbi-assessment");
+  };
+
+  if (isLoadingSubmit){
+    return <Loading />;
+  }
 
   return (
     <div className="space-y-6">
@@ -1816,19 +2197,19 @@ const RBIAssessmentCreatePage: React.FC = () => {
           <ArrowLeft className="h-4 w-4" /> Back to RBI Assessment
         </Button>
       </div>
-      {/* <h1>last {formData.online_monitor_id_scc_sohic ?? "NA"}</h1> */}
+      {/* <h1>last {formData.asset_name ?? "NA"}</h1> */}
       {/* <h1>last {formData.iso_sys_id_cof_area ?? "NA"}</h1> */}
-      <h1>last {formData.rate_n_cof_area ?? "NA"}</h1>
+      {/* <h1>last {formData.comp_type_cof ?? "NA"}</h1> */}
       {/* <h1>last {formData.mitigation_system_name ?? "NA"}</h1>
       <h1>last {formData.mitigation_system_value ?? "NA"}</h1> */}
-      <h1>Asset Detail ID DUMMY. NNTI TUKAR KAT INITIAL : {formData.asset_detail_id ?? "NA"}</h1>
+      {/* <h1>Asset Detail ID DUMMY. NNTI TUKAR KAT INITIAL : {formData.asset_detail_id ?? "NA"}</h1> */}
       {/* <pre>{JSON.stringify(imsGeneral, null, 2)}</pre>
       <pre>{JSON.stringify(imsDesign, null, 2)}</pre> */}
 
       <form onSubmit={handleSubmit}>
         <Card>
           <CardContent className="pt-6">
-            <Tabs defaultValue="cof" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="mb-4">
                 <TabsTrigger value="pof">POF Assessment</TabsTrigger>
                 <TabsTrigger value="cof">COF Assessment</TabsTrigger>
