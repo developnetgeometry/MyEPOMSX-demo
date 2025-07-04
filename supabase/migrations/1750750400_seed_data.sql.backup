@@ -11,7 +11,7 @@ SET session_replication_role = 'replica';
 -- ============================================================================
 
 -- Insert User Types
-INSERT INTO public.user_type (id, name, description, is_active, created_at) VALUES
+INSERT INTO public.user_type (id, name, description, is_active, created_when) VALUES
 ('550e8400-e29b-41d4-a716-446655440001', 'Admin', 'System Administrator', true, now()),
 ('550e8400-e29b-41d4-a716-446655440002', 'Engineer', 'Maintenance Engineer', true, now()),
 ('550e8400-e29b-41d4-a716-446655440003', 'Technician', 'Field Technician', true, now()),
@@ -24,12 +24,12 @@ ON CONFLICT (id) DO NOTHING;
 -- ============================================================================
 
 -- Insert Clients
-INSERT INTO public.e_client (id, name, created_at) VALUES
-(1, 'PETRONAS', now()),
-(2, 'ExxonMobil', now()),
-(3, 'Shell', now()),
-(4, 'TotalEnergies', now()),
-(5, 'Chevron', now())
+INSERT INTO public.e_client (id, code, name, created_at) VALUES
+(1, 'PETRONAS', 'PETRONAS', now()),
+(2, 'EXXON', 'ExxonMobil', now()),
+(3, 'SHELL', 'Shell', now()),
+(4, 'TOTAL', 'TotalEnergies', now()),
+(5, 'CHEVRON', 'Chevron', now())
 ON CONFLICT (id) DO NOTHING;
 
 -- Insert Project Types

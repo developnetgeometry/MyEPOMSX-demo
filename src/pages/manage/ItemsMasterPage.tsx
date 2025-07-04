@@ -1,4 +1,4 @@
-import React, { act, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,6 +12,8 @@ import { z } from "zod";
 import { createUniqueOptions } from "@/utils/dropdown";
 import { useLoadingState } from "@/hooks/use-loading-state";
 import { toast } from "@/hooks/use-toast";
+import SearchFilters from "@/components/shared/SearchFilters";
+import useDebounce from "@/hooks/use-debounce"; // Import the debounce hook
 
 interface ItemsMasterPageProps {
   hideHeader?: boolean;
@@ -24,6 +26,7 @@ const ItemsMasterPage: React.FC<ItemsMasterPageProps> = ({
 }) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 300); // Add debounced search term
   const [currentItem, setCurrentItem] =
     useState<ItemMasterWithRelations | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -32,9 +35,20 @@ const ItemsMasterPage: React.FC<ItemsMasterPageProps> = ({
   const { withLoading } = useLoadingState();
   const addItemMasterMutation = useAddItemMaster();
   
+  // Memoized filtered data
+  const filteredData = useMemo(() => {
+    if (!data) return [];
+    if (!debouncedSearchQuery.trim()) return data;
+    
+    const lowerSearch = debouncedSearchQuery.toLowerCase();
+    return data.filter(item => 
+      (item.item_no || "").toLowerCase().includes(lowerSearch) ||
+      (item.item_name || "").toLowerCase().includes(lowerSearch)
+    );
+  }, [data, debouncedSearchQuery]);
 
   // Define columns for items master table
-  const columns: Column[] = [
+  const columns: Column[] = useMemo(() => [
     { id: "item_no", header: "Item No", accessorKey: "item_no" },
     { id: "item_name", header: "Item Name", accessorKey: "item_name" },
     { id: "group", header: "Item Group", accessorKey: "group.name" },
@@ -77,15 +91,7 @@ const ItemsMasterPage: React.FC<ItemsMasterPageProps> = ({
           <StatusBadge status="Inactive" />
         ),
     },
-    // { id: "supplier", header: "Supplier", accessorKey: "supplier" },
-    // { id: "uom", header: "UOM", accessorKey: "uom" },
-    // {
-    //   id: "price",
-    //   header: "Price",
-    //   accessorKey: "price",
-    //   cell: (value) => <span>${value.toFixed(2)}</span>,
-    // },
-  ];
+  ], []);
 
   const formSchema = z.object({
     item_no: z.string().min(1, "Item No. is required"),
@@ -109,7 +115,6 @@ const ItemsMasterPage: React.FC<ItemsMasterPageProps> = ({
   const unitOptions = useMemo(() => createUniqueOptions(data, 'item_unit'), [data]);
   const criticalityOptions = useMemo(() => createUniqueOptions(data, 'item_criticality'), [data]);
 
-
   const activeOptions = [
     { value: "true", label: "Active" },
     { value: "false", label: "Inactive" },
@@ -130,9 +135,7 @@ const ItemsMasterPage: React.FC<ItemsMasterPageProps> = ({
     is_active: "",
   };
 
-  
-
-  const formFields = [
+  const formFields = useMemo(() => [
     {
       name: "item_no",
       label: "Item No",
@@ -205,14 +208,13 @@ const ItemsMasterPage: React.FC<ItemsMasterPageProps> = ({
       type: "select" as const,
       options: activeOptions,
     },
-  ];
+  ], [groupOptions, categoryOptions, typeOptions, manufacturerOptions, unitOptions, criticalityOptions]);
 
   const handleAddNew = () => {
     navigate("/manage/items-master/add");
   };
 
   const handleSubmit = async (values: any) => {
-    console.log(values)
     withLoading(async () => {
       try {
         await addItemMasterMutation.mutateAsync({
@@ -230,7 +232,7 @@ const ItemsMasterPage: React.FC<ItemsMasterPageProps> = ({
           is_active: Boolean(values.is_active)
         });
         toast({
-          title: "Facility added successfully",
+          title: "Item added successfully",
           variant: "default",
         });
       } catch (error: any) {
@@ -243,19 +245,19 @@ const ItemsMasterPage: React.FC<ItemsMasterPageProps> = ({
     })
   }
 
-  // Handle search
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
+  // Handle search - no-op since filtering is automatic
+  const handleSearch = () => {
+    // Already handled by debouncedSearchQuery
   };
 
   // Handle view details
-  const handleRowClick = (row: any) => {
+  const handleRowClick = useCallback((row: any) => {
     if (onRowClick) {
       onRowClick(row);
     } else {
       navigate(`/manage/items-master/${row.id}`);
     }
-  };
+  }, [navigate, onRowClick]);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -272,7 +274,6 @@ const ItemsMasterPage: React.FC<ItemsMasterPageProps> = ({
           title="Items Master"
           subtitle="Manage inventory items master data"
           icon={<Database className="h-6 w-6" />}
-          onSearch={handleSearch}
           onAddNew={handleAddNew}
           addNewLabel="Add New Item"
         />
@@ -280,9 +281,15 @@ const ItemsMasterPage: React.FC<ItemsMasterPageProps> = ({
 
       <Card>
         <CardContent className="p-6">
+          <SearchFilters
+            searchTerm={searchQuery}
+            setSearchTerm={setSearchQuery}
+            handleSearch={handleSearch}
+            text="Items Master"
+          />
           <DataTable
             columns={columns}
-            data={data || []}
+            data={filteredData}
             onRowClick={handleRowClick}
           />
         </CardContent>

@@ -1,26 +1,27 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 
-export const useExtEnvData = () => {
+
+export const useOnlineMonitorData = () => {
     return useQuery({
-        queryKey: ["e-ext-env-data"],
+        queryKey: ['online-monitoring'],
         queryFn: async () => {
             const { data, error } = await supabase
-                .from("e_ext_env")
-                .select("id, name")
-                .order("id");
+                .from('e_online_monitor')
+                .select('id, name')
+                .order('id');
 
             if (error) {
-                console.error("Error fetching e_ext_env data:", error);
+                console.error('Error fetching e_online_monitoring data:', error);
                 throw error;
             }
 
             return data;
         },
-    });
-};
+    })
+}
 
-export const useExtEnvOptions = () => {
-    const { data } = useExtEnvData();
+export const useOnlineMonitorOptions = () => {
+    const { data } = useOnlineMonitorData();
     return data?.map((item) => ({ value: item.id, label: item.name }));
 };

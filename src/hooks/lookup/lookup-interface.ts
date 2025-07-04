@@ -19,3 +19,8 @@ export const useInterfaceData = () => {
         },
     });
 };
+
+export const useInterfaceOptions = () => {
+    const { data } = useInterfaceData();
+    return data?.map((item) => ({ value: item.id, label: item.name }));
+};

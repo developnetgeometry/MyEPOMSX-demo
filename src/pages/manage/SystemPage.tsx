@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2, X } from "lucide-react";
+import { Loader2, Wrench, X } from "lucide-react";
 import { System } from "@/types/manage";
 import {
   useCreateSystem,
@@ -36,7 +36,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import SearchFilters from "@/components/shared/SearchFilters";
+import useDebounce from "@/hooks/use-debounce";
 
+// Form schema outside component
 const systemFormSchema = z.object({
   facility_id: z.number().min(1, "Please select a facility"),
   system_code: z.string().min(1, "System code is required"),
@@ -44,12 +48,7 @@ const systemFormSchema = z.object({
   is_active: z.boolean().default(true),
 });
 
-type SystemFormValues = {
-  facility_id: number;
-  system_code: string;
-  system_name: string;
-  is_active: boolean;
-};
+type SystemFormValues = z.infer<typeof systemFormSchema>;
 
 const SystemPage: React.FC = () => {
   const { data: facilities } = useFacilityOptions();
@@ -57,118 +56,84 @@ const SystemPage: React.FC = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // State
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newSystem, setNewSystem] = useState({
-    system_code: "",
-    system_name: "",
-    is_active: true,
-    facility_id: null,
-    system_no: null,
-  });
-
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentItem, setCurrentItem] = useState<System | null>(null);
-
-  // Search state
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredSystems, setFilteredSystems] = useState<System[]>([]);
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   const { isLoading: isProcessing, withLoading } = useLoadingState();
 
-  // Query to fetch systems
+  // Queries
   const { data: systems, isLoading } = useSystems();
   const addSystemMutation = useCreateSystem();
   const updateSystemMutation = useUpdateSystem();
   const deleteSystemMutation = useDeleteSystem();
 
+  // Form
   const form = useForm<SystemFormValues>({
     resolver: zodResolver(systemFormSchema),
     defaultValues: {
-      facility_id: null as unknown as number, // TypeScript workaround
+      facility_id: null as unknown as number,
       system_code: "",
       system_name: "",
       is_active: true,
     },
   });
+  
   const facilityId = form.watch("facility_id");
   const systemCode = form.watch("system_code");
 
-  // Compute system number
+  // Memoized system number
   const systemNumber = useMemo(() => {
-    if (!facilityId || !systemCode) return "";
-
+    if (!facilityId || !systemCode || !facilities) return "";
+    
     const selectedFacility = facilities.find((f) => f.id === facilityId);
-    if (!selectedFacility) return "";
-
-    return `${selectedFacility.location_code}-${systemCode}`;
+    return selectedFacility ? `${selectedFacility.location_code}-${systemCode}` : "";
   }, [facilityId, systemCode, facilities]);
 
-  useEffect(() => {
-    if (!systems) return;
+  // Memoized columns
+  const columns = useMemo<Column[]>(() => [
+    {
+      id: "system_code",
+      header: "System Code",
+      accessorKey: "system_code",
+    },
+    {
+      id: "system_name",
+      header: "Name",
+      accessorKey: "system_name",
+    },
+    {
+      id: "system_no",
+      header: "System Number",
+      accessorKey: "system_no",
+    },
+    {
+      id: "facility.location_name",
+      header: "Location",
+      accessorKey: "facility.location_name",
+    },
+  ], []);
 
-    let filtered = systems;
-    if (searchTerm.trim()) {
-      filtered = systems.filter(
-        (item) =>
-          item.system_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.system_code.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
+  // Memoized filtered data
+  const filteredSystems = useMemo(() => {
+    if (!systems) return [];
+    
+    if (!debouncedSearchTerm.trim()) return systems;
+    
+    const lowerSearch = debouncedSearchTerm.toLowerCase();
+    return systems.filter(item => 
+      (item.system_name || "").toLowerCase().includes(lowerSearch) ||
+      (item.system_code || "").toLowerCase().includes(lowerSearch)
+    );
+  }, [systems, debouncedSearchTerm]); 
 
-    setFilteredSystems((prev) => {
-      if (
-        prev.length === filtered.length &&
-        prev.every((v, i) => v.id === filtered[i].id)
-      ) {
-        return prev;
-      }
-      return filtered;
-    });
-
-    if (filtered.length === 0 && searchTerm.trim() !== "") {
-      toast({
-        title: "No matching systems found",
-        description: "Please try a different search term.",
-        variant: "destructive",
-      });
-    }
-  }, [systems, searchTerm]);
-
-  useEffect(() => {
-    if (!isDialogOpen) {
-      form.reset({
-        facility_id: null as unknown as number,
-        system_code: "",
-        system_name: "",
-        is_active: true,
-      });
-    }
-    return () => {
-      form.reset({
-        facility_id: null as unknown as number,
-        system_code: "",
-        system_name: "",
-        is_active: true,
-      });
-    };
-  }, [isDialogOpen, form]);
-
-  // Initialize form in edit mode
-  useEffect(() => {
-    if (isDialogOpen && isEditMode && currentItem) {
-      form.reset({
-        facility_id: currentItem.facility_id,
-        system_code: currentItem.system_code,
-        system_name: currentItem.system_name || "",
-        is_active: currentItem.is_active,
-      });
-    }
-  }, [isDialogOpen, isEditMode, currentItem]);
-
-  const handleAddNew = () => {
+  // Callbacks
+  const handleAddNew = useCallback(() => {
     setIsEditMode(false);
     setCurrentItem(null);
-    // Reset form to blank/default values before opening
     form.reset({
       facility_id: null as unknown as number,
       system_code: "",
@@ -176,30 +141,22 @@ const SystemPage: React.FC = () => {
       is_active: true,
     });
     setIsDialogOpen(true);
-  };
-  const handleEdit = (item: System) => {
+  }, [form]);
+
+  const handleEdit = useCallback((item: System) => {
     setIsEditMode(true);
     setCurrentItem(item);
-    setNewSystem({
-      system_code: item.system_code,
-      system_name: item.system_name || "",
-      is_active: item.is_active,
-      facility_id: item.facility_id,
-      system_no: item.system_no,
-    });
     setIsDialogOpen(true);
-  };
-
-  // Handle search function
-  const handleSearch = useCallback((query: string) => {
-    setSearchTerm(query);
   }, []);
 
-  const handleSubmit = async (values: SystemFormValues) => {
+  const handleSubmit = useCallback(async (values: SystemFormValues) => {
     withLoading(async () => {
       try {
-        const systemData = {
-          ...values,
+        const systemData: Omit<System, "id"> = {
+          facility_id: values.facility_id,
+          system_code: values.system_code,
+          system_name: values.system_name,
+          is_active: values.is_active,
           system_no: systemNumber,
         };
 
@@ -223,9 +180,9 @@ const SystemPage: React.FC = () => {
         });
       }
     });
-  };
+  }, [currentItem, isEditMode, systemNumber, withLoading]);
 
-  const handleDelete = async (item: System) => {
+  const handleDelete = useCallback(async (item: System) => {
     if (!window.confirm("Are you sure you want to delete this system?")) return;
 
     withLoading(async () => {
@@ -241,50 +198,63 @@ const SystemPage: React.FC = () => {
         });
       }
     });
-  };
+  }, [withLoading]);
 
-  const columns: Column[] = React.useMemo(
-    () => [
-      {
-        id: "system_no",
-        header: "System Code",
-        accessorKey: "system_no",
-      },
-      {
-        id: "system_name",
-        header: "Name",
-        accessorKey: "system_name",
-      },
-      {
-        id: "system_code",
-        header: "System Number",
-        accessorKey: "system_code",
-      },
-      {
-        id: "facility.location_name",
-        header: "Location",
-        accessorKey: "facility.location_name",
-      },
-    ],
-    []
-  );
+  const handleSearch = useCallback(() => {
+    // Already handled in memoized filteredSystems
+  }, []);
+
+  // Initialize form in edit mode
+  useEffect(() => {
+    if (isDialogOpen && isEditMode && currentItem) {
+      form.reset({
+        facility_id: currentItem.facility_id,
+        system_code: currentItem.system_code,
+        system_name: currentItem.system_name || "",
+        is_active: currentItem.is_active,
+      });
+    }
+  }, [isDialogOpen, isEditMode, currentItem]);
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+          <p className="mt-2">Loading systems...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Systems"
         subtitle="Manage plant systems and subsystems"
+        icon={<Wrench className="h-6 w-6" />}
         onAddNew={handleAddNew}
         addNewLabel="Add System"
-        onSearch={handleSearch}
       />
 
-      <DataTable
-        columns={columns}
-        data={filteredSystems}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+      <Card>
+        <CardContent className="pt-6">
+          <SearchFilters
+            text="System"
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            handleSearch={handleSearch}
+          />
+
+          <DataTable
+            columns={columns}
+            data={filteredSystems}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+        </CardContent>
+      </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
@@ -329,7 +299,7 @@ const SystemPage: React.FC = () => {
                       <SelectValue placeholder="Select location" />
                     </SelectTrigger>
                     <SelectContent>
-                      {facilities.map((facility) => (
+                      {facilities?.map((facility) => (
                         <SelectItem
                           key={facility.id}
                           value={facility.id.toString()}
@@ -434,4 +404,4 @@ const SystemPage: React.FC = () => {
   );
 };
 
-export default SystemPage;
+export default React.memo(SystemPage);

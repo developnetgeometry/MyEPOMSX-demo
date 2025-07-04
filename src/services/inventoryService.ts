@@ -5,49 +5,42 @@ export const inventoryService = {
   // Update in services/inventoryService.ts
 
   async getInventoryList(params?: {
-    storeId?: string;
-    page?: number;
-    pageSize?: number;
-    searchQuery?: string;
-  }) {
-    let query = supabase
-      .from("e_inventory")
-      .select(
-        "*, item_master:item_master_id(*, manu:manufacturer(*), type:type_id(*), category:category_id(*), unit:unit_id(*)), rack:rack_id(*)",
-        { count: "exact" }
-      )
-      .order("created_at", { ascending: false });
+  storeId?: string;
+  page?: number;
+  pageSize?: number;
+  // searchQuery?: string; // Remove from backend filtering
+}) {
+  let query = supabase
+    .from("e_inventory")
+    .select(
+      "*, item_master:item_master_id(*, manu:manufacturer(*), type:type_id(*), category:category_id(*), unit:unit_id(*)), rack:rack_id(*)",
+      { count: "exact" }
+    )
+    .order("created_at", { ascending: false });
 
-    // Apply store filter
-    if (params?.storeId) {
-      query = query.eq("store_id", Number(params.storeId));
-    }
+  // Apply store filter
+  if (params?.storeId) {
+    query = query.eq("store_id", Number(params.storeId));
+  }
 
-    // Apply search filter
-    if (params?.searchQuery) {
-      query = query.or(
-        `itemName.ilike.%${params.searchQuery}%,description.ilike.%${params.searchQuery}%`
-      );
-    }
+  // Always fetch a large page for frontend filtering
+  const page = params?.page || 1;
+  const pageSize = params?.pageSize || 1000;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+  query = query.range(from, to);
 
-    // Apply pagination
-    if (params?.page && params?.pageSize) {
-      const from = (params.page - 1) * params.pageSize;
-      const to = from + params.pageSize - 1;
-      query = query.range(from, to);
-    }
+  const { data, count, error } = await query;
 
-    const { data, count, error } = await query;
+  if (error) {
+    throw new Error(`Error fetching inventories: ${error.message}`);
+  }
 
-    if (error) {
-      throw new Error(`Error fetching inventories: ${error.message}`);
-    }
-
-    return {
-      items: data || [],
-      totalCount: count || 0,
-    };
-  },
+  return {
+    items: data || [],
+    totalCount: count || 0,
+  };
+},
 
   async createReceiveInventory(payload: any) {
     const { data, error } = await supabase.rpc("handle_receive_inventory", {
@@ -413,7 +406,10 @@ export const inventoryService = {
       .order("id");
 
     if (error) {
-      console.error("Error fetching adjustment inventory by inventory ID:", error);
+      console.error(
+        "Error fetching adjustment inventory by inventory ID:",
+        error
+      );
       throw error;
     }
 
@@ -423,7 +419,7 @@ export const inventoryService = {
         ? formatDate(item.adjustment_date.split("T")[0])
         : "",
       quantity: item.quantity || 0,
-      totalQuantity: (item.inventory?.current_balance || 0),
+      totalQuantity: item.inventory?.current_balance || 0,
       price: item.inventory?.unit_price || 0,
       total: (item.quantity || 0) * (item.inventory?.unit_price || 0),
       authorizedEmployee: profileMap[item.created_by]?.full_name || "",
@@ -458,7 +454,10 @@ export const inventoryService = {
       .order("id");
 
     if (error) {
-      console.error("Error fetching transfer inventory by inventory ID:", error);
+      console.error(
+        "Error fetching transfer inventory by inventory ID:",
+        error
+      );
       throw error;
     }
 
@@ -570,7 +569,6 @@ export const inventoryService = {
 
       // Map receive transactions
       (receiveData.data || []).forEach((item) => {
-        
         transactions.push({
           id: `RCV-${item.id}`,
           particulars: "Inventory Receive",

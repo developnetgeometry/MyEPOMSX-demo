@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,16 +25,19 @@ import {
 } from "@/hooks/queries/useAssets";
 import HierarchyNode from "@/components/ui/hierarchy";
 import { Loader2 } from "lucide-react";
+import SearchFilters from "@/components/shared/SearchFilters";
+import useDebounce from "@/hooks/use-debounce";
 
 const AssetsPage: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<any | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [workRequestData, setWorkRequestData] = useState<any | null>(null);
-  const [selectedAsset, setSelectedAsset] = useState<AssetWithRelations | null>(
-    null
-  );
-  const navigate = useNavigate();
+  const [selectedAsset, setSelectedAsset] = useState<AssetWithRelations | null>(null);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300); // Debounce search term
+  
+  const navigate = useNavigate();
+  
   const { data: assets, isLoading, isError, error } = useAssetsWithRelations();
   const {
     data: assetHierarchy,
@@ -51,61 +54,8 @@ const AssetsPage: React.FC = () => {
     selectedNode?.id || ""
   );
 
-  const handleNodeSelect = (node: any) => {
-    setSelectedNode(node);
-
-    // If the selected node is an asset, we could optionally navigate directly to its detail page
-    // or show a button to navigate in the metadata section
-    if (node.type === "asset") {
-      // Option 1: Direct navigation (commented out)
-      // navigate(`/manage/assets/${node.id}`);
-      // Option 2: Just set selected node to show details in the sidebar
-      // This is already done with setSelectedNode(node) above
-    }
-  };
-
-  const handleExpandAll = () => {
-    const collectIds = (nodes: any[]): string[] => {
-      let ids: string[] = [];
-      nodes.forEach((node) => {
-        ids.push(String(node.id)); // Ensure string
-        if (node.children && node.children.length > 0) {
-          ids = ids.concat(collectIds(node.children));
-        }
-      });
-      return ids;
-    };
-    if (assetHierarchy && assetHierarchy.facilities) {
-      const allIds = collectIds(assetHierarchy.facilities);
-      setExpandedNodes(new Set(allIds));
-    }
-  };
-
-  const handleCollapseAll = () => {
-    setExpandedNodes(new Set());
-  };
-
-  const handleAddNew = () => {
-    navigate("/manage/assets/add");
-  };
-
-  const handleEdit = (item: Asset) => {
-    navigate(`/manage/assets/${item.id}`);
-  };
-
-  const handleRowClick = (row: Asset) => {
-    navigate(`/manage/assets/${row.id}`);
-  };
-
-  const handleCreateWorkRequest = (assetId: number) => {
-    navigate("/work-orders/work-request/new", {
-      state: { asset_id: assetId },
-    });
-  };
-
-  const handleFormSubmit = async (formData: any) => {};
-
-  const columns: Column[] = [
+  // Memoized columns
+  const columns = useMemo<Column[]>(() => [
     {
       id: "asset_no",
       header: "Asset Code",
@@ -151,7 +101,114 @@ const AssetsPage: React.FC = () => {
       header: "SCE Code",
       accessorKey: "asset_sce.sce_code",
     },
-  ];
+  ], []);
+
+  // Memoized filtered assets for list view
+  const filteredAssets = useMemo(() => {
+    if (!assets) return [];
+    
+    // Handle empty search term
+    if (!debouncedSearchTerm) return assets;
+    
+    // Ensure we have a string to work with
+    const lowerSearch = debouncedSearchTerm.toLowerCase();
+    
+    return assets.filter(asset => 
+      (asset.asset_no || "").toLowerCase().includes(lowerSearch) ||
+      (asset.asset_name || "").toLowerCase().includes(lowerSearch)
+    );
+  }, [assets, debouncedSearchTerm]);
+
+  // Callbacks with useCallback
+  const handleNodeSelect = useCallback((node: any) => {
+    setSelectedNode(node);
+    if (node.type === "asset") {
+      setSelectedAsset(node);
+    }
+  }, []);
+
+  const handleExpandAll = useCallback(() => {
+    if (!assetHierarchy?.facilities) return;
+
+    const collectIds = (nodes: any[]): string[] => {
+      return nodes.flatMap(node => [
+        String(node.id),
+        ...(node.children ? collectIds(node.children) : [])
+      ]);
+    };
+
+    const allIds = collectIds(assetHierarchy.facilities);
+    setExpandedNodes(new Set(allIds));
+  }, [assetHierarchy]);
+
+  const handleCollapseAll = useCallback(() => {
+    setExpandedNodes(new Set());
+  }, []);
+
+  const handleAddNew = useCallback(() => {
+    navigate("/manage/assets/add");
+  }, [navigate]);
+
+  const handleEdit = useCallback((item: Asset) => {
+    navigate(`/manage/assets/${item.id}`);
+  }, [navigate]);
+
+  const handleRowClick = useCallback((row: Asset) => {
+    navigate(`/manage/assets/${row.id}`);
+  }, [navigate]);
+
+  const handleCreateWorkRequest = useCallback((assetId: number) => {
+    navigate("/work-orders/work-request/new", {
+      state: { asset_id: assetId },
+    });
+  }, [navigate]);
+
+  // Handle search - triggered on Enter key
+  const handleSearch = useCallback(() => {
+    // Already handled by debouncedSearchTerm
+  }, []);
+
+  // Render node details based on type
+  const renderNodeDetails = useMemo(() => {
+    if (!selectedNode) return null;
+
+    if (isNodeDetailsLoading) {
+      return <p className="text-sm text-gray-500">Loading details...</p>;
+    }
+
+    if (nodeDetailsError) {
+      return <p className="text-sm text-red-500">Error loading details</p>;
+    }
+
+    // Simplified details rendering
+    return (
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-3 bg-gray-50 rounded-md">
+            <span className="text-xs text-gray-500 block">Name</span>
+            <span className="text-sm font-medium">{selectedNode.name}</span>
+          </div>
+          <div className="p-3 bg-gray-50 rounded-md">
+            <span className="text-xs text-gray-500 block">Type</span>
+            <span className="text-sm font-medium capitalize">{selectedNode.type}</span>
+          </div>
+        </div>
+
+        {selectedNode.type === "asset" && nodeDetails && (
+          <div className="grid grid-cols-1 gap-3">
+            <div className="p-3 bg-gray-50 rounded-md">
+              <span className="text-xs text-gray-500 block">Asset Code</span>
+              <span className="text-sm font-medium">{nodeDetails.asset_no || "-"}</span>
+            </div>
+            <div className="p-3 bg-gray-50 rounded-md">
+              <span className="text-xs text-gray-500 block">Asset Name</span>
+              <span className="text-sm font-medium">{nodeDetails.asset_name || "-"}</span>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }, [selectedNode, nodeDetails, isNodeDetailsLoading, nodeDetailsError]);
 
   if (isLoading) {
     return (
@@ -161,7 +218,6 @@ const AssetsPage: React.FC = () => {
     );
   }
 
-  // If there was an error fetching the data
   if (isError) {
     return <div>Error loading assets: {error?.message}</div>;
   }
@@ -181,14 +237,23 @@ const AssetsPage: React.FC = () => {
               <TabsTrigger value="list">List View</TabsTrigger>
               <TabsTrigger value="hierarchy">Asset Hierarchy</TabsTrigger>
             </TabsList>
+            
             <TabsContent value="list" className="pt-4">
+              <SearchFilters
+                text="Asset"
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                handleSearch={handleSearch}
+              />
+              
               <DataTable
-                data={assets}
+                data={filteredAssets}
                 columns={columns}
                 onEdit={handleEdit}
                 onRowClick={handleRowClick}
               />
             </TabsContent>
+            
             <TabsContent value="hierarchy" className="pt-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="md:col-span-1">
@@ -214,7 +279,7 @@ const AssetsPage: React.FC = () => {
                     {isHierarchyLoading ? (
                       <div>Loading hierarchy...</div>
                     ) : (
-                      assetHierarchy.facilities.map((facility) => (
+                      assetHierarchy?.facilities?.map((facility) => (
                         <HierarchyNode
                           key={facility.id}
                           node={facility}
@@ -230,22 +295,13 @@ const AssetsPage: React.FC = () => {
                 <div className="md:col-span-2">
                   <h3 className="text-lg font-medium mb-4">
                     {selectedNode
-                      ? `${
-                          selectedNode.type.charAt(0).toUpperCase() +
-                          selectedNode.type.slice(1)
-                        } Details`
+                      ? `${selectedNode.type.charAt(0).toUpperCase() + selectedNode.type.slice(1)} Details`
                       : "Details"}
                   </h3>
 
                   {selectedNode ? (
                     <div className="space-y-4">
-                      <div
-                        className={
-                          selectedNode.type === "asset"
-                            ? "grid grid-cols-3 gap-4"
-                            : "grid grid-cols-2 gap-4"
-                        }
-                      >
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="p-3 bg-gray-50 rounded-md">
                           <span className="text-xs text-gray-500 block">
                             Name
@@ -283,680 +339,13 @@ const AssetsPage: React.FC = () => {
                             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                           )}
                         </h4>
-
-                        {isNodeDetailsLoading ? (
-                          <p className="text-sm text-gray-500">
-                            Loading details...
-                          </p>
-                        ) : nodeDetailsError ? (
-                          <p className="text-sm text-red-500">
-                            Error loading details
-                          </p>
-                        ) : (
-                          <>
-                            {selectedNode.type === "package" && nodeDetails && (
-                              <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div className="p-2 bg-gray-50 rounded-md">
-                                    <span className="text-xs text-gray-500 block">
-                                      Package Code
-                                    </span>
-                                    <span className="text-sm font-medium">
-                                      {nodeDetails.package_code || "-"}
-                                    </span>
-                                  </div>
-                                  <div className="p-2 bg-gray-50 rounded-md">
-                                    <span className="text-xs text-gray-500 block">
-                                      Total Assets
-                                    </span>
-                                    <span className="text-sm font-medium">
-                                      {nodeDetails.assets?.length || 0}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                {/* Package Assets Summary */}
-                                {nodeDetails.assets &&
-                                  nodeDetails.assets.length > 0 && (
-                                    <div className="mt-4">
-                                      <h5 className="text-xs font-medium text-gray-500 mb-2">
-                                        Assets in this Package
-                                      </h5>
-                                      <div className="border rounded-md divide-y divide-gray-100 overflow-hidden">
-                                        {nodeDetails.assets.map(
-                                          (asset: any) => (
-                                            <div
-                                              key={asset.id}
-                                              className="p-3 text-sm hover:bg-gray-50"
-                                            >
-                                              <div className="flex justify-between mb-1">
-                                                <span className="font-medium">
-                                                  {asset.asset_name ||
-                                                    asset.asset_no}
-                                                </span>
-                                                {asset.asset_status ? (
-                                                  <StatusBadge
-                                                    status={
-                                                      asset.asset_status.name
-                                                    }
-                                                  />
-                                                ) : null}
-                                              </div>
-                                              <div className="grid grid-cols-2 gap-1 mt-2">
-                                                {asset.asset_detail
-                                                  ?.manufacturer?.name && (
-                                                  <div>
-                                                    <span className="text-xs text-gray-500 block">
-                                                      Manufacturer
-                                                    </span>
-                                                    <span className="text-xs">
-                                                      {
-                                                        asset.asset_detail
-                                                          .manufacturer.name
-                                                      }
-                                                    </span>
-                                                  </div>
-                                                )}
-                                                {asset.asset_detail?.model && (
-                                                  <div>
-                                                    <span className="text-xs text-gray-500 block">
-                                                      Model
-                                                    </span>
-                                                    <span className="text-xs">
-                                                      {asset.asset_detail.model}
-                                                    </span>
-                                                  </div>
-                                                )}
-                                                {asset.asset_detail
-                                                  ?.serial_number && (
-                                                  <div>
-                                                    <span className="text-xs text-gray-500 block">
-                                                      Serial Number
-                                                    </span>
-                                                    <span className="text-xs">
-                                                      {
-                                                        asset.asset_detail
-                                                          .serial_number
-                                                      }
-                                                    </span>
-                                                  </div>
-                                                )}
-                                                {asset.asset_detail?.type
-                                                  ?.name && (
-                                                  <div>
-                                                    <span className="text-xs text-gray-500 block">
-                                                      Type
-                                                    </span>
-                                                    <span className="text-xs">
-                                                      {
-                                                        asset.asset_detail.type
-                                                          .name
-                                                      }
-                                                    </span>
-                                                  </div>
-                                                )}
-                                              </div>
-                                            </div>
-                                          )
-                                        )}
-                                      </div>
-                                    </div>
-                                  )}
-
-                                {/* Asset Distribution by Category/Type */}
-                                <div>
-                                  <h5 className="text-xs font-medium text-gray-500 mb-2">
-                                    Asset Distribution
-                                  </h5>
-                                  <div className="grid grid-cols-1 gap-1">
-                                    {nodeDetails.assets &&
-                                      Array.from(
-                                        new Set(
-                                          nodeDetails.assets
-                                            .filter(
-                                              (asset: any) =>
-                                                asset.asset_detail?.type
-                                                  ?.category?.name
-                                            )
-                                            .map(
-                                              (asset: any) =>
-                                                asset.asset_detail.type.category
-                                                  .name
-                                            )
-                                        )
-                                      ).map((category: string) => {
-                                        const count = nodeDetails.assets.filter(
-                                          (asset: any) =>
-                                            asset.asset_detail?.type?.category
-                                              ?.name === category
-                                        ).length;
-
-                                        return (
-                                          <div
-                                            key={category}
-                                            className="flex justify-between items-center p-2 bg-gray-50 rounded-md"
-                                          >
-                                            <span className="text-xs">
-                                              {category}
-                                            </span>
-                                            <span className="text-xs font-medium">
-                                              {count as number}
-                                            </span>
-                                          </div>
-                                        );
-                                      })}
-                                    {(!nodeDetails.assets ||
-                                      nodeDetails.assets.length === 0) && (
-                                      <div className="p-2 bg-gray-50 rounded-md">
-                                        <span className="text-xs text-gray-500">
-                                          No category data available
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-
-                                {/* Asset Distribution by Status */}
-                                <div>
-                                  <h5 className="text-xs font-medium text-gray-500 mb-2">
-                                    Assets by Status
-                                  </h5>
-                                  <div className="grid grid-cols-1 gap-1">
-                                    {nodeDetails.statistics?.assetsByStatus &&
-                                      Object.entries(
-                                        nodeDetails.statistics.assetsByStatus
-                                      ).map(([status, count]) => (
-                                        <div
-                                          key={status}
-                                          className="flex justify-between items-center p-2 bg-gray-50 rounded-md"
-                                        >
-                                          <div className="flex items-center">
-                                            <div
-                                              className={`w-2 h-2 rounded-full mr-2 ${
-                                                status === "Operational"
-                                                  ? "bg-green-500"
-                                                  : status ===
-                                                    "Under Maintenance"
-                                                  ? "bg-orange-500"
-                                                  : status === "Out of Service"
-                                                  ? "bg-red-500"
-                                                  : "bg-gray-500"
-                                              }`}
-                                            ></div>
-                                            <span className="text-xs">
-                                              {status}
-                                            </span>
-                                          </div>
-                                          <span className="text-xs font-medium">
-                                            {count as number}
-                                          </span>
-                                        </div>
-                                      ))}
-                                    {(!nodeDetails.statistics?.assetsByStatus ||
-                                      Object.keys(
-                                        nodeDetails.statistics?.assetsByStatus
-                                      ).length === 0) && (
-                                      <div className="p-2 bg-gray-50 rounded-md">
-                                        <span className="text-xs text-gray-500">
-                                          No status data available
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-
-                                {/* Recent Assets List (showing just first 5) */}
-                                <div>
-                                  <h5 className="text-xs font-medium text-gray-500 mb-2">
-                                    Recent Assets
-                                  </h5>
-                                  <div className="grid grid-cols-1 gap-1 max-h-[200px] overflow-y-auto">
-                                    {nodeDetails.assets &&
-                                      nodeDetails.assets
-                                        .slice(0, 5)
-                                        .map((asset: any) => (
-                                          <div
-                                            key={asset.id}
-                                            className="p-2 bg-gray-50 rounded-md"
-                                          >
-                                            <div className="flex justify-between">
-                                              <span className="text-xs font-medium">
-                                                {asset.asset_name ||
-                                                  asset.asset_no}
-                                              </span>
-                                              <StatusBadge
-                                                status={
-                                                  asset.asset_status?.name ||
-                                                  "Unknown"
-                                                }
-                                              />
-                                            </div>
-                                            <span className="text-xs text-gray-500 block mt-1">
-                                              {asset.asset_detail?.category
-                                                ?.name || "Uncategorized"}{" "}
-                                              •
-                                              {asset.asset_detail?.manufacturer
-                                                ?.name ||
-                                                "Unknown Manufacturer"}
-                                            </span>
-                                          </div>
-                                        ))}
-                                    {(!nodeDetails.assets ||
-                                      nodeDetails.assets.length === 0) && (
-                                      <div className="p-2 bg-gray-50 rounded-md">
-                                        <span className="text-xs text-gray-500">
-                                          No assets in this package
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-
-                            {selectedNode.type === "facility" &&
-                              nodeDetails && (
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div className="p-2 bg-gray-50 rounded-md">
-                                    <span className="text-xs text-gray-500 block">
-                                      Location Name
-                                    </span>
-                                    <span className="text-sm font-medium">
-                                      {nodeDetails.location_name || "-"}
-                                    </span>
-                                  </div>
-                                  <div className="p-2 bg-gray-50 rounded-md">
-                                    <span className="text-xs text-gray-500 block">
-                                      Location Code
-                                    </span>
-                                    <span className="text-sm font-medium">
-                                      {nodeDetails.location_code || "-"}
-                                    </span>
-                                  </div>
-                                  <div className="p-2 bg-gray-50 rounded-md">
-                                    <span className="text-xs text-gray-500 block">
-                                      Address
-                                    </span>
-                                    <span className="text-sm font-medium">
-                                      {nodeDetails.address || "-"}
-                                    </span>
-                                  </div>
-                                </div>
-                              )}
-
-                            {selectedNode.type === "system" && nodeDetails && (
-                              <div className="grid grid-cols-2 gap-3">
-                                <div className="p-2 bg-gray-50 rounded-md">
-                                  <span className="text-xs text-gray-500 block">
-                                    System Name
-                                  </span>
-                                  <span className="text-sm font-medium">
-                                    {nodeDetails.system_name || "-"}
-                                  </span>
-                                </div>
-                                <div className="p-2 bg-gray-50 rounded-md">
-                                  <span className="text-xs text-gray-500 block">
-                                    System Code
-                                  </span>
-                                  <span className="text-sm font-medium">
-                                    {nodeDetails.system_code || "-"}
-                                  </span>
-                                </div>
-                              </div>
-                            )}
-
-                            {selectedNode.type === "asset" && nodeDetails && (
-                              <div className="space-y-3">
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div className="p-2 bg-gray-50 rounded-md">
-                                    <span className="text-xs text-gray-500 block">
-                                      Asset Name
-                                    </span>
-                                    <span className="text-sm font-medium">
-                                      {nodeDetails.asset_name || "-"}
-                                    </span>
-                                  </div>
-                                  <div className="p-2 bg-gray-50 rounded-md">
-                                    <span className="text-xs text-gray-500 block">
-                                      Asset Code
-                                    </span>
-                                    <span className="text-sm font-medium">
-                                      {nodeDetails.asset_no || "-"}
-                                    </span>
-                                  </div>
-                                  <div className="p-2 bg-gray-50 rounded-md">
-                                    <span className="text-xs text-gray-500 block">
-                                      Status
-                                    </span>
-                                    <StatusBadge
-                                      status={
-                                        nodeDetails.asset_status?.name ||
-                                        "Unknown"
-                                      }
-                                    />
-                                  </div>
-                                  <div className="p-2 bg-gray-50 rounded-md">
-                                    <span className="text-xs text-gray-500 block">
-                                      Commission Date
-                                    </span>
-                                    <span className="text-sm font-medium">
-                                      {nodeDetails.commission_date
-                                        ? new Date(
-                                            nodeDetails.commission_date
-                                          ).toLocaleDateString()
-                                        : "-"}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                {nodeDetails.asset_detail && (
-                                  <div>
-                                    <h5 className="text-xs font-medium text-gray-500 mb-2">
-                                      Asset Technical Information
-                                    </h5>
-                                    <div className="grid grid-cols-2 gap-3">
-                                      <div className="p-2 bg-gray-50 rounded-md">
-                                        <span className="text-xs text-gray-500 block">
-                                          Category
-                                        </span>
-                                        <span className="text-sm font-medium">
-                                          {nodeDetails.asset_detail.type
-                                            ?.category?.name || "-"}
-                                        </span>
-                                      </div>
-                                      <div className="p-2 bg-gray-50 rounded-md">
-                                        <span className="text-xs text-gray-500 block">
-                                          Type
-                                        </span>
-                                        <span className="text-sm font-medium">
-                                          {nodeDetails.asset_detail.type
-                                            ?.name || "-"}
-                                        </span>
-                                      </div>
-                                      <div className="p-2 bg-gray-50 rounded-md">
-                                        <span className="text-xs text-gray-500 block">
-                                          Manufacturer
-                                        </span>
-                                        <span className="text-sm font-medium">
-                                          {nodeDetails.asset_detail.manufacturer
-                                            ?.name || "-"}
-                                        </span>
-                                      </div>
-                                      <div className="p-2 bg-gray-50 rounded-md">
-                                        <span className="text-xs text-gray-500 block">
-                                          Model
-                                        </span>
-                                        <span className="text-sm font-medium">
-                                          {nodeDetails.asset_detail.model ||
-                                            "-"}
-                                        </span>
-                                      </div>
-                                      <div className="p-2 bg-gray-50 rounded-md">
-                                        <span className="text-xs text-gray-500 block">
-                                          Serial Number
-                                        </span>
-                                        <span className="text-sm font-medium">
-                                          {nodeDetails.asset_detail
-                                            .serial_number || "-"}
-                                        </span>
-                                      </div>
-                                      <div className="p-2 bg-gray-50 rounded-md">
-                                        <span className="text-xs text-gray-500 block">
-                                          Area
-                                        </span>
-                                        <span className="text-sm font-medium">
-                                          {nodeDetails.asset_detail.area
-                                            ?.name || "-"}
-                                        </span>
-                                      </div>
-                                      <div className="p-2 bg-gray-50 rounded-md">
-                                        <span className="text-xs text-gray-500 block">
-                                          Asset Class
-                                        </span>
-                                        <span className="text-sm font-medium">
-                                          {nodeDetails.asset_detail.asset_class
-                                            ?.name || "-"}
-                                        </span>
-                                      </div>
-                                      <div className="p-2 bg-gray-50 rounded-md">
-                                        <span className="text-xs text-gray-500 block">
-                                          Maker Number
-                                        </span>
-                                        <span className="text-sm font-medium">
-                                          {nodeDetails.asset_detail.maker_no ||
-                                            "-"}
-                                        </span>
-                                      </div>
-
-                                      <div className="p-2 bg-gray-50 rounded-md col-span-2">
-                                        <span className="text-xs text-gray-500 block">
-                                          Specification
-                                        </span>
-                                        <span className="text-sm font-medium">
-                                          {nodeDetails.asset_detail
-                                            .specification || "-"}
-                                        </span>
-                                      </div>
-
-                                      <div className="p-2 bg-gray-50 rounded-md">
-                                        <span className="text-xs text-gray-500 block">
-                                          Integrity Critical
-                                        </span>
-                                        <span className="text-sm font-medium">
-                                          {nodeDetails.asset_detail.is_integrity
-                                            ? "Yes"
-                                            : "No"}
-                                        </span>
-                                      </div>
-                                      <div className="p-2 bg-gray-50 rounded-md">
-                                        <span className="text-xs text-gray-500 block">
-                                          Reliability Critical
-                                        </span>
-                                        <span className="text-sm font-medium">
-                                          {nodeDetails.asset_detail
-                                            .is_reliability
-                                            ? "Yes"
-                                            : "No"}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {nodeDetails.asset_installation && (
-                                  <div className="mt-4">
-                                    <h5 className="text-xs font-medium text-gray-500 mb-2">
-                                      Installation Information
-                                    </h5>
-                                    <div className="grid grid-cols-2 gap-3">
-                                      {nodeDetails.asset_installation
-                                        .actual_installation_date && (
-                                        <div className="p-2 bg-gray-50 rounded-md">
-                                          <span className="text-xs text-gray-500 block">
-                                            Installation Date
-                                          </span>
-                                          <span className="text-sm font-medium">
-                                            {new Date(
-                                              nodeDetails.asset_installation.actual_installation_date
-                                            ).toLocaleDateString()}
-                                          </span>
-                                        </div>
-                                      )}
-                                      {nodeDetails.asset_installation
-                                        .actual_startup_date && (
-                                        <div className="p-2 bg-gray-50 rounded-md">
-                                          <span className="text-xs text-gray-500 block">
-                                            Startup Date
-                                          </span>
-                                          <span className="text-sm font-medium">
-                                            {new Date(
-                                              nodeDetails.asset_installation.actual_startup_date
-                                            ).toLocaleDateString()}
-                                          </span>
-                                        </div>
-                                      )}
-                                      {nodeDetails.asset_installation
-                                        .warranty_date && (
-                                        <div className="p-2 bg-gray-50 rounded-md">
-                                          <span className="text-xs text-gray-500 block">
-                                            Warranty Date
-                                          </span>
-                                          <span className="text-sm font-medium">
-                                            {new Date(
-                                              nodeDetails.asset_installation.warranty_date
-                                            ).toLocaleDateString()}
-                                          </span>
-                                        </div>
-                                      )}
-                                      {nodeDetails.asset_installation
-                                        .drawing_no && (
-                                        <div className="p-2 bg-gray-50 rounded-md">
-                                          <span className="text-xs text-gray-500 block">
-                                            Drawing No
-                                          </span>
-                                          <span className="text-sm font-medium">
-                                            {
-                                              nodeDetails.asset_installation
-                                                .drawing_no
-                                            }
-                                          </span>
-                                        </div>
-                                      )}
-
-                                      {nodeDetails.asset_installation
-                                        .orientation && (
-                                        <div className="p-2 bg-gray-50 rounded-md">
-                                          <span className="text-xs text-gray-500 block">
-                                            Orientation
-                                          </span>
-                                          <span className="text-sm font-medium">
-                                            {
-                                              nodeDetails.asset_installation
-                                                .orientation
-                                            }
-                                          </span>
-                                        </div>
-                                      )}
-
-                                      {(nodeDetails.asset_installation
-                                        .overall_height ||
-                                        nodeDetails.asset_installation
-                                          .overall_length ||
-                                        nodeDetails.asset_installation
-                                          .overall_width) && (
-                                        <div className="p-2 bg-gray-50 rounded-md">
-                                          <span className="text-xs text-gray-500 block">
-                                            Dimensions (H×L×W)
-                                          </span>
-                                          <span className="text-sm font-medium">
-                                            {nodeDetails.asset_installation
-                                              .overall_height || "-"}
-                                            ×
-                                            {nodeDetails.asset_installation
-                                              .overall_length || "-"}
-                                            ×
-                                            {nodeDetails.asset_installation
-                                              .overall_width || "-"}
-                                          </span>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {nodeDetails.asset_detail?.child_assets &&
-                                  nodeDetails.asset_detail.child_assets.length >
-                                    0 && (
-                                    <div className="mt-4">
-                                      <h5 className="text-xs font-medium text-gray-500 mb-2">
-                                        Child Assets (
-                                        {
-                                          nodeDetails.asset_detail.child_assets
-                                            .length
-                                        }
-                                        )
-                                      </h5>
-                                      <div className="border rounded-md divide-y divide-gray-100 overflow-hidden">
-                                        {nodeDetails.asset_detail.child_assets.map(
-                                          (childAsset: any) => (
-                                            <div
-                                              key={childAsset.id}
-                                              className="p-2 text-sm hover:bg-gray-50"
-                                            >
-                                              <div className="flex justify-between items-center">
-                                                <span className="font-medium">
-                                                  {childAsset.asset
-                                                    ?.asset_name ||
-                                                    childAsset.asset
-                                                      ?.asset_no ||
-                                                    "-"}
-                                                </span>
-                                                {childAsset.asset
-                                                  ?.asset_status && (
-                                                  <StatusBadge
-                                                    status={
-                                                      childAsset.asset
-                                                        .asset_status.name
-                                                    }
-                                                  />
-                                                )}
-                                              </div>
-                                            </div>
-                                          )
-                                        )}
-                                      </div>
-                                    </div>
-                                  )}
-
-                                {nodeDetails.asset_sce &&
-                                  nodeDetails.asset_sce.length > 0 && (
-                                    <div className="mt-4">
-                                      <h5 className="text-xs font-medium text-gray-500 mb-2">
-                                        SCE Information
-                                      </h5>
-                                      <div className="grid grid-cols-2 gap-3">
-                                        <div className="p-2 bg-gray-50 rounded-md">
-                                          <span className="text-xs text-gray-500 block">
-                                            SCE Code
-                                          </span>
-                                          <span className="text-sm font-medium">
-                                            {nodeDetails.asset_sce[0]
-                                              .sce_code || "-"}
-                                          </span>
-                                        </div>
-                                        <div className="p-2 bg-gray-50 rounded-md">
-                                          <span className="text-xs text-gray-500 block">
-                                            Group Name
-                                          </span>
-                                          <span className="text-sm font-medium">
-                                            {nodeDetails.asset_sce[0]
-                                              .group_name || "-"}
-                                          </span>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
-                              </div>
-                            )}
-
-                            {selectedNode.type !== "facility" &&
-                              selectedNode.type !== "system" &&
-                              selectedNode.type !== "package" &&
-                              selectedNode.type !== "asset" && (
-                                <p className="text-sm text-gray-500">
-                                  Additional information about this{" "}
-                                  {selectedNode.type} would be displayed here.
-                                </p>
-                              )}
-                          </>
-                        )}
+                        {renderNodeDetails}
                       </div>
                     </div>
                   ) : (
                     <div className="p-4 border rounded-md bg-muted/50 text-center">
                       <p className="text-muted-foreground">
-                        Select an item from the hierarchy tree to view its
-                        details
+                        Select an item from the hierarchy tree to view its details
                       </p>
                     </div>
                   )}
@@ -998,14 +387,6 @@ const AssetsPage: React.FC = () => {
                       </div>
                       <div className="bg-gray-50 p-3 rounded-md">
                         <span className="text-xs text-gray-500 block">
-                          Asset Tag
-                        </span>
-                        <span className="text-sm font-medium">
-                          {selectedAsset.asset_tag?.name || "-"}
-                        </span>
-                      </div>
-                      <div className="bg-gray-50 p-3 rounded-md">
-                        <span className="text-xs text-gray-500 block">
                           Status
                         </span>
                         <StatusBadge
@@ -1032,41 +413,12 @@ const AssetsPage: React.FC = () => {
                       </div>
                       <div className="bg-gray-50 p-3 rounded-md">
                         <span className="text-xs text-gray-500 block">
-                          Package
-                        </span>
-                        <span className="text-sm font-medium">
-                          {selectedAsset.package?.package_name || "-"}
-                        </span>
-                      </div>
-                      <div className="bg-gray-50 p-3 rounded-md">
-                        <span className="text-xs text-gray-500 block">
                           Facility
                         </span>
                         <span className="text-sm font-medium">
                           {selectedAsset.facility?.location_name || "-"}
                         </span>
                       </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    Technical Information
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <span className="text-xs text-gray-500 block">
-                        SCE Code
-                      </span>
-                      <span className="text-sm font-medium">
-                        {selectedAsset.asset_sce &&
-                        selectedAsset.asset_sce.length > 0
-                          ? selectedAsset.asset_sce[0].sce_code
-                          : "-"}
-                      </span>
                     </div>
                   </div>
                 </div>
@@ -1103,4 +455,4 @@ const AssetsPage: React.FC = () => {
   );
 };
 
-export default AssetsPage;
+export default React.memo(AssetsPage);
