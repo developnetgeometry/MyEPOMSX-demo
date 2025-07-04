@@ -666,6 +666,12 @@ const NewPressureVesselPage: React.FC = () => {
         }
       }
 
+      // Mark as used
+      await supabase
+        .from("e_asset")
+        .update({ ims_used: true })
+        .eq("id", selectedAsset.id);
+
       // Success notification
       toast({
         title: "Success!",
