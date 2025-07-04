@@ -1,9 +1,9 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 
-export const useImsPofAssessmentData = (imsGeneralId: number) => {
+export const useImsPofAssessmentData = (rbiGeneralId: number) => {
   return useQuery({
-    queryKey: ["i-ims-pof-assessment-general", imsGeneralId],
+    queryKey: ["i-ims-pof-assessment-general"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("i_ims_pof_assessment_general")
@@ -13,8 +13,8 @@ export const useImsPofAssessmentData = (imsGeneralId: number) => {
           ims_general_id (id, year_in_service, ims_asset_type_id, outer_diameter, inner_diameter, tmin, material_construction_id (spec_code)),
           data_confidence_id`
         )
-        .eq("ims_general_id", imsGeneralId)
-        .single(); // Fetch a single record based on imsGeneralId
+        .eq("ims_rbi_general_id", rbiGeneralId)
+        .single(); // Fetch a single record based on rbiGeneralId
 
       if (error) {
         console.error("Error fetching i_ims_pof_assessment_general data:", error);
@@ -23,7 +23,7 @@ export const useImsPofAssessmentData = (imsGeneralId: number) => {
 
       return data;
     },
-    enabled: !!imsGeneralId, // Only fetch if imsGeneralId is provided
+    enabled: !!rbiGeneralId, // Only fetch if rbiGeneralId is provided
   });
 };
 

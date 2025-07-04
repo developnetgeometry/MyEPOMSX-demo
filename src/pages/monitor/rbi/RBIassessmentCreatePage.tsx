@@ -50,6 +50,7 @@ const RBIAssessmentCreatePage: React.FC = () => {
 
 
   const [formData, setFormData] = useState<any | null>({
+    editMode: true,
     // ims_general
     asset_detail_id: null,
     asset_name: "",
@@ -130,10 +131,10 @@ const RBIAssessmentCreatePage: React.FC = () => {
     composition: "",
 
     // i_df_thin (1)
-    last_inspection_date_thin: "",
+    last_inspection_date_thin: null,
     current_thickness_thin: 0, //Trd
     agetk_thin: 0,
-    agerc_thin: "",
+    agerc_thin: null,
     crexp_thin: 0,
     cract_thin: 0,
     crcm_thin: 0,
@@ -161,8 +162,8 @@ const RBIAssessmentCreatePage: React.FC = () => {
     // *** i_df_ext (2)
     current_thickness_ext: 0, //Trd
     coating_quality_id_ext: null,
-    new_coating_date_ext: "",
-    last_inspection_date_ext: "",
+    new_coating_date_ext: null,
+    last_inspection_date_ext: null,
     agetk_ext: 0,
     agecoat_ext: 0,
     coatadj_ext: 0,
@@ -190,8 +191,8 @@ const RBIAssessmentCreatePage: React.FC = () => {
 
     // *** i_df_ext_clscc (3)
     coating_quality_id_ext_clscc: null,
-    new_coating_date_ext_clscc: "",
-    last_inspection_date_ext_clscc: "",
+    new_coating_date_ext_clscc: null,
+    last_inspection_date_ext_clscc: null,
     agecrack_ext_clscc: 0,
     agecoat_ext_clscc: 0,
     coatadj_ext_clscc: 0,
@@ -229,8 +230,8 @@ const RBIAssessmentCreatePage: React.FC = () => {
     // *** i_df_cui (5)
     current_thickness_cui: 0, //Trd
     coating_quality_id_cui: null, //?? coating_quality_id(5)
-    last_inspection_date_cui: "",
-    new_coating_date_cui: "",
+    last_inspection_date_cui: null,
+    new_coating_date_cui: null,
     agetk_cui: 0,
     agecoat_cui: 0,
     coatadj_cui: 0,
@@ -258,7 +259,7 @@ const RBIAssessmentCreatePage: React.FC = () => {
     dfcuiff_cui: 0,
 
     // *** i_df_scc_scc (6)
-    last_inspection_date_scc_scc: "",
+    last_inspection_date_scc_scc: null,
     inspection_efficiency_id_scc_scc: null,
     inspection_efficiency_name_scc_scc: "",
     susceptibility_scc_scc: "", // Yes?
@@ -272,7 +273,7 @@ const RBIAssessmentCreatePage: React.FC = () => {
     df_scc_scc_scc_scc: 0,
 
     // *** i_df_scc_sohic (7)
-    last_inspection_date_scc_sohic: "",
+    last_inspection_date_scc_sohic: null,
     inspection_efficiency_id_scc_sohic: null,
     inspection_efficiency_name_scc_sohic: "",
     susceptibility_scc_sohic: "", // Yes?
@@ -2007,8 +2008,9 @@ const RBIAssessmentCreatePage: React.FC = () => {
           ims_general_id: imsGeneralId,
           cr_act: formData.cract_thin,
           ims_rbi_general_id: rbiGeneralId,
+          current_thickness: formData.current_thickness_thin,
         };
-        // await insertImsDfThinData(dfThinData);
+        await insertImsDfThinData(dfThinData);
 
         // Step 4 df ext
         console.log("Step 4 df ext");
@@ -2024,6 +2026,7 @@ const RBIAssessmentCreatePage: React.FC = () => {
           nextcorrd: formData.nextcorrd_ext,
           ims_general_id: imsGeneralId,
           ims_rbi_general_id: rbiGeneralId,
+          current_thickness: formData.current_thickness_ext,
         };
         await insertImsDfExtData(dfExtData);
 
@@ -2037,6 +2040,8 @@ const RBIAssessmentCreatePage: React.FC = () => {
           df_ext_cl_scc: formData.df_ext_cl_scc_ext_clscc,
           ims_general_id: imsGeneralId,
           ims_rbi_general_id: rbiGeneralId,
+          coating_quality_id: formData.coating_quality_id_ext_clscc,
+          external_environment_id: formData.external_environment_id_ext_clscc,
         };
         await insertImsDfExtClsccData(dfExtClsccData);
 
@@ -2074,6 +2079,9 @@ const RBIAssessmentCreatePage: React.FC = () => {
           ims_general_id: imsGeneralId,
           cr_act: formData.cract_cui,
           ims_rbi_general_id: rbiGeneralId,
+          coating_quality_id: formData.coating_quality_id_cui,
+          current_thickness: formData.current_thickness_cui,
+          external_environment_id: formData.external_environment_id_cui,
         };
         await insertImsDfCuiData(dfCuiData);
 
@@ -2086,7 +2094,7 @@ const RBIAssessmentCreatePage: React.FC = () => {
           df_scc_scc: formData.df_scc_scc_scc_scc,
           h2s_in_water: formData.h2s_in_water_scc_scc,
           ph: formData.ph_scc_scc,
-          i_ims_general_id: imsGeneralId,
+          ims_general_id: imsGeneralId,
           last_inspection_date: formData.last_inspection_date_scc_scc,
           ims_pof_assessment_id: pofGeneralId,
           ims_rbi_general_id: rbiGeneralId,
@@ -2102,9 +2110,10 @@ const RBIAssessmentCreatePage: React.FC = () => {
           ims_pof_assessment_id: pofGeneralId,
           h2s_in_water: formData.h2s_in_water_scc_sohic,
           ph: formData.ph_scc_sohic,
-          i_ims_general_id: imsGeneralId,
+          ims_general_id: imsGeneralId,
           last_inspection_date: formData.last_inspection_date_scc_sohic,
           ims_rbi_general_id: rbiGeneralId,
+          online_monitor_id: formData.online_monitor_id_scc_sohic,
         };
         await insertImsDfSccSohicData(dfSccSohicData);
 
@@ -2120,6 +2129,7 @@ const RBIAssessmentCreatePage: React.FC = () => {
           fc: formData.fc_cof_prod,
           ims_general_id: imsGeneralId,
           ims_rbi_general_id: rbiGeneralId,
+          lra_prod: formData.lra_prod_cof_prod,
         };
         await insertImsCofAssessmentCofProdData(cofProdData);
 
@@ -2163,7 +2173,24 @@ const RBIAssessmentCreatePage: React.FC = () => {
           description: "RBI created successfully!",
           variant: "default",
         });
-        queryClient.invalidateQueries({ queryKey: ["i-ims-rbi-general-data"] });
+        const queryKeys = [
+          ["i-ims-rbi-general-data"],
+          ["i-df-thin"],
+          ["i-df-ext"],
+          ["i-df-ext-clscc"],
+          ["i-df-mfat"],
+          ["i-df-cui"],
+          ["i-df-scc-scc"],
+          ["i-df-scc-sohic"],
+          ["i-ims-cof-assessment-cof-prod"],
+          ["i-ims-cof-assessment-cof-area"],
+          ["i-ims-rbi-risk-irp"],
+          ["i-ims-pof-assessment-general"]
+        ];
+
+        queryKeys.forEach((key) => {
+          queryClient.invalidateQueries({ queryKey: key });
+        });
       }
     } catch (error) {
       console.error("Failed to create RBI data:", error);
@@ -2178,7 +2205,7 @@ const RBIAssessmentCreatePage: React.FC = () => {
     navigate("/monitor/rbi-assessment");
   };
 
-  if (isLoadingSubmit){
+  if (isLoadingSubmit) {
     return <Loading />;
   }
 

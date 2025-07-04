@@ -104,7 +104,7 @@ const RBIAssessmentPage: React.FC = () => {
             <DataTable
               columns={columns}
               data={filteredRbiData}
-              // onRowClick={handleRowClick}
+              onRowClick={handleRowClick}
               onIndex={true}
             />
           )}

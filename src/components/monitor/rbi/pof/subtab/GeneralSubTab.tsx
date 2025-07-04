@@ -55,6 +55,7 @@ const GeneralSubTab: React.FC<{
                             handleSelectChange("asset_detail_id", parseInt(value));
                             handleSelectChange("asset_name", selectedAsset?.asset_name || "");
                         }}
+                        disabled={!formData?.editMode} // Disable the select list if editMode is false
                     >
                         <SelectTrigger className="mt-1">
                             <SelectValue placeholder="Select Asset" />

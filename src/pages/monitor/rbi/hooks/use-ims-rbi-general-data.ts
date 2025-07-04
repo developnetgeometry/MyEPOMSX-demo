@@ -32,6 +32,41 @@ export const useImsRbiGeneralData = () => {
   });
 };
 
+export const useImsRbiGeneralDataById = (id: number | null) => {
+  return useQuery({
+    queryKey: ["i-ims-rbi-general-data", id],
+    queryFn: async () => {
+      if (!id) return null; // Return null if no id is provided
+
+      const { data, error } = await supabase
+        .from("i_ims_rbi_general")
+        .select(`
+          id,
+          created_at,
+          rbi_no,
+          i_ims_general_id,
+          asset_detail_id(
+            id, type_id (name),
+            e_asset!e_asset_detail_asset_id_fkey(
+                asset_no,
+                asset_name
+            )
+          )
+        `)
+        .eq("id", id) // Filter by the provided id
+        .single(); // Fetch a single record
+
+      if (error) {
+        console.error(`Error fetching i_ims_rbi_general data for id ${id}:`, error);
+        throw error;
+      }
+
+      return data;
+    },
+    enabled: !!id, // Only run the query if id is provided
+  });
+};
+
 export const insertImsRbiGeneralData = async (rbiGeneralData: {
   i_ims_general_id?: number;
   asset_detail_id?: number;
