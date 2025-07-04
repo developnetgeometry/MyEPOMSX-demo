@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 
 export const useImsCofAssessmentCofAreaData = (rbiGeneralId: number) => {
   return useQuery({
-    queryKey: ["i-ims-cof-assessment-cof-area"],
+    queryKey: ["i-ims-cof-assessment-cof-area", rbiGeneralId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("i_ims_cof_assessment_cof_area")

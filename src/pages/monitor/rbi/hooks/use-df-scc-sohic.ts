@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 
 export const useImsDfSccSohicData = (rbiGeneralId: number) => {
   return useQuery({
-    queryKey: ["i-df-scc-sohic"],
+    queryKey: ["i-df-scc-sohic", rbiGeneralId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("i_df_scc_sohic")

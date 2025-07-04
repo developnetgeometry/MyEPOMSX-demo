@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 
 export const useImsDfExtClsccData = (rbiGeneralId: number) => {
   return useQuery({
-    queryKey: ["i-df-ext-clscc"],
+    queryKey: ["i-df-ext-clscc", rbiGeneralId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("i_df_ext_clscc")

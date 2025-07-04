@@ -27,7 +27,7 @@ import { calculateDfSccFbSccScc, calculateDfSccScc, calculateEnvSeveritySccScc, 
 import { calculateDfSccSohic, calculateDfSohicFbSccSohic, calculateEnvSeveritySccSohic, calculateSuscToCrackSccSohic, calculateSviSccSohic } from "./hooks/formula-df-scc-sohic";
 import { calculateFcAffaCofProd, calculateFcCmdCofProd, calculateFcCofProd, calculateFcEnvironCofProd, calculateFcInjCostCofProd, calculateFcProdCofProd, calculateFracEvapCofProd, calculateOutageAffaCofProd, calculateOutageCmdCofProd, calculatePopDensCofProd, calculateVolEnvCofProd } from "./hooks/formula-cof-prod";
 import { calculateCpCofArea, calculateFactDiCofArea, calculateLdMaxCofArea, calculateInventoryCofArea, calculateKCofArea, calculateMReleaseCofArea, calculateOpTempCofArea, calculatePsCofArea, calculatePTransCofArea, calculateRateNCofArea, calculateReleaseTypeCofArea, calculateTimeEmptyCofArea, calculateW1CofArea, calculateLdSCofArea, calculateMassNCofArea, calculateEneffCofArea, calculateFactIcCofArea, calculateCaContValues, calculateCaInstValues, calculateCaCmdAil, calculateCaInjAil, calculateCaCmdAinl, calculateCaInjAinl, calculateFactAIT, calculateCaCmdFlam, calculateCaInjFlam } from "./hooks/formula-cof-area";
-import { calculateCofAreaRiskIrp, calculateCofFinancialRiskIrp, calculateDextdRiskIrp, calculateDmfatRiskIrp, calculateDsccRiskIrp, calculateDthinRiskIrp, calculatePofRiskIrp, calculatePofValueRiskIrp } from "./hooks/formula-risk-irp";
+import { calculateCofAreaRiskIrp, calculateCofFinancialRiskIrp, calculateDextdRiskIrp, calculateDmfatRiskIrp, calculateDsccRiskIrp, calculateDthinRiskIrp, calculateMatrixesRiskIrp, calculatePofRiskIrp, calculatePofValueRiskIrp } from "./hooks/formula-risk-irp";
 import { insertImsRbiGeneralData } from "./hooks/use-ims-rbi-general-data";
 import { insertImsPofAssessmentData } from "./hooks/use-ims-pof-assessment-data";
 import { insertImsDfThinData } from "./hooks/use-df-thin-data";
@@ -363,8 +363,14 @@ const RBIAssessmentCreatePage: React.FC = () => {
     cof_financial_risk_irp: 0,
     cof_area_risk_irp: 0,
     pof_value_risk_irp: "",
+
     risk_level_risk_irp: "",
-    risk_ranking_risk_irp: "",
+    int_insp_risk_irp: "",
+    int_insp_interval_risk_irp: 0,
+    ext_insp_risk_irp: "",
+    ext_insp_interval_risk_irp: 0,
+    env_crack_risk_irp: "",
+    env_crack_interval_risk_irp: "",
 
   });
   const { data: imsGeneral, isLoading: isImsGeneralLoading } = useImsGeneralDataByAssetDetailId(formData?.asset_detail_id ?? 0);
@@ -1945,6 +1951,27 @@ const RBIAssessmentCreatePage: React.FC = () => {
     }
   }, [formData?.pof_risk_irp]);
 
+  //matrix risk_irp❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const results = calculateMatrixesRiskIrp(
+        formData.pof_value_risk_irp,
+        formData.cof_financial_risk_irp,
+        formData.cof_area_risk_irp
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        risk_level_risk_irp: results.riskLevel,
+        int_insp_risk_irp: results.intInsp,
+        int_insp_interval_risk_irp: results.intInspInterval,
+        ext_insp_risk_irp: results.extInsp,
+        ext_insp_interval_risk_irp: results.extInspInterval,
+        env_crack_risk_irp: results.envCrack,
+        env_crack_interval_risk_irp: results.envCrackInterval
+      }));
+    }
+  }, [formData?.pof_value_risk_irp, formData?.cof_financial_risk_irp, formData?.cof_area_risk_irp]);
+
 
 
 
@@ -1965,7 +1992,8 @@ const RBIAssessmentCreatePage: React.FC = () => {
 
     if (!formData.asset_detail_id) {
       setActiveTab("pof"); // Navigate to the "Asset Information" tab
-      return showValidationError("Asset is required");
+      showValidationError("Asset is required");
+      return; // Make sure return is after the error handling
     }
     setIsLoadingSubmit(true);
     try {
@@ -1978,6 +2006,10 @@ const RBIAssessmentCreatePage: React.FC = () => {
           i_ims_general_id: imsGeneralId,
           asset_detail_id: formData.asset_detail_id,
           asset_name: formData.asset_name,
+          pof_value: formData.pof_value_risk_irp,
+          cof_finance_value: formData.cof_financial_risk_irp,
+          cof_area_value: formData.cof_area_risk_irp,
+          risk_level: formData.risk_level_risk_irp,
         };
         const rbiGeneralId = await insertImsRbiGeneralData(rbiGeneralData);
 

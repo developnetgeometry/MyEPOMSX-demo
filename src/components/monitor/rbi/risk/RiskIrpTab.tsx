@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import RiskMatrix from "./RiskMatrixCard";
 
 const RiskIrpTab: React.FC<{ formData: any; setFormData: any }> = ({
   formData,
@@ -11,7 +12,7 @@ const RiskIrpTab: React.FC<{ formData: any; setFormData: any }> = ({
     const { name, value } = e.target;
     setFormData((prev: any) => ({ ...prev, [name]: value }));
   };
-
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [precision, setPrecision] = useState<2 | 8>(2);
 
   const formatNumber = (val: number | null) => {
@@ -30,6 +31,37 @@ const RiskIrpTab: React.FC<{ formData: any; setFormData: any }> = ({
           This section calculates the overall risk assessment and incident response planning.
         </p>
       </div>
+      {/* Toggle Collapse Button */}
+      <div className="flex justify-end">
+        <Button
+          type="button"
+          onClick={() => setIsCollapsed((prev) => !prev)}
+          variant="outline"
+          size="sm"
+        >
+          {isCollapsed ? "Expand Section" : "Collapse Section"}
+        </Button>
+      </div>
+      {!isCollapsed && (
+        <>
+          <RiskMatrix
+            x={formData?.pof_value_risk_irp || ""}
+            y={String(
+              Math.max(
+                Number(formData?.cof_financial_risk_irp ?? 0),
+                Number(formData?.cof_area_risk_irp ?? 0)
+              )
+            )}
+            className="mt-4"
+            intInspection={formData?.int_insp_risk_irp || ""}
+            intInspectionInterval={formData?.int_insp_interval_risk_irp || 0}
+            extInspection={formData?.ext_insp_risk_irp || ""}
+            extInspectionInterval={formData?.ext_insp_interval_risk_irp || 0}
+            envCrack={formData?.env_crack_risk_irp || ""}
+            envCrackInterval={formData?.env_crack_interval_risk_irp || 0}
+          />
+        </>
+      )}
       {/* Toggle precision */}
       <div className="flex justify-end">
         <Button
@@ -152,12 +184,12 @@ const RiskIrpTab: React.FC<{ formData: any; setFormData: any }> = ({
         </div>
 
         <div>
-          <Label htmlFor="cofFinancial_risk_irp">Cof (Financial)</Label>
+          <Label htmlFor="cof_financial_risk_irp">Cof (Financial)</Label>
           <Input
-            id="cofFinancial_risk_irp"
-            name="cofFinancial_risk_irp"
+            id="cof_financial_risk_irp"
+            name="cof_financial_risk_irp"
             type="number"
-            value={formatNumber(formData?.cofFinancia_risk_irpl) || 0}
+            value={formatNumber(formData?.cof_financial_risk_irp) || 0}
             onChange={handleInputChange}
             disabled
             className="mt-1 bg-gray-100"
@@ -166,12 +198,12 @@ const RiskIrpTab: React.FC<{ formData: any; setFormData: any }> = ({
         </div>
 
         <div>
-          <Label htmlFor="cofArea_risk_irp">Cof (Area)</Label>
+          <Label htmlFor="cof_area_risk_irp">Cof (Area)</Label>
           <Input
-            id="cofArea_risk_irp"
-            name="cofArea_risk_irp"
+            id="cof_area_risk_irp"
+            name="cof_area_risk_irp"
             type="number"
-            value={formatNumber(formData?.cofArea_risk_irp) || 0}
+            value={formatNumber(formData?.cof_area_risk_irp) || 0}
             onChange={handleInputChange}
             disabled
             className="mt-1 bg-gray-100"
@@ -179,7 +211,7 @@ const RiskIrpTab: React.FC<{ formData: any; setFormData: any }> = ({
           />
         </div>
 
-{/* TEST */}
+        {/* TEST */}
         <div>
           <Label htmlFor="pof_value_risk_irp">Pof Value</Label>
           <Input
@@ -204,20 +236,6 @@ const RiskIrpTab: React.FC<{ formData: any; setFormData: any }> = ({
             disabled
             className="mt-1 bg-gray-100"
             placeholder="Calculated Risk Level"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="risk_ranking_risk_irp">Risk Ranking</Label>
-          <Input
-            id="risk_ranking_risk_irp"
-            name="risk_ranking_risk_irp"
-            type="text"
-            value={formData?.risk_ranking_risk_irp || ""}
-            onChange={handleInputChange}
-            disabled
-            className="mt-1 bg-gray-100"
-            placeholder="Calculated Risk Ranking"
           />
         </div>
       </div>

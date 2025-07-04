@@ -11,6 +11,9 @@ export const useImsRbiGeneralData = () => {
           id,
           created_at,
           rbi_no,
+          pof_value,
+          cof_value,
+          risk_level,
           i_ims_general_id,
           asset_detail_id(
             id, type_id (name),
@@ -32,18 +35,19 @@ export const useImsRbiGeneralData = () => {
   });
 };
 
-export const useImsRbiGeneralDataById = (id: number | null) => {
+export const useImsRbiGeneralDataById = (id: number) => {
   return useQuery({
     queryKey: ["i-ims-rbi-general-data", id],
     queryFn: async () => {
-      if (!id) return null; // Return null if no id is provided
-
       const { data, error } = await supabase
         .from("i_ims_rbi_general")
         .select(`
           id,
           created_at,
           rbi_no,
+          pof_value,
+          cof_value,
+          risk_level,
           i_ims_general_id,
           asset_detail_id(
             id, type_id (name),
@@ -57,13 +61,13 @@ export const useImsRbiGeneralDataById = (id: number | null) => {
         .single(); // Fetch a single record
 
       if (error) {
-        console.error(`Error fetching i_ims_rbi_general data for id ${id}:`, error);
+        console.error("Error fetching i_ims_rbi_general data:", error);
         throw error;
       }
 
       return data;
     },
-    enabled: !!id, // Only run the query if id is provided
+    enabled: !!id, // Only fetch if id is provided
   });
 };
 
@@ -72,6 +76,10 @@ export const insertImsRbiGeneralData = async (rbiGeneralData: {
   asset_detail_id?: number;
   asset_name?: string; // Added asset_name
   i_ims_design?: number;
+  pof_value?: string;
+  cof_finance_value?: number;
+  cof_area_value?: number;
+  risk_level?: string;
 }) => {
   try {
     const { data, error } = await supabase
@@ -98,6 +106,10 @@ export const updateImsRbiGeneralData = async (
     asset_detail_id?: number;
     asset_name?: string; // Added asset_name
     i_ims_design?: number;
+    pof_value?: string;
+    cof_finance_value?: number;
+    cof_area_value?: number;
+    risk_level?: string;
   }>
 ) => {
   try {

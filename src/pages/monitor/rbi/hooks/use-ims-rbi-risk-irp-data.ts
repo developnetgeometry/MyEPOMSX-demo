@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 
 export const useImsRbiRiskIrpData = (rbiGeneralId: number) => {
   return useQuery({
-    queryKey: ["i-ims-rbi-risk-irp"],
+    queryKey: ["i-ims-rbi-risk-irp", rbiGeneralId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("i_ims_rbi_risk_irp")

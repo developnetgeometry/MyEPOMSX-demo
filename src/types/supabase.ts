@@ -7938,26 +7938,41 @@ export type Database = {
         Row: {
           asset_detail_id: number | null
           asset_name: string | null
+          cof_area_value: number | null
+          cof_finance_value: number | null
+          cof_value: number | null
           created_at: string
           i_ims_general_id: number | null
           id: number
+          pof_value: string | null
           rbi_no: string | null
+          risk_level: string | null
         }
         Insert: {
           asset_detail_id?: number | null
           asset_name?: string | null
+          cof_area_value?: number | null
+          cof_finance_value?: number | null
+          cof_value?: number | null
           created_at?: string
           i_ims_general_id?: number | null
           id?: number
+          pof_value?: string | null
           rbi_no?: string | null
+          risk_level?: string | null
         }
         Update: {
           asset_detail_id?: number | null
           asset_name?: string | null
+          cof_area_value?: number | null
+          cof_finance_value?: number | null
+          cof_value?: number | null
           created_at?: string
           i_ims_general_id?: number | null
           id?: number
+          pof_value?: string | null
           rbi_no?: string | null
+          risk_level?: string | null
         }
         Relationships: [
           {

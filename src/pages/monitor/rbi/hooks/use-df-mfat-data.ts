@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 
 export const useImsDfMfatData = (rbiGeneralId: number) => {
   return useQuery({
-    queryKey: ["i-df-mfat"],
+    queryKey: ["i-df-mfat", rbiGeneralId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("i_df_mfat")

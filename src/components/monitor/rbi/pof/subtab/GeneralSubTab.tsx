@@ -120,7 +120,7 @@ const GeneralSubTab: React.FC<{
                         value={formData?.description || ""}
                         onChange={handleInputChange}
                         className="mt-1 min-h-[100px]"
-                        placeholder="Enter description"
+                        placeholder="Asset Description"
                         disabled
                     />
                 </div>

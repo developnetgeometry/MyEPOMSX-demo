@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 
 export const useImsDfThinData = (rbiGeneralId: number) => {
   return useQuery({
-    queryKey: ["i-df-thin"],
+    queryKey: ["i-df-thin", rbiGeneralId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("i_df_thin")
