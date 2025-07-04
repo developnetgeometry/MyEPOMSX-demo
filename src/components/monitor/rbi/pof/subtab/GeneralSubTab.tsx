@@ -17,7 +17,7 @@ const GeneralSubTab: React.FC<{
     handleRadioChange: any;
 }> = ({ formData, handleInputChange, handleSelectChange, handleRadioChange }) => {
     const [precision, setPrecision] = useState<2 | 8>(2);
-    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(true);
 
     const formatNumber = (val: number | null) => {
         if (val === null || val === undefined) return "";
@@ -48,7 +48,14 @@ const GeneralSubTab: React.FC<{
                     <Label htmlFor="asset">Asset</Label>
                     <Select
                         value={formData?.asset_detail_id?.toString() || ""}
-                        onValueChange={(value) => handleSelectChange("asset_detail_id", parseInt(value))}
+                        onValueChange={(value) => {
+                            const selectedAsset = assets?.find(
+                                (asset) => asset.asset_detail_id.toString() === value
+                            );
+                            handleSelectChange("asset_detail_id", parseInt(value));
+                            handleSelectChange("asset_name", selectedAsset?.asset_name || "");
+                        }}
+                        disabled={!formData?.editMode} // Disable the select list if editMode is false
                     >
                         <SelectTrigger className="mt-1">
                             <SelectValue placeholder="Select Asset" />
@@ -113,7 +120,7 @@ const GeneralSubTab: React.FC<{
                         value={formData?.description || ""}
                         onChange={handleInputChange}
                         className="mt-1 min-h-[100px]"
-                        placeholder="Enter description"
+                        placeholder="Asset Description"
                         disabled
                     />
                 </div>
@@ -190,10 +197,20 @@ const GeneralSubTab: React.FC<{
                         <InputBlock label="Detection System ID" value={formData?.detection_system_id} />
                         <InputBlock label="Mitigation System ID" value={formData?.mitigation_system_id} />
                         <InputBlock label="Design Fabrication ID" value={formData?.design_fabrication_id} />
+                        <InputBlock label="Design Fabrication Name" value={formData?.design_fabrication_name} />
+                        <InputBlock label="Design Fabrication Value" value={formatNumber(formData?.design_fabrication_value)} />
                         <InputBlock label="Insulation Type ID" value={formData?.insulation_type_id} />
+                        <InputBlock label="Insulation Type Name" value={formData?.insulation_type_name} />
+                        <InputBlock label="Insulation Type Value" value={formatNumber(formData?.insulation_type_value)} />
                         <InputBlock label="Interface ID" value={formData?.interface_id} />
+                        <InputBlock label="Interface Name" value={formData?.interface_name} />
+                        <InputBlock label="Interface Value" value={formatNumber(formData?.interface_value)} />
                         <InputBlock label="Insulation Complexity ID" value={formData?.insulation_complexity_id} />
-                        <InputBlock label="Insulation Condition" value={formData?.insulation_condition} />
+                        <InputBlock label="Insulation Complexity Name" value={formData?.insulation_complexity_name} />
+                        <InputBlock label="Insulation Complexity Value" value={formatNumber(formData?.insulation_complexity_value)} />
+                        <InputBlock label="Insulation Condition ID" value={formData?.insulation_condition_id} />
+                        <InputBlock label="Insulation Condition Name" value={formData?.insulation_condition_name} />
+                        <InputBlock label="Insulation Condition Value" value={formatNumber(formData?.insulation_condition_value)} />
                         <InputBlock label="Lining Type" value={formData?.lining_type} />
                         <InputBlock label="Lining Condition" value={formData?.lining_condition} />
                         <InputBlock label="Lining Monitoring" value={formData?.lining_monitoring} />

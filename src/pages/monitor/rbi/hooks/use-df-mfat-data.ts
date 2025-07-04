@@ -1,19 +1,22 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 
-export const useImsDfMfatData = (imsGeneralId: number) => {
+export const useImsDfMfatData = (rbiGeneralId: number) => {
   return useQuery({
-    queryKey: ["i-df-mfat", imsGeneralId],
+    queryKey: ["i-df-mfat", rbiGeneralId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("i_df_mfat")
         .select(
-          `id, previous_failure_id, visible_audible_shaking_id, shaking_frequency_id,
-          cyclic_load_type_id, corrective_action_id, pipe_complexity_id, pipe_condition_id,
-          joint_branch_design_id, brach_diameter_id, dmfatfb, ims_pof_assessment_id,
+          `id, previous_failure_id (id, name, value),
+          visible_audible_shaking_id (id, name, value), shaking_frequency_id (id, name, value),
+          cyclic_load_type_id (id, name, value), corrective_action_id (id, name, value),
+          pipe_complexity_id (id, name, value), pipe_condition_id (id, name, value),
+          joint_branch_design_id (id, name, value), brach_diameter_id (id, name, value), 
+          dmfatfb, ims_pof_assessment_id,
           data_confidence_id, ims_general_id`
         )
-        .eq("ims_general_id", imsGeneralId) // Fetch records based on ims_pof_assessment_id
+        .eq("ims_rbi_general_id", rbiGeneralId) // Fetch records based on ims_pof_assessment_id
         .single(); // Use single() to get a single record
 
       if (error) {
@@ -23,7 +26,7 @@ export const useImsDfMfatData = (imsGeneralId: number) => {
 
       return data;
     },
-    enabled: !!imsGeneralId, // Only fetch if imsGeneralId is provided
+    enabled: !!rbiGeneralId, // Only fetch if rbiGeneralId is provided
   });
 };
 
@@ -40,6 +43,8 @@ export const insertImsDfMfatData = async (dfMfatData: {
   dmfatfb?: number;
   ims_pof_assessment_id?: number;
   data_confidence_id?: number;
+  ims_general_id?: number;
+  ims_rbi_general_id?: number;
 }) => {
   try {
     const { data, error } = await supabase

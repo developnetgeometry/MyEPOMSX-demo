@@ -67,6 +67,7 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             value={formData?.current_thickness_thin || ""}
             onChange={handleInputChange}
             className="mt-1"
+            placeholder="Enter current thickness"
           />
         </div>
       </div>
@@ -113,9 +114,10 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             name="cract_thin"
             type="number"
             step="any"
-            value={formData?.cract_thin || 0}
+            value={formData?.cract_thin || ""}
             onChange={handleInputChange}
             className="mt-1"
+            placeholder="Enter Cr Act"
           />
         </div>
         <div>
@@ -189,9 +191,11 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="nthin_a_thin"
             name="nthin_a_thin"
             type="number"
-            value={formatNumber(formData?.nthin_a_thin) || 0}
+            step="any"
+            value={formData?.nthin_a_thin || ""}
             onChange={handleInputChange}
             className="mt-1"
+            placeholder="Enter NThin A"
           />
         </div>
         <div>
@@ -200,9 +204,11 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="nthin_b_thin"
             name="nthin_b_thin"
             type="number"
-            value={formatNumber(formData?.nthin_b_thin) || 0}
+            step="any"
+            value={formData?.nthin_b_thin || ""}
             onChange={handleInputChange}
             className="mt-1"
+            placeholder="Enter NThin B"
           />
         </div>
         <div>
@@ -211,9 +217,11 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="nthin_c_thin"
             name="nthin_c_thin"
             type="number"
-            value={formatNumber(formData?.nthin_c_thin) || 0}
+            step="any"
+            value={formData?.nthin_c_thin || ""}
             onChange={handleInputChange}
             className="mt-1"
+            placeholder="Enter NThin C"
           />
         </div>
         <div>
@@ -222,9 +230,11 @@ const DfThinSubTab: React.FC<{ formData: any; handleInputChange: any; handleSele
             id="nthin_d_thin"
             name="nthin_d_thin"
             type="number"
-            value={formatNumber(formData?.nthin_d_thin) || 0}
+            step="any"
+            value={formData?.nthin_d_thin || ""}
             onChange={handleInputChange}
             className="mt-1"
+            placeholder="Enter NThin D"
           />
         </div>
       </div>

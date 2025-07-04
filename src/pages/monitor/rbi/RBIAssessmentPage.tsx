@@ -28,13 +28,13 @@ const RBIAssessmentPage: React.FC = () => {
 
   const getRiskRankColor = (rank: string) => {
     switch (rank) {
-      case "Critical":
+      case "VERY HIGH":
         return "bg-red-100 text-red-800";
-      case "High":
+      case "HIGH":
         return "bg-orange-100 text-orange-800";
-      case "Medium":
+      case "MEDIUM":
         return "bg-yellow-100 text-yellow-800";
-      case "Low":
+      case "LOW":
         return "bg-green-100 text-green-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -51,9 +51,9 @@ const RBIAssessmentPage: React.FC = () => {
         item.asset_no.toLowerCase().includes(lower) ||
         item.asset_name.toLowerCase().includes(lower) ||
         item.type_name.toLowerCase().includes(lower) ||
-        item.PoF.toLowerCase().includes(lower) ||
-        item.CoF.toString().includes(lower) ||
-        item.Risk.toLowerCase().includes(lower)
+        item.pof_value.toLowerCase().includes(lower) ||
+        item.cof_value.toString().includes(lower) ||
+        item.risk_level.toLowerCase().includes(lower)
     );
   }, [rbiData, searchQuery]);
 
@@ -78,9 +78,18 @@ const RBIAssessmentPage: React.FC = () => {
     { id: "asset_no", header: "Asset No", accessorKey: "asset_detail_id.e_asset.asset_no" },
     { id: "asset_name", header: "Asset Name", accessorKey: "asset_detail_id.e_asset.asset_name" },
     { id: "type_name", header: "Type Name", accessorKey: "asset_detail_id.type_id.name" },
-    { id: "PoF", header: "PoF", accessorKey: "PoF" },
-    { id: "CoF", header: "CoF", accessorKey: "CoF" },
-    { id: "Risk", header: "Risk", accessorKey: "Risk" },
+    { id: "PoF", header: "PoF", accessorKey: "pof_value" },
+    { id: "CoF", header: "CoF", accessorKey: "cof_value" },
+    {
+      id: "Risk",
+      header: "Risk",
+      accessorKey: "risk_level",
+      cell: (value) => (
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRiskRankColor(value)}`}>
+          {value}
+        </span>
+      )
+    },
   ];
 
   return (
@@ -104,7 +113,7 @@ const RBIAssessmentPage: React.FC = () => {
             <DataTable
               columns={columns}
               data={filteredRbiData}
-              // onRowClick={handleRowClick}
+              onRowClick={handleRowClick}
               onIndex={true}
             />
           )}

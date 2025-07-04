@@ -1,17 +1,17 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 
-export const useBranchDiameterData = () => {
+export const useOnlineMonitorDfSccSohicData = () => {
     return useQuery({
-        queryKey: ["i-branch-diameter-data"],
+        queryKey: ["e-online-monitor-df-scc-sohic-data"],
         queryFn: async () => {
             const { data, error } = await supabase
-                .from("i_branch_diameter")
+                .from("e_online_monitor_df_scc_sohic")
                 .select("id, name, value")
                 .order("id");
 
             if (error) {
-                console.error("Error fetching i_branch_diameter data:", error);
+                console.error("Error fetching e_online_monitor_df_scc_sohic data:", error);
                 throw error;
             }
 

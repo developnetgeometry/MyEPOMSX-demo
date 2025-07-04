@@ -7,7 +7,7 @@ export const usePipeConditionData = () => {
         queryFn: async () => {
             const { data, error } = await supabase
                 .from("i_pipe_condition")
-                .select("id, name")
+                .select("id, name, value")
                 .order("id");
 
             if (error) {

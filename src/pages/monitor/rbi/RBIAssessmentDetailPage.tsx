@@ -4,16 +4,22 @@ import PageHeader from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, BathIcon, ShieldAlert } from "lucide-react";
+import { ArrowLeft, Edit, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import PofTab from "@/components/monitor/rbi/pof/PofTab";
 import CofTab from "@/components/monitor/rbi/cof/CofTab";
 import RiskIrpTab from "@/components/monitor/rbi/risk/RiskIrpTab";
-import { useImsPofAssessmentData } from "./hooks/use-ims-pof-assessment-data";
+import Loading from "@/components/shared/Loading";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from '@/hooks/use-toast';
+import { useAverageMtsMpaMysMpaByName } from "./hooks/use-average-mts_mpa-mys_mpa-by-name";
+import { useImsGeneralDataByAssetDetailId } from "./hooks/use-ims-general-data";
+import { useImsProtectionByAssetDetailId } from "./hooks/use-ims-protection-by-asset-detail-id";
+import { useImsDesignByAssetDetailId } from "./hooks/use-ims-design-by-asset-detail-id";
+import { useImsServiceByAssetDetailId } from "./hooks/use-ims-service-by-asset-detail-id";
 import { useImsCofAssessmentCofProdData } from "./hooks/use-ims-cof-assessment-prod-data";
 import { useImsCofAssessmentCofAreaData } from "./hooks/use-ims-cof-assessment-area-data";
-import { useImsRbiRiskIrpData } from "./hooks/use-ims-rib-risk-irp-data";
-import Loading from "@/components/shared/Loading";
+import { useImsRbiRiskIrpData } from "./hooks/use-ims-rbi-risk-irp-data";
 import { useImsDfThinData } from "./hooks/use-df-thin-data";
 import { useImsDfExtData } from "./hooks/use-df-ext-data";
 import { useImsDfExtClsccData } from "./hooks/use-df-ext-clscc-data";
@@ -21,17 +27,466 @@ import { useImsDfMfatData } from "./hooks/use-df-mfat-data";
 import { useImsDfCuiData } from "./hooks/use-df-cui-data";
 import { useImsDfSccSccData } from "./hooks/use-df-scc-scc";
 import { useImsDfSccSohicData } from "./hooks/use-df-scc-sohic";
-import { calcIThinAndProportions, calculateAge, calculateAgeCoat, calculateAgeTk, calculateArt, calculateBThins, calculateCoatAdj, calculateCrAct, calculateCrCm, calculateCrExp, calculateCrExpExt, calculateDFThinFb, calculateFsThin, calculateSrThin } from "./hooks/formula-lama";
-import { useAverageMtsMpaMysMpaByName } from "./hooks/use-average-mts_mpa-mys_mpa-by-name";
+import { calcIThinAndProportions, calculateArt, calculateBThins, calculateCrAct, calculateCrCm, calculateCrExp, calculateDFThinFDFThinFB, calculateFsThin, calculateSrThin } from "./hooks/formula-df-thin";
+import { calculateAgeTk } from "./hooks/formula";
+import { calculateAge, calculateAgeCoat, calculateArtExt, calculateBetaExtcorrs, calculateCoatAdj, calculateCrActExt, calculateCrExpExt, calculateDFextcorrF, calculateFSextcorr, calculateIextCorrsAndPoExtcorrs, calculateSRextcorr } from "./hooks/formula-df-ext";
+import { calculateAgeCrackExtClscc, calculateAgeCoatExtClscc, calculateCoatAdjExtClscc, calculateAgeExtClscc, calculateClSccSuscAndSviExtClscc, calculateExtClsccFb, calculateDfExtClsccFinal } from "./hooks/formula-df-ext-clscc";
+import { calculateDfMfat, calculateDmFatFb } from "./hooks/formula-df-mfat";
+import { calculateAgeCoatCui, calculateAgeCui, calculateArtCui, calculateBCuiFsCui, calculateCoatAdjCui, calculateCrExpCui, calculateDFCuiFFCui, calculateFSCUIFCui, calculateICuiFsAndPoCuiFsCui, calculateSRCUIFCui } from "./hooks/formula-df-cui";
+import { calculateDfSccFbSccScc, calculateDfSccScc, calculateEnvSeveritySccScc, calculateSscSucsFToHtSccScc, calculateSusceptibilitySccScc, calculateSviSccScc } from "./hooks/formula-df-scc-scc";
+import { calculateDfSccSohic, calculateDfSohicFbSccSohic, calculateEnvSeveritySccSohic, calculateSuscToCrackSccSohic, calculateSviSccSohic } from "./hooks/formula-df-scc-sohic";
+import { calculateFcAffaCofProd, calculateFcCmdCofProd, calculateFcCofProd, calculateFcEnvironCofProd, calculateFcInjCostCofProd, calculateFcProdCofProd, calculateFracEvapCofProd, calculateOutageAffaCofProd, calculateOutageCmdCofProd, calculatePopDensCofProd, calculateVolEnvCofProd } from "./hooks/formula-cof-prod";
+import { calculateCpCofArea, calculateFactDiCofArea, calculateLdMaxCofArea, calculateInventoryCofArea, calculateKCofArea, calculateMReleaseCofArea, calculateOpTempCofArea, calculatePsCofArea, calculatePTransCofArea, calculateRateNCofArea, calculateReleaseTypeCofArea, calculateTimeEmptyCofArea, calculateW1CofArea, calculateLdSCofArea, calculateMassNCofArea, calculateEneffCofArea, calculateFactIcCofArea, calculateCaContValues, calculateCaInstValues, calculateCaCmdAil, calculateCaInjAil, calculateCaCmdAinl, calculateCaInjAinl, calculateFactAIT, calculateCaCmdFlam, calculateCaInjFlam } from "./hooks/formula-cof-area";
+import { calculateCofAreaRiskIrp, calculateCofFinancialRiskIrp, calculateDextdRiskIrp, calculateDmfatRiskIrp, calculateDsccRiskIrp, calculateDthinRiskIrp, calculateMatrixesRiskIrp, calculatePofRiskIrp, calculatePofValueRiskIrp } from "./hooks/formula-risk-irp";
+import { updateImsRbiGeneralData, useImsRbiGeneralDataById } from "./hooks/use-ims-rbi-general-data";
+import { updateImsPofAssessmentData, useImsPofAssessmentData } from "./hooks/use-ims-pof-assessment-data";
+import { updateImsDfThinData } from "./hooks/use-df-thin-data";
+import { updateImsDfExtData } from "./hooks/use-df-ext-data";
+import { updateImsDfExtClsccData } from "./hooks/use-df-ext-clscc-data";
+import { updateImsDfMfatData } from "./hooks/use-df-mfat-data";
+import { updateImsDfCuiData } from "./hooks/use-df-cui-data";
+import { updateImsDfSccSccData } from "./hooks/use-df-scc-scc";
+import { updateImsDfSccSohicData } from "./hooks/use-df-scc-sohic";
+import { updateImsCofAssessmentCofProdData } from "./hooks/use-ims-cof-assessment-prod-data";
+import { updateImsCofAssessmentCofAreaData } from "./hooks/use-ims-cof-assessment-area-data";
+import { updateImsRbiRiskIrpData } from "./hooks/use-ims-rbi-risk-irp-data";
+
 
 const RBIAssessmentDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("pof");
 
-  const { data: pofData, isLoading: isPofLoading, error: pofError, refetch: pofRefetch } = useImsPofAssessmentData(Number(id));
+
+  const [formData, setFormData] = useState<any | null>({
+    editMode: false,
+    // ims_general
+    asset_detail_id: null,
+    asset_name: "",
+    line_no: "",
+    pipe_schedule_id: null,
+    pressure_rating: 0,
+    year_in_service: "",
+    normal_wall_thickness: 0, // Nominal Thickness Tnom nominal_thickness
+    tmin: 0, // Tmin
+    material_construction_id: null,
+    spec_code: "", // Spec Code
+    description: "",
+    circuit_id: null,
+    nominal_bore_diameter: null,
+    insulation: false,
+    line_h2s: false,
+    internal_lining: false,
+    pwht: false,
+    cladding: false,
+    ims_asset_type_id: null,
+    clad_thickness: 0,
+    pipe_class_id: null,
+    // ims_design
+    internal_diameter: 0,
+    welding_efficiency: 0,
+    design_pressure: 0,
+    corrosion_allowance: 0,
+    outer_diameter: 0,
+    design_temperature: 0,
+    operating_pressure_mpa: 0,
+    ext_env_id: null,
+    ext_env_name: "",
+    geometry_id: null,
+    length: 0,
+    operating_temperature: 0,
+    allowable_stress_mpa: 0,
+    pipe_support: false,
+    soil_water_interface: false,
+    dead_legs: false,
+    mix_point: false,
+    // ims_protection
+    coating_quality_id: null,
+    isolation_system_id: null,
+    online_monitor_id: null,
+    online_monitor_name: "",
+    minimum_thickness: 0,
+    post_weld_heat_treatment: 0,
+    line_description: "",
+    replacement_line: "",
+    detection_system_id: null,
+    mitigation_system_id: null,
+    mitigation_system_name: "",
+    mitigation_system_value: 0, // factmit used in the cof area calculation
+    design_fabrication_id: null,
+    design_fabrication_name: "",
+    design_fabrication_value: 0,
+    insulation_type_id: null,
+    insulation_type_name: "",
+    insulation_type_value: 0,
+    interface_id: null,
+    interface_name: "",
+    interface_value: 0,
+    insulation_complexity_id: null,
+    insulation_complexity_name: "",
+    insulation_complexity_value: 0,
+    insulation_condition_id: null,
+    insulation_condition_name: "",
+    insulation_condition_value: 0,
+    lining_type: "",
+    lining_condition: "",
+    lining_monitoring: "",
+    // ims_service
+    fluid_representative_name: "",
+    fluid_phase_name: "",
+    // useAverageMtsMpaMysMpaByName
+    avg_mts_mpa: 0,
+    avg_mys_mpa: 0,
+    composition: "",
+
+    // i_df_thin (1)
+    last_inspection_date_thin: null,
+    current_thickness_thin: 0, //Trd
+    agetk_thin: 0,
+    agerc_thin: null,
+    crexp_thin: 0,
+    cract_thin: 0,
+    crcm_thin: 0,
+    ca_thin: 0,
+    art_thin: 0,
+    fsthin_thin: 0,
+    srthin_thin: 0,
+    nthin_a_thin: 0,
+    nthin_b_thin: 0,
+    nthin_c_thin: 0,
+    nthin_d_thin: 0,
+    data_confidence_id_thin: null,
+    ithin1_thin: 0,
+    ithin2_thin: 0,
+    ithin3_thin: 0,
+    pothin1_thin: 0,
+    pothin2_thin: 0,
+    pothin3_thin: 0,
+    bthin1_thin: 0,
+    bthin2_thin: 0,
+    bthin3_thin: 0,
+    dfthinfb_thin: 0,
+    dfthinf_thin: 0,
+
+    // *** i_df_ext (2)
+    current_thickness_ext: 0, //Trd
+    coating_quality_id_ext: null,
+    new_coating_date_ext: null,
+    last_inspection_date_ext: null,
+    agetk_ext: 0,
+    agecoat_ext: 0,
+    coatadj_ext: 0,
+    age_ext: 0,
+    crexp_ext: 0,
+    cract_ext: 0,
+    art_ext: 0,
+    fsextcorr_ext: 0,
+    srextcorr_ext: 0,
+    nextcorra_ext: 0,
+    nextcorrb_ext: 0,
+    nextcorrc_ext: 0,
+    nextcorrd_ext: 0,
+    data_confidence_id_ext: null,
+    iextcorr1_ext: 0,
+    iextcorr2_ext: 0,
+    iextcorr3_ext: 0,
+    poextcorrp1_ext: 0,
+    poextcorrp2_ext: 0,
+    poextcorrp3_ext: 0,
+    bextcorr1_ext: 0,
+    bextcorr2_ext: 0,
+    bextcorr3_ext: 0,
+    dfextcorrf_ext: 0,
+
+    // *** i_df_ext_clscc (3)
+    coating_quality_id_ext_clscc: null,
+    new_coating_date_ext_clscc: null,
+    last_inspection_date_ext_clscc: null,
+    agecrack_ext_clscc: 0,
+    agecoat_ext_clscc: 0,
+    coatadj_ext_clscc: 0,
+    age_ext_clscc: 0,
+    external_environment_id_ext_clscc: null,
+    ext_cl_scc_susc_ext_clscc: 0,
+    svi_ext_clscc: 0,
+    inspection_efficiency_id_ext_clscc: null,
+    inspection_efficiency_name_ext_clscc: "",
+    df_ext_cl_scc_ext_clscc: 0,
+    df_ext_cl_scc_fb_ext_clscc: 0,
+
+    // *** i_df_mfat(4)
+    previous_failure_id_mfat: null,
+    visible_audible_shaking_id_mfat: null,
+    shaking_frequency_id_mfat: null,
+    cyclic_load_type_id_mfat: null,
+    previous_failure_value_mfat: 0,
+    visible_audible_shaking_value_mfat: 0,
+    shaking_frequency_value_mfat: 0,
+    cyclic_load_type_value_mfat: 0,
+    dmfatfb_mfat: 0,
+    corrective_action_id_mfat: null,
+    pipe_complexity_id_mfat: null,
+    pipe_condition_id_mfat: null,
+    joint_branch_design_id_mfat: null,
+    brach_diameter_id_mfat: null,
+    corrective_action_value_mfat: 0,
+    pipe_complexity_value_mfat: 0,
+    pipe_condition_value_mfat: 0,
+    joint_branch_design_value_mfat: 0,
+    branch_diameter_value_mfat: 0,
+    dmfat_mfat: 0,
+
+    // *** i_df_cui (5)
+    current_thickness_cui: 0, //Trd
+    coating_quality_id_cui: null, //?? coating_quality_id(5)
+    last_inspection_date_cui: null,
+    new_coating_date_cui: null,
+    agetk_cui: 0,
+    agecoat_cui: 0,
+    coatadj_cui: 0,
+    age_cui: 0,
+    external_environment_id_cui: null,
+    crexp_cui: 0,
+    cract_cui: 0,
+    art_cui: 0,
+    fscuif_cui: 0,
+    srcuif_cui: 0,
+    ncuifa_cui: 0,
+    ncuifb_cui: 0,
+    ncuifc_cui: 0,
+    ncuifd_cui: 0,
+    data_confidence_id_cui: null,
+    icuif1_cui: 0,
+    icuif2_cui: 0,
+    icuif3_cui: 0,
+    pociufp1_cui: 0,
+    pociufp2_cui: 0,
+    pociufp3_cui: 0,
+    bcuif1_cui: 0,
+    bcuif2_cui: 0,
+    bcuif3_cui: 0,
+    dfcuiff_cui: 0,
+
+    // *** i_df_scc_scc (6)
+    last_inspection_date_scc_scc: null,
+    inspection_efficiency_id_scc_scc: null,
+    inspection_efficiency_name_scc_scc: "",
+    susceptibility_scc_scc: "", // Yes?
+    h2s_in_water_scc_scc: 0,
+    ph_scc_scc: 0,
+    envseverity_scc_scc: "", //low?
+    hardness_brinnel_scc_scc: 0,
+    ssc_sucs_f_to_ht_scc_scc: "", //low?
+    svi_scc_scc: 0,
+    dfsccfb_scc_scc: 0,
+    df_scc_scc_scc_scc: 0,
+
+    // *** i_df_scc_sohic (7)
+    last_inspection_date_scc_sohic: null,
+    inspection_efficiency_id_scc_sohic: null,
+    inspection_efficiency_name_scc_sohic: "",
+    susceptibility_scc_sohic: "", // Yes?
+    h2s_in_water_scc_sohic: 0,
+    ph_scc_sohic: 0,
+    envseverity_scc_sohic: "", //low?
+    steelscontent_id_scc_sohic: null,
+    online_monitor_id_scc_sohic: null,
+    online_monitor_value_scc_sohic: 0,
+    sucs_to_crack_scc_sohic: "", //low?
+    svi_scc_sohic: 0,
+    dfsohicfb_scc_sohic: 0,
+    dfscc_sohic_scc_sohic: 0,
+
+    // cof_general
+    comp_type_cof: "",
+
+    // cof_prod
+    fc_cmd_cof_prod: 0,
+    fc_affa_cof_prod: 0,
+    outage_affa_cof_prod: 0,
+    outage_mult_cof_prod: 0,
+    outage_cmd_cof_prod: 0,
+    lra_prod_cof_prod: 0,
+    fc_prod_cof_prod: 0,
+    pop_dens_cof_prod: calculatePopDensCofProd() ?? 0,
+    inj_cost_cof_prod: 0,
+    fc_inj_cost_cof_prod: 0,
+    envcost_cof_prod: 0,
+    frac_evap_cof_prod: 0,
+    vol_env_cof_prod: 0,
+    fc_environ_cof_prod: 0,
+    fc_cof_prod: 0,
+
+    // cof_area
+    ideal_gas_specific_heat_eq_id: null,
+    ideal_gas_specific_heat_eq_name: "",
+    iso_sys_id_cof_area: null,
+    iso_sys_name_cof_area: "",
+    det_sys_id_cof_area: null,
+    det_sys_name_cof_area: "",
+    p_s_cof_area: 0,
+    op_temp_cof_area: 0,
+    cp_cof_area: 0,
+    k_cof_area: 0,
+    p_trans_cof_area: 0,
+    w1_cof_area: 0,
+    inventory_cof_area: 0,
+    time_empty_cof_area: 0,
+    m_release_cof_area: 0,
+    release_type_cof_area: "",
+    fact_di_cof_area: 0,
+    ld_max_cof_area: 0,
+    rate_n_cof_area: 0,
+    ld_s_cof_area: 0,
+    mass_n_cof_area: 0,
+    eneff_cof_area: 0,
+    fact_ic_cof_area: 0,
+    mitigation_system: "",
+
+    ca_cmd_ainl_cont_cof_area: 0,
+    ca_cmd_ail_cont_cof_area: 0,
+    ca_cmd_ainl_inst_cof_area: 0,
+    ca_cmd_ail_inst_cof_area: 0,
+    ca_inj_ainl_cont_cof_area: 0,
+    ca_inj_ail_cont_cof_area: 0,
+    ca_inj_ainl_inst_cof_area: 0,
+    ca_inj_ail_inst_cof_area: 0,
+
+    ca_cmd_ail_cof_area: 0,
+    ca_inj_ail_cof_area: 0,
+    ca_cmd_ainl_cof_area: 0,
+    ca_inj_ainl_cof_area: 0,
+
+    fact_ait_cof_area: 0,
+    ca_cmd_flam_cof_area: 0,
+    ca_inj_flam_cof_area: 0,
+
+    // risk and IRP
+    dhtha_risk_irp: 0, // constant 0
+    dbrit_risk_irp: 0, // constant 0
+    dthin_risk_irp: 0,
+    dextd_risk_irp: 0,
+    dscc_risk_irp: 0,
+    dmfat_risk_irp: 0,
+    pof_risk_irp: 0,
+    cof_financial_risk_irp: 0,
+    cof_area_risk_irp: 0,
+    pof_value_risk_irp: "",
+
+    risk_level_risk_irp: "",
+    int_insp_risk_irp: "",
+    int_insp_interval_risk_irp: 0,
+    ext_insp_risk_irp: "",
+    ext_insp_interval_risk_irp: 0,
+    env_crack_risk_irp: "",
+    env_crack_interval_risk_irp: "",
+
+  });
+  //By asset_detail_id
+  const { data: rbiGeneralData, isLoading: isrbiGeneralLoading, error: rbiGeneralError, refetch: rbiGeneralRefetch } = useImsRbiGeneralDataById(Number(id));
+  const { data: imsGeneral, isLoading: isImsGeneralLoading } = useImsGeneralDataByAssetDetailId(formData?.asset_detail_id ?? 0);
+  const { data: imsDesign, isLoading: isImsDesignLoading } = useImsDesignByAssetDetailId(formData?.asset_detail_id ?? 0);
+  const { data: imsProtection, isLoading: isImsProtectionLoading } = useImsProtectionByAssetDetailId(formData?.asset_detail_id ?? 0);
+  const { data: imsService, isLoading: isImsServiceLoading } = useImsServiceByAssetDetailId(formData?.asset_detail_id ?? 0);
+  const { data: avgs, isLoading: isAvgsLoading } = useAverageMtsMpaMysMpaByName(formData?.spec_code ?? ""); // Example calculation
+
+  const allLoaded = !isrbiGeneralLoading && !isImsDesignLoading && !isImsGeneralLoading && !isImsProtectionLoading && !isImsServiceLoading;
+
+
+  useEffect(() => {
+    if (formData && allLoaded) {
+      setFormData((prev: any) => ({
+        ...prev,
+        //asset_detail_id from rbi-general-id
+        asset_detail_id: rbiGeneralData?.asset_detail_id?.id ?? null,
+        // ims_general
+        line_no: imsGeneral?.line_no ?? "",
+        pipe_schedule_id: imsGeneral?.pipe_schedule_id ?? null,
+        pressure_rating: imsGeneral?.pressure_rating ?? 0,
+        year_in_service: imsGeneral?.year_in_service ?? null,
+        normal_wall_thickness: imsGeneral?.normal_wall_thickness ?? 0,
+        tmin: imsGeneral?.tmin ?? 0,
+        material_construction_id: imsGeneral?.material_construction_id?.id ?? null,
+        spec_code: imsGeneral?.material_construction_id?.spec_code ?? null,
+        description: imsGeneral?.description ?? "",
+        circuit_id: imsGeneral?.circuit_id ?? null,
+        nominal_bore_diameter: imsGeneral?.nominal_bore_diameter ?? null,
+        insulation: imsGeneral?.insulation ?? false,
+        line_h2s: imsGeneral?.line_h2s ?? false,
+        internal_lining: imsGeneral?.internal_lining ?? false,
+        pwht: imsGeneral?.pwht ?? false,
+        cladding: imsGeneral?.cladding ?? false,
+        ims_asset_type_id: imsGeneral?.ims_asset_type_id ?? null,
+        comp_type_cof: imsGeneral?.asset_detail_id?.type_id?.name ?? "",
+        clad_thickness: imsGeneral?.clad_thickness ?? 0,
+        pipe_class_id: imsGeneral?.pipe_class_id ?? null,
+
+        // ims_design
+        internal_diameter: imsDesign?.internal_diameter ?? 0,
+        welding_efficiency: imsDesign?.welding_efficiency ?? 0,
+        design_pressure: imsDesign?.design_pressure ?? 0,
+        corrosion_allowance: imsDesign?.corrosion_allowance ?? 0,
+        outer_diameter: imsDesign?.outer_diameter ?? 0,
+        design_temperature: imsDesign?.design_temperature ?? 0,
+        operating_pressure_mpa: imsDesign?.operating_pressure_mpa ?? 0,
+        ext_env_id: imsDesign?.ext_env_id?.id ?? null,
+        ext_env_name: imsDesign?.ext_env_id?.name ?? null,
+        geometry_id: imsDesign?.geometry_id ?? null,
+        length: imsDesign?.length ?? 0,
+        operating_temperature: imsDesign?.operating_temperature ?? 0,
+        allowable_stress_mpa: imsDesign?.allowable_stress_mpa ?? 0,
+        pipe_support: imsDesign?.pipe_support ?? false,
+        soil_water_interface: imsDesign?.soil_water_interface ?? false,
+        dead_legs: imsDesign?.dead_legs ?? false,
+        mix_point: imsDesign?.mix_point ?? false,
+
+        // ims_protection
+        coating_quality_id: imsProtection?.coating_quality_id ?? null,
+        isolation_system_id: imsProtection?.isolation_system_id ?? null,
+        online_monitor_id: imsProtection?.online_monitor?.id ?? null,
+        online_monitor_name: imsProtection?.online_monitor?.name ?? null,
+        minimum_thickness: imsProtection?.minimum_thickness ?? 0,
+        post_weld_heat_treatment: imsProtection?.post_weld_heat_treatment ?? 0,
+        line_description: imsProtection?.line_description ?? "",
+        replacement_line: imsProtection?.replacement_line ?? "",
+        detection_system_id: imsProtection?.detection_system_id ?? null,
+        mitigation_system_id: imsProtection?.mitigation_system_id?.id ?? null,
+        mitigation_system_name: imsProtection?.mitigation_system_id?.name ?? null,
+        mitigation_system_value: imsProtection?.mitigation_system_id?.value ?? null,
+        design_fabrication_id: imsProtection?.design_fabrication_id?.id ?? null,
+        design_fabrication_name: imsProtection?.design_fabrication_id?.name ?? "",
+        design_fabrication_value: imsProtection?.design_fabrication_id?.value ?? 0,
+        insulation_type_id: imsProtection?.insulation_type_id?.id ?? null,
+        insulation_type_name: imsProtection?.insulation_type_id?.name ?? null,
+        insulation_type_value: imsProtection?.insulation_type_id?.value ?? null,
+        interface_id: imsProtection?.interface_id?.id ?? null,
+        interface_name: imsProtection?.interface_id?.name ?? "",
+        interface_value: imsProtection?.interface_id?.value ?? 0,
+        insulation_complexity_id: imsProtection?.insulation_complexity_id?.id ?? null,
+        insulation_complexity_name: imsProtection?.insulation_complexity_id?.name ?? "",
+        insulation_complexity_value: imsProtection?.insulation_complexity_id?.value ?? 0,
+        insulation_condition_id: imsProtection?.insulation_condition_id?.id ?? null,
+        insulation_condition_name: imsProtection?.insulation_condition_id?.name ?? "",
+        insulation_condition_value: imsProtection?.insulation_condition_id?.value ?? 0,
+        lining_type: imsProtection?.lining_type ?? "",
+        lining_condition: imsProtection?.lining_condition ?? "",
+        lining_monitoring: imsProtection?.lining_monitoring ?? "",
+
+        // ims_service
+        fluid_representative_name: imsService?.fluid_representive_id?.name ?? "",
+        fluid_phase_name: imsService?.fluid_phase_id?.name ?? "",
+
+      }));
+    }
+  }, [rbiGeneralData, allLoaded, imsGeneral, imsDesign, imsProtection]);
+
+  //By RbI General ID
+  const { data: pofGeneralData, isLoading: ispofGeneralLoading, error: pofGeneralError, refetch: pofGeneralRefetch } = useImsPofAssessmentData(Number(id));
   const { data: cofProdData, isLoading: isCofProdLoading, error: cofProdError, refetch: codProdRefetch } = useImsCofAssessmentCofProdData(Number(id));
   const { data: cofAreaData, isLoading: isCofAreaLoading, error: cofAreaError, refetch: codAreaRefetch } = useImsCofAssessmentCofAreaData(Number(id));
-  const { data: rbiData, isLoading: isRbiLoading, error: rbiError, refetch: rbiRefetch } = useImsRbiRiskIrpData(Number(id));
+  const { data: riskIrpData, isLoading: isRiskIrpLoading, error: riskIrpError, refetch: riskIrpRefetch } = useImsRbiRiskIrpData(Number(id));
   const { data: dfThinData, isLoading: isDfThinLoading, error: dfThinError, refetch: dfThinRefetch } = useImsDfThinData(Number(id));
   const { data: dfExtData, isLoading: isDfExtLoading, error: dfExtError, refetch: dfExtRefetch } = useImsDfExtData(Number(id));
   const { data: dfExtClsccData, isLoading: isDfExtClsccLoading, error: dfExtClsccError, refetch: dfExtClsccRefetch } = useImsDfExtClsccData(Number(id));
@@ -39,250 +494,133 @@ const RBIAssessmentDetailPage: React.FC = () => {
   const { data: dfCuiData, isLoading: isDfCuiLoading, error: dfCuiError, refetch: dfCuiRefetch } = useImsDfCuiData(Number(id));
   const { data: dfSccSccData, isLoading: isDfSccSccLoading, error: dfSccSccError, refetch: dfSccSccRefetch } = useImsDfSccSccData(Number(id));
   const { data: dfccSohicData, isLoading: isDfccSohicLoading, error: dfccSohicError, refetch: dfccSohicRefetch } = useImsDfSccSohicData(Number(id));
-  const { data: avgs } = useAverageMtsMpaMysMpaByName(pofData?.ims_general_id?.material_construction_id?.spec_code); // Example calculation
 
-
-  const [formData, setFormData] = useState<any | null>(null);
-
-  /** Sync `formData` once **all** primary datasets are loaded */
+  const allRbiLoaded = !ispofGeneralLoading && !isCofProdLoading && !isCofAreaLoading && !isRiskIrpLoading && !isDfThinLoading && !isDfExtLoading && !isDfExtClsccLoading && !isDfMfatLoading && !isDfCuiLoading && !isDfSccSccLoading && !isDfccSohicLoading;
+  const allRbi = pofGeneralData && cofProdData && cofAreaData && riskIrpData && dfThinData && dfExtData && dfExtClsccData && dfMfatData && dfCuiData && dfSccSccData && dfccSohicData;
+  // For loading the data
   useEffect(() => {
-    const primaryLoaded =
-      !isPofLoading && !isCofProdLoading && !isCofAreaLoading && !isRbiLoading;
+    if (formData && allRbiLoaded) {
+      setFormData((prev: any) => ({
+        ...prev,
+        // df thin
+        last_inspection_date_thin: dfThinData?.last_inspection_date ?? null,
+        data_confidence_id_thin: dfThinData?.data_confidence_id ?? null,
+        current_thickness_thin: dfThinData?.current_thickness ?? 0,
+        agerc_thin: dfThinData?.agerc ?? null,
+        cract_thin: dfThinData?.cr_act ?? 0,
+        nthin_a_thin: dfThinData?.nthin_a ?? 0,
+        nthin_b_thin: dfThinData?.nthin_b ?? 0,
+        nthin_c_thin: dfThinData?.nthin_c ?? 0,
+        nthin_d_thin: dfThinData?.nthin_d ?? 0,
 
-    if (primaryLoaded) {
-      setFormData({
-        // *** i_ims_pof_assessment_general
-        asset_detail_id: pofData?.asset_detail_id || null,
-        ims_asset_type: pofData?.ims_general_id?.ims_asset_type_id || null, // 1= preasure vessel, 2= piping
-        coating_quality_id: pofData?.coating_quality_id || null, //coating_quality_id(2), coating_quality_id(3), coating_quality_id(5)
-        data_confidence_id: pofData?.data_confidence_id || null,
-        cladding: pofData?.cladding || false, //clad(1)
-        nominal_thickness: pofData?.nominal_thickness || 0, //Tnom(1)
-        current_thickness: pofData?.current_thickness || 0, //Trd(1), Trd(2), Trd(3)
-        description: pofData?.description || "",
-        year_in_service: pofData?.ims_general_id?.year_in_service || "",
-        // tmin: 0,// Tmin(1)
-        tmin: pofData?.ims_general_id.tmin || 0,// Tmin(1)
-        outer_diameter: pofData?.ims_general_id?.outer_diameter || 0,
-        inner_diameter: pofData?.ims_general_id?.inner_diameter || 0,
-        corrosion_allowance_thin: dfThinData?.i_ims_design_id?.corrosion_allowance || 0,
-        spec_code: pofData?.ims_general_id?.material_construction_id?.spec_code || "",
-        avg_mts_mpa: avgs?.avg_mts_mpa || 0, // Average MTS/MPA
-        avg_mys_mpa: avgs?.avg_mys_mpa || 0, // Average MYS/MPA
-        composition: avgs?.composition || "", // Composition
+        // df ext
+        last_inspection_date_ext: dfExtData?.last_inspection_date ?? null,
+        new_coating_date_ext: dfExtData?.new_coating_date ?? null,
+        data_confidence_id_ext: dfExtData?.data_confidence_id ?? null,
+        current_thickness_ext: dfExtData?.current_thickness ?? null,
+        nextcorra_ext: dfExtData?.nextcorra ?? 0,
+        nextcorrb_ext: dfExtData?.nextcorrb ?? 0,
+        nextcorrc_ext: dfExtData?.nextcorrc ?? 0,
+        nextcorrd_ext: dfExtData?.nextcorrd ?? 0,
 
-        // i_df_thin (1)
-        //clad(1)
-        last_inspection_date_thin: dfThinData?.last_inspection_date || "",
-        agetk_thin: 0,
-        agerc_thin: dfThinData?.agerc || "",
-        crexp_thin: 0,
-        cract_thin: dfThinData?.cr_act || 0,
-        crcm_thin: 0,
-        //Tnom(1)
-        //Tmin(1)
-        //Trd(1)
-        ca_thin: 0,
-        art_thin: 0,
-        fsthin_thin: 0,
-        srthin_thin: 0,
-        nthin_a_thin: dfThinData?.nthin_a || 0,
-        nthin_b_thin: dfThinData?.nthin_b || 0,
-        nthin_c_thin: dfThinData?.nthin_c || 0,
-        nthin_d_thin: dfThinData?.nthin_d || 0,
-        data_confidence_id_thin: dfThinData?.data_confidence_id || null,
-        ithin1_thin: 0,
-        ithin2_thin: 0,
-        ithin3_thin: 0,
-        pothin1_thin: 0,
-        pothin2_thin: 0,
-        pothin3_thin: 0,
-        bthin1_thin: 0,
-        bthin2_thin: 0,
-        bthin3_thin: 0,
-        dfthinfb_thin: dfThinData?.dfthinfb || 0,
-        //onlinemoitor(1)
-        mixpoint_thin: dfThinData?.i_ims_design_id?.mix_point, //mixpoint(1)
-        dead_legs_tin: dfThinData?.i_ims_design_id.dead_legs,//deadlegs(1)
-        dthinf_thin: 0,
-        remaininglife_thin: 0,
-        welding_efficiency_thin: dfThinData?.i_ims_design_id?.welding_efficiency || 0,
-        allowable_stress_mpa_thin: dfThinData?.i_ims_design_id?.allowable_stress_mpa || 0,
-        design_pressure_thin: dfThinData?.i_ims_design_id?.design_pressure || 0,
+        // df ext clscc
+        last_inspection_date_ext_clscc: dfExtClsccData?.last_inspection_date ?? null,
+        new_coating_date_ext_clscc: dfExtClsccData?.new_coating_date ?? null,
+        coating_quality_id_ext_clscc: dfExtClsccData?.coating_quality_id ?? null,
+        external_environment_id_ext_clscc: dfExtClsccData?.external_environment_id ?? null,
+        inspection_efficiency_id_ext_clscc: dfExtClsccData?.inspection_efficiency_id?.id ?? null,
+        inspection_efficiency_name_ext_clscc: dfExtClsccData?.inspection_efficiency_id?.name ?? "",
 
-        // *** i_df_ext (2)
-        coating_quality_id_ext: dfExtData?.i_ims_protection_id?.coating_quality_id || null, //?? coating_quality_id(2)
-        new_coating_date_ext: dfExtData?.new_coating_date || "",
-        last_inspection_date_ext: dfExtData?.last_inspection_date || "",
-        //Trd(2)
-        agetk_ext: 0,
-        agecoat_ext: 0,
-        coatadj_ext: 0,
-        age_ext: 0,
-        external_environment_id_ext: dfExtData?.i_ims_design_id?.ext_env_id || null,
-        pipesupprt_ext: dfExtData?.i_ims_design_id?.pipe_support || false,
-        soilwaterinterface_ext: dfExtData?.i_ims_design_id?.soil_water_interface || false,
-        crexp_ext: 0,
-        cract_ext: 0,
-        art_ext: 0,
-        fsextcorr_ext: 0,
-        srextcorr_ext: 0,
-        nextcorra_ext: dfExtData?.nextcorra || 0,
-        nextcorrb_ext: dfExtData?.nextcorrb || 0,
-        nextcorrc_ext: dfExtData?.nextcorrc || 0,
-        nextcorrd_ext: dfExtData?.nextcorrd || 0,
-        data_confidence_id_ext: dfExtData?.data_confidence_id || null,
-        iextcorr1_ext: 0,
-        iextcorr2_ext: 0,
-        iextcorr3_ext: 0,
-        poextcorrp1_ext: 0,
-        poextcorrp2_ext: 0,
-        poextcorrp3_ext: 0,
-        bextcorr1_ext: 0,
-        bextcorr2_ext: 0,
-        bextcorr3_ext: 0,
-        dfextcorrf_ext: dfExtData?.dfextcorrf || 0,
-        //rl
+        // df mfat
+        previous_failure_id_mfat: dfMfatData?.previous_failure_id?.id ?? null,
+        previous_failure_value_mfat: dfMfatData?.previous_failure_id?.value ?? 0,
+        visible_audible_shaking_id_mfat: dfMfatData?.visible_audible_shaking_id?.id ?? null,
+        visible_audible_shaking_value_mfat: dfMfatData?.visible_audible_shaking_id?.value ?? 0,
+        shaking_frequency_id_mfat: dfMfatData?.shaking_frequency_id?.id ?? null,
+        shaking_frequency_value_mfat: dfMfatData?.shaking_frequency_id?.value ?? 0,
+        cyclic_load_type_id_mfat: dfMfatData?.cyclic_load_type_id?.id ?? null,
+        cyclic_load_type_value_mfat: dfMfatData?.cyclic_load_type_id?.value ?? 0,
+        corrective_action_id_mfat: dfMfatData?.corrective_action_id?.id ?? null,
+        corrective_action_value_mfat: dfMfatData?.corrective_action_id?.value ?? 0,
+        pipe_complexity_id_mfat: dfMfatData?.pipe_complexity_id?.id ?? null,
+        pipe_complexity_value_mfat: dfMfatData?.pipe_complexity_id?.value ?? 0,
+        pipe_condition_id_mfat: dfMfatData?.pipe_condition_id?.id ?? null,
+        pipe_condition_value_mfat: dfMfatData?.pipe_condition_id?.value ?? 0,
+        joint_branch_design_id_mfat: dfMfatData?.joint_branch_design_id?.id ?? null,
+        joint_branch_design_value_mfat: dfMfatData?.joint_branch_design_id?.value ?? 0,
+        brach_diameter_id_mfat: dfMfatData?.brach_diameter_id?.id ?? null,
+        branch_diameter_value_mfat: dfMfatData?.brach_diameter_id?.value ?? 0,
 
+        // df cui
+        last_inspection_date_cui: dfCuiData?.last_inspection_date ?? null,
+        new_coating_date_cui: dfCuiData?.new_coating_date ?? null,
+        coating_quality_id_cui: dfCuiData?.coating_quality_id ?? null,
+        current_thickness_cui: dfCuiData?.current_thickness ?? null,
+        external_environment_id_cui: dfCuiData?.external_environment_id ?? null,
+        data_confidence_id_cui: dfCuiData?.data_confidence_id ?? null,
+        cract_cui: dfCuiData?.cr_act ?? 0,
+        ncuifa_cui: dfCuiData?.ncuifa ?? 0,
+        ncuifb_cui: dfCuiData?.ncuifb ?? 0,
+        ncuifc_cui: dfCuiData?.ncuifc ?? 0,
+        ncuifd_cui: dfCuiData?.ncuifd ?? 0,
 
-        // *** i_df_ext_clscc (3)
-        coating_quality_id_ext_clscc: dfExtClsccData?.i_ims_protection_id?.coating_quality_id || null, //?? coating_quality_id(3)
-        new_coating_date_ext_clscc: dfExtClsccData?.new_coating_date || "",
-        last_inspection_date_ext_clscc: dfExtClsccData?.last_inspection_date || "",
-        //Trd(3)
-        agecrack_ext_clscc: 0,
-        agecoat_ext_clscc: 0,
-        coatadj_ext_clscc: 0,
-        age_ext_clscc: 0,
-        external_environment_id_ext_clscc: dfExtClsccData?.i_ims_design_id?.ext_env_id || null,
-        ext_cl_scc_susc_ext_clscc: 0,
-        svi_ext_clscc: 0,
-        inspection_efficiency_id_ext_clscc: dfExtClsccData?.inspection_efficiency_id || null,
-        df_ext_cl_scc_ext_clscc: dfExtClsccData?.df_ext_cl_scc || 0,
-        df_ext_cl_scc_fb_ext_clscc: 0,
+        // df scc scc
+        last_inspection_date_scc_scc: dfSccSccData?.last_inspection_date ?? null,
+        inspection_efficiency_id_scc_scc: dfSccSccData?.inspection_efficiency_id?.id ?? null,
+        inspection_efficiency_name_scc_scc: dfSccSccData?.inspection_efficiency_id?.name ?? "",
+        h2s_in_water_scc_scc: dfSccSccData?.h2s_in_water ?? 0,
+        ph_scc_scc: dfSccSccData?.ph ?? 0,
+        hardness_brinnel_scc_scc: dfSccSccData?.hardness_brinnel ?? 0,
 
-        // *** i_df_mfat(4)
-        previous_failure_id_mfat: dfMfatData?.previous_failure_id || null,
-        visible_audible_shaking_id_mfat: dfMfatData?.visible_audible_shaking_id || null,
-        shaking_frequency_id_mfat: dfMfatData?.shaking_frequency_id || null,
-        cyclic_load_type_id_mfat: dfMfatData?.cyclic_load_type_id || null,
-        dmfatfb_mfat: dfMfatData?.dmfatfb || 0,
-        corrective_action_id_mfat: dfMfatData?.corrective_action_id || null,
-        pipe_complexity_id_mfat: dfMfatData?.pipe_complexity_id || null,
-        pipe_condition_id_mfat: dfMfatData?.pipe_condition_id || null,
-        joint_branch_design_id_mfat: dfMfatData?.joint_branch_design_id || null,
-        brach_diameter_id_mfat: dfMfatData?.brach_diameter_id || null,
-        dmfat_mfat: 0,
+        // df scc sohic
+        last_inspection_date_scc_sohic: dfccSohicData?.last_inspection_date ?? null,
+        inspection_efficiency_id_scc_sohic: dfccSohicData?.inspection_efficiency_id?.id ?? null,
+        inspection_efficiency_name_scc_sohic: dfccSohicData?.inspection_efficiency_id?.name ?? "",
+        h2s_in_water_scc_sohic: dfccSohicData?.h2s_in_water ?? 0,
+        ph_scc_sohic: dfccSohicData?.ph ?? 0,
+        steelscontent_id_scc_sohic: dfccSohicData?.steelscontent_id ?? null,
+        online_monitor_id_scc_sohic: dfccSohicData?.online_monitor_id?.id ?? null,
+        online_monitor_value_scc_sohic: dfccSohicData?.online_monitor_id?.value ?? 0,
 
-        // *** i_df_cui (5)
-        coating_quality_id_cui: dfCuiData?.i_ims_protection_id?.coating_quality_id || null, //?? coating_quality_id(5)
-        last_inspection_date_cui: dfCuiData?.last_inspection_date || "",
-        new_coating_date_cui: dfCuiData?.new_coating_date || "",
-        agetk_cui: 0,
-        agecoat_cui: 0,
-        coatadj_cui: 0,
-        age_cui: 0,
-        external_environment_id_cui: dfCuiData?.i_ims_design_id?.ext_env_id || null,
-        insulation_type_id_cui: dfCuiData?.i_ims_protection_id?.insulation_type_id || null,
-        insulation_complexity_id_cui: dfCuiData?.i_ims_protection_id?.insulation_complexity_id || null,
-        insulation_condition_cui: dfCuiData?.i_ims_protection_id?.insulation_condition || "",
-        design_fabrication_id_cui: dfCuiData?.i_ims_protection_id?.design_fabrication_id || null,
-        interface_id_cui: dfCuiData?.i_ims_protection_id?.interface_id || null,
-        crexp_cui: 0,
-        cract_cui: dfCuiData?.cr_act || 0,
-        art_cui: 0,
-        fscuif_cui: 0,
-        srcuif_cui: 0,
-        ncuifa_cui: dfCuiData?.ncuifa || 0,
-        ncuifb_cui: dfCuiData?.ncuifb || 0,
-        ncuifc_cui: dfCuiData?.ncuifc || 0,
-        ncuifd_cui: dfCuiData?.ncuifd || 0,
-        data_confidence_id_cui: dfCuiData?.data_confidence_id || null,
-        icuif1_cui: 0,
-        icuif2_cui: 0,
-        icuif3_cui: 0,
-        pociufp1_cui: 0,
-        pociufp2_cui: 0,
-        pociufp3_cui: 0,
-        bcuif1_cui: 0,
-        bcuif2_cui: 0,
-        bcuif3_cui: 0,
-        dfcuiff_cui: dfCuiData?.dfcuiff || 0,
+        // cof prod
+        outage_mult_cof_prod: cofProdData?.outagemult ?? 0,
+        lra_prod_cof_prod: cofProdData?.lra_prod ?? 0,
+        inj_cost_cof_prod: cofProdData?.injcost ?? 0,
+        envcost_cof_prod: cofProdData?.envcost ?? 0,
 
-        // *** i_df_scc_scc (6)
-        susceptibility_scc_scc: false, // Yes?
-        h2s_in_water_scc_scc: dfSccSccData?.h2s_in_water || 0,
-        ph_scc_scc: dfSccSccData?.ph || 0,
-        envseverity_scc_scc: "", //low?
-        pwht_scc_scc: dfSccSccData?.ims_general_id?.pwht || false,
-        hardness_brinnel_scc_scc: dfSccSccData?.hardness_brinnel || 0,
-        ssc_sucs_f_to_ht_scc_scc: "", //low?
-        svi_scc_scc: 0,
-        inspection_efficiency_id_scc_scc: dfSccSccData?.inspection_efficiency_id || null,
-        dfsccfb_scc_scc: dfSccSccData?.dfsccfb || 0,
-        last_inspection_date_scc_scc: dfSccSccData?.last_inspection_date || "",
-        df_scc_scc_scc_scc: dfSccSccData?.df_scc_scc || 0,
+        // cof arena
+        ideal_gas_specific_heat_eq_id: cofAreaData?.ideal_gas_specific_heat_eq?.id ?? null,
+        ideal_gas_specific_heat_eq_name: cofAreaData?.ideal_gas_specific_heat_eq?.name ?? "",
+        iso_sys_id_cof_area: cofAreaData?.iso_sys_id?.id ?? null,
+        iso_sys_name_cof_area: cofAreaData?.iso_sys_id?.name ?? "",
+        det_sys_id_cof_area: cofAreaData?.det_sys_id?.id ?? null,
+        det_sys_name_cof_area: cofAreaData?.det_sys_id?.name ?? "",
 
-        // *** i_df_scc_sohic (7)
-        susceptibility_scc_sohic: false, // Yes?
-        h2s_in_water_scc_sohic: dfccSohicData?.h2s_in_water || 0,
-        ph_scc_sohic: dfccSohicData?.ph || 0,
-        envseverity_scc_sohic: "", //low?
-        pwht_scc_sohic: dfccSohicData?.ims_general_id?.pwht || false,
-        steelscontent_id_scc_sohic: dfccSohicData?.steelscontent_id || null,
-        sucs_to_crack_scc_sohic: "", //low?
-        svi_scc_sohic: 0,
-        inspection_efficiency_id_scc_sohic: dfccSohicData?.inspection_efficiency_id || null,
-        dfsohicfb_scc_sohic: 0,
-        last_inspection_date_scc_sohic: dfccSohicData?.last_inspection_date || "",
-        //onlinemoitor(7)
-        dfscc_sohic_scc_sohic: dfccSohicData?.dfscc_sohic || 0,
+        // risk and irp
+        dextd_risk_irp: riskIrpData?.dextd ?? 0,
+        dmfat_risk_irp: riskIrpData?.dmfat ?? 0,
 
-        // *** i_ims_cof_assessment_cof_prod
-        outagemult: cofProdData?.outagemult || 0,
-        injcost: cofProdData?.injcost || 0,
-        envcost: cofProdData?.envcost || 0,
-        fracevap: cofProdData?.fracevap || 0,
-        volenv: cofProdData?.volenv || 0,
-        fcenviron: cofProdData?.fcenviron || 0,
-        fc: cofProdData?.fc || 0,
-
-        // *** i_ims_cof_asssessment_cof_area
-        iso_sys_id: cofAreaData?.iso_sys_id || null,
-        det_sys_id: cofAreaData?.det_sys_id || null,
-        mitigation_system_id: cofAreaData?.mitigation_system_id || null,
-        ideal_gas_specific_heat_eq: cofAreaData?.ideal_gas_specific_heat_eq || 0,
-        ca_cmdflam: cofAreaData?.ca_cmdflam || 0,
-        ca_injflam: cofAreaData?.ca_injflam || 0,
-        ims_service_id: cofAreaData?.ims_service_id || null,
-
-        // *** i_ims_rbi_risk_irp
-        dhtha: rbiData?.dhtha || 0,
-        dbrit: rbiData?.dbrit || 0,
-        dthin: rbiData?.dthin || 0,
-        dextd: rbiData?.dextd || 0,
-        dscc: rbiData?.dscc || 0,
-        dmfat: rbiData?.dmfat || 0,
-        pof: rbiData?.pof || 0,
-        cof_financial: rbiData?.cof_financial || 0,
-        cof_area: rbiData?.cof_area || 0,
-        pof_value: rbiData?.pof_value || 0,
-        risk_level: rbiData?.risk_level || "",
-        risk_ranking: rbiData?.risk_ranking || "",
-      });
+      }));
     }
+  }, [id, allRbiLoaded, allRbi]);
 
-  }, [
-    isPofLoading,
-    isCofProdLoading,
-    isCofAreaLoading,
-    isRbiLoading,
-    pofData,
-  ]);
-
-  /** Calculate agetk_thin when last_inspection_date_thin or year_in_service changes */
+  // for average mts_mpa, mys_mpa and composition
   useEffect(() => {
-    if (formData && formData.last_inspection_date_thin) {
+    if (formData && allLoaded) {
+      setFormData((prev: any) => ({
+        ...prev,
+        avg_mts_mpa: avgs?.avg_mts_mpa ?? 0,
+        avg_mys_mpa: avgs?.avg_mys_mpa ?? 0,
+        composition: avgs?.composition ?? "",
+      }));
+    }
+  }, [formData?.spec_code, avgs, !isAvgsLoading]);
+
+  //*****************  Formula DfThin Start
+
+  //ageTk_thin✅
+  useEffect(() => {
+    if (formData) {
       const ageTk = calculateAgeTk(
         formData.last_inspection_date_thin,
         formData.year_in_service
@@ -291,31 +629,31 @@ const RBIAssessmentDetailPage: React.FC = () => {
     }
   }, [formData?.last_inspection_date_thin, formData?.year_in_service]);
 
-  // /** Calculate crexp_thin when corrosion_allowance_thin changes */
+  // crexp_thin✅
   useEffect(() => {
-    if (formData && formData.last_inspection_date_thin) {
+    if (formData) {
       const crExp = calculateCrExp(
-        formData.corrosion_allowance_thin
+        formData.corrosion_allowance
       );
       setFormData((prev: any) => ({ ...prev, crexp_thin: crExp }));
     }
-  }, [formData?.corrosion_allowance_thin]);
+  }, [formData?.corrosion_allowance]);
 
-  // /** Calculate cract_thin when Tnom and Trd and LastInspectiondate changes */
+  // cract_thin✅
   useEffect(() => {
-    if (formData && formData.nominal_thickness && formData.current_thickness && formData.last_inspection_date_thin && formData.year_in_service) {
+    if (formData) {
       const crAct = calculateCrAct(
-        formData.nominal_thickness,
-        formData.current_thickness,
+        formData.normal_wall_thickness,
+        formData.current_thickness_thin,
         formData.last_inspection_date_thin,
-        formData.year_in_service
+        formData.year_in_service,
+        formData.ims_asset_type_id
       );
       setFormData((prev: any) => ({ ...prev, cract_thin: crAct }));
     }
-  }, [formData?.nominal_thickness, formData?.current_thickness, formData?.last_inspection_date_thin, formData?.year_in_service]);
-  // cladding
+  }, [formData?.normal_wall_thickness, formData?.current_thickness_thin, formData?.last_inspection_date_thin, formData?.year_in_service, formData?.ims_asset_type_id]);
 
-  // /** Calculate crcm when cladding changes */
+  // crcm_thin✅
   useEffect(() => {
     if (formData) {
       const crcm = calculateCrCm(formData.cladding);
@@ -323,61 +661,66 @@ const RBIAssessmentDetailPage: React.FC = () => {
     }
   }, [formData?.cladding]);
 
-  // Ca = allowed corrosion
+  // ca_thin✅
   useEffect(() => {
     if (formData) {
-      const cathin = formData.corrosion_allowance_thin;
+      const cathin = formData.corrosion_allowance;
       setFormData((prev: any) => ({ ...prev, ca_thin: cathin }));
     }
-  }, [formData?.corrosion_allowance_thin]);
+  }, [formData?.corrosion_allowance]);
 
-  // /** Calculate art_thin when crAct, crExp, ageTk, trd, tNom changes */
+  // art_thin✅
   useEffect(() => {
     if (formData) {
       const artThin = calculateArt(
         formData.cract_thin,
         formData.crexp_thin,
         formData.agethk_thin,
-        formData.current_thickness,
-        formData.nominal_thickness
+        formData.current_thickness_thin,
+        formData.normal_wall_thickness,
+        formData.ims_asset_type_id,
+        formData.cladding,
+        formData.crcm_thin,
+        formData.agerc_thin,
+        formData.year_in_service
       );
       setFormData((prev: any) => ({ ...prev, art_thin: artThin }));
     }
-  }, [formData?.cract_thin, formData?.crexp_thin, formData?.agethk_thin, formData?.current_thickness, formData?.nominal_thickness]);
+  }, [formData?.cract_thin, formData?.crexp_thin, formData?.agethk_thin, formData?.current_thickness_thin, formData?.normal_wall_thickness]);
 
-  // Fsthin
+  // fsthin_thin☑️not check for ims_asset_type_id = 2
   useEffect(() => {
     if (formData) {
       const fsThin = calculateFsThin(
-        formData.ims_asset_type,
-        formData.welding_efficiency_thin,
+        formData.ims_asset_type_id,
+        1,
         formData.avg_mts_mpa,
         formData.avg_mys_mpa
       );
       setFormData((prev: any) => ({ ...prev, fsthin_thin: fsThin }));
     }
-  }, [formData?.avg_mts_mpa, formData?.avg_mys_mpa, formData?.ims_asset_type, formData?.welding_efficiency_thin]);
+  }, [formData?.avg_mts_mpa, formData?.avg_mys_mpa, formData?.ims_asset_type_id, formData?.welding_efficiency]);
 
-  // Srthin
+  // srthin_thin☑️not check for ims_asset_type_id = 2 AND 1
   useEffect(() => {
     if (formData) {
       const srThin = calculateSrThin(
-        formData.ims_asset_type,
-        formData.allowable_stress_mpa_thin,
-        formData.welding_efficiency_thin,
+        formData.ims_asset_type_id,
+        formData.allowable_stress_mpa,
+        formData.welding_efficiency,
         formData.fsthin_thin,
         formData.tmin,
-        formData.nominal_thickness,
-        formData.current_thickness,
-        formData.design_pressure_thin,
+        formData.normal_wall_thickness,
+        formData.current_thickness_thin,
+        formData.design_pressure,
         formData.outer_diameter,
-        formData.inner_diameter
+        formData.internal_diameter
       );
       setFormData((prev: any) => ({ ...prev, srthin_thin: srThin }));
     }
-  }, [formData?.allowable_stress_mpa_thin, formData?.welding_efficiency_thin, formData?.fsthin_thin, formData?.tmin, formData?.nominal_thickness, formData?.current_thickness, formData?.design_pressure_thin, formData?.outer_diameter, formData?.inner_diameter, formData?.ims_asset_type]);
+  }, [formData?.allowable_stress_mpa, formData?.welding_efficiency, formData?.fsthin_thin, formData?.tmin, formData?.normal_wall_thickness, formData?.current_thickness_thin, formData?.design_pressure, formData?.outer_diameter, formData?.internal_diameter, formData?.ims_asset_type_id]);
 
-  // IThin123
+  // ithins and pothins☑️not check for ims_asset_type_id = 2 AND 1
   useEffect(() => {
     if (formData) {
       const scores = calcIThinAndProportions(
@@ -398,8 +741,8 @@ const RBIAssessmentDetailPage: React.FC = () => {
       }));
     }
   }, [formData?.data_confidence_id_thin, formData?.nthin_a_thin, formData?.nthin_b_thin, formData?.nthin_c_thin, formData?.nthin_d_thin]);
-  // calculateBThins(art: number, srThin: number)
-  //  // BThin123
+
+  // bthins☑️not check for ims_asset_type_id = 2 AND 1
   useEffect(() => {
     if (formData) {
       const bThins = calculateBThins(
@@ -415,28 +758,35 @@ const RBIAssessmentDetailPage: React.FC = () => {
     }
   }, [formData?.art_thin, formData?.srthin_thin]);
 
-  // DFThinFB
-    useEffect(() => {
+  // dfthinfb_thin☑️not check for ims_asset_type_id = 2 AND 1
+  useEffect(() => {
     if (formData) {
-      const dfThinFb = calculateDFThinFb(
+      const dfThins = calculateDFThinFDFThinFB(
         formData.pothin1_thin,
         formData.pothin2_thin,
         formData.pothin3_thin,
         formData.bthin1_thin,
         formData.bthin2_thin,
-        formData.bthin3_thin
+        formData.bthin3_thin,
+        formData.mix_point,
+        formData.dead_legs,
+        formData.online_monitor_name
       );
       setFormData((prev: any) => ({
         ...prev,
-        dfthinfb_thin: dfThinFb,
-        dfthinf_thin: dfThinFb //NNATI AKU GUNA COLUMN leg, monitor etc
+        dfthinfb_thin: dfThins.dfThinFb,
+        dfthinf_thin: dfThins.dfThinF
       }));
     }
-  }, [formData?.pothin1_thin, formData?.pothin2_thin, formData?.pothin3_thin, formData?.bthin1_thin, formData?.bthin2_thin, formData?.bthin3_thin]);
+  }, [formData?.pothin1_thin, formData?.pothin2_thin, formData?.pothin3_thin, formData?.bthin1_thin, formData?.bthin2_thin, formData?.bthin3_thin, formData?.mix_point, formData?.dead_legs, formData?.online_monitor_name]);
 
-  // AgeTk
+  //*****************  Formula DfThin End
+
+  //*****************  Formula DfExt Start
+
+  // AgeTk_ext✅
   useEffect(() => {
-    if (formData && formData.last_inspection_date_ext) {
+    if (formData) {
       const ageExt = calculateAgeTk(
         formData.last_inspection_date_ext,
         formData.year_in_service
@@ -445,17 +795,17 @@ const RBIAssessmentDetailPage: React.FC = () => {
     }
   }, [formData?.last_inspection_date_ext, formData?.year_in_service]);
 
-  // AgeCoat
+  // Agecoat_ext✅
   useEffect(() => {
-    if (formData && formData.new_coating_date_ext) {
+    if (formData) {
       const ageCoat = calculateAgeCoat(
         formData.new_coating_date_ext
       );
       setFormData((prev: any) => ({ ...prev, agecoat_ext: ageCoat }));
     }
-  }, [formData?.new_coating_date_ext, formData?.year_in_service]);
+  }, [formData?.new_coating_date_ext]);
 
-  // CoatAdj
+  // CoatAdj_ext✅
   useEffect(() => {
     if (formData) {
       const coatAdj = calculateCoatAdj(
@@ -467,7 +817,7 @@ const RBIAssessmentDetailPage: React.FC = () => {
     }
   }, [formData?.coating_quality_id_ext, formData?.agetk_ext, formData?.agecoat_ext]);
 
-  // AgeExt
+  // Age_ext✅
   useEffect(() => {
     if (formData) {
       const ageExt = calculateAge(
@@ -478,35 +828,1561 @@ const RBIAssessmentDetailPage: React.FC = () => {
     }
   }, [formData?.agetk_ext, formData?.coatadj_ext]);
 
-// CrExp_Ext, forumula piping vs preasure vevssele lain
-// piping, check metal type (kalau carbon steel, ada formula, else 0.01)
-// preasure vessel,
-  // useEffect(() => {
-  //   if (formData) {
-  //     const crExpExt = calculateCrExpExt(
-  //       formData.ims_asst_type,
-  //       formData.composition,
-  //       formData.external_environment_id_ext,
-  //       formData.pipesupprt_ext,
-  //       formData.soilwaterinterface_ext,
+  // CrExp_ext❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const crExpExt = calculateCrExpExt(
+        formData.ims_asset_type_id,
+        formData.composition,
+        formData.ext_env_id,
+        formData.pipe_support,
+        formData.soil_water_interface,
+        formData.operating_temperature,
+        formData.design_pressure
 
-  //     );
-  //     setFormData((prev: any) => ({ ...prev, crexp_ext: crExpExt }));
-  //   }
-  // }, [formData?.external_environment_id_ext]);
+      );
+      setFormData((prev: any) => ({ ...prev, crexp_ext: crExpExt }));
+    }
+  }, [formData?.ims_asset_type_id, formData?.composition, formData?.ext_env_id, formData?.pipe_support, formData?.soil_water_interface, formData?.operating_temperature, formData?.design_pressure]);
+
+  // CrAct_ext✅
+  useEffect(() => {
+    if (formData) {
+      const crAct = calculateCrActExt(
+        formData.last_inspection_date_ext,
+        formData.new_coating_date_ext
+      );
+      setFormData((prev: any) => ({ ...prev, cract_ext: crAct }));
+    }
+  }, [formData?.last_inspection_date_ext, formData?.new_coating_date_ext]);
+
+  // Art_ext❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const artExt = calculateArtExt(
+        formData.cract_ext,
+        formData.crexp_ext,
+        formData.age_ext,
+        formData.current_thickness_ext,
+        formData.normal_wall_thickness,
+        formData.ims_asset_type_id
+      );
+      setFormData((prev: any) => ({ ...prev, art_ext: artExt }));
+    }
+  }, [formData?.cract_ext, formData?.crexp_ext, formData?.age_ext, formData?.current_thickness_ext, formData?.normal_wall_thickness, formData?.ims_asset_type_id]);
+
+  // FSExtCorr_ext❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const fsExtCorr = calculateFSextcorr(
+        formData.avg_mts_mpa,
+        formData.avg_mys_mpa,
+        formData.welding_efficiency,
+        formData.ims_asset_type_id
+      );
+      setFormData((prev: any) => ({ ...prev, fsextcorr_ext: fsExtCorr }));
+    }
+  }, [formData?.avg_mts_mpa, formData?.avg_mys_mpa, formData?.welding_efficiency, formData?.ims_asset_type_id]);
+
+  // SRExtCorr_ext❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const srExtCorr = calculateSRextcorr(
+        formData.allowable_stress_mpa,
+        formData.welding_efficiency,
+        formData.fsextcorr_ext,
+        formData.tmin,
+        formData.current_thickness_ext,
+        formData.normal_wall_thickness,
+        formData.design_pressure,
+        formData.internal_diameter,
+        formData.outer_diameter,
+        formData.ims_asset_type_id
+      );
+      setFormData((prev: any) => ({ ...prev, srextcorr_ext: srExtCorr }));
+    }
+  }, [formData?.allowable_stress_mpa, formData?.welding_efficiency, formData?.fsextcorr_ext, formData?.tmin, formData?.current_thickness_ext, formData?.normal_wall_thickness, formData?.design_pressure, formData?.internal_diameter, formData?.outer_diameter, formData?.ims_asset_type_id]);
+
+  // IExtCorrs and PoExtCorrs❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const scores = calculateIextCorrsAndPoExtcorrs(
+        formData.data_confidence_id_ext,   // Medium confidence
+        formData.nextcorra_ext,
+        formData.nextcorrb_ext,
+        formData.nextcorrc_ext,
+        formData.nextcorrd_ext
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        iextcorr1_ext: scores.lextcorr1,
+        iextcorr2_ext: scores.lextcorr2,
+        iextcorr3_ext: scores.lextcorr3,
+        poextcorrp1_ext: scores.poextcorrP1,
+        poextcorrp2_ext: scores.poextcorrP2,
+        poextcorrp3_ext: scores.poextcorrP3
+      }));
+    }
+  }, [formData?.data_confidence_id_ext, formData?.nextcorra_ext, formData?.nextcorrb_ext, formData?.nextcorrc_ext, formData?.nextcorrd_ext]);
+
+  // BExtCorrs❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const bExtCorrs = calculateBetaExtcorrs(
+        formData.art_ext,
+        formData.srextcorr_ext
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        bextcorr1_ext: bExtCorrs.betaExtcorr1,
+        bextcorr2_ext: bExtCorrs.betaExtcorr2,
+        bextcorr3_ext: bExtCorrs.betaExtcorr3
+      }));
+    }
+  }, [formData?.art_ext, formData?.srextcorr_ext]);
+
+  // DFExtCorrF and DfExtCorrFB❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const dfExtCorrs = calculateDFextcorrF(
+        formData.poextcorrp1_ext,
+        formData.poextcorrp2_ext,
+        formData.poextcorrp3_ext,
+        formData.bextcorr1_ext,
+        formData.bextcorr2_ext,
+        formData.bextcorr3_ext
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        dfextcorrf_ext: dfExtCorrs,
+      }));
+    }
+  }, []);
+
+  //*****************  Formula DfExt End
+
+  //*****************  Formula DFExtClscc Start
+
+  // AgeCrack_ext_clscc✅
+  useEffect(() => {
+    if (formData) {
+      const ageCrack = calculateAgeCrackExtClscc(
+        formData.last_inspection_date_ext_clscc
+      );
+      setFormData((prev: any) => ({ ...prev, agecrack_ext_clscc: ageCrack }));
+    }
+  }, [formData?.last_inspection_date_ext_clscc]);
+
+  // AgeCoat_ext_clscc✅
+  useEffect(() => {
+    if (formData) {
+      const ageCoat = calculateAgeCoatExtClscc(
+        formData.new_coating_date_ext_clscc,
+        formData.year_in_service,
+        formData.ims_asset_type_id // 1 = Pressure Vessel (use newCoatDate), 2 = Piping (use serviceDate)
+      );
+      setFormData((prev: any) => ({ ...prev, agecoat_ext_clscc: ageCoat }));
+    }
+  }, [formData?.new_coating_date_ext_clscc, formData?.year_in_service, formData?.ims_asset_type_id]);
+
+  // CoatAdj_ext_clscc✅
+  useEffect(() => {
+    if (formData) {
+      const coatAdj = calculateCoatAdjExtClscc(
+        formData.agecrack_ext_clscc,
+        formData.agecoat_ext_clscc,
+        formData.coating_quality_id_ext_clscc
+      );
+      setFormData((prev: any) => ({ ...prev, coatadj_ext_clscc: coatAdj }));
+    }
+  }, [formData?.coating_quality_id_ext_clscc, formData?.agecrack_ext_clscc, formData?.agecoat_ext_clscc]);
+
+  // Age_ext_clscc✅
+  useEffect(() => {
+    if (formData) {
+      const ageExtClscc = calculateAgeExtClscc(
+        formData.agecrack_ext_clscc,
+        formData.coatadj_ext_clscc
+      );
+      setFormData((prev: any) => ({ ...prev, age_ext_clscc: ageExtClscc }));
+    }
+  }, [formData?.agecrack_ext_clscc, formData?.coatadj_ext_clscc]);
+
+  // ExtClSccSusceptibility_ext_clscc And RVI_ext_clscc✅
+  useEffect(() => {
+    if (formData) {
+      const datas = calculateClSccSuscAndSviExtClscc(
+        formData.operating_temperature,
+        formData.external_environment_id_ext_clscc
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        ext_cl_scc_susc_ext_clscc: datas.susceptibility,
+        svi_ext_clscc: datas.svi
+      }));
+    }
+  }, [formData?.operating_temperature, formData?.external_environment_id_ext_clscc]);
+
+  // DfExtClsccFb✅
+  useEffect(() => {
+    if (formData) {
+      const dfExtClsccFb = calculateExtClsccFb(
+        50,
+        formData.inspection_efficiency_name_ext_clscc
+      );
+      setFormData((prev: any) => ({ ...prev, df_ext_cl_scc_fb_ext_clscc: dfExtClsccFb }));
+    }
+  }, [formData?.svi_ext_clscc, formData?.inspection_efficiency_name_ext_clscc]);
+
+  // DfExtClscc❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const dfExtClscc = calculateDfExtClsccFinal(
+        formData.df_ext_cl_scc_fb_ext_clscc,
+        formData.age_ext_clscc,
+        formData.ims_asset_type_id
+      );
+      setFormData((prev: any) => ({ ...prev, df_ext_cl_scc_ext_clscc: dfExtClscc }));
+    }
+  }, [formData?.df_ext_cl_scc_fb_ext_clscc, formData?.age_ext_clscc, formData?.ims_asset_type_id]);
+
+  //*****************  Formula DFExtClscc End
+
+  //***************** Formula DFMfat Start
+
+  // DmfatFb_mfat☑️tak check lagi
+  useEffect(() => {
+    if (formData) {
+      const dmfatFb = calculateDmFatFb(
+        formData.previous_failure_value_mfat,
+        formData.visible_audible_shaking_value_mfat,
+        formData.shaking_frequency_value_mfat,
+        formData.cyclic_load_type_value_mfat
+      );
+      setFormData((prev: any) => ({ ...prev, dmfatfb_mfat: dmfatFb }));
+    }
+  }, [formData?.previous_failure_value_mfat, formData?.visible_audible_shaking_value_mfat, formData?.shaking_frequency_value_mfat, formData?.cyclic_load_type_value_mfat]);
+
+  // Dmfat_mfat☑️tak check lagi
+  useEffect(() => {
+    if (formData) {
+      const dmfat = calculateDfMfat(
+        formData.dmfatfb_mfat,
+        formData.corrective_action_value_mfat,
+        formData.pipe_complexity_value_mfat,
+        formData.pipe_condition_value_mfat,
+        formData.joint_branch_design_value_mfat,
+        formData.branch_diameter_value_mfat
+      );
+      setFormData((prev: any) => ({ ...prev, dmfat_mfat: dmfat }));
+    }
+  }, [formData?.dmfatfb_mfat, formData?.corrective_action_value_mfat, formData?.pipe_complexity_value_mfat, formData?.pipe_condition_value_mfat, formData?.joint_branch_design_value_mfat, formData?.branch_diameter_value_mfat]);
+
+  //*****************  Formula DFMfat End
+
+  //*****************  Formula DfCui Start
+
+  // AgeTk_cui✅
+  useEffect(() => {
+    if (formData) {
+      const ageTkCui = calculateAgeTk(
+        formData.last_inspection_date_cui,
+        formData.year_in_service
+      );
+      setFormData((prev: any) => ({ ...prev, agetk_cui: ageTkCui }));
+    }
+  }, [formData?.last_inspection_date_cui, formData?.year_in_service]);
+
+  // Agecoat_cui✅sama macam extclscc
+  useEffect(() => {
+    if (formData) {
+      const ageCoatCui = calculateAgeCoatCui(
+        formData.new_coating_date_cui,
+        formData.year_in_service,
+        formData.ims_asset_type_id // 1 = Pressure Vessel (use newCoatDate), 2 = Piping (use serviceDate)
+      );
+      setFormData((prev: any) => ({ ...prev, agecoat_cui: ageCoatCui }));
+    }
+  }, [formData?.new_coating_date_cui, formData?.year_in_service, formData?.ims_asset_type_id]);
+
+  // CoatAdj_cui✅
+  useEffect(() => {
+    if (formData) {
+      const coatAdjCui = calculateCoatAdjCui(
+        formData.coating_quality_id_cui,
+        formData.agetk_cui,
+        formData.agecoat_cui
+      );
+      setFormData((prev: any) => ({ ...prev, coatadj_cui: coatAdjCui }));
+    }
+  }, [formData?.coating_quality_id_cui, formData?.agetk_cui, formData?.agecoat_cui]);
+
+  // Age_cui✅
+  useEffect(() => {
+    if (formData) {
+      const ageCui = calculateAgeCui(
+        formData.agetk_cui,
+        formData.coatadj_cui
+      );
+      setFormData((prev: any) => ({ ...prev, age_cui: ageCui }));
+    }
+  }, [formData?.agetk_cui, formData?.coatadj_cui]);
+
+  // CrExp_cui✅
+  useEffect(() => {
+    if (formData) {
+      const crExpCui = calculateCrExpCui(
+        formData.composition,
+        formData.operating_temperature,
+        formData.external_environment_id_cui,
+        formData.insulation_type_value,
+        formData.insulation_complexity_value,
+        formData.insulation_condition_value,
+        formData.design_fabrication_value,
+        formData.interface_value
+      );
+      setFormData((prev: any) => ({ ...prev, crexp_cui: crExpCui }));
+    }
+  }, [formData?.composition, formData?.operating_temperature, formData?.external_environment_id_cui, formData?.insulation_type_value, formData?.insulation_complexity_value, formData?.insulation_condition_value, formData?.design_fabrication_value, formData?.interface_value]);
+
+  //Art_cui☑️tak check lagi
+  useEffect(() => {
+    if (formData) {
+      const artCui = calculateArtCui(
+        formData.cract_cui,
+        formData.crexp_cui,
+        formData.age_cui,
+        formData.current_thickness_cui,
+        formData.normal_wall_thickness
+      );
+      setFormData((prev: any) => ({ ...prev, art_cui: artCui }));
+    }
+  }, [formData?.cract_cui, formData?.crexp_cui, formData?.age_cui, formData?.current_thickness_cui, formData?.normal_wall_thickness]);
+
+  // FsCuiF☑️tak check lagi
+  useEffect(() => {
+    if (formData) {
+      const fsCuiF = calculateFSCUIFCui(
+        formData.avg_mts_mpa,
+        formData.avg_mys_mpa,
+        formData.welding_efficiency
+      );
+      setFormData((prev: any) => ({ ...prev, fscuif_cui: fsCuiF }));
+    }
+  }, [formData?.avg_mts_mpa, formData?.avg_mys_mpa, formData?.welding_efficiency]);
+
+  // SrCuiF☑️tak check lagi
+  useEffect(() => {
+    if (formData) {
+      const srCuiF = calculateSRCUIFCui(
+        formData.welding_efficiency,
+        formData.allowable_stress_mpa,
+        formData.fscuif_cui,
+        formData.tmin,
+        formData.current_thickness_cui,
+        formData.normal_wall_thickness,
+        formData.design_pressure,
+        formData.internal_diameter
+
+      );
+      setFormData((prev: any) => ({ ...prev, srcuif_cui: srCuiF }));
+    }
+  }, [formData?.welding_efficiency, formData?.allowable_stress_mpa, formData?.fscuif_cui, formData?.tmin, formData?.current_thickness_cui, formData?.normal_wall_thickness, formData?.design_pressure, formData?.internal_diameter]);
+
+  // ICuiFs and PoCuiFs✅
+  useEffect(() => {
+    if (formData) {
+      const scores = calculateICuiFsAndPoCuiFsCui(
+        formData.data_confidence_id_cui,   // Medium confidence
+        formData.ncuifa_cui,
+        formData.ncuifb_cui,
+        formData.ncuifc_cui,
+        formData.ncuifd_cui
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        icuif1_cui: scores.icuif1,
+        icuif2_cui: scores.icuif2,
+        icuif3_cui: scores.icuif3,
+        pociufp1_cui: scores.poCUIFP1,
+        pociufp2_cui: scores.poCUIFP2,
+        pociufp3_cui: scores.poCUIFP3
+      }));
+    }
+  }, [formData?.data_confidence_id_cui, formData?.ncuifa_cui, formData?.ncuifb_cui, formData?.ncuifc_cui, formData?.ncuifd_cui]);
+
+  // BCuiFs✅
+  useEffect(() => {
+    if (formData) {
+      const bCuiFs = calculateBCuiFsCui(
+        formData.art_cui,
+        formData.srcuif_cui
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        bcuif1_cui: bCuiFs.bCUIF1,
+        bcuif2_cui: bCuiFs.bCUIF2,
+        bcuif3_cui: bCuiFs.bCUIF3
+      }));
+    }
+  }, [formData?.art_cui, formData?.srcuif_cui]);
+
+  // DfCuiFF☑️tak check lagi
+  useEffect(() => {
+    if (formData) {
+      const dfCuiFF = calculateDFCuiFFCui(
+        formData.insulation,
+        formData.composition,
+        formData.bcuif1_cui,
+        formData.bcuif2_cui,
+        formData.bcuif3_cui,
+        formData.pociufp1_cui,
+        formData.pociufp2_cui,
+        formData.pociufp3_cui
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        dfcuiff_cui: dfCuiFF
+      }));
+    }
+  }, [formData?.insulation, formData?.composition, formData?.bcuif1_cui, formData?.bcuif2_cui, formData?.bcuif3_cui, formData?.pociufp1_cui, formData?.pociufp2_cui, formData?.pociufp3_cui]);
+
+  //*****************  Formula DfCui End
+
+  //*****************  Formula DfSccScc Start
+
+  // sussceptibility_scc_scc✅
+  useEffect(() => {
+    if (formData) {
+      const susceptibility = calculateSusceptibilitySccScc(
+        formData.ims_asset_type_id,
+        formData.composition,
+        formData.cladding
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        susceptibility_scc_scc: susceptibility
+      }));
+    }
+  }, [formData?.ims_asset_type_id, formData?.composition, formData?.cladding]);
+
+  // EnvSeverity_scc_scc✅
+  useEffect(() => {
+    if (formData) {
+      const envSeverity = calculateEnvSeveritySccScc(
+        formData.susceptibility_scc_scc,
+        formData.ph_scc_scc,
+        formData.h2s_in_water_scc_scc
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        envseverity_scc_scc: envSeverity
+      }));
+    }
+  }, [formData?.susceptibility_scc_scc, formData?.ph_scc_scc, formData?.h2s_in_water_scc_scc]);
+
+  // SscSucsFToHt_scc_scc✅
+  useEffect(() => {
+    if (formData) {
+      const sscSucsFToHt = calculateSscSucsFToHtSccScc(
+        formData.pwht,
+        formData.envseverity_scc_scc,
+        formData.hardness_brinnel_scc_scc
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        ssc_sucs_f_to_ht_scc_scc: sscSucsFToHt
+      }));
+    }
+  }, [formData?.pwht, formData?.envseverity_scc_scc, formData?.hardness_brinnel_scc_scc]);
+
+  // Svi_scc_scc✅
+  useEffect(() => {
+    if (formData) {
+      const svi = calculateSviSccScc(
+        formData.ssc_sucs_f_to_ht_scc_scc
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        svi_scc_scc: svi
+      }));
+    }
+  }, [formData?.ssc_sucs_f_to_ht_scc_scc]);
+
+  // DfSccSccFb_scc_scc✅
+  useEffect(() => {
+    if (formData) {
+      const dfSccSccFb = calculateDfSccFbSccScc(
+        formData.svi_scc_scc,
+        formData.inspection_efficiency_name_scc_scc
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        dfsccfb_scc_scc: dfSccSccFb
+      }));
+    }
+  }, [formData?.svi_scc_scc, formData?.inspection_efficiency_name_scc_scc]);
+
+  // DfSccScc_scc_scc✅
+  useEffect(() => {
+    if (formData) {
+      const dfSccScc = calculateDfSccScc(
+        1,
+        formData.last_inspection_date_scc_scc
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        df_scc_scc_scc_scc: dfSccScc
+      }));
+    }
+  }, [formData?.dfsccfb_scc_scc, formData?.last_inspection_date_scc_scc]);
+
+  //*****************  Formula DfSccScc End
+
+  //*****************  Formula DfSccSoHic Start
+
+  // Sussceptibility_scc_sohic☑️tak check lagi
+  useEffect(() => {
+    if (formData) {
+      const susceptibility = calculateSusceptibilitySccScc(
+        formData.ims_asset_type_id,
+        formData.composition,
+        formData.cladding
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        susceptibility_scc_sohic: susceptibility
+      }));
+    }
+  }, [formData?.ims_asset_type_id, formData?.composition, formData?.cladding]);
+
+  // EnvSeverity_scc_sohic☑️tak check lagi
+  useEffect(() => {
+    if (formData) {
+      const envSeverity = calculateEnvSeveritySccSohic(
+        formData.susceptibility_scc_sohic,
+        formData.ph_scc_sohic,
+        formData.h2s_in_water_scc_sohic
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        envseverity_scc_sohic: envSeverity
+      }));
+    }
+  }, [formData?.susceptibility_scc_sohic, formData?.ph_scc_sohic, formData?.h2s_in_water_scc_sohic]);
+
+  // SccSucsToCrack_scc_sohic☑️tak check lagi
+  useEffect(() => {
+    if (formData) {
+      const sccSucsToCrack = calculateSuscToCrackSccSohic(
+        formData.steelscontent_id_scc_sohic,
+        formData.pwht,
+        formData.envseverity_scc_sohic
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        sucs_to_crack_scc_sohic: sccSucsToCrack
+      }));
+    }
+  }, [formData?.steelscontent_id_scc_sohic, formData?.pwht, formData?.envseverity_scc_sohic]);
+
+  // Svi_scc_sohic☑️tak check lagi
+  useEffect(() => {
+    if (formData) {
+      const svi = calculateSviSccSohic(
+        formData.sucs_to_crack_scc_sohic
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        svi_scc_sohic: svi
+      }));
+    }
+  }, [formData?.sucs_to_crack_scc_sohic]);
+
+  // dfsohicfb_scc_sohic☑️tak check lagi
+  useEffect(() => {
+    if (formData) {
+      const dfSccSoHicFb = calculateDfSohicFbSccSohic(
+        formData.svi_scc_sohic,
+        formData.inspection_efficiency_name_scc_sohic
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        dfsohicfb_scc_sohic: dfSccSoHicFb
+      }));
+    }
+  }, [formData?.svi_scc_sohic, formData?.inspection_efficiency_name_scc_sohic]);
+
+  // dfscc_sohic_scc_sohic☑️tak check lagi
+  useEffect(() => {
+    if (formData) {
+      const dfSccSoHic = calculateDfSccSohic(
+        formData.dfsohicfb_scc_sohic,
+        formData.last_inspection_date_scc_sohic,
+        formData.online_monitor_value_scc_sohic
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        dfscc_sohic_scc_sohic: dfSccSoHic
+      }));
+    }
+  }, [formData?.dfsohicfb_scc_sohic, formData?.last_inspection_date_scc_sohic, formData?.online_monitor_value_scc_sohic]);
+
+  //*****************  Formula DfSccSoHic End
+
+  //*****************  Formula CofProd Start
+
+  // fcCmdCofProd❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const fcCmd = calculateFcCmdCofProd(
+        formData.ims_asset_type_id,
+        formData.comp_type_cof,
+        formData.composition
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        fc_cmd_cof_prod: fcCmd
+      }));
+    }
+  }, [formData?.ims_asset_type_id, formData?.comp_type_cof, formData?.composition]);
+
+  // fcAffaCofProd❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const fcAffa = calculateFcAffaCofProd(
+        formData.ca_cmd_flam_cof_area,
+        formData.fc_cmd_cof_prod
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        fc_affa_cof_prod: fcAffa
+      }));
+    }
+  }, [formData?.ca_cmd_flam_cof_area, formData?.fc_cmd_cof_prod]);
+
+  // outage_affa_cof_prod❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const outageAffa = calculateOutageAffaCofProd(
+        formData.fc_affa_cof_prod
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        outage_affa_cof_prod: outageAffa
+      }));
+    }
+  }, [formData?.ca_cmd_flam_cof_outage, formData?.fc_affa_cof_prod]);
+
+  // outage_cmd_cof_prod❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const outageCmd = calculateOutageCmdCofProd(
+        formData.ims_asset_type_id,
+        formData.comp_type_cof,
+        formData.outage_mult_cof_prod
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        outage_cmd_cof_prod: outageCmd
+      }));
+    }
+  }, [formData?.ims_asset_type_id, formData?.comp_type_cof, formData?.outage_mult_cof_prod]);
+
+  // fc_prod_cof_prod❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const fcProd = calculateFcProdCofProd(
+        formData.outage_affa_cof_prod,
+        formData.outage_cmd_cof_prod,
+        formData.lra_prod_cof_prod
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        fc_prod_cof_prod: fcProd
+      }));
+    }
+  }, [formData?.outage_affa_cof_prod, formData?.outage_cmd_cof_prod, formData?.lra_prod_cof_prod]);
+
+  //fc_inj_cost_cof_prod❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const fcInjCost = calculateFcInjCostCofProd(
+        formData.m_release_cof_area,
+        formData.inj_cost_cof_prod,
+        formData.pop_dens_cof_prod
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        fc_inj_cost_cof_prod: fcInjCost
+      }));
+    }
+  }, [formData?.m_release_cof_area, formData?.inj_cost_cof_prod, formData?.pop_dens_cof_prod]);
+
+  //frac_evap_cof_prod⁉️Formula dari Excel may be wrong
+  useEffect(() => {
+    if (formData) {
+      const fracEvap = calculateFracEvapCofProd(
+        formData.fluid_representative_name
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        frac_evap_cof_prod: fracEvap
+      }));
+    }
+  }, [formData?.fluid_representative_name]);
+
+  //vol_env_cof_prod❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const volEnv = calculateVolEnvCofProd(
+        formData.mass_n_cof_area,
+        formData.frac_evap_cof_prod,
+        formData.fluid_representative_name
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        vol_env_cof_prod: volEnv
+      }));
+    }
+  }, [formData?.mass_n_cof_area, formData?.frac_evap_cof_prod, formData?.fluid_representative_name]);
+
+  //fc_environ_cof_prod❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const fcEnviron = calculateFcEnvironCofProd(
+        formData.comp_type_cof,
+        formData.vol_env_cof_prod,
+        formData.envcost_cof_prod
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        fc_environ_cof_prod: fcEnviron
+      }));
+    }
+  }, [formData?.comp_type_cof, formData?.vol_env_cof_prod, formData?.envcost_cof_prod]);
+
+  //fc_cof_prod❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const fcCof = calculateFcCofProd(
+        formData.fc_cmd_cof_prod,
+        formData.fc_affa_cof_prod,
+        formData.fc_prod_cof_prod,
+        formData.fc_inj_cost_cof_prod,
+        formData.fc_environ_cof_prod
+
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        fc_cof_prod: fcCof
+      }));
+    }
+  }, [formData?.fc_cmd_cof_prod, formData?.fc_affa_cof_prod, formData?.fc_prod_cof_prod, formData?.fc_inj_cost_cof_prod, formData?.fc_environ_cof_prod]);
+
+  //*****************  Formula CofProd End
 
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast.success("RBI Assessment updated successfully");
+  //*****************  Formula CofArea Start
+
+  //p_s_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const pS = calculatePsCofArea(
+        formData.operating_pressure_mpa
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        p_s_cof_area: pS
+      }));
+    }
+  }, [formData?.operating_pressure_mpa]);
+
+  //op_temp_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const opTemp = calculateOpTempCofArea(
+        formData.operating_temperature
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        op_temp_cof_area: opTemp
+      }));
+    }
+  }, [formData?.operating_temperature]);
+
+  //cp_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const cp = calculateCpCofArea(
+        formData.fluid_representative_name,
+        formData.ideal_gas_specific_heat_eq_name,
+        formData.op_temp_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        cp_cof_area: cp
+      }));
+    }
+  }, [formData?.fluid_representative_name, formData?.ideal_gas_specific_heat_eq_name, formData?.op_temp_cof_area]);
+
+  //k_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const k = calculateKCofArea(
+        formData.cp_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        k_cof_area: k
+      }));
+    }
+  }, [formData?.cp_cof_area]);
+
+  //p_trans_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const pTrans = calculatePTransCofArea(
+        formData.k_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        p_trans_cof_area: pTrans
+      }));
+    }
+  }, [formData?.k_cof_area]);
+
+  //w1_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const w1 = calculateW1CofArea(
+        formData.fluid_phase_name,
+        formData.p_s_cof_area,
+        formData.p_trans_cof_area,
+        formData.op_temp_cof_area,
+        formData.k_cof_area,
+        formData.fluid_representative_name,
+        formData.comp_type_cof
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        w1_cof_area: w1
+      }));
+    }
+  }, [formData?.fluid_phase_name, formData?.fluid_representative_name, formData?.comp_type_cof, formData?.p_s_cof_area, formData?.p_trans_cof_area, formData?.k_cof_area, formData?.op_temp_cof_area]);
+
+  //inventory_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const inventory = calculateInventoryCofArea(
+        formData.fluid_phase_name
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        inventory_cof_area: inventory
+      }));
+    }
+  }, [formData?.fluid_phase_name]);
+
+  //time_empty_cof_area✅ (⁉️ Worng becasue the w1_cof_area is wrong)
+  useEffect(() => {
+    if (formData) {
+      const timeEmpty = calculateTimeEmptyCofArea(
+        formData.inventory_cof_area,
+        formData.w1_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        time_empty_cof_area: timeEmpty
+      }));
+    }
+  }, [formData?.inventory_cof_area, formData?.w1_cof_area]);
+
+  //m_release_cof_area✅(⁉️ Worng becasue the w1_cof_area is wrong)
+  useEffect(() => {
+    if (formData) {
+      const mRelease = calculateMReleaseCofArea(
+        formData.w1_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        m_release_cof_area: mRelease
+      }));
+    }
+  }, [formData?.w1_cof_area]);
+
+  //release_type_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const releaseType = calculateReleaseTypeCofArea(
+        formData.time_empty_cof_area,
+        formData.m_release_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        release_type_cof_area: releaseType
+      }));
+    }
+  }, [formData?.time_empty_cof_area, formData?.m_release_cof_area]);
+
+  //fact_di_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const factDi = calculateFactDiCofArea(
+        formData.iso_sys_name_cof_area,
+        formData.det_sys_name_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        fact_di_cof_area: factDi
+      }));
+    }
+  }, [formData?.iso_sys_name_cof_area, formData?.det_sys_name_cof_area]);
+
+  //ld_max_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const idMax = calculateLdMaxCofArea(
+        formData.iso_sys_name_cof_area,
+        formData.det_sys_name_cof_area,
+        formData.comp_type_cof
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        ld_max_cof_area: idMax
+      }));
+    }
+  }, [formData?.iso_sys_name_cof_area, formData?.det_sys_name_cof_area, formData?.comp_type_cof]);
+
+  //rate_n_cof_area✅(⁉️ Worng becasue the w1_cof_area is wrong)
+  useEffect(() => {
+    if (formData) {
+      const rateN = calculateRateNCofArea(
+        formData.w1_cof_area,
+        formData.fact_di_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        rate_n_cof_area: rateN
+      }));
+    }
+  }, [formData?.w1_cof_area, formData?.fact_di_cof_area]);
+
+  //ld_s_cof_area✅(⁉️ Worng becasue the w1_cof_area is wrong)
+  useEffect(() => {
+    if (formData) {
+      const ldS = calculateLdSCofArea(
+        formData.inventory_cof_area,
+        formData.rate_n_cof_area,
+        formData.ld_max_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        ld_s_cof_area: ldS
+      }));
+    }
+  }, [formData?.inventory_cof_area, formData?.rate_n_cof_area, formData?.ld_max_cof_area]);
+
+  //mass_n_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const massN = calculateMassNCofArea(
+        formData.w1_cof_area,
+        formData.ld_s_cof_area,
+        formData.inventory_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        mass_n_cof_area: massN
+      }));
+    }
+  }, [formData?.w1_cof_area, formData?.ld_s_cof_area, formData?.inventory_cof_area]);
+
+  //eneff_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const eneff = calculateEneffCofArea(
+        formData.mass_n_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        eneff_cof_area: eneff
+      }));
+    }
+  }, [formData?.mass_n_cof_area]);
+
+  //fact_ic_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const factIC = calculateFactIcCofArea(
+        formData.release_type_cof_area,
+        formData.rate_n_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        fact_ic_cof_area: factIC
+      }));
+    }
+  }, [formData?.release_type_cof_area, formData?.rate_n_cof_area]);
+
+  //4 ca_conts✅(⁉️ Worng becasue the w1_cof_area is wrong) //ca_cmd_ainl_cont_cof_area //ca_cmd_ail_cont_cof_area //ca_inj_ainl_cont_cof_area //ca_inj_ail_cont_cof_area
+  useEffect(() => {
+    if (formData) {
+      const results = calculateCaContValues(
+        formData.fluid_phase_name,
+        formData.fluid_representative_name,
+        formData.rate_n_cof_area,
+        formData.mitigation_system_value
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        ca_cmd_ainl_cont_cof_area: results.ca_cmd_ainl_cont_cof_area,
+        ca_cmd_ail_cont_cof_area: results.ca_cmd_ail_cont_cof_area,
+        ca_inj_ainl_cont_cof_area: results.ca_inj_ainl_cont_cof_area,
+        ca_inj_ail_cont_cof_area: results.ca_inj_ail_cont_cof_area
+      }));
+    }
+  }, [formData?.fluid_phase_name, formData?.fluid_representative_name, formData?.rate_n_cof_area, formData?.mitigation_system_value]);
+
+  //4 ca_ints✅(⁉️ Worng becasue the w1_cof_area is wrong) //ca_cmd_ainl_inst_cof_area //ca_cmd_ail_inst_cof_area //ca_inj_ainl_inst_cof_area //ca_inj_ail_inst_cof_area
+  useEffect(() => {
+    if (formData) {
+      const results = calculateCaInstValues(
+        formData.fluid_phase_name,
+        formData.fluid_representative_name,
+        formData.mass_n_cof_area,
+        formData.mitigation_system_value,
+        formData.eneff_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        ca_cmd_ainl_inst_cof_area: results.ca_cmd_ainl_inst_cof_area,
+        ca_cmd_ail_inst_cof_area: results.ca_cmd_ail_inst_cof_area,
+        ca_inj_ainl_inst_cof_area: results.ca_inj_ainl_inst_cof_area,
+        ca_inj_ail_inst_cof_area: results.ca_inj_ail_inst_cof_area
+      }));
+    }
+  }, [formData?.fluid_phase_name, formData?.fluid_representative_name, formData?.mass_n_cof_area, formData?.mitigation_system_value, formData?.eneff_cof_area]);
+
+  //ca_cmd_ail_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const result = calculateCaCmdAil(
+        formData.ca_cmd_ail_inst_cof_area,
+        formData.ca_cmd_ail_cont_cof_area,
+        formData.fact_ic_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        ca_cmd_ail_cof_area: result
+      }));
+    }
+  }, [formData?.ca_cmd_ail_inst_cof_area, formData?.ca_cmd_ail_cont_cof_area, formData?.fact_ic_cof_area]);
+
+  //ca_inj_ail_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const result = calculateCaInjAil(
+        formData.ca_inj_ail_inst_cof_area,
+        formData.ca_inj_ail_cont_cof_area,
+        formData.fact_ic_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        ca_inj_ail_cof_area: result
+      }));
+    }
+  }, [formData?.ca_inj_ail_inst_cof_area, formData?.ca_inj_ail_cont_cof_area, formData?.fact_ic_cof_area]);
+
+  //ca_cmd_ainl_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const result = calculateCaCmdAinl(
+        formData.ca_cmd_ainl_inst_cof_area,
+        formData.ca_cmd_ainl_cont_cof_area,
+        formData.fact_ic_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        ca_cmd_ainl_cof_area: result
+      }));
+    }
+  }, [formData?.ca_cmd_ainl_inst_cof_area, formData?.ca_cmd_ainl_cont_cof_area, formData?.fact_ic_cof_area]);
+
+  //ca_inj_ainl_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const result = calculateCaInjAinl(
+        formData.ca_inj_ainl_inst_cof_area,
+        formData.ca_inj_ainl_cont_cof_area,
+        formData.fact_ic_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        ca_inj_ainl_cof_area: result
+      }));
+    }
+  }, [formData?.ca_inj_ainl_inst_cof_area, formData?.ca_inj_ainl_cont_cof_area, formData?.fact_ic_cof_area]);
+
+  //fact_ait_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const factAit = calculateFactAIT(
+        formData.op_temp_cof_area,
+        formData.fluid_representative_name
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        fact_ait_cof_area: factAit
+      }));
+    }
+  }, [formData?.op_temp_cof_area, formData?.fluid_representative_name]);
+
+  //ca_cmd_flam_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const caCmdFlam = calculateCaCmdFlam(
+        formData.ca_cmd_ail_cof_area,
+        formData.ca_cmd_ainl_cof_area,
+        formData.fact_ait_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        ca_cmd_flam_cof_area: caCmdFlam
+      }));
+    }
+  }, [formData?.ca_cmd_ail_cof_area, formData?.ca_cmd_ainl_cof_area, formData?.fact_ait_cof_area]);
+
+  //ca_inj_flam_cof_area✅
+  useEffect(() => {
+    if (formData) {
+      const caInjFlam = calculateCaInjFlam(
+        formData.ca_inj_ail_cof_area,
+        formData.ca_inj_ainl_cof_area,
+        formData.fact_ait_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        ca_inj_flam_cof_area: caInjFlam
+      }));
+    }
+  }, [formData?.ca_inj_ail_cof_area, formData?.ca_inj_ainl_cof_area, formData?.fact_ait_cof_area]);
+
+  //*****************  Formula CofArea End
+
+  //*****************  Formula Risk Irp Start
+
+  //dthin_risk_irp✅
+  useEffect(() => {
+    if (formData) {
+      const dThin = calculateDthinRiskIrp(
+        formData.ims_asset_type_id,
+        formData.dfthinf_thin
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        dthin_risk_irp: dThin
+      }));
+    }
+  }, [formData?.ims_asset_type_id, formData?.dfthinf_thin]);
+
+  //dextd_risk_irp❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const dextd = calculateDextdRiskIrp(
+        formData.ims_asset_type_id,
+        formData.dfextcorrf_ext,
+        formData.df_ext_cl_scc_ext_clscc,
+        formData.dfcuiff_cui
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        dextd_risk_irp: dextd
+      }));
+    }
+  }, [formData?.ims_asset_type_id, formData?.dfextcorrf_ext, formData?.df_ext_cl_scc_ext_clscc, formData?.dfcuiff_cui]);
+
+  //dscc_risk_irp❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const dscc = calculateDsccRiskIrp(
+        formData.df_scc_scc_scc_scc,
+        formData.dfscc_sohic_scc_sohic
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        dscc_risk_irp: dscc
+      }));
+    }
+  }, [formData?.df_scc_scc_scc_scc, formData?.dfscc_sohic_scc_sohic]);
+
+  //dmfat_risk_irp❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const dmfat = calculateDmfatRiskIrp(
+        formData.ims_asset_type_id,
+        formData.dmfat_mfat
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        dmfat_risk_irp: dmfat
+      }));
+    }
+  }, [formData?.ims_asset_type_id, formData?.dmfat_mfat]);
+
+  //pof_risk_irp❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const pof = calculatePofRiskIrp(
+        formData.comp_type_cof,
+        formData.dthin_risk_irp,
+        formData.dextd_risk_irp,
+        formData.dscc_risk_irp,
+        formData.dhtha_risk_irp,
+        formData.dbrit_risk_irp,
+        formData.dmfat_risk_irp
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        pof_risk_irp: pof
+      }));
+    }
+  }, [formData?.comp_type_cof, formData?.dthin_risk_irp, formData?.dextd_risk_irp, formData?.dscc_risk_irp, formData?.dhtha_risk_irp, formData?.dbrit_risk_irp, formData?.dmfat_risk_irp]);
+
+  //cof_financial_risk_irp❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const cofFinancial = calculateCofFinancialRiskIrp(
+        formData.fc_cof_prod
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        cof_financial_risk_irp: cofFinancial
+      }));
+    }
+  }, [formData?.fc_cof_prod]);
+
+  //cof_area_risk_irp❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const cofArea = calculateCofAreaRiskIrp(
+        formData.ca_cmd_flam_cof_area,
+        formData.ca_inj_flam_cof_area
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        cof_area_risk_irp: cofArea
+      }));
+    }
+  }, [formData?.ca_cmd_flam_cof_area, formData?.ca_inj_flam_cof_area]);
+
+  //pof_value_risk_irp❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const pofValue = calculatePofValueRiskIrp(
+        formData.pof_risk_irp
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        pof_value_risk_irp: pofValue
+      }));
+    }
+  }, [formData?.pof_risk_irp]);
+
+
+  //matrix risk_irp❌tak test lansung
+  useEffect(() => {
+    if (formData) {
+      const results = calculateMatrixesRiskIrp(
+        formData.pof_value_risk_irp,
+        formData.cof_financial_risk_irp,
+        formData.cof_area_risk_irp
+      );
+      setFormData((prev: any) => ({
+        ...prev,
+        risk_level_risk_irp: results.riskLevel,
+        int_insp_risk_irp: results.intInsp,
+        int_insp_interval_risk_irp: results.intInspInterval,
+        ext_insp_risk_irp: results.extInsp,
+        ext_insp_interval_risk_irp: results.extInspInterval,
+        env_crack_risk_irp: results.envCrack,
+        env_crack_interval_risk_irp: results.envCrackInterval
+      }));
+    }
+  }, [formData?.pof_value_risk_irp, formData?.cof_financial_risk_irp, formData?.cof_area_risk_irp]);
+
+
+
+  //*****************  Formula Risk Irp End
+
+
+  const [isLoadingSubmit, setIsLoadingSubmit] = useState(false);
+  const showValidationError = (description: string) => {
+    toast({
+      title: "Form Incomplete",
+      description,
+      variant: "destructive",
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+
+    if (!formData.asset_detail_id) {
+      setActiveTab("pof"); // Navigate to the "Asset Information" tab
+      showValidationError("Asset is required");
+      return; // Make sure return is after the error handling
+    }
+    setIsLoadingSubmit(true);
+    try {
+      if (formData) {
+
+        const rbiGeneralId = Number(id)
+        const pofGeneralId = pofGeneralData.id
+        const cofProdId = cofProdData.id
+        const cofAreaId = cofAreaData.id
+        const riskIrpId = riskIrpData.id
+        const dfThinId = dfThinData.id
+        const dfExtId = dfExtData.id
+        const dfExtClsccId = dfExtClsccData.id
+        const dfMfatId = dfMfatData.id
+        const dfCuiId = dfCuiData.id
+        const dfSccSccId = dfSccSccData.id
+        const dfSccSohicId = dfccSohicData.id
+
+        console.log("last RBI General ID:", rbiGeneralId ?? "NA");
+        console.log("last POF General ID:", pofGeneralId ?? "NA");
+        console.log("last COF Prod ID:", cofProdId ?? "NA");
+        console.log("last COF Area ID:", cofAreaId ?? "NA");
+        console.log("last Risk IRP ID:", riskIrpId ?? "NA");
+        console.log("last DF Thin ID:", dfThinId ?? "NA");
+        console.log("last DF Ext ID:", dfExtId ?? "NA");
+        console.log("last DF Ext CLSCC ID:", dfExtClsccId ?? "NA");
+        console.log("last DF MFAT ID:", dfMfatId ?? "NA");
+        console.log("last DF CUI ID:", dfCuiId ?? "NA");
+        console.log("last DF SCC-SCC ID:", dfSccSccId ?? "NA");
+        console.log("last DF SCC-SOHIC ID:", dfSccSohicId ?? "NA");
+
+
+        // Step 1
+        console.log("Step 1 RBI general");
+        const rbiGeneralDataa = {
+          pof_value: formData.pof_value_risk_irp,
+          cof_finance_value: formData.cof_financial_risk_irp,
+          cof_area_value: formData.cof_area_risk_irp,
+          risk_level: formData.risk_level_risk_irp,
+        };
+        await updateImsRbiGeneralData(rbiGeneralId, rbiGeneralDataa);
+
+        // Step 2 Pof general
+        console.log("Step 2 POF general");
+        const pofGeneralDataa = {
+          cladding: formData.cladding,
+          nominal_thickness: formData.normal_wall_thickness,
+          description: formData.description,
+        };
+        await updateImsPofAssessmentData(pofGeneralId, pofGeneralDataa);
+
+        // Step 3 df thin
+        console.log("Step 3 df thin");
+        const dfThinDataa = {
+          last_inspection_date: formData.last_inspection_date_thin,
+          data_confidence_id: formData.data_confidence_id_thin,
+          nthin_a: formData.nthin_a_thin,
+          nthin_b: formData.nthin_b_thin,
+          nthin_c: formData.nthin_c_thin,
+          nthin_d: formData.nthin_d_thin,
+          agerc: formData.agerc_thin,
+          dfthinfb: formData.dfthinfb_thin,
+          cr_act: formData.cract_thin,
+          current_thickness: formData.current_thickness_thin,
+        };
+        await updateImsDfThinData(dfThinId, dfThinDataa);
+
+        // Step 4 df ext
+        console.log("Step 4 df ext");
+        const dfExtDataa = {
+          last_inspection_date: formData.last_inspection_date_ext,
+          new_coating_date: formData.new_coating_date_ext,
+          data_confidence_id: formData.data_confidence_id_ext,
+          dfextcorrf: formData.dfextcorrf_ext,
+          nextcorra: formData.nextcorra_ext,
+          nextcorrb: formData.nextcorrb_ext,
+          nextcorrc: formData.nextcorrc_ext,
+          nextcorrd: formData.nextcorrd_ext,
+          current_thickness: formData.current_thickness_ext,
+        };
+        await updateImsDfExtData(dfExtId, dfExtDataa);
+
+        // Step 5 df ext clscc
+        console.log("Step 5 df ext clscc");
+        const dfExtClsccDataa = {
+          last_inspection_date: formData.last_inspection_date_ext_clscc,
+          new_coating_date: formData.new_coating_date_ext_clscc,
+          inspection_efficiency_id: formData.inspection_efficiency_id_ext_clscc,
+          df_ext_cl_scc: formData.df_ext_cl_scc_ext_clscc,
+          coating_quality_id: formData.coating_quality_id_ext_clscc,
+          external_environment_id: formData.external_environment_id_ext_clscc,
+        };
+        await updateImsDfExtClsccData(dfExtClsccId, dfExtClsccDataa);
+
+        // Step 6 df mfat
+        console.log("Step 6 df mfat");
+        const dfMfatDataa = {
+          previous_failure_id: formData.previous_failure_id_mfat,
+          visible_audible_shaking_id: formData.visible_audible_shaking_id_mfat,
+          shaking_frequency_id: formData.shaking_frequency_id_mfat,
+          cyclic_load_type_id: formData.cyclic_load_type_id_mfat,
+          corrective_action_id: formData.corrective_action_id_mfat,
+          pipe_complexity_id: formData.pipe_complexity_id_mfat,
+          pipe_condition_id: formData.pipe_condition_id_mfat,
+          joint_branch_design_id: formData.joint_branch_design_id_mfat,
+          brach_diameter_id: formData.brach_diameter_id_mfat,
+          dmfatfb: formData.dmfatfb_mfat,
+        };
+        await updateImsDfMfatData(dfMfatId, dfMfatDataa);
+
+        // Step 7 df cui
+        console.log("Step 7 df cui");
+        const dfCuiDataa = {
+          last_inspection_date: formData.last_inspection_date_cui,
+          new_coating_date: formData.new_coating_date_cui,
+          dfcuiff: formData.dfcuiff_cui,
+          data_confidence_id: formData.data_confidence_id_cui,
+          ncuifa: formData.ncuifa_cui,
+          ncuifb: formData.ncuifb_cui,
+          ncuifc: formData.ncuifc_cui,
+          ncuifd: formData.ncuifd_cui,
+          cr_act: formData.cract_cui,
+          coating_quality_id: formData.coating_quality_id_cui,
+          current_thickness: formData.current_thickness_cui,
+          external_environment_id: formData.external_environment_id_cui,
+        };
+        await updateImsDfCuiData(dfCuiId, dfCuiDataa);
+
+        // Step 8 df scc scc
+        console.log("Step 8 df scc scc");
+        const dfSccSccDataa = {
+          inspection_efficiency_id: formData.inspection_efficiency_id_scc_scc,
+          hardness_brinnel: formData.hardness_brinnel_scc_scc,
+          dfsccfb: formData.dfsccfb_scc_scc,
+          df_scc_scc: formData.df_scc_scc_scc_scc,
+          h2s_in_water: formData.h2s_in_water_scc_scc,
+          ph: formData.ph_scc_scc,
+          last_inspection_date: formData.last_inspection_date_scc_scc,
+        };
+        await updateImsDfSccSccData(dfSccSccId, dfSccSccDataa);
+
+        // Step 9 df scc sohic
+        console.log("Step 9 df scc sohic");
+        const dfSccSohicDataa = {
+          inspection_efficiency_id: formData.inspection_efficiency_id_scc_sohic,
+          steelscontent_id: formData.steelscontent_id_scc_sohic,
+          dfscc_sohic: formData.dfscc_sohic_scc_sohic,
+          h2s_in_water: formData.h2s_in_water_scc_sohic,
+          ph: formData.ph_scc_sohic,
+          last_inspection_date: formData.last_inspection_date_scc_sohic,
+          online_monitor_id: formData.online_monitor_id_scc_sohic,
+        };
+        await updateImsDfSccSohicData(dfSccSohicId, dfSccSohicDataa);
+
+        // Step 10 cof prod
+        console.log("Step 10 COF Prod");
+        const cofProdDataa = {
+          outagemult: formData.outage_mult_cof_prod,
+          injcost: formData.inj_cost_cof_prod,
+          envcost: formData.envcost_cof_prod,
+          fracevap: formData.frac_evap_cof_prod,
+          volenv: formData.vol_env_cof_prod,
+          fcenviron: formData.fc_environ_cof_prod,
+          fc: formData.fc_cof_prod,
+          lra_prod: formData.lra_prod_cof_prod,
+        };
+        await updateImsCofAssessmentCofProdData(cofProdId, cofProdDataa);
+
+        // Step 11 cof area
+        console.log("Step 11 COF Area");
+        const cofAreaDataa = {
+          iso_sys_id: formData.iso_sys_id_cof_area,
+          det_sys_id: formData.det_sys_id_cof_area,
+          mitigation_system_id: formData.mitigation_system_id,
+          ideal_gas_specific_heat_eq: formData.ideal_gas_specific_heat_eq_id,
+          ca_cmdflam: formData.ca_cmd_flam_cof_area,
+          ca_injflam: formData.ca_inj_flam_cof_area,
+        };
+        await updateImsCofAssessmentCofAreaData(cofAreaId, cofAreaDataa);
+
+        // Step 12 Risk IRP
+        console.log("Step 12 Risk IRP");
+        const riskIrpDataa = {
+          dhtha: formData.dhtha_risk_irp,
+          dbrit: formData.dbrit_risk_irp,
+          dthin: formData.dthin_risk_irp,
+          dextd: formData.dextd_risk_irp,
+          dscc: formData.dscc_risk_irp,
+          dmfat: formData.dmfat_risk_irp,
+          pof: formData.pof_risk_irp,
+          cof_financial: formData.cof_financial_risk_irp,
+          cof_area: formData.cof_area_risk_irp,
+          pof_value: formData.pof_value_risk_irp,
+          risk_level: formData.risk_level,
+          risk_ranking: formData.risk_ranking,
+        };
+        await updateImsRbiRiskIrpData(riskIrpId, riskIrpDataa);
+
+        // Toast and invalidateQueries
+        toast({
+          title: "Success",
+          description: "RBI updated successfully!",
+          variant: "default",
+        });
+        const queryKeys = [
+          ["i-ims-rbi-general-data"],
+          ["i-df-thin"],
+          ["i-df-ext"],
+          ["i-df-ext-clscc"],
+          ["i-df-mfat"],
+          ["i-df-cui"],
+          ["i-df-scc-scc"],
+          ["i-df-scc-sohic"],
+          ["i-ims-cof-assessment-cof-prod"],
+          ["i-ims-cof-assessment-cof-area"],
+          ["i-ims-rbi-risk-irp"],
+          ["i-ims-pof-assessment-general"]
+        ];
+
+        queryKeys.forEach((key) => {
+          queryClient.invalidateQueries({ queryKey: key });
+        });
+
+        
+      }
+    } catch (error) {
+      console.error("Failed to update RBI data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update RBI data.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingSubmit(false);
+    }
+    
     navigate("/monitor/rbi-assessment");
   };
+
+  if (!allLoaded && formData.asset_detail_id == null) {
+    return <Loading />;
+  }
+
+  if (isLoadingSubmit) {
+    return <Loading />;
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <PageHeader
-          title="RBI Assessment Detail"
+          title="Create New RBI Assessment"
           icon={<ShieldAlert className="h-6 w-6" />}
         />
         <Button
@@ -517,47 +2393,48 @@ const RBIAssessmentDetailPage: React.FC = () => {
           <ArrowLeft className="h-4 w-4" /> Back to RBI Assessment
         </Button>
       </div>
-      {(formData && isPofLoading && isCofProdLoading && isCofAreaLoading && isRbiLoading) ? (
-        <Loading />
-      ) : (
-        <form onSubmit={handleSubmit}>
-          <Card>
-            <CardContent className="pt-6">
-              <h1>TEST: {formData?.art_thin ?? "na"}</h1>
-              {/* <pre>{JSON.stringify(avgs, null, 2)}</pre> */}
+      {/* <h1>last {formData.asset_name ?? "NA"}</h1> */}
+      {/* <h1>last {formData.iso_sys_id_cof_area ?? "NA"}</h1> */}
+      {/* <h1>last {formData.comp_type_cof ?? "NA"}</h1> */}
+      {/* <h1>last {formData.mitigation_system_name ?? "NA"}</h1>
+      <h1>last {formData.mitigation_system_value ?? "NA"}</h1> */}
+      {/* <h1>Asset Detail ID DUMMY. NNTI TUKAR KAT INITIAL : {formData.asset_detail_id ?? "NA"}</h1> */}
+      {/* <pre>{JSON.stringify(imsGeneral, null, 2)}</pre>
+      <pre>{JSON.stringify(imsDesign, null, 2)}</pre> */}
 
-              <Tabs defaultValue="pof" className="w-full">
-                <TabsList className="mb-4">
-                  <TabsTrigger value="pof">POF Assessment</TabsTrigger>
-                  <TabsTrigger value="cof">COF Assessment</TabsTrigger>
-                  <TabsTrigger value="risk">Risk & IRP</TabsTrigger>
-                </TabsList>
-                <TabsContent value="pof">
-                  <PofTab formData={formData} setFormData={setFormData} />
-                </TabsContent>
-                <TabsContent value="cof">
-                  {/* <CofTab formData={formData} setFormData={setFormData} /> */}
-                </TabsContent>
-                <TabsContent value="risk">
-                  {/* <RiskIrpTab formData={formData} setFormData={setFormData} /> */}
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
+      <form onSubmit={handleSubmit}>
+        <Card>
+          <CardContent className="pt-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="pof">POF Assessment</TabsTrigger>
+                <TabsTrigger value="cof">COF Assessment</TabsTrigger>
+                <TabsTrigger value="risk">Risk & IRP</TabsTrigger>
+              </TabsList>
+              <TabsContent value="pof">
+                <PofTab formData={formData} setFormData={setFormData} />
+              </TabsContent>
+              <TabsContent value="cof">
+                <CofTab formData={formData} setFormData={setFormData} />
+              </TabsContent>
+              <TabsContent value="risk">
+                <RiskIrpTab formData={formData} setFormData={setFormData} />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
 
-          <div className="flex justify-end space-x-3 mt-6">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate("/monitor/rbi-assessment")}
-            >
-              Cancel
-            </Button>
-            <Button type="submit">Save Changes
-            </Button>
-          </div>
-        </form>
-      )}
+        <div className="flex justify-end space-x-3 mt-6">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate("/monitor/rbi-assessment")}
+          >
+            Cancel
+          </Button>
+          <Button type="submit">Update RBI</Button>
+        </div>
+      </form>
     </div>
   );
 };

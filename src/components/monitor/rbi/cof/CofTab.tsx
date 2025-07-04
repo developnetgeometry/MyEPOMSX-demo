@@ -4,7 +4,6 @@ import CofProdSubTab from "./subtab/CofProdSubTab";
 import CofAreaSubTab from "./subtab/CofAreaSubTab";
 
 const CofTab: React.FC<{ formData: any; setFormData: any }> = ({ formData, setFormData }) => {
-  const [activeSubTab, setActiveSubTab] = useState("cofProd");
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -16,7 +15,7 @@ const CofTab: React.FC<{ formData: any; setFormData: any }> = ({ formData, setFo
   };
 
   return (
-    <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
+    <Tabs defaultValue="cofProd">
       <TabsList className="mb-4">
         <TabsTrigger value="cofProd">COF PROD</TabsTrigger>
         <TabsTrigger value="cofArea">COF AREA</TabsTrigger>

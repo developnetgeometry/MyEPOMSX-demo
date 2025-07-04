@@ -1,17 +1,17 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 
-export const useBranchDiameterData = () => {
+export const useIdealGasSpecificHeatEqData = () => {
     return useQuery({
-        queryKey: ["i-branch-diameter-data"],
+        queryKey: ["e-ideal-gas-specific-heat-eq-data"],
         queryFn: async () => {
             const { data, error } = await supabase
-                .from("i_branch_diameter")
-                .select("id, name, value")
+                .from("e_ideal_gas_specific_heat_eq")
+                .select("id, name")
                 .order("id");
 
             if (error) {
-                console.error("Error fetching i_branch_diameter data:", error);
+                console.error("Error fetching e_ideal_gas_specific_heat_eq data:", error);
                 throw error;
             }
 

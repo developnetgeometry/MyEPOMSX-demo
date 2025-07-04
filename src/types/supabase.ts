@@ -6204,11 +6204,14 @@ export type Database = {
       }
       i_df_cui: {
         Row: {
+          coating_quality_id: number | null
           cr_act: number | null
           created_at: string | null
           created_by: string | null
+          current_thickness: number | null
           data_confidence_id: number | null
           dfcuiff: number | null
+          external_environment_id: number | null
           i_ims_design_id: number | null
           i_ims_protection_id: number | null
           id: number
@@ -6225,11 +6228,14 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          coating_quality_id?: number | null
           cr_act?: number | null
           created_at?: string | null
           created_by?: string | null
+          current_thickness?: number | null
           data_confidence_id?: number | null
           dfcuiff?: number | null
+          external_environment_id?: number | null
           i_ims_design_id?: number | null
           i_ims_protection_id?: number | null
           id?: number
@@ -6246,11 +6252,14 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          coating_quality_id?: number | null
           cr_act?: number | null
           created_at?: string | null
           created_by?: string | null
+          current_thickness?: number | null
           data_confidence_id?: number | null
           dfcuiff?: number | null
+          external_environment_id?: number | null
           i_ims_design_id?: number | null
           i_ims_protection_id?: number | null
           id?: number
@@ -6267,6 +6276,20 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "i_df_cui_coating_quality_id_fkey"
+            columns: ["coating_quality_id"]
+            isOneToOne: false
+            referencedRelation: "e_coating_quality"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_df_cui_external_environment_id_fkey"
+            columns: ["external_environment_id"]
+            isOneToOne: false
+            referencedRelation: "e_ext_env"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "i_df_cui_i_data_confidence_fk"
             columns: ["data_confidence_id"]
@@ -6315,6 +6338,7 @@ export type Database = {
         Row: {
           created_at: string | null
           created_by: string | null
+          current_thickness: number | null
           data_confidence_id: number | null
           dfextcorrf: number | null
           i_ims_design_id: number | null
@@ -6335,6 +6359,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           created_by?: string | null
+          current_thickness?: number | null
           data_confidence_id?: number | null
           dfextcorrf?: number | null
           i_ims_design_id?: number | null
@@ -6355,6 +6380,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           created_by?: string | null
+          current_thickness?: number | null
           data_confidence_id?: number | null
           dfextcorrf?: number | null
           i_ims_design_id?: number | null
@@ -6419,10 +6445,12 @@ export type Database = {
       }
       i_df_ext_clscc: {
         Row: {
+          coating_quality_id: number | null
           created_at: string | null
           created_by: string | null
           data_confidence_id: number | null
           df_ext_cl_scc: number | null
+          external_environment_id: number | null
           i_ims_design_id: number | null
           i_ims_protection_id: number | null
           id: number
@@ -6436,10 +6464,12 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          coating_quality_id?: number | null
           created_at?: string | null
           created_by?: string | null
           data_confidence_id?: number | null
           df_ext_cl_scc?: number | null
+          external_environment_id?: number | null
           i_ims_design_id?: number | null
           i_ims_protection_id?: number | null
           id?: number
@@ -6453,10 +6483,12 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          coating_quality_id?: number | null
           created_at?: string | null
           created_by?: string | null
           data_confidence_id?: number | null
           df_ext_cl_scc?: number | null
+          external_environment_id?: number | null
           i_ims_design_id?: number | null
           i_ims_protection_id?: number | null
           id?: number
@@ -6470,6 +6502,20 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "i_df_ext_clscc_coating_quality_id_fkey"
+            columns: ["coating_quality_id"]
+            isOneToOne: false
+            referencedRelation: "e_coating_quality"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "i_df_ext_clscc_external_environment_id_fkey"
+            columns: ["external_environment_id"]
+            isOneToOne: false
+            referencedRelation: "e_ext_env"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "i_df_ext_clscc_i_data_confidence_fk"
             columns: ["data_confidence_id"]
@@ -6776,6 +6822,7 @@ export type Database = {
           ims_rbi_general_id: number | null
           inspection_efficiency_id: number | null
           last_inspection_date: string | null
+          online_monitor_id: number | null
           ph: number | null
           steelscontent_id: number | null
           updated_at: string | null
@@ -6794,6 +6841,7 @@ export type Database = {
           ims_rbi_general_id?: number | null
           inspection_efficiency_id?: number | null
           last_inspection_date?: string | null
+          online_monitor_id?: number | null
           ph?: number | null
           steelscontent_id?: number | null
           updated_at?: string | null
@@ -6812,6 +6860,7 @@ export type Database = {
           ims_rbi_general_id?: number | null
           inspection_efficiency_id?: number | null
           last_inspection_date?: string | null
+          online_monitor_id?: number | null
           ph?: number | null
           steelscontent_id?: number | null
           updated_at?: string | null
@@ -6860,12 +6909,20 @@ export type Database = {
             referencedRelation: "i_ims_rbi_general"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "i_df_scc_sohic_online_monitor_id_fkey"
+            columns: ["online_monitor_id"]
+            isOneToOne: false
+            referencedRelation: "e_online_monitor_df_scc_sohic"
+            referencedColumns: ["id"]
+          },
         ]
       }
       i_df_thin: {
         Row: {
           agerc: string | null
           cr_act: number | null
+          current_thickness: number | null
           data_confidence_id: number | null
           dfthinfb: number | null
           i_ims_design_id: number | null
@@ -6874,6 +6931,7 @@ export type Database = {
           ims_pof_assessment_id: number | null
           ims_rbi_general_id: number | null
           last_inspection_date: string | null
+          new_coating_date: string | null
           nthin_a: number | null
           nthin_b: number | null
           nthin_c: number | null
@@ -6882,6 +6940,7 @@ export type Database = {
         Insert: {
           agerc?: string | null
           cr_act?: number | null
+          current_thickness?: number | null
           data_confidence_id?: number | null
           dfthinfb?: number | null
           i_ims_design_id?: number | null
@@ -6890,6 +6949,7 @@ export type Database = {
           ims_pof_assessment_id?: number | null
           ims_rbi_general_id?: number | null
           last_inspection_date?: string | null
+          new_coating_date?: string | null
           nthin_a?: number | null
           nthin_b?: number | null
           nthin_c?: number | null
@@ -6898,6 +6958,7 @@ export type Database = {
         Update: {
           agerc?: string | null
           cr_act?: number | null
+          current_thickness?: number | null
           data_confidence_id?: number | null
           dfthinfb?: number | null
           i_ims_design_id?: number | null
@@ -6906,6 +6967,7 @@ export type Database = {
           ims_pof_assessment_id?: number | null
           ims_rbi_general_id?: number | null
           last_inspection_date?: string | null
+          new_coating_date?: string | null
           nthin_a?: number | null
           nthin_b?: number | null
           nthin_c?: number | null
@@ -7130,6 +7192,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "i_ims_cof_assessment_cof_area_ideal_gas_specific_heat_eq_fkey"
+            columns: ["ideal_gas_specific_heat_eq"]
+            isOneToOne: false
+            referencedRelation: "e_ideal_gas_specific_heat_eq"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "i_ims_cof_assessment_cof_area_ims_rbi_general_id_fkey"
             columns: ["ims_rbi_general_id"]
             isOneToOne: false
@@ -7193,6 +7262,7 @@ export type Database = {
           ims_general_id: number | null
           ims_rbi_general_id: number | null
           injcost: number | null
+          lra_prod: number | null
           outagemult: number | null
           updated_at: string | null
           updated_by: string | null
@@ -7210,6 +7280,7 @@ export type Database = {
           ims_general_id?: number | null
           ims_rbi_general_id?: number | null
           injcost?: number | null
+          lra_prod?: number | null
           outagemult?: number | null
           updated_at?: string | null
           updated_by?: string | null
@@ -7227,6 +7298,7 @@ export type Database = {
           ims_general_id?: number | null
           ims_rbi_general_id?: number | null
           injcost?: number | null
+          lra_prod?: number | null
           outagemult?: number | null
           updated_at?: string | null
           updated_by?: string | null
@@ -7488,7 +7560,7 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "i_ims_general_i_ims_asset_type_fk"
+            foreignKeyName: "i_ims_general_ims_asset_type_id_fkey"
             columns: ["ims_asset_type_id"]
             isOneToOne: false
             referencedRelation: "i_ims_asset_type"
@@ -7865,27 +7937,42 @@ export type Database = {
       i_ims_rbi_general: {
         Row: {
           asset_detail_id: number | null
+          asset_name: string | null
+          cof_area_value: number | null
+          cof_finance_value: number | null
+          cof_value: number | null
           created_at: string
-          i_ims_design: number | null
           i_ims_general_id: number | null
           id: number
+          pof_value: string | null
           rbi_no: string | null
+          risk_level: string | null
         }
         Insert: {
           asset_detail_id?: number | null
+          asset_name?: string | null
+          cof_area_value?: number | null
+          cof_finance_value?: number | null
+          cof_value?: number | null
           created_at?: string
-          i_ims_design?: number | null
           i_ims_general_id?: number | null
           id?: number
+          pof_value?: string | null
           rbi_no?: string | null
+          risk_level?: string | null
         }
         Update: {
           asset_detail_id?: number | null
+          asset_name?: string | null
+          cof_area_value?: number | null
+          cof_finance_value?: number | null
+          cof_value?: number | null
           created_at?: string
-          i_ims_design?: number | null
           i_ims_general_id?: number | null
           id?: number
+          pof_value?: string | null
           rbi_no?: string | null
+          risk_level?: string | null
         }
         Relationships: [
           {
@@ -7893,13 +7980,6 @@ export type Database = {
             columns: ["asset_detail_id"]
             isOneToOne: false
             referencedRelation: "e_asset_detail"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "i_ims_rbi_general_i_ims_design_fkey"
-            columns: ["i_ims_design"]
-            isOneToOne: false
-            referencedRelation: "i_ims_design"
             referencedColumns: ["id"]
           },
           {
@@ -7928,7 +8008,7 @@ export type Database = {
           ims_general_id: number | null
           ims_rbi_general_id: number | null
           pof: number | null
-          pof_value: number | null
+          pof_value: string | null
           risk_level: number | null
           risk_ranking: number | null
           updated_at: string | null
@@ -7950,7 +8030,7 @@ export type Database = {
           ims_general_id?: number | null
           ims_rbi_general_id?: number | null
           pof?: number | null
-          pof_value?: number | null
+          pof_value?: string | null
           risk_level?: number | null
           risk_ranking?: number | null
           updated_at?: string | null
@@ -7972,7 +8052,7 @@ export type Database = {
           ims_general_id?: number | null
           ims_rbi_general_id?: number | null
           pof?: number | null
-          pof_value?: number | null
+          pof_value?: string | null
           risk_level?: number | null
           risk_ranking?: number | null
           updated_at?: string | null
@@ -8807,6 +8887,21 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      rbi_asset_counter: {
+        Row: {
+          asset_name: string
+          counter: number
+        }
+        Insert: {
+          asset_name: string
+          counter?: number
+        }
+        Update: {
+          asset_name?: string
+          counter?: number
+        }
+        Relationships: []
       }
       user_projects: {
         Row: {

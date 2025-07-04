@@ -7,7 +7,7 @@ export const useVisibleAudioShakingData = () => {
         queryFn: async () => {
             const { data, error } = await supabase
                 .from("i_visible_audio_shaking")
-                .select("id, name")
+                .select("id, name, value")
                 .order("id");
 
             if (error) {

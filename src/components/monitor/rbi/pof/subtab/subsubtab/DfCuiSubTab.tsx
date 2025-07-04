@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -20,11 +21,28 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
   const { data: insulationConditions } = useInsulationConditionData();
   const { data: designFabrications } = useDesignFabricationData();
   const { data: interfaces } = useInterfaceData();
+  const [precision, setPrecision] = useState<2 | 8>(2);
+
+  const formatNumber = (val: number | null) => {
+    if (val === null || val === undefined) return "";
+    return parseFloat(Number(val).toFixed(precision)).toString();
+  };
 
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Toggle precision */}
+      <div className="flex justify-end">
+        <Button
+          type="button"
+          onClick={() => setPrecision((prev) => (prev === 2 ? 8 : 2))}
+          variant="outline"
+          size="sm"
+        >
+          Accuracy: {precision} decimals
+        </Button>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div>
           <Label htmlFor="last_inspection_date_cui">Last Inspection Date</Label>
           <Input
@@ -65,6 +83,19 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             </SelectContent>
           </Select>
         </div>
+        <div>
+          <Label htmlFor="current_thickness_cui">Current Thickness (mm)</Label>
+          <Input
+            id="current_thickness_cui"
+            name="current_thickness_cui"
+            type="number"
+            step="any"
+            value={formData?.current_thickness_cui ?? ""}
+            onChange={handleInputChange}
+            className="mt-1"
+            placeholder="Enter Current Thickness (mm)"
+          />
+        </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div>
@@ -73,7 +104,7 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="agetk_cui"
             name="agetk_cui"
             type="number"
-            value={formData?.agetk_cui || 0}
+            value={formatNumber(formData?.agetk_cui) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -85,7 +116,7 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="agecoat_cui"
             name="agecoat_cui"
             type="number"
-            value={formData?.agecoat_cui || 0}
+            value={formatNumber(formData?.agecoat_cui) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -97,7 +128,7 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="coatadj_cui"
             name="coatadj_cui"
             type="number"
-            value={formData?.coatadj_cui || 0}
+            value={formatNumber(formData?.coatadj_cui) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -109,7 +140,7 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="age_cui"
             name="age_cui"
             type="number"
-            value={formData?.age_cui || 0}
+            value={formatNumber(formData?.age_cui) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -156,104 +187,12 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
       </div>
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <div>
-          <Label htmlFor="insulation_type_id_cui">Insul Type</Label>
-          <Select
-            value={formData?.insulation_type_id_cui?.toString() || ""}
-            onValueChange={(value) => handleSelectChange("insulation_type_id_cui", parseInt(value))}
-          >
-            <SelectTrigger className="mt-1">
-              <SelectValue placeholder="Select Insulation Type" />
-            </SelectTrigger>
-            <SelectContent>
-              {insulationTypes?.map((type) => (
-                <SelectItem key={type.id} value={type.id.toString()}>
-                  {type.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label htmlFor="insulation_complexity_id_cui">Insul Complexity</Label>
-          <Select
-            value={formData?.insulation_complexity_id_cui?.toString() || ""}
-            onValueChange={(value) => handleSelectChange("insulation_complexity_id_cui", parseInt(value))}
-          >
-            <SelectTrigger className="mt-1">
-              <SelectValue placeholder="Select Insulation Complexity" />
-            </SelectTrigger>
-            <SelectContent>
-              {insulationComplexities?.map((complexity) => (
-                <SelectItem key={complexity.id} value={complexity.id.toString()}>
-                  {complexity.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label htmlFor="insulation_condition_cui">Insul Condition</Label>
-          <Select
-            value={formData?.insulation_condition_cui?.toString() || ""}
-            onValueChange={(value) => handleSelectChange("insulation_condition_cui", parseInt(value))}
-          >
-            <SelectTrigger className="mt-1">
-              <SelectValue placeholder="Select Insulation Condition" />
-            </SelectTrigger>
-            <SelectContent>
-              {insulationConditions?.map((condition) => (
-                <SelectItem key={condition.id} value={condition.id.toString()}>
-                  {condition.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label htmlFor="design_fabrication_id_cui">Design Fabric</Label>
-          <Select
-            value={formData?.design_fabrication_id_cui?.toString() || ""}
-            onValueChange={(value) => handleSelectChange("design_fabrication_id_cui", parseInt(value))}
-          >
-            <SelectTrigger className="mt-1">
-              <SelectValue placeholder="Select Design Fabrication" />
-            </SelectTrigger>
-            <SelectContent>
-              {designFabrications?.map((fabrication) => (
-                <SelectItem key={fabrication.id} value={fabrication.id.toString()}>
-                  {fabrication.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label htmlFor="interface_id_cui">Interface</Label>
-          <Select
-            value={formData?.interface_id_cui?.toString() || ""}
-            onValueChange={(value) => handleSelectChange("interface_id_cui", parseInt(value))}
-          >
-            <SelectTrigger className="mt-1">
-              <SelectValue placeholder="Select Interface" />
-            </SelectTrigger>
-            <SelectContent>
-              {interfaces?.map((interfaceItem) => (
-                <SelectItem key={interfaceItem.id} value={interfaceItem.id.toString()}>
-                  {interfaceItem.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-        <div>
           <Label htmlFor="crexp_cui">CR Exp</Label>
           <Input
             id="crexp_cui"
             name="crexp_cui"
             type="number"
-            value={formData?.crexp_cui || 0}
+            value={formatNumber(formData?.crexp_cui) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -265,9 +204,11 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="cract_cui"
             name="cract_cui"
             type="number"
-            value={formData?.cract_cui || 0}
+            step="any"
+            value={formData?.cract_cui ?? ""}
             onChange={handleInputChange}
             className="mt-1"
+            placeholder="Enter CR Act"
           />
         </div>
         <div>
@@ -276,7 +217,7 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="art_cui"
             name="art_cui"
             type="number"
-            value={formData?.art_cui || 0}
+            value={formatNumber(formData?.art_cui) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -288,7 +229,7 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="fscuif_cui"
             name="fscuif_cui"
             type="number"
-            value={formData?.fscuif_cui || 0}
+            value={formatNumber(formData?.fscuif_cui) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -300,7 +241,7 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="srcuif_cui"
             name="srcuif_cui"
             type="number"
-            value={formData?.srcuif_cui || 0}
+            value={formatNumber(formData?.srcuif_cui) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -314,10 +255,11 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="ncuifa_cui"
             name="ncuifa_cui"
             type="number"
-            value={formData?.ncuifa_cui || 0}
+            step="any"
+            value={formData?.ncuifa_cui || ""}
             onChange={handleInputChange}
             className="mt-1"
-            disabled
+            placeholder="Enter NCUIF A"
           />
         </div>
         <div>
@@ -326,10 +268,11 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="ncuifb_cui"
             name="ncuifb_cui"
             type="number"
-            value={formData?.ncuifb_cui || 0}
+            step="any"
+            value={formData?.ncuifb_cui || ""}
             onChange={handleInputChange}
             className="mt-1"
-            disabled
+            placeholder="Enter NCUIF B"
           />
         </div>
         <div>
@@ -338,10 +281,11 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="ncuifc_cui"
             name="ncuifc_cui"
             type="number"
-            value={formData?.ncuifc_cui || 0}
+            step="any"
+            value={formData?.ncuifc_cui || ""}
             onChange={handleInputChange}
             className="mt-1"
-            disabled
+            placeholder="Enter NCUIF C"
           />
         </div>
         <div>
@@ -350,10 +294,11 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="ncuifd_cui"
             name="ncuifd_cui"
             type="number"
-            value={formData?.ncuifd_cui || 0}
+            step="any"
+            value={formData?.ncuifd_cui || ""}
             onChange={handleInputChange}
             className="mt-1"
-            disabled
+            placeholder="Enter NCUIF D"
           />
         </div>
       </div>
@@ -364,7 +309,7 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="icuif1_cui"
             name="icuif1_cui"
             type="number"
-            value={formData?.icuif1_cui || 0}
+            value={formatNumber(formData?.icuif1_cui) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -376,7 +321,7 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="icuif2_cui"
             name="icuif2_cui"
             type="number"
-            value={formData?.icuif2_cui || 0}
+            value={formatNumber(formData?.icuif2_cui) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -388,7 +333,7 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="icuif3_cui"
             name="icuif3_cui"
             type="number"
-            value={formData?.icuif3_cui || 0}
+            value={formatNumber(formData?.icuif3_cui) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -403,7 +348,7 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="pociufp1_cui"
             name="pociufp1_cui"
             type="number"
-            value={formData?.pociufp1_cui || 0}
+            value={formatNumber(formData?.pociufp1_cui) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -415,7 +360,7 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="pociufp2_cui"
             name="pociufp2_cui"
             type="number"
-            value={formData?.pociufp2_cui || 0}
+            value={formatNumber(formData?.pociufp2_cui) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -427,7 +372,7 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="pociufp3_cui"
             name="pociufp3_cui"
             type="number"
-            value={formData?.pociufp3_cui || 0}
+            value={formatNumber(formData?.pociufp3_cui) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -441,7 +386,7 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="bcuif1_cui"
             name="bcuif1_cui"
             type="number"
-            value={formData?.bcuif1_cui || 0}
+            value={formatNumber(formData?.bcuif1_cui) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -453,7 +398,7 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="bcuif2_cui"
             name="bcuif2_cui"
             type="number"
-            value={formData?.bcuif2_cui || 0}
+            value={formatNumber(formData?.bcuif2_cui) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -465,7 +410,7 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="bcuif3_cui"
             name="bcuif3_cui"
             type="number"
-            value={formData?.bcuif3_cui || 0}
+            value={formatNumber(formData?.bcuif3_cui) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled
@@ -480,7 +425,7 @@ const DfCuiSubTab: React.FC<{ formData: any; handleInputChange: any; handleSelec
             id="dfcuiff_cui"
             name="dfcuiff_cui"
             type="number"
-            value={formData?.dfcuiff_cui || 0}
+            value={formatNumber(formData?.dfcuiff_cui) || 0}
             onChange={handleInputChange}
             className="mt-1"
             disabled

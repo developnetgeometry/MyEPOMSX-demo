@@ -1,9 +1,9 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 
-export const useImsDfExtData = (imsGeneralId: number) => {
+export const useImsDfExtData = (rbiGeneralId: number) => {
   return useQuery({
-    queryKey: ["i-df-ext", imsGeneralId],
+    queryKey: ["i-df-ext", rbiGeneralId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("i_df_ext")
@@ -11,9 +11,9 @@ export const useImsDfExtData = (imsGeneralId: number) => {
           `id, last_inspection_date, new_coating_date, ims_pof_assessment_id,
           data_confidence_id, dfextcorrf, i_ims_protection_id(coating_quality_id),
           i_ims_design_id (ext_env_id, pipe_support, soil_water_interface, operating_temperature ),
-          nextcorra, nextcorrb, nextcorrc, nextcorrd, ims_general_id`
+          nextcorra, nextcorrb, nextcorrc, nextcorrd, ims_general_id, current_thickness`
         )
-        .eq("ims_general_id", imsGeneralId) // Fetch records based on ims_por_assessment_id
+        .eq("ims_rbi_general_id", rbiGeneralId) // Fetch records based on ims_por_assessment_id
         .single(); // Use single() to get a single record
 
       if (error) {
@@ -23,14 +23,14 @@ export const useImsDfExtData = (imsGeneralId: number) => {
 
       return data;
     },
-    enabled: !!imsGeneralId, // Only fetch if imsGeneralId is provided
+    enabled: !!rbiGeneralId, // Only fetch if rbiGeneralId is provided
   });
 };
 
 export const insertImsDfExtData = async (dfExtData: {
   last_inspection_date?: string; // Use ISO string format for dates
   new_coating_date?: string; // Use ISO string format for dates
-  ims_por_assessment_id?: number;
+  ims_pof_assessment_id?: number;
   data_confidence_id?: number;
   dfextcorrf?: number;
   i_ims_protection_id?: number;
@@ -39,6 +39,9 @@ export const insertImsDfExtData = async (dfExtData: {
   nextcorrb?: number;
   nextcorrc?: number;
   nextcorrd?: number;
+  ims_general_id?: number;
+  ims_rbi_general_id?: number;
+  current_thickness?: number; // Optional, if you want to store the current thickness
 }) => {
   try {
     const { data, error } = await supabase
@@ -71,6 +74,7 @@ export const updateImsDfExtData = async (
     nextcorrb?: number;
     nextcorrc?: number;
     nextcorrd?: number;
+    current_thickness?: number; // Optional, if you want to store the current thickness
   }>
 ) => {
   try {

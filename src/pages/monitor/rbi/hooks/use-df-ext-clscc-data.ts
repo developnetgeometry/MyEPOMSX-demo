@@ -1,18 +1,18 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 
-export const useImsDfExtClsccData = (imsGeneralId: number) => {
+export const useImsDfExtClsccData = (rbiGeneralId: number) => {
   return useQuery({
-    queryKey: ["i-df-ext-clscc", imsGeneralId],
+    queryKey: ["i-df-ext-clscc", rbiGeneralId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("i_df_ext_clscc")
         .select(
-          `id, last_inspection_date, new_coating_date, inspection_efficiency_id,
-          ims_pof_asessment_id, data_confidence_id, df_ext_cl_scc,
-          i_ims_protection_id (coating_quality_id), i_ims_design_id (ext_env_id), ims_general_id`
+          `id, last_inspection_date, new_coating_date, inspection_efficiency_id (id, name),
+          ims_pof_asessment_id, data_confidence_id, df_ext_cl_scc, ims_general_id,
+          coating_quality_id, external_environment_id`
         )
-        .eq("ims_general_id", imsGeneralId) // Fetch records based on ims_pof_asessment_id
+        .eq("ims_rbi_general_id", rbiGeneralId) // Fetch records based on ims_pof_asessment_id
         .single(); // Use single() to get a single record
 
       if (error) {
@@ -22,19 +22,23 @@ export const useImsDfExtClsccData = (imsGeneralId: number) => {
 
       return data;
     },
-    enabled: !!imsGeneralId, // Only fetch if imsGeneralId is provided
+    enabled: !!rbiGeneralId, // Only fetch if rbiGeneralId is provided
   });
 };
 
 export const insertImsDfExtClsccData = async (dfExtClsccData: {
   last_inspection_date?: string; // Use ISO string format for dates
   new_coating_date?: string; // Use ISO string format for dates
-  inspection_efficiency?: number;
+  inspection_efficiency_id?: number;
   ims_pof_asessment_id?: number;
   data_confidence_id?: number;
   df_ext_cl_scc?: number;
   i_ims_protection_id?: number;
   i_ims_design_id?: number;
+  ims_general_id?: number;
+  ims_rbi_general_id?: number;
+  coating_quality_id?: number;
+  external_environment_id?: number;
 }) => {
   try {
     const { data, error } = await supabase
@@ -64,6 +68,8 @@ export const updateImsDfExtClsccData = async (
     df_ext_cl_scc?: number;
     i_ims_protection_id?: number;
     i_ims_design_id?: number;
+    coating_quality_id?: number;
+    external_environment_id?: number;
   }>
 ) => {
   try {
