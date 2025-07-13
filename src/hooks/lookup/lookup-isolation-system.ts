@@ -19,3 +19,8 @@ export const useIsolationSystemData = () => {
         },
     });
 };
+
+export const useIsolationSystemOptions = () => {
+    const { data } = useIsolationSystemData();
+    return data?.map((item) => ({ value: item.id, label: item.name }));
+};

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable, { Column } from "@/components/shared/DataTable";
@@ -6,13 +6,31 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FileCodeIcon } from "lucide-react";
 import { useCorrosionStudies } from "@/hooks/queries/useCorrosionStudy";
 import { formatDate } from "@/utils/formatters";
+import Loading from "@/components/shared/Loading";
+import SearchFilters from "@/components/shared/SearchFilters";
+import useDebounce from "@/hooks/use-debounce";
 
 
 const CorrosionStudiesPage: React.FC = () => {
   const navigate = useNavigate();
 
   // Corrosion study page data and mutation
-  const { data: corrosionStudies, isLoading: loadingStudies } = useCorrosionStudies();
+  const { data: corrosionStudies, isLoading: loadingStudies } = useCorrosionStudies()
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
+  const filteredData = useMemo(() => {
+    if (!corrosionStudies) return [];
+    if (!debouncedSearchTerm.trim()) return corrosionStudies;
+  
+    const lowerSearch = debouncedSearchTerm.toLowerCase();
+    return corrosionStudies.filter(
+      (study) =>
+        study.studyCode?.toLowerCase().includes(lowerSearch) ||
+        study.studyName?.toLowerCase().includes(lowerSearch) ||
+        study.assetName?.toLowerCase().includes(lowerSearch)
+    );
+  }, [corrosionStudies, debouncedSearchTerm]);
   
 
   const handleAddNew = () => {
@@ -23,6 +41,10 @@ const CorrosionStudiesPage: React.FC = () => {
   const handleRowClick = (row: any) => {
     navigate(`/monitor/corrosion-studies/${row.id}`);
   };
+
+  const handleSearch = () => {
+
+  }
 
   // Function to get appropriate color class based on corrosion rate
   const getCorrosionRateColor = (rate: number) => {
@@ -83,16 +105,27 @@ const CorrosionStudiesPage: React.FC = () => {
         icon={<FileCodeIcon className="h-6 w-6" />}
         onAddNew={handleAddNew}
         addNewLabel="New Study"
-        onSearch={(query) => console.log("Search:", query)}
       />
 
       <Card>
         <CardContent className="p-6">
-          <DataTable
-            columns={columns}
-            data={corrosionStudies}
-            onRowClick={handleRowClick}
-          />
+          {loadingStudies ? (
+            <Loading />
+          ) : (
+            <>
+            <SearchFilters
+              text="Corrosion Studies"
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              handleSearch={handleSearch}
+            />
+            <DataTable
+              columns={columns}
+              data={filteredData}
+              onRowClick={handleRowClick}
+            />
+            </>
+          )}
         </CardContent>
       </Card>
     </div>

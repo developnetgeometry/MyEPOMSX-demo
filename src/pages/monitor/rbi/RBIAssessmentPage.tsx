@@ -8,11 +8,14 @@ import StatusBadge from "@/components/shared/StatusBadge";
 import { ShieldAlertIcon } from "lucide-react";
 import Loading from "@/components/shared/Loading";
 import { useImsRbiGeneralData } from "./hooks/use-ims-rbi-general-data";
+import SearchFilters from "@/components/shared/SearchFilters";
+import useDebounce from "@/hooks/use-debounce";
 
 const RBIAssessmentPage: React.FC = () => {
   const navigate = useNavigate();
   const { data: rbiData, isLoading, error } = useImsRbiGeneralData();
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
   const handleAddNew = () => {
     navigate("/monitor/rbi-assessment/new");
@@ -22,8 +25,8 @@ const RBIAssessmentPage: React.FC = () => {
     navigate(`/monitor/rbi-assessment/${row.id}`);
   };
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
+  const handleSearch = () => {
+
   };
 
   const getRiskRankColor = (rank: string) => {
@@ -41,21 +44,19 @@ const RBIAssessmentPage: React.FC = () => {
     }
   };
 
-  const filteredRbiData = useMemo(() => {
+  const filteredData = useMemo(() => {
     if (!rbiData) return [];
-    if (!searchQuery) return rbiData;
+    if(!debouncedSearchQuery.trim()) return rbiData;
 
-    const lower = searchQuery.toLowerCase();
+    const lowerSearch = debouncedSearchQuery.toLowerCase();
     return rbiData.filter(
-      (item: any) =>
-        item.asset_no.toLowerCase().includes(lower) ||
-        item.asset_name.toLowerCase().includes(lower) ||
-        item.type_name.toLowerCase().includes(lower) ||
-        item.pof_value.toLowerCase().includes(lower) ||
-        item.cof_value.toString().includes(lower) ||
-        item.risk_level.toLowerCase().includes(lower)
+      (rbi) =>
+        rbi.rbi_no?.toLowerCase().includes(lowerSearch) ||
+        rbi.asset_detail_id.e_asset.asset_no?.toLowerCase().includes(lowerSearch) ||
+        rbi.asset_detail_id.e_asset.asset_name?.toLowerCase().includes(lowerSearch) ||
+        rbi.asset_detail_id.type_id.name?.toLowerCase().includes(lowerSearch)
     );
-  }, [rbiData, searchQuery]);
+  }, [rbiData, debouncedSearchQuery]);
 
   const columns: Column[] = [
     { id: "rbi_no", header: "RBI No", accessorKey: "rbi_no" },
@@ -100,7 +101,6 @@ const RBIAssessmentPage: React.FC = () => {
         icon={<ShieldAlertIcon className="h-6 w-6" />}
         onAddNew={handleAddNew}
         addNewLabel="New Assessment"
-        onSearch={handleSearch}
       />
       {/* <pre>{JSON.stringify(rbiData, null, 2)}</pre> */}
 
@@ -110,12 +110,21 @@ const RBIAssessmentPage: React.FC = () => {
           {isLoading ? (
             <Loading />
           ) : (
+            <>
+            <SearchFilters
+              text="RBI"
+              searchTerm={searchQuery}
+              setSearchTerm={setSearchQuery}
+              handleSearch={handleSearch}
+              />
+
             <DataTable
               columns={columns}
-              data={filteredRbiData}
+              data={filteredData}
               onRowClick={handleRowClick}
               onIndex={true}
             />
+            </>
           )}
         </CardContent>
       </Card>

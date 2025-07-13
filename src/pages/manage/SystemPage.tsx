@@ -173,6 +173,7 @@ const SystemPage: React.FC = () => {
 
         setIsDialogOpen(false);
       } catch (error: any) {
+        console.error(error);
         toast({
           title: isEditMode ? "Error updating system" : "Error creating system",
           description: error.message,

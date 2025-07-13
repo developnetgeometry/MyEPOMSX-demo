@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable, { Column } from "@/components/shared/DataTable";
@@ -16,20 +16,37 @@ import { formatDate } from "@/utils/formatters";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { useWorkRequestData } from "../hooks/use-work-request-data";
+import { Card, CardContent } from "@/components/ui/card";
+import SearchFilters from "@/components/shared/SearchFilters";
+import useDebounce from "@/hooks/use-debounce";
 
 const WorkRequestPage: React.FC = () => {
   const navigate = useNavigate();
   const { data: workRequests, isLoading, refetch } = useWorkRequestData();
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
+  const filteredData = useMemo(() => {
+      if (!workRequests) return [];
+      if (!debouncedSearchTerm.trim()) return workRequests;
+  
+      const lowerSearch = debouncedSearchTerm.toLowerCase();
+      return workRequests.filter(
+        (work) =>
+          work.work_request_no?.toLowerCase().includes(lowerSearch) ||
+          work.asset_id?.asset_name?.toLowerCase().includes(lowerSearch)
+      );
+    }, [workRequests, debouncedSearchTerm]);
 
   const handleRowClick = (row: any) => {
     navigate(`/work-orders/work-request/${row.id}`);
   };
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-  };
+  const handleSearch = useCallback(() => {
+    
+  }, []);
 
   const handleCreateNewWorkRequest = (assetId: number) => {
     navigate("/work-orders/work-request/new", {
@@ -80,18 +97,27 @@ const WorkRequestPage: React.FC = () => {
         title="Work Requests"
         onAddNew={() => handleCreateNewWorkRequest(null)}
         addNewLabel="New Work Request"
-        onSearch={handleSearch}
       />
 
       {isLoading ? (
         <Loading />
       ) : (
-        <DataTable
-          columns={columns}
-          data={filteredWorkRequests}
-          onRowClick={handleRowClick}
-          onIndex={true}
-        />
+        <Card>
+          <CardContent className="pt-6">
+            <SearchFilters
+              text="Work Requests"
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              handleSearch={handleSearch}
+            />
+            <DataTable
+              columns={columns}
+              data={filteredData || []}
+              onRowClick={handleRowClick}
+              onIndex={true}
+            />
+          </CardContent>
+        </Card>
       )}
 
     </div>

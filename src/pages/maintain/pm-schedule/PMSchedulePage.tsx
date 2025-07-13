@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable, { Column } from "@/components/shared/DataTable";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   usePmScheduleData,
-  insertPmScheduleData
+  insertPmScheduleData,
 } from "../hooks/use-pm-schedule-data";
 import {
   Dialog,
@@ -24,6 +24,9 @@ import PMScheduleDialogForm from "./PMScheduleDialogForm";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { createWorkOrderMany } from "../hooks/use-pm-work-generate";
+import { Card, CardContent } from "@/components/ui/card";
+import SearchFilters from "@/components/shared/SearchFilters";
+import useDebounce from "@/hooks/use-debounce";
 
 const PMSchedulePage: React.FC = () => {
   const navigate = useNavigate();
@@ -35,22 +38,33 @@ const PMSchedulePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<any | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
   const { toast } = useToast();
 
+  const filteredData = useMemo(() => {
+    if (!pmSchedules) return [];
+    if (!debouncedSearchTerm.trim()) return pmSchedules;
+
+    const lowerSearch = debouncedSearchTerm.toLowerCase();
+    return pmSchedules.filter(
+      (pm) =>
+        pm.pm_no?.toLowerCase().includes(lowerSearch) ||
+        pm.asset_id?.asset_name?.toLowerCase().includes(lowerSearch)
+    );
+  }, [pmSchedules, debouncedSearchTerm]);
 
   const handleRowClick = (row: any) => {
     navigate(`/maintain/pm-schedule/${row.id}`);
   };
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-  };
+  const handleSearch = useCallback(() => {}, []);
 
   const handleAddNew = () => {
     setEditingSchedule(null);
     setIsDialogOpen(true);
   };
-
 
   const handleFormSubmit = async (formData: any) => {
     try {
@@ -73,47 +87,50 @@ const PMSchedulePage: React.FC = () => {
     }
   };
 
-const { filteredSchedules, readyToGenerateCount } = useMemo(() => {
-  if (!pmSchedules) return { filteredSchedules: [], readyToGenerateCount: 0 };
+  const { filteredSchedules, readyToGenerateCount } = useMemo(() => {
+    if (!pmSchedules) return { filteredSchedules: [], readyToGenerateCount: 0 };
 
-  let filtered = pmSchedules;
+    let filtered = pmSchedules;
 
-  // Filter by search query
-  if (searchQuery) {
-    const lower = searchQuery.toLowerCase();
-    filtered = filtered.filter(
-      (schedule: any) =>
-        schedule.pm_no?.toLowerCase().includes(lower) ||
-        schedule.pm_description?.toLowerCase().includes(lower) ||
-        schedule.asset_id?.asset_name?.toLowerCase().includes(lower) ||
-        schedule.work_center_id?.name?.toLowerCase().includes(lower) ||
-        schedule.frequency_id?.name?.toLowerCase().includes(lower)
-    );
-  }
+    // Filter by search query
+    if (searchQuery) {
+      const lower = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (schedule: any) =>
+          schedule.pm_no?.toLowerCase().includes(lower) ||
+          schedule.pm_description?.toLowerCase().includes(lower) ||
+          schedule.asset_id?.asset_name?.toLowerCase().includes(lower) ||
+          schedule.work_center_id?.name?.toLowerCase().includes(lower) ||
+          schedule.frequency_id?.name?.toLowerCase().includes(lower)
+      );
+    }
 
-  // Filter by start_date, end_date, and is_active = true
-  if (start_date || end_date) {
-    filtered = filtered.filter((schedule: any) => {
-      const dueDate = new Date(schedule.due_date).getTime();
-      const startDate = start_date ? new Date(start_date).getTime() : null;
-      const endDate = end_date ? new Date(end_date).getTime() : null;
+    // Filter by start_date, end_date, and is_active = true
+    if (start_date || end_date) {
+      filtered = filtered.filter((schedule: any) => {
+        const dueDate = new Date(schedule.due_date).getTime();
+        const startDate = start_date ? new Date(start_date).getTime() : null;
+        const endDate = end_date ? new Date(end_date).getTime() : null;
 
-      const isWithinDateRange =
-        (startDate && endDate && dueDate >= startDate && dueDate <= endDate) ||
-        (startDate && dueDate >= startDate) ||
-        (endDate && dueDate <= endDate);
+        const isWithinDateRange =
+          (startDate &&
+            endDate &&
+            dueDate >= startDate &&
+            dueDate <= endDate) ||
+          (startDate && dueDate >= startDate) ||
+          (endDate && dueDate <= endDate);
 
-      return schedule.is_active && isWithinDateRange; // Ensure is_active is true
-    });
-  }
+        return schedule.is_active && isWithinDateRange; // Ensure is_active is true
+      });
+    }
 
-  // Count PM Schedules ready to be generated
-  const readyToGenerateCount = filtered.filter(
-    (schedule: any) => schedule.is_active && !schedule.is_deleted
-  ).length;
+    // Count PM Schedules ready to be generated
+    const readyToGenerateCount = filtered.filter(
+      (schedule: any) => schedule.is_active && !schedule.is_deleted
+    ).length;
 
-  return { filteredSchedules: filtered, readyToGenerateCount };
-}, [pmSchedules, searchQuery, start_date, end_date]);
+    return { filteredSchedules: filtered, readyToGenerateCount };
+  }, [pmSchedules, searchQuery, start_date, end_date]);
 
   const handleCreateWoMany = async () => {
     if (!start_date || !end_date) {
@@ -179,9 +196,17 @@ const { filteredSchedules, readyToGenerateCount } = useMemo(() => {
 
   const columns: Column[] = [
     { id: "pm_no", header: "PM No", accessorKey: "pm_no" },
-    { id: "pm_description", header: "Description", accessorKey: "pm_description" },
+    {
+      id: "pm_description",
+      header: "Description",
+      accessorKey: "pm_description",
+    },
     { id: "asset", header: "Asset", accessorKey: "asset_id.asset_name" },
-    { id: "work_center", header: "Work Center", accessorKey: "work_center_id.name" },
+    {
+      id: "work_center",
+      header: "Work Center",
+      accessorKey: "work_center_id.name",
+    },
     { id: "frequency", header: "Frequency", accessorKey: "frequency_id.name" },
     {
       id: "due_date",
@@ -194,13 +219,16 @@ const { filteredSchedules, readyToGenerateCount } = useMemo(() => {
       header: "Status",
       accessorKey: "is_active",
       cell: (value) =>
-        value ? <StatusBadge status="Active" /> : <StatusBadge status="Inactive" />,
+        value ? (
+          <StatusBadge status="Active" />
+        ) : (
+          <StatusBadge status="Inactive" />
+        ),
     },
   ];
 
   return (
     <div className="space-y-6">
-
       <div className="bg-white p-4 rounded-md border shadow-sm space-y-4">
         <h2 className="text-lg font-semibold text-gray-800">
           Schedule Parameters
@@ -261,7 +289,6 @@ const { filteredSchedules, readyToGenerateCount } = useMemo(() => {
           )}
         </div>
         <div className="flex gap-2">
-
           <Button
             variant="outline"
             className="flex items-center gap-2"
@@ -277,23 +304,31 @@ const { filteredSchedules, readyToGenerateCount } = useMemo(() => {
       </div>
       {/* <pre>{JSON.stringify(filteredSchedules, null, 2)}</pre> */}
 
-
       <PageHeader
         title="PM Schedules"
         onAddNew={handleAddNew}
         addNewLabel="New PM Schedule"
-        onSearch={handleSearch}
       />
 
-      {(isLoading || authLoading) ? (
+      {isLoading || authLoading ? (
         <Loading />
       ) : (
-        <DataTable
-          columns={columns}
-          data={filteredSchedules}
-          onRowClick={handleRowClick}
-          onIndex={true}
-        />
+        <Card>
+          <CardContent className="pt-6">
+            <SearchFilters
+              text="PM Schedules"
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              handleSearch={handleSearch}
+            />
+            <DataTable
+              columns={columns}
+              data={filteredData}
+              onRowClick={handleRowClick}
+              onIndex={true}
+            />
+          </CardContent>
+        </Card>
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -310,7 +345,11 @@ const { filteredSchedules, readyToGenerateCount } = useMemo(() => {
                     : "Fill in the details to add a new PM Schedule."}
                 </DialogDescription>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setIsDialogOpen(false)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsDialogOpen(false)}
+              >
                 <X className="h-4 w-4" />
               </Button>
             </div>
