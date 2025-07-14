@@ -19,3 +19,8 @@ export const useDetectionSystemData = () => {
         },
     });
 };
+
+export const useDetectionSystemOptions = () => {
+    const { data } = useDetectionSystemData();
+    return data?.map((item) => ({ value: item.id, label: item.name }));
+};
