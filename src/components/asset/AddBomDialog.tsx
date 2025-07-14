@@ -126,17 +126,10 @@ export const AddBomDialog: React.FC<AddBomDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Add Bill of Materials</DialogTitle>
           <DialogDescription>
-            Select an existing BOM or create a new one to assign to this asset.
+            Select an existing BOM to assign to this asset.
           </DialogDescription>
         </DialogHeader>
-
-        <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="existing">Select Existing</TabsTrigger>
-            <TabsTrigger value="new">Create New</TabsTrigger>
-          </TabsList>
           
-          <TabsContent value="existing">
             <div className="space-y-4">
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -196,26 +189,6 @@ export const AddBomDialog: React.FC<AddBomDialogProps> = ({
                 Assign Selected BOM
               </Button>
             </div>
-          </TabsContent>
-          
-          <TabsContent value="new">
-            <div className="space-y-4">
-              <p className="text-sm text-gray-600">
-                Create a new Bill of Materials that will be assigned to this asset.
-              </p>
-              <Button 
-                onClick={() => {
-                  onNewBomRequest();
-                  onClose();
-                }}
-                className="w-full"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create New BOM
-              </Button>
-            </div>
-          </TabsContent>
-        </Tabs>
       </DialogContent>
     </Dialog>
   );
