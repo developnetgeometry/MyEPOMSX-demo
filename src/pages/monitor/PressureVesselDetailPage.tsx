@@ -16,7 +16,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import PageHeader from "@/components/shared/PageHeader";
 import {
-  ShieldIcon,
+  Pipette,
   ArrowLeft,
   Edit,
   Save,
@@ -26,7 +26,10 @@ import {
   Loader,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/lib/supabaseClient";
+import {
+  usePipingData,
+  useUpdatePipingData,
+} from "@/hooks/queries/useIntegrity";
 import { useMaterialConstructionOptions } from "@/hooks/queries/useCorrosionDropdownOptions";
 import { useExtEnvOptions } from "@/hooks/lookup/lookup-ext-env";
 import { useGeometryOptions } from "@/hooks/lookup/lookup-geometry";
@@ -40,140 +43,78 @@ import { useInterfaceOptions } from "@/hooks/lookup/lookup-interface";
 import { useOnlineMonitorOptions } from "@/hooks/lookup/lookup-online-monitoring";
 import { useToxicityOptions } from "@/hooks/lookup/lookup-toxicity";
 import { useInsulationConditionOptions } from "@/hooks/lookup/lookup-insulation-condition";
-import { useUpdateVesselData, useVesselData } from "@/hooks/queries/useIntegrity";
+import { usePipeClassOptions } from "@/hooks/lookup/lookup-pipe-class";
+import { usePipeScheduleOptions } from "@/hooks/lookup/lookup-pipe-schedule";
+import { useIsolationSystemOptions } from "@/hooks/lookup/lookup-isolation-system";
+import { useDetectionSystemOptions } from "@/hooks/lookup/lookup-detection-system";
+import { useMitigationSystemOptions } from "@/hooks/lookup/lookup-mitigation-system";
+import { useCircuitOptions } from "@/hooks/lookup/lookup-circuit";
 
-interface PressureVesselData {
-  // General data from i_ims_general
-  general: {
-    id: number;
-    asset_detail_id: number;
-    year_in_service: string;
-    tmin: string;
-    material_construction_id: number;
-    description: string;
-    normal_wall_thickness: number;
-    insulation: boolean;
-    line_h2s: boolean;
-    internal_lining: boolean;
-    pwht: boolean;
-    cladding: boolean;
-    inner_diameter: number;
-    clad_thickness: number;
-  };
+interface PipingFormData {
+  // General Tab
+  yearInService: string;
+  materialConstruction: string;
+  tmin: string;
+  description: string;
+  nominalWallThickness: string;
+  nominalBoreDiameter: string;
+  pressureRating: string;
+  pipeClass: string;
+  pipeSchedule: string;
+  circuitId: string;
+  lineNo: string;
+  insulation: string;
+  lineH2S: string;
+  internalLining: string;
+  pwht: string;
+  cladding: string;
+  innerDiameter: string;
+  cladThickness: string;
 
-  // Design data from i_ims_design
-  design: {
-    outer_diameter: number;
-    internal_diameter: number;
-    length: number;
-    welding_efficiency: number;
-    design_temperature: number;
-    operating_temperature: number;
-    design_pressure: number;
-    operating_pressure_mpa: number;
-    allowable_stress_mpa: number;
-    corrosion_allowance: number;
-    ext_env_id: number;
-    geometry_id: number;
-    pipe_support: boolean;
-    soil_water_interface: boolean;
-    dead_legs: boolean;
-    mix_point: boolean;
-  };
+  // Design Tab
+  outerDiameter: string;
+  length: string;
+  weldingEfficiency: string;
+  designTemperature: string;
+  operatingTemperature: string;
+  designPressure: string;
+  operatingPressure: string;
+  allowableStress: string;
+  corrosionAllowance: string;
+  extEnv: string;
+  geometry: string;
+  pipeSupport: string;
+  soilWaterInterface: string;
+  deadLegs: string;
+  mixPoint: string;
 
-  // Protection data from i_ims_protection
-  protection: {
-    coating_quality_id: number;
-    insulation_type_id: number;
-    insulation_complexity_id: number;
-    insulation_condition_id: number;
-    design_fabrication_id: number;
-    interface_id: number;
-    lining_type: string;
-    lining_condition: string;
-    lining_monitoring: string;
-    online_monitor: number;
-  };
+  // Protection Tab
+  coatingQuality: string;
+  insulationType: string;
+  insulationComplexity: string;
+  insulationCondition: string;
+  designFabrication: string;
+  interface: string;
+  liningType: string;
+  liningCondition: string;
+  liningMonitoring: string;
+  isolationSystem: string;
+  detectionSystem: string;
+  mitigationSystem: string;
+  onlineMonitor: string;
+  postWeldHeatTreatment: string;
+  lineDescription: string;
+  replacementLine: string;
+  minimumThickness: string;
 
-  // Service data from i_ims_service
-  service: {
-    fluid_representive_id: number;
-    toxicity_id: number;
-    fluid_phase_id: number;
-    toxic_mass_fraction: number;
-  };
-
-  // Asset detail from e_asset_detail
-  assetDetail: {
-    equipment_tag: string;
-    component_type: string;
-    area: string;
-    system: string;
-  };
+  // Service Tab
+  fluidRepresentative: string;
+  toxicity: string;
+  fluidPhase: string;
+  toxicMassFraction: string;
 }
 
-const dummyVesselData: PressureVesselData = {
-  general: {
-    id: 1,
-    asset_detail_id: 1,
-    year_in_service: "2010-01-01",
-    tmin: "8.0",
-    material_construction_id: 72,
-    description: "Main pressure vessel for process line A.",
-    normal_wall_thickness: 12.5,
-    insulation: true,
-    line_h2s: false,
-    internal_lining: true,
-    pwht: false,
-    cladding: true,
-    inner_diameter: 1200,
-    clad_thickness: 2.5,
-  },
-  design: {
-    outer_diameter: 1250,
-    internal_diameter: 1200,
-    length: 5000,
-    welding_efficiency: 0.95,
-    design_temperature: 200,
-    operating_temperature: 180,
-    design_pressure: 2.5,
-    operating_pressure_mpa: 2.0,
-    allowable_stress_mpa: 150,
-    corrosion_allowance: 3.0,
-    ext_env_id: 1,
-    geometry_id: 2,
-    pipe_support: true,
-    soil_water_interface: false,
-    dead_legs: false,
-    mix_point: true,
-  },
-  protection: {
-    coating_quality_id: 1,
-    insulation_type_id: 2,
-    insulation_complexity_id: 3,
-    insulation_condition_id: 1,
-    design_fabrication_id: 4,
-    interface_id: 2,
-    lining_type: "Epoxy",
-    lining_condition: "Excellent",
-    lining_monitoring: "Periodic",
-    online_monitor: 1,
-  },
-  service: {
-    fluid_representive_id: 1,
-    toxicity_id: 2,
-    fluid_phase_id: 1,
-    toxic_mass_fraction: 0.002,
-  },
-  assetDetail: {
-    equipment_tag: "PV-1001",
-    component_type: "Pressure Vessel",
-    area: "Area A",
-    system: "System 1",
-  },
-};
-
-const PressureVesselDetailPage: React.FC = () => {
+const PipingDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { id } = useParams<{ id: string }>();
@@ -181,28 +122,34 @@ const PressureVesselDetailPage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("general");
 
-  const { data: vesselData, isLoading: isVesselLoading } = useVesselData(Number(id));
-  const updateVesselMutation = useUpdateVesselData(Number(id), setIsEditing);
-  
-  const [formData, setFormData] = useState({
-    // General Tab
+  const { data: pipingData, isLoading: isPipingLoading } = usePipingData(
+    Number(id)
+  );
+  const updatePipingMutation = useUpdatePipingData(Number(id), setIsEditing);
+
+  const [formData, setFormData] = useState<PipingFormData>({
+    // Initialize with empty values
     yearInService: "",
     materialConstruction: "",
     tmin: "",
     description: "",
-    nominalThickness: "",
-    insulation: "",
-    h2s: "",
-    internalLining: "",
-    pwht: "",
-    cladding: "",
+    nominalWallThickness: "",
+    nominalBoreDiameter: "",
+    pressureRating: "",
+    pipeClass: "",
+    pipeSchedule: "",
+    circuitId: "",
+    lineNo: "",
+    insulation: "no",
+    lineH2S: "no",
+    internalLining: "no",
+    pwht: "no",
+    cladding: "no",
     innerDiameter: "",
     cladThickness: "",
-
-    // Design Tab
     outerDiameter: "",
     length: "",
-    weldJoinEfficiency: "",
+    weldingEfficiency: "",
     designTemperature: "",
     operatingTemperature: "",
     designPressure: "",
@@ -211,12 +158,10 @@ const PressureVesselDetailPage: React.FC = () => {
     corrosionAllowance: "",
     extEnv: "",
     geometry: "",
-    pipeSupport: "",
-    soilWaterInterface: "",
-    deadleg: "",
-    mixpoint: "",
-
-    // Protection Tab
+    pipeSupport: "no",
+    soilWaterInterface: "no",
+    deadLegs: "no",
+    mixPoint: "no",
     coatingQuality: "",
     insulationType: "",
     insulationComplexity: "",
@@ -226,15 +171,21 @@ const PressureVesselDetailPage: React.FC = () => {
     liningType: "",
     liningCondition: "",
     liningMonitoring: "",
+    isolationSystem: "",
+    detectionSystem: "",
+    mitigationSystem: "",
     onlineMonitor: "",
-
-    // Service Tab
+    postWeldHeatTreatment: "no",
+    lineDescription: "",
+    replacementLine: "",
+    minimumThickness: "",
     fluidRepresentative: "",
     toxicity: "",
     fluidPhase: "",
     toxicMassFraction: "",
   });
 
+  // Lookup hooks
   const { data: materialConstructionOptions = [] } =
     useMaterialConstructionOptions();
   const coatingQualityOptions = useCoatingQualityOptions();
@@ -249,72 +200,100 @@ const PressureVesselDetailPage: React.FC = () => {
   const fluidPhaseOptions = useFluidPhaseOptions();
   const extEnvOptions = useExtEnvOptions();
   const geometryOptions = useGeometryOptions();
+  const pipeClassOptions = usePipeClassOptions();
+  const pipeScheduleOptions = usePipeScheduleOptions();
+  const isolationSystemOptions = useIsolationSystemOptions();
+  const detectionSystemOptions = useDetectionSystemOptions();
+  const mitigationSystemOptions = useMitigationSystemOptions();
+  const circuitOptions = useCircuitOptions();
+  
 
   useEffect(() => {
-    if (!vesselData) return;
+    if (!pipingData) return;
+
     setFormData({
       // General Tab
-      yearInService: vesselData.general.year_in_service || "",
+      yearInService: pipingData.general.year_in_service || "",
       materialConstruction:
-        vesselData.general.material_construction_id?.toString() || "",
-      tmin: vesselData.general.tmin || "",
-      description: vesselData.general.description || "",
-      nominalThickness:
-        vesselData.general.normal_wall_thickness?.toString() || "",
-      insulation: vesselData.general.insulation ? "yes" : "no",
-      h2s: vesselData.general.line_h2s ? "yes" : "no",
-      internalLining: vesselData.general.internal_lining ? "yes" : "no",
-      pwht: vesselData.general.pwht ? "yes" : "no",
-      cladding: vesselData.general.cladding ? "yes" : "no",
-      innerDiameter: vesselData.general.inner_diameter?.toString() || "",
-      cladThickness: vesselData.general.clad_thickness?.toString() || "",
+        pipingData.general.material_construction_id?.toString() || "",
+      tmin: pipingData.general.tmin || "",
+      description: pipingData.general.description || "",
+      nominalWallThickness:
+        pipingData.general.normal_wall_thickness?.toString() || "",
+      nominalBoreDiameter:
+        pipingData.general.nominal_bore_diameter?.toString() || "",
+      pressureRating: pipingData.general.pressure_rating?.toString() || "",
+      pipeClass: pipingData.general.pipe_class_id?.toString() || "",
+      pipeSchedule: pipingData.general.pipe_schedule_id?.toString() || "",
+      circuitId: pipingData.general.circuit_id?.toString() || "",
+      lineNo: pipingData.general.line_no || "",
+      insulation: pipingData.general.insulation ? "yes" : "no",
+      lineH2S: pipingData.general.line_h2s ? "yes" : "no",
+      internalLining: pipingData.general.internal_lining ? "yes" : "no",
+      pwht: pipingData.general.pwht ? "yes" : "no",
+      cladding: pipingData.general.cladding ? "yes" : "no",
+      innerDiameter: pipingData.general.inner_diameter?.toString() || "",
+      cladThickness: pipingData.general.clad_thickness?.toString() || "",
 
       // Design Tab
-      outerDiameter: vesselData.design.outer_diameter?.toString() || "",
-      length: vesselData.design.length?.toString() || "",
-      weldJoinEfficiency:
-        vesselData.design.welding_efficiency?.toString() || "",
-      designTemperature: vesselData.design.design_temperature?.toString() || "",
+      outerDiameter: pipingData.design.outer_diameter?.toString() || "",
+      length: pipingData.design.length?.toString() || "",
+      weldingEfficiency: pipingData.design.welding_efficiency?.toString() || "",
+      designTemperature: pipingData.design.design_temperature?.toString() || "",
       operatingTemperature:
-        vesselData.design.operating_temperature?.toString() || "",
-      designPressure: vesselData.design.design_pressure?.toFixed(1) || "",
+        pipingData.design.operating_temperature?.toString() || "",
+      designPressure: pipingData.design.design_pressure?.toString() || "",
       operatingPressure:
-        vesselData.design.operating_pressure_mpa?.toFixed(1) || "",
-      allowableStress: vesselData.design.allowable_stress_mpa?.toFixed(1) || "",
+        pipingData.design.operating_pressure_mpa?.toString() || "",
+      allowableStress: pipingData.design.allowable_stress_mpa?.toString() || "",
       corrosionAllowance:
-        vesselData.design.corrosion_allowance?.toFixed(1) || "",
-      extEnv: vesselData.design.ext_env_id?.toString() || "",
-      geometry: vesselData.design.geometry_id?.toString() || "",
-      pipeSupport: vesselData.design.pipe_support ? "yes" : "no",
-      soilWaterInterface: vesselData.design.soil_water_interface ? "yes" : "no",
-      deadleg: vesselData.design.dead_legs ? "yes" : "no",
-      mixpoint: vesselData.design.mix_point ? "yes" : "no",
+        pipingData.design.corrosion_allowance?.toString() || "",
+      extEnv: pipingData.design.ext_env_id?.toString() || "",
+      geometry: pipingData.design.geometry_id?.toString() || "",
+      pipeSupport: pipingData.design.pipe_support ? "yes" : "no",
+      soilWaterInterface: pipingData.design.soil_water_interface ? "yes" : "no",
+      deadLegs: pipingData.design.dead_legs ? "yes" : "no",
+      mixPoint: pipingData.design.mix_point ? "yes" : "no",
 
       // Protection Tab
       coatingQuality:
-        vesselData.protection.coating_quality_id?.toString() || "",
+        pipingData.protection.coating_quality_id?.toString() || "",
       insulationType:
-        vesselData.protection.insulation_type_id?.toString() || "",
+        pipingData.protection.insulation_type_id?.toString() || "",
       insulationComplexity:
-        vesselData.protection.insulation_complexity_id?.toString() || "",
-      insulationCondition: vesselData.protection.insulation_condition_id?.toString() || "",
+        pipingData.protection.insulation_complexity_id?.toString() || "",
+      insulationCondition:
+        pipingData.protection.insulation_condition_id?.toString() || "",
       designFabrication:
-        vesselData.protection.design_fabrication_id?.toString() || "",
-      interface: vesselData.protection.interface_id?.toString() || "",
-      liningType: vesselData.protection.lining_type || "",
-      liningCondition: vesselData.protection.lining_condition || "",
-      liningMonitoring: vesselData.protection.lining_monitoring || "",
-      onlineMonitor: vesselData.protection.online_monitor?.toString() || "",
+        pipingData.protection.design_fabrication_id?.toString() || "",
+      interface: pipingData.protection.interface_id?.toString() || "",
+      liningType: pipingData.protection.lining_type || "",
+      liningCondition: pipingData.protection.lining_condition || "",
+      liningMonitoring: pipingData.protection.lining_monitoring || "",
+      isolationSystem:
+        pipingData.protection.isolation_system_id?.toString() || "",
+      detectionSystem:
+        pipingData.protection.detection_system_id?.toString() || "",
+      mitigationSystem:
+        pipingData.protection.mitigation_system_id?.toString() || "",
+      onlineMonitor: pipingData.protection.online_monitor?.toString() || "",
+      postWeldHeatTreatment: pipingData.protection.post_weld_heat_treatment
+        ? "yes"
+        : "no",
+      lineDescription: pipingData.protection.line_description || "",
+      replacementLine: pipingData.protection.replacement_line || "",
+      minimumThickness:
+        pipingData.protection.minimum_thickness?.toString() || "",
 
       // Service Tab
       fluidRepresentative:
-        vesselData.service.fluid_representive_id?.toString() || "",
-      toxicity: vesselData.service.toxicity_id?.toString() || "",
-      fluidPhase: vesselData.service.fluid_phase_id?.toString() || "",
+        pipingData.service.fluid_representive_id?.toString() || "",
+      toxicity: pipingData.service.toxicity_id?.toString() || "",
+      fluidPhase: pipingData.service.fluid_phase_id?.toString() || "",
       toxicMassFraction:
-        vesselData.service.toxic_mass_fraction?.toString() || "",
+        pipingData.service.toxic_mass_fraction?.toString() || "",
     });
-  }, [vesselData]);
+  }, [pipingData]);
 
   const handleCancel = () => {
     setIsEditing(false);
@@ -323,69 +302,88 @@ const PressureVesselDetailPage: React.FC = () => {
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      // Prepare payload for update (convert formData fields as needed)
       const payload = {
-        // General Tab
         general: {
           year_in_service: formData.yearInService,
-          material_construction_id: Number(formData.materialConstruction) || null,
+          material_construction_id:
+            Number(formData.materialConstruction) || null,
           tmin: formData.tmin,
           description: formData.description,
-          normal_wall_thickness: parseFloat(formData.nominalThickness) || null,
+          normal_wall_thickness:
+            parseFloat(formData.nominalWallThickness) || null,
+          nominal_bore_diameter:
+            parseFloat(formData.nominalBoreDiameter) || null,
+          pressure_rating: parseFloat(formData.pressureRating) || null,
+          pipe_class_id: Number(formData.pipeClass) || null,
+          pipe_schedule_id: Number(formData.pipeSchedule) || null,
+          circuit_id: formData.circuitId,
+          line_no: formData.lineNo,
           insulation: formData.insulation === "yes",
-          line_h2s: formData.h2s === "yes",
+          line_h2s: formData.lineH2S === "yes",
           internal_lining: formData.internalLining === "yes",
           pwht: formData.pwht === "yes",
           cladding: formData.cladding === "yes",
           inner_diameter: parseFloat(formData.innerDiameter) || null,
           clad_thickness: parseFloat(formData.cladThickness) || null,
         },
-        // Design Tab
         design: {
           outer_diameter: parseFloat(formData.outerDiameter) || null,
           length: parseFloat(formData.length) || null,
-          welding_efficiency: parseFloat(formData.weldJoinEfficiency) || null,
+          welding_efficiency: parseFloat(formData.weldingEfficiency) || null,
           design_temperature: parseFloat(formData.designTemperature) || null,
-          operating_temperature: parseFloat(formData.operatingTemperature) || null,
+          operating_temperature:
+            parseFloat(formData.operatingTemperature) || null,
           design_pressure: parseFloat(formData.designPressure) || null,
-          operating_pressure_mpa: parseFloat(formData.operatingPressure) || null,
+          operating_pressure_mpa:
+            parseFloat(formData.operatingPressure) || null,
           allowable_stress_mpa: parseFloat(formData.allowableStress) || null,
           corrosion_allowance: parseFloat(formData.corrosionAllowance) || null,
-          ext_env_id: formData.extEnv ? Number(formData.extEnv) : null,
-          geometry_id: formData.geometry ? Number(formData.geometry) : null,
+          ext_env_id: Number(formData.extEnv) || null,
+          geometry_id: Number(formData.geometry) || null,
           pipe_support: formData.pipeSupport === "yes",
           soil_water_interface: formData.soilWaterInterface === "yes",
-          dead_legs: formData.deadleg === "yes",
-          mix_point: formData.mixpoint === "yes",
+          dead_legs: formData.deadLegs === "yes",
+          mix_point: formData.mixPoint === "yes",
         },
-        // Protection Tab
         protection: {
-          coating_quality_id: formData.coatingQuality ? Number(formData.coatingQuality) : null,
-          insulation_type_id: formData.insulationType ? Number(formData.insulationType) : null,
-          insulation_complexity_id: formData.insulationComplexity ? Number(formData.insulationComplexity) : null,
-          insulation_condition_id: formData.insulationCondition ? Number(formData.insulationCondition) : null,
-          design_fabrication_id: formData.designFabrication ? Number(formData.designFabrication) : null,
-          interface_id: formData.interface ? Number(formData.interface) : null,
+          coating_quality_id: Number(formData.coatingQuality) || null,
+          insulation_type_id: Number(formData.insulationType) || null,
+          insulation_complexity_id:
+            Number(formData.insulationComplexity) || null,
+          insulation_condition_id: Number(formData.insulationCondition) || null,
+          design_fabrication_id: Number(formData.designFabrication) || null,
+          interface_id: Number(formData.interface) || null,
           lining_type: formData.liningType,
           lining_condition: formData.liningCondition,
           lining_monitoring: formData.liningMonitoring,
-          online_monitor: formData.onlineMonitor ? Number(formData.onlineMonitor) : null,
+          isolation_system_id: Number(formData.isolationSystem) || null,
+          detection_system_id: Number(formData.detectionSystem) || null,
+          mitigation_system_id: Number(formData.mitigationSystem) || null,
+          online_monitor: Number(formData.onlineMonitor) || null,
+          post_weld_heat_treatment: formData.postWeldHeatTreatment === "yes",
+          line_description: formData.lineDescription,
+          replacement_line: formData.replacementLine,
+          minimum_thickness: parseFloat(formData.minimumThickness) || null,
         },
-        // Service Tab
         service: {
-          fluid_representive_id: formData.fluidRepresentative ? Number(formData.fluidRepresentative) : null,
-          toxicity_id: formData.toxicity ? Number(formData.toxicity) : null,
-          fluid_phase_id: formData.fluidPhase ? Number(formData.fluidPhase) : null,
-          toxic_mass_fraction: formData.toxicMassFraction ? parseFloat(formData.toxicMassFraction) : null,
+          fluid_representive_id: Number(formData.fluidRepresentative) || null,
+          toxicity_id: Number(formData.toxicity) || null,
+          fluid_phase_id: Number(formData.fluidPhase) || null,
+          toxic_mass_fraction: parseFloat(formData.toxicMassFraction) || null,
         },
       };
 
-      await updateVesselMutation.mutateAsync(payload);
+      await updatePipingMutation.mutateAsync(payload);
 
+      toast({
+        title: "Success",
+        description: "Piping data updated successfully",
+        variant: "default",
+      });
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to update vessel data.",
+        description: error.message || "Failed to update piping data",
         variant: "destructive",
       });
     } finally {
@@ -393,19 +391,19 @@ const PressureVesselDetailPage: React.FC = () => {
     }
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: keyof PipingFormData, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
-    }))
+    }));
   };
 
-  if(isVesselLoading) {
+  if (isPipingLoading) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader className="h-8 w-8 animate-spin" />
       </div>
-    )
+    );
   }
 
   return (
@@ -413,21 +411,23 @@ const PressureVesselDetailPage: React.FC = () => {
       {/* Title Bar */}
       <div className="border-b pb-4">
         <PageHeader
-          title={`Pressure Vessel - ${vesselData.assetDetail.equipment_tag}`}
-          subtitle={`${vesselData.assetDetail.component_type} | ${vesselData.assetDetail.area} | ${vesselData.assetDetail.system}`}
-          icon={<ShieldIcon className="h-6 w-6" />}
+          title={`Piping - ${
+            pipingData?.assetDetail?.equipment_tag || "Unknown"
+          }`}
+          subtitle={`${pipingData?.assetDetail?.component_type || "Piping"} | ${
+            pipingData?.assetDetail?.area || "N/A"
+          } | ${pipingData?.assetDetail?.system || "N/A"}`}
+          icon={<Pipette className="h-6 w-6" />}
         />
 
         <div className="flex items-center justify-between mt-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={() => navigate("/monitor/integrity")}
-              className="p-0 h-auto"
             >
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Back to Integrity Management
+              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Integrity
             </Button>
           </div>
 
@@ -491,7 +491,7 @@ const PressureVesselDetailPage: React.FC = () => {
                       General Information
                     </h2>
                     <p className="text-sm text-muted-foreground">
-                      Asset identification and basic specification details
+                      Piping identification and basic specification details
                     </p>
                   </div>
 
@@ -506,7 +506,7 @@ const PressureVesselDetailPage: React.FC = () => {
                         <Label htmlFor="equipmentTag">Equipment Tag</Label>
                         <Input
                           id="equipmentTag"
-                          value={vesselData.assetDetail.equipment_tag}
+                          value={pipingData?.assetDetail?.equipment_tag || ""}
                           disabled
                           className="bg-gray-50 font-mono"
                         />
@@ -516,7 +516,7 @@ const PressureVesselDetailPage: React.FC = () => {
                         <Label htmlFor="componentType">Component Type</Label>
                         <Input
                           id="componentType"
-                          value={vesselData.assetDetail.component_type}
+                          value={pipingData?.assetDetail?.component_type || ""}
                           disabled
                           className="bg-gray-50"
                         />
@@ -526,7 +526,7 @@ const PressureVesselDetailPage: React.FC = () => {
                         <Label htmlFor="area">Area</Label>
                         <Input
                           id="area"
-                          value={vesselData.assetDetail.area}
+                          value={pipingData?.assetDetail?.area || ""}
                           disabled
                           className="bg-gray-50"
                         />
@@ -536,7 +536,7 @@ const PressureVesselDetailPage: React.FC = () => {
                         <Label htmlFor="system">System</Label>
                         <Input
                           id="system"
-                          value={vesselData.assetDetail.system}
+                          value={pipingData?.assetDetail?.system || ""}
                           disabled
                           className="bg-gray-50"
                         />
@@ -592,6 +592,32 @@ const PressureVesselDetailPage: React.FC = () => {
                       </div>
 
                       <div className="space-y-2">
+                        <Label htmlFor="circuitId">Circuit</Label>
+                        <Select
+                          value={formData.circuitId}
+                          onValueChange={(value) =>
+                            handleInputChange("circuitId", value)
+                          }
+                          disabled={!isEditing}
+                          name="circuitId"
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select circuit" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {circuitOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value.toString()}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
                         <Label htmlFor="description">Description</Label>
                         <Textarea
                           id="description"
@@ -606,17 +632,17 @@ const PressureVesselDetailPage: React.FC = () => {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="nominalThickness">
-                          Nominal Thickness (mm)
+                        <Label htmlFor="nominalWallThickness">
+                          Nominal Wall Thickness (mm)
                         </Label>
                         <Input
-                          id="nominalThickness"
+                          id="nominalWallThickness"
                           type="number"
                           step="0.1"
-                          value={formData.nominalThickness}
+                          value={formData.nominalWallThickness}
                           onChange={(e) =>
                             handleInputChange(
-                              "nominalThickness",
+                              "nominalWallThickness",
                               e.target.value
                             )
                           }
@@ -678,6 +704,41 @@ const PressureVesselDetailPage: React.FC = () => {
                         />
                       </div>
 
+                      <div className="space-y-2">
+                        <Label htmlFor="nominalBoreDiameter">
+                          Nominal Bore Diameter (mm)
+                        </Label>
+                        <Input
+                          id="nominalBoreDiameter"
+                          type="number"
+                          value={formData.nominalBoreDiameter}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "nominalBoreDiameter",
+                              e.target.value
+                            )
+                          }
+                          disabled={!isEditing}
+                          className={!isEditing ? "bg-gray-50" : ""}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="pressureRating">
+                          Pressure Rating (PSI)
+                        </Label>
+                        <Input
+                          id="pressureRating"
+                          type="number"
+                          value={formData.pressureRating}
+                          onChange={(e) =>
+                            handleInputChange("pressureRating", e.target.value)
+                          }
+                          disabled={!isEditing}
+                          className={!isEditing ? "bg-gray-50" : ""}
+                        />
+                      </div>
+
                       {/* Yes/No Options */}
                       <div className="space-y-4 pt-2">
                         <div className="space-y-3">
@@ -718,75 +779,6 @@ const PressureVesselDetailPage: React.FC = () => {
                             <div className="flex items-center space-x-2">
                               <RadioGroupItem value="no" id="pwht-no" />
                               <Label htmlFor="pwht-no">No</Label>
-                            </div>
-                          </RadioGroup>
-                        </div>
-
-                        <div className="space-y-3">
-                          <Label>Insulation?</Label>
-                          <RadioGroup
-                            value={formData.insulation}
-                            onValueChange={(value) =>
-                              handleInputChange("insulation", value)
-                            }
-                            disabled={!isEditing}
-                            className="flex gap-6"
-                          >
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="yes" id="insulation-yes" />
-                              <Label htmlFor="insulation-yes">Yes</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="no" id="insulation-no" />
-                              <Label htmlFor="insulation-no">No</Label>
-                            </div>
-                          </RadioGroup>
-                        </div>
-
-                        <div className="space-y-3">
-                          <Label>H2S?</Label>
-                          <RadioGroup
-                            value={formData.h2s}
-                            onValueChange={(value) =>
-                              handleInputChange("h2s", value)
-                            }
-                            disabled={!isEditing}
-                            className="flex gap-6"
-                          >
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="yes" id="h2s-yes" />
-                              <Label htmlFor="h2s-yes">Yes</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="no" id="h2s-no" />
-                              <Label htmlFor="h2s-no">No</Label>
-                            </div>
-                          </RadioGroup>
-                        </div>
-
-                        <div className="space-y-3">
-                          <Label>Internal Lining?</Label>
-                          <RadioGroup
-                            value={formData.internalLining}
-                            onValueChange={(value) =>
-                              handleInputChange("internalLining", value)
-                            }
-                            disabled={!isEditing}
-                            className="flex gap-6"
-                          >
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem
-                                value="yes"
-                                id="internal-lining-yes"
-                              />
-                              <Label htmlFor="internal-lining-yes">Yes</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem
-                                value="no"
-                                id="internal-lining-no"
-                              />
-                              <Label htmlFor="internal-lining-no">No</Label>
                             </div>
                           </RadioGroup>
                         </div>
@@ -844,17 +836,17 @@ const PressureVesselDetailPage: React.FC = () => {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="weldJoinEfficiency">
+                        <Label htmlFor="weldingEfficiency">
                           Weld Join Efficiency
                         </Label>
                         <Input
-                          id="weldJoinEfficiency"
+                          id="weldingEfficiency"
                           type="number"
                           step="0.01"
-                          value={formData.weldJoinEfficiency}
+                          value={formData.weldingEfficiency}
                           onChange={(e) =>
                             handleInputChange(
-                              "weldJoinEfficiency",
+                              "weldingEfficiency",
                               e.target.value
                             )
                           }
@@ -1089,22 +1081,22 @@ const PressureVesselDetailPage: React.FC = () => {
                         </div>
 
                         <div className="space-y-3">
-                          <Label>Dead Leg?</Label>
+                          <Label>Dead Legs?</Label>
                           <RadioGroup
-                            value={formData.deadleg}
+                            value={formData.deadLegs}
                             onValueChange={(value) =>
-                              handleInputChange("deadleg", value)
+                              handleInputChange("deadLegs", value)
                             }
                             disabled={!isEditing}
                             className="flex gap-6"
                           >
                             <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="yes" id="deadleg-yes" />
-                              <Label htmlFor="deadleg-yes">Yes</Label>
+                              <RadioGroupItem value="yes" id="deadlegs-yes" />
+                              <Label htmlFor="deadlegs-yes">Yes</Label>
                             </div>
                             <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="no" id="deadleg-no" />
-                              <Label htmlFor="deadleg-no">No</Label>
+                              <RadioGroupItem value="no" id="deadlegs-no" />
+                              <Label htmlFor="deadlegs-no">No</Label>
                             </div>
                           </RadioGroup>
                         </div>
@@ -1112,9 +1104,9 @@ const PressureVesselDetailPage: React.FC = () => {
                         <div className="space-y-3">
                           <Label>Mix Point?</Label>
                           <RadioGroup
-                            value={formData.mixpoint}
+                            value={formData.mixPoint}
                             onValueChange={(value) =>
-                              handleInputChange("mixpoint", value)
+                              handleInputChange("mixPoint", value)
                             }
                             disabled={!isEditing}
                             className="flex gap-6"
@@ -1141,7 +1133,7 @@ const PressureVesselDetailPage: React.FC = () => {
                       Protection Systems
                     </h2>
                     <p className="text-sm text-muted-foreground">
-                      Asset protection and coating specifications
+                      Piping protection and coating specifications
                     </p>
                   </div>
 
@@ -1275,7 +1267,7 @@ const PressureVesselDetailPage: React.FC = () => {
                           value={formData.designFabrication}
                           onValueChange={(value) =>
                             handleInputChange("designFabrication", value)
-                          } 
+                          }
                           disabled={!isEditing}
                           name="designFabrication"
                         >
@@ -1346,12 +1338,53 @@ const PressureVesselDetailPage: React.FC = () => {
                           </SelectContent>
                         </Select>
                       </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="minimumThickness">
+                          Minimum Thickness (mm)
+                        </Label>
+                        <Input
+                          id="minimumThickness"
+                          type="number"
+                          step="0.1"
+                          value={formData.minimumThickness}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "minimumThickness",
+                              e.target.value
+                            )
+                          }
+                          disabled={!isEditing}
+                          className={!isEditing ? "bg-gray-50" : ""}
+                        />
+                      </div>
+
+                      <div className="space-y-3">
+                        <Label>Post Weld Heat Treatment?</Label>
+                        <RadioGroup
+                          value={formData.postWeldHeatTreatment}
+                          onValueChange={(value) =>
+                            handleInputChange("postWeldHeatTreatment", value)
+                          }
+                          disabled={!isEditing}
+                          className="flex gap-6"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="yes" id="pwht-yes" />
+                            <Label htmlFor="pwht-yes">Yes</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="no" id="pwht-no" />
+                            <Label htmlFor="pwht-no">No</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
                     </div>
 
-                    {/* Column 3 - Lining */}
+                    {/* Column 3 - Lining & Systems */}
                     <div className="space-y-4">
                       <h3 className="font-medium text-lg text-purple-600">
-                        Lining
+                        Lining & Systems
                       </h3>
 
                       <div className="space-y-2">
@@ -1398,6 +1431,62 @@ const PressureVesselDetailPage: React.FC = () => {
                           disabled={!isEditing}
                           className={!isEditing ? "bg-gray-50" : ""}
                         />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="isolationSystem">
+                          Isolation System
+                        </Label>
+                        <Select
+                          value={formData.isolationSystem}
+                          onValueChange={(value) =>
+                            handleInputChange("isolationSystem", value)
+                          }
+                          disabled={!isEditing}
+                          name="isolationSystem"
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select isolation system" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {isolationSystemOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value.toString()}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="detectionSystem">
+                          Detection System
+                        </Label>
+                        <Select
+                          value={formData.detectionSystem}
+                          onValueChange={(value) =>
+                            handleInputChange("detectionSystem", value)
+                          }
+                          disabled={!isEditing}
+                          name="detectionSystem"
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select detection system" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {detectionSystemOptions?.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value.toString()}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </div>
@@ -1539,4 +1628,4 @@ const PressureVesselDetailPage: React.FC = () => {
   );
 };
 
-export default PressureVesselDetailPage;
+export default PipingDetailPage;

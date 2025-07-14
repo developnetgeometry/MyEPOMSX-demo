@@ -138,8 +138,11 @@ const DataTable: React.FC<DataTableProps> = ({
           columns
             .map((col) => {
               if (!col.accessorKey) return "";
-              const value = row[col.accessorKey];
-              return typeof value === "string" ? `"${value}"` : value;
+              // Support nested keys like "item_master.item_name"
+              const value = col.accessorKey
+                .split(".")
+                .reduce((obj, key) => obj?.[key], row);
+              return typeof value === "string" ? `"${value}"` : value ?? "";
             })
             .join(",")
         )
@@ -239,11 +242,13 @@ const DataTable: React.FC<DataTableProps> = ({
                 currentData.map((row, rowIndex) => (
                   <TableRow
                     key={rowIndex}
-                    className={`border-t border-gray-100 ${rowIndex % 2 === 0 ? "bg-white" : "bg-gray-50"
-                      } ${onRowClick
+                    className={`border-t border-gray-100 ${
+                      rowIndex % 2 === 0 ? "bg-white" : "bg-gray-50"
+                    } ${
+                      onRowClick
                         ? "cursor-pointer hover:bg-blue-50 transition-colors duration-150"
                         : ""
-                      }`}
+                    }`}
                     onClick={
                       onRowClick && !isLoading
                         ? () => handleRowClickEvent(row)
@@ -409,10 +414,11 @@ const DataTable: React.FC<DataTableProps> = ({
                           key={page}
                           variant={currentPage === page ? "default" : "outline"}
                           size="sm"
-                          className={`h-9 w-9 p-0 ${currentPage === page
-                            ? "bg-blue-600"
-                            : "border-gray-200"
-                            }`}
+                          className={`h-9 w-9 p-0 ${
+                            currentPage === page
+                              ? "bg-blue-600"
+                              : "border-gray-200"
+                          }`}
                           onClick={() => handlePageChange(page)}
                         >
                           {page}
@@ -425,8 +431,9 @@ const DataTable: React.FC<DataTableProps> = ({
                       key={page}
                       variant={currentPage === page ? "default" : "outline"}
                       size="sm"
-                      className={`h-9 w-9 p-0 ${currentPage === page ? "bg-blue-600" : "border-gray-200"
-                        }`}
+                      className={`h-9 w-9 p-0 ${
+                        currentPage === page ? "bg-blue-600" : "border-gray-200"
+                      }`}
                       onClick={() => handlePageChange(page)}
                     >
                       {page}

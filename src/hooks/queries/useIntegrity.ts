@@ -9,6 +9,13 @@ export const useVesselData = (assetId: number) => {
     })
 }
 
+export const usePipingData = (assetId: number) => {
+  return useQuery({
+    queryKey: ["pipingData", assetId],
+    queryFn: () => integrityService.getPipingData(assetId)
+  })
+}
+
 export const useUpdateVesselData = (assetId: number, setIsEditing?: (v: boolean) => void) => {
   const queryClient = useQueryClient()
   const { toast } = useToast()
@@ -28,6 +35,35 @@ export const useUpdateVesselData = (assetId: number, setIsEditing?: (v: boolean)
       toast({
         title: "Error",
         description: error.message || "Failed to update vessel data.",
+        variant: "destructive",
+      })
+    },
+  })
+}
+
+export const useUpdatePipingData = (
+  assetId: number,
+  setIsEditing?: (v: boolean) => void
+) => {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+  
+  return useMutation({
+    mutationFn: async (payload: any) => {
+      return integrityService.updatePipingData(assetId, payload)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pipingData", assetId] })
+      toast({
+        title: "Success",
+        description: "Piping data updated successfully",
+      })
+      if (setIsEditing) setIsEditing(false)
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update piping data",
         variant: "destructive",
       })
     },
