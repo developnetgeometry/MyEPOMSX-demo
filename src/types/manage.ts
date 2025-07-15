@@ -57,6 +57,7 @@ export interface System {
   is_active: boolean | null;
   // Add related data
   facility?: {
+    id: number;
     location_name?: string;
     location_code?: string;
   };

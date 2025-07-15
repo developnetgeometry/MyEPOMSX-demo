@@ -97,6 +97,9 @@ export const packageService = {
       .single();
 
     if (error) {
+      if(error.code === '23505') {
+        throw new Error(`Package with number ${packageData.package_no} already exists`);
+      }
       throw new Error(`Error creating package: ${error.message}`);
     }
 

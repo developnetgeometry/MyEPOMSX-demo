@@ -17,6 +17,8 @@ import {
   FileText,
   View,
   X,
+  Wrench,
+  Check,
 } from "lucide-react";
 import StatusBadge from "./StatusBadge";
 import {
@@ -55,7 +57,9 @@ interface DataTableProps {
   onExport?: () => void;
   onViewDetails?: (row: any) => void;
   isLoading?: boolean;
-  onIndex?: boolean; // Add this prop to enable index column
+  onIndex?: boolean;
+  onToggleActive?: (row: any) => void;
+  toggleEntityLabel?: string;
 }
 
 const DataTable: React.FC<DataTableProps> = ({
@@ -68,12 +72,17 @@ const DataTable: React.FC<DataTableProps> = ({
   onExport,
   onViewDetails,
   isLoading,
-  onIndex = false, // Default to false
+  onIndex = false,
+  onToggleActive,
+  toggleEntityLabel = "system",
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [rowToDelete, setRowToDelete] = useState<any>(null);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
+  const [toggleDialogOpen, setToggleDialogOpen] = useState(false);
+  const [rowToToggle, setRowToToggle] = useState<any>(null);
+  const [isToggleLoading, setIsToggleLoading] = useState(false);
 
   const totalPages = Math.ceil(data.length / pageSize);
 
@@ -100,6 +109,25 @@ const DataTable: React.FC<DataTableProps> = ({
         setIsDeleteLoading(false);
         setDeleteDialogOpen(false);
         setRowToDelete(null);
+      }
+    }
+  };
+
+  const handleToggleClick = (row: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setRowToToggle(row);
+    setToggleDialogOpen(true);
+  };
+
+  const handleToggleConfirm = async () => {
+    if (rowToToggle && onToggleActive) {
+      setIsToggleLoading(true);
+      try {
+        await onToggleActive(rowToToggle);
+      } finally {
+        setIsToggleLoading(false);
+        setToggleDialogOpen(false);
+        setRowToToggle(null);
       }
     }
   };
@@ -203,7 +231,7 @@ const DataTable: React.FC<DataTableProps> = ({
                     {column.header}
                   </TableHead>
                 ))}
-                {(onEdit || onDelete || onViewDetails) && (
+                {(onEdit || onDelete || onViewDetails || onToggleActive) && (
                   <TableHead className="w-24 text-right px-6 text-sm font-semibold text-gray-900">
                     Actions
                   </TableHead>
@@ -216,7 +244,9 @@ const DataTable: React.FC<DataTableProps> = ({
                   <TableCell
                     colSpan={
                       columns.length +
-                      (onEdit || onDelete || onViewDetails ? 1 : 0)
+                      (onEdit || onDelete || onViewDetails || onToggleActive
+                        ? 1
+                        : 0)
                     }
                     className="h-24 text-center"
                   >
@@ -231,7 +261,9 @@ const DataTable: React.FC<DataTableProps> = ({
                   <TableCell
                     colSpan={
                       columns.length +
-                      (onEdit || onDelete || onViewDetails ? 1 : 0)
+                      (onEdit || onDelete || onViewDetails || onToggleActive
+                        ? 1
+                        : 0)
                     }
                     className="h-24 text-center text-gray-500"
                   >
@@ -268,7 +300,10 @@ const DataTable: React.FC<DataTableProps> = ({
                         {formatCellValue(column, row)}
                       </TableCell>
                     ))}
-                    {(onEdit || onDelete || onViewDetails) && (
+                    {(onEdit ||
+                      onDelete ||
+                      onViewDetails ||
+                      onToggleActive) && (
                       <TableCell className="text-right py-2 pr-6">
                         <div className="flex space-x-2 justify-end">
                           {onViewDetails && (
@@ -338,6 +373,42 @@ const DataTable: React.FC<DataTableProps> = ({
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>Delete</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                          {onToggleActive && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className={`h-8 w-8 p-0 ${
+                                      row.is_active
+                                        ? "text-yellow-500 hover:text-yellow-700 hover:bg-yellow-50"
+                                        : "text-green-500 hover:text-green-700 hover:bg-green-50"
+                                    }`}
+                                    onClick={(e) =>
+                                      !isLoading && handleToggleClick(row, e)
+                                    }
+                                    disabled={isLoading}
+                                  >
+                                    {row.is_active ? (
+                                      <X className="h-4 w-4" />
+                                    ) : (
+                                      <Check className="h-4 w-4" />
+                                    )}
+                                    <span className="sr-only">
+                                      {row.is_active
+                                        ? "Deactivate"
+                                        : "Activate"}
+                                    </span>
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  {row.is_active ? "Deactivate" : "Activate"}
+                                </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
                           )}
@@ -480,6 +551,44 @@ const DataTable: React.FC<DataTableProps> = ({
               ) : (
                 "Delete"
               )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={toggleDialogOpen} onOpenChange={setToggleDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {rowToToggle?.is_active
+                ? `Deactivate ${toggleEntityLabel.charAt(0).toUpperCase() + toggleEntityLabel.slice(1)}?`
+                : `Activate ${toggleEntityLabel.charAt(0).toUpperCase() + toggleEntityLabel.slice(1)}?`}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {rowToToggle?.is_active
+                ? `Deactivating will hide this ${toggleEntityLabel} from the list. You can activate it again later.`
+                : `Activating will show this ${toggleEntityLabel} in the list.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isToggleLoading}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleToggleConfirm}
+              className={
+                rowToToggle?.is_active
+                  ? "bg-yellow-500 text-white"
+                  : "bg-green-500 text-white"
+              }
+              disabled={isToggleLoading}
+            >
+              {isToggleLoading
+                ? rowToToggle?.is_active
+                  ? `Deactivating...`
+                  : `Activating...`
+                : rowToToggle?.is_active
+                ? "Deactivate"
+                : "Activate"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

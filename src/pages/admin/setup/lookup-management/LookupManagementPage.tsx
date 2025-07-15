@@ -199,6 +199,7 @@ const LookupManagementPage: React.FC = () => {
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [currentItem, setCurrentItem] = useState<any | null>(null);
   const [initialLoad, setInitialLoad] = useState(true);
+  const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
 
   // State for user type
   const [userType, setUserType] = useState<{ name: string } | null>(null);
@@ -206,6 +207,7 @@ const LookupManagementPage: React.FC = () => {
   // Fetch user type information
   useEffect(() => {
     const fetchUserType = async () => {
+      setIsCheckingAdmin(true);
       // Cast profile to ExtendedProfile to access user_type_id
       const extendedProfile = profile as unknown as ExtendedProfile;
 
@@ -218,6 +220,7 @@ const LookupManagementPage: React.FC = () => {
 
         setUserType(data);
       }
+      setIsCheckingAdmin(false);
     };
 
     fetchUserType();
@@ -230,7 +233,7 @@ const LookupManagementPage: React.FC = () => {
 
   useEffect(() => {
     // If not super admin, show toast message
-    if (!isSuperAdmin && !initialLoad) {
+    if (!isCheckingAdmin && !isSuperAdmin) {
       toast({
         title: "Access Denied",
         description: "You need Super Admin privileges to access this page.",
@@ -238,7 +241,7 @@ const LookupManagementPage: React.FC = () => {
       });
     }
     setInitialLoad(false);
-  }, [isSuperAdmin, initialLoad, toast]);
+  }, [isSuperAdmin, isCheckingAdmin, toast]);
 
   // Get table metadata when a table is selected
   useEffect(() => {
@@ -744,7 +747,13 @@ const LookupManagementPage: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4">
-      {isSuperAdmin ? (
+      {isCheckingAdmin ? (
+        <Card>
+          <CardContent className="flex justify-center items-center h-64">
+            <div>Verifying permissions...</div>
+          </CardContent>
+        </Card>
+      ) : isSuperAdmin ? (
         <>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
