@@ -396,7 +396,7 @@ const AssetAddPage: React.FC = () => {
           asset_class_id: formData.assetClass
             ? parseInt(formData.assetClass)
             : null,
-          parent_asset_id: formData.parentAssetId
+          asset_id: formData.parentAssetId
             ? parseInt(formData.parentAssetId)
             : null,
           specification: formData.assetSpecification || null,
@@ -528,6 +528,19 @@ const AssetAddPage: React.FC = () => {
           setUploadStatus((prev) => ({ ...prev, inProgress: false }));
         }
       }
+
+      // Step 4: Update asset id in asset_detail
+      const { error: updateAssetDetailError } = await supabase
+        .from("e_asset_detail")
+        .update({ asset_id: assetId })
+        .eq("id", assetDetailId);
+
+      if (updateAssetDetailError) {
+        throw new Error(
+          `Error updating asset detail: ${updateAssetDetailError.message}`
+        );
+      }
+
 
       // Show success message
       toast({
