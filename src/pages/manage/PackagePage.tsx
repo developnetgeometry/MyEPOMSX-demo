@@ -40,6 +40,7 @@ import { Loader2, X } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import SearchFilters from "@/components/shared/SearchFilters";
 import useDebounce from "@/hooks/use-debounce";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 // Define form schema with Zod
 const formSchema = z.object({
@@ -58,6 +59,8 @@ const PackagePage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [facilityCode, setFacilityCode] = useState<string>("");
+  const [systemFilter, setSystemFilter] = useState<string>("all");
+  const [activeFilter, setActiveFilter] = useState<string>("all");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -119,10 +122,10 @@ const PackagePage: React.FC = () => {
     if (selectedPackageType) {
       if (selectedPackageType.label === "Assembly") {
         typeAbbreviation = "ASY";
-      } else {
-        typeAbbreviation = selectedPackageType.label
-          .substring(0, 3)
-          .toUpperCase();
+      } else if (selectedPackageType.label === "Package") {
+        typeAbbreviation = "PKG";
+      } else if (selectedPackageType.label === "System") {
+        typeAbbreviation = "SYS";
       }
     }
 
@@ -188,18 +191,39 @@ const PackagePage: React.FC = () => {
     });
   }, [packages, systemOptions, packageTypeOptions]);
 
-  // Memoize filtered data
+  // Memoize filtered data - FIXED: Now includes system and active filters
   const filteredData = useMemo(() => {
     if (!formattedData) return [];
-    if (!debouncedSearchTerm.trim()) return formattedData;
 
-    const lowerSearch = debouncedSearchTerm.toLowerCase();
-    return formattedData.filter(
-      (item) =>
-        (item.package_name || "").toLowerCase().includes(lowerSearch) ||
-        (item.package_no || "").toLowerCase().includes(lowerSearch)
-    );
-  }, [formattedData, debouncedSearchTerm]);
+    let filtered = formattedData;
+
+    // Apply search term filter
+    if (debouncedSearchTerm.trim()) {
+      const lowerSearch = debouncedSearchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (item) =>
+          (item.package_name || "").toLowerCase().includes(lowerSearch) ||
+          (item.package_no || "").toLowerCase().includes(lowerSearch) ||
+          (item.package_tag || "").toLowerCase().includes(lowerSearch) ||
+          (item.system_name || "").toLowerCase().includes(lowerSearch)
+      );
+    }
+
+    // Apply system filter
+    if (systemFilter && systemFilter !== "all") {
+      filtered = filtered.filter(
+        (item) => item.system_id?.toString() === systemFilter
+      );
+    }
+
+    // Apply active status filter
+    if (activeFilter && activeFilter !== "all") {
+      const isActive = activeFilter === "active";
+      filtered = filtered.filter((item) => item.is_active === isActive);
+    }
+
+    return filtered;
+  }, [formattedData, debouncedSearchTerm, systemFilter, activeFilter]);
 
   // Fetch facility code when system changes
   useEffect(() => {
@@ -243,22 +267,45 @@ const PackagePage: React.FC = () => {
           : "",
       });
     } else if (isDialogOpen && !isEditMode) {
-      form.reset();
+      form.reset({
+        name: "",
+        tag: "",
+        systemId: "",
+        type: "",
+      });
     }
   }, [isDialogOpen, isEditMode, currentItem, form]);
+
+  // Reset form and clear states when dialog closes
+  useEffect(() => {
+    if (!isDialogOpen) {
+      form.reset({
+        name: "",
+        tag: "",
+        systemId: "",
+        type: "",
+      });
+      setFacilityCode("");
+      setCurrentItem(null);
+      setIsEditMode(false);
+    }
+  }, [isDialogOpen, form]);
 
   // Callbacks
   const handleAddNew = useCallback(() => {
     setIsEditMode(false);
     setCurrentItem(null);
-    form.reset();
     setIsDialogOpen(true);
-  }, [form]);
+  }, []);
 
   const handleEdit = useCallback((item: PackageData) => {
     setIsEditMode(true);
     setCurrentItem(item);
     setIsDialogOpen(true);
+  }, []);
+
+  const handleCloseDialog = useCallback(() => {
+    setIsDialogOpen(false);
   }, []);
 
   const handleSubmit = useCallback(
@@ -308,7 +355,7 @@ const PackagePage: React.FC = () => {
         });
       }
     },
-    [isEditMode, currentItem, computedPackageNo]
+    [isEditMode, currentItem, computedPackageNo, updatePackageMutation, addPackageMutation, toast]
   );
 
   const handleDelete = useCallback((id: number) => {
@@ -327,10 +374,17 @@ const PackagePage: React.FC = () => {
         });
       },
     });
-  }, []);
+  }, [deletePackageMutation, toast]);
 
   const handleSearch = useCallback(() => {
     // Already handled in memoized filteredData
+  }, []);
+
+  // Add clear filters function
+  const handleClearFilters = useCallback(() => {
+    setSearchTerm("");
+    setSystemFilter("all");
+    setActiveFilter("all");
   }, []);
 
   // Loading state
@@ -366,12 +420,56 @@ const PackagePage: React.FC = () => {
 
       <Card>
         <CardContent className="pt-6">
-          <SearchFilters
-            text="Package"
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            handleSearch={handleSearch}
-          />
+          <div className="flex justify-between mb-4">
+            <div className="flex-1 mr-4">
+              <SearchFilters
+                text="Packages"
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                handleSearch={handleSearch}
+              />
+            </div>
+            {/* System Filter */}
+            <div className="flex gap-2">
+              <Select value={systemFilter} onValueChange={setSystemFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by System" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Systems</SelectItem>
+                  {systems?.map((system) => (
+                    <SelectItem key={system.id} value={system.id.toString()}>
+                      {system.system_name || system.system_code}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {/* Active Status Filter */}
+              <Select value={activeFilter} onValueChange={setActiveFilter}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Filter by Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+              {/* Clear Filters Button */}
+              {(searchTerm ||
+                systemFilter !== "all" ||
+                activeFilter !== "all") && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleClearFilters}
+                  className="whitespace-nowrap"
+                >
+                  Clear Filters
+                </Button>
+              )}
+            </div>
+          </div>
 
           <DataTable
             data={filteredData}
@@ -398,7 +496,7 @@ const PackagePage: React.FC = () => {
             variant="ghost"
             size="icon"
             className="absolute right-4 top-4"
-            onClick={() => setIsDialogOpen(false)}
+            onClick={handleCloseDialog}
           >
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
@@ -429,18 +527,15 @@ const PackagePage: React.FC = () => {
                 name="systemId"
                 control={form.control}
                 render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select system" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {systemOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    options={systemOptions}
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Select system"
+                    searchBy={(item) => [item.label, item.facilityCode]}
+                    getLabel={(item) => item.label}
+                    getValue={(item) => item.value}
+                  />
                 )}
               />
               {form.formState.errors.systemId && (
@@ -520,7 +615,7 @@ const PackagePage: React.FC = () => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setIsDialogOpen(false)}
+                onClick={handleCloseDialog}
               >
                 Cancel
               </Button>
