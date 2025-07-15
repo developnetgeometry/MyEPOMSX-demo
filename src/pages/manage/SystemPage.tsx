@@ -39,6 +39,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import SearchFilters from "@/components/shared/SearchFilters";
 import useDebounce from "@/hooks/use-debounce";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Form schema outside component
 const systemFormSchema = z.object({
@@ -55,12 +56,15 @@ const SystemPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { profile } = useAuth();
 
   // State
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentItem, setCurrentItem] = useState<System | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [locationFilter, setLocationFilter] = useState<string>("");
+  const [activeFilter, setActiveFilter] = useState<string>("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   const { isLoading: isProcessing, withLoading } = useLoadingState();
@@ -69,7 +73,6 @@ const SystemPage: React.FC = () => {
   const { data: systems, isLoading } = useSystems();
   const addSystemMutation = useCreateSystem();
   const updateSystemMutation = useUpdateSystem();
-  const deleteSystemMutation = useDeleteSystem();
 
   // Form
   const form = useForm<SystemFormValues>({
@@ -81,54 +84,78 @@ const SystemPage: React.FC = () => {
       is_active: true,
     },
   });
-  
+
   const facilityId = form.watch("facility_id");
   const systemCode = form.watch("system_code");
 
   // Memoized system number
   const systemNumber = useMemo(() => {
     if (!facilityId || !systemCode || !facilities) return "";
-    
+
     const selectedFacility = facilities.find((f) => f.id === facilityId);
-    return selectedFacility ? `${selectedFacility.location_code}-${systemCode}` : "";
+    return selectedFacility
+      ? `${selectedFacility.location_code}-${systemCode}`
+      : "";
   }, [facilityId, systemCode, facilities]);
 
   // Memoized columns
-  const columns = useMemo<Column[]>(() => [
-    {
-      id: "system_code",
-      header: "System Code",
-      accessorKey: "system_code",
-    },
-    {
-      id: "system_name",
-      header: "Name",
-      accessorKey: "system_name",
-    },
-    {
-      id: "system_no",
-      header: "System Number",
-      accessorKey: "system_no",
-    },
-    {
-      id: "facility.location_name",
-      header: "Location",
-      accessorKey: "facility.location_name",
-    },
-  ], []);
+  const columns = useMemo<Column[]>(
+    () => [
+      {
+        id: "system_code",
+        header: "System Code",
+        accessorKey: "system_code",
+      },
+      {
+        id: "system_name",
+        header: "Name",
+        accessorKey: "system_name",
+      },
+      {
+        id: "system_no",
+        header: "System Number",
+        accessorKey: "system_no",
+      },
+      {
+        id: "facility.location_name",
+        header: "Facility Location",
+        accessorKey: "facility.location_name",
+      },
+    ],
+    []
+  );
 
-  // Memoized filtered data
   const filteredSystems = useMemo(() => {
     if (!systems) return [];
-    
-    if (!debouncedSearchTerm.trim()) return systems;
-    
-    const lowerSearch = debouncedSearchTerm.toLowerCase();
-    return systems.filter(item => 
-      (item.system_name || "").toLowerCase().includes(lowerSearch) ||
-      (item.system_code || "").toLowerCase().includes(lowerSearch)
-    );
-  }, [systems, debouncedSearchTerm]); 
+
+    let result = systems;
+
+    // Fixed location filter
+    if (locationFilter && locationFilter !== "all") {
+      result = result.filter(
+        (item) => item.facility_id?.toString() === locationFilter
+      );
+    }
+
+    // Fixed active status filter
+    if (activeFilter && activeFilter !== "all") {
+      const isActive = activeFilter === "active";
+      result = result.filter((item) => item.is_active === isActive);
+    }
+
+    // Search filter
+    if (debouncedSearchTerm.trim()) {
+      const lowerSearch = debouncedSearchTerm.toLowerCase();
+      result = result.filter(
+        (item) =>
+          (item.system_name || "").toLowerCase().includes(lowerSearch) ||
+          (item.system_code || "").toLowerCase().includes(lowerSearch)
+      );
+    }
+
+    return result;
+  }, [systems, debouncedSearchTerm, locationFilter, activeFilter]);
+  
 
   // Callbacks
   const handleAddNew = useCallback(() => {
@@ -149,57 +176,78 @@ const SystemPage: React.FC = () => {
     setIsDialogOpen(true);
   }, []);
 
-  const handleSubmit = useCallback(async (values: SystemFormValues) => {
-    withLoading(async () => {
-      try {
-        const systemData: Omit<System, "id"> = {
-          facility_id: values.facility_id,
-          system_code: values.system_code,
-          system_name: values.system_name,
-          is_active: values.is_active,
-          system_no: systemNumber,
-        };
+  const handleSubmit = useCallback(
+    async (values: SystemFormValues) => {
+      withLoading(async () => {
+        try {
+          const systemData: Omit<System, "id"> = {
+            facility_id: values.facility_id,
+            system_code: values.system_code,
+            system_name: values.system_name,
+            is_active: values.is_active,
+            system_no: systemNumber,
+          };
 
-        if (isEditMode && currentItem) {
-          await updateSystemMutation.mutateAsync({
-            ...currentItem,
-            ...systemData,
+          if (isEditMode && currentItem) {
+            await updateSystemMutation.mutateAsync({
+              ...currentItem,
+              ...systemData,
+            });
+            toast({ title: "System updated successfully" });
+          } else {
+            await addSystemMutation.mutateAsync(systemData);
+            toast({ title: "System created successfully" });
+          }
+
+          setIsDialogOpen(false);
+        } catch (error: any) {
+          console.error(error);
+          toast({
+            title: isEditMode
+              ? "Error updating system"
+              : "Error creating system",
+            description: error.message,
+            variant: "destructive",
           });
-          toast({ title: "System updated successfully" });
-        } else {
-          await addSystemMutation.mutateAsync(systemData);
-          toast({ title: "System created successfully" });
         }
+      });
+    },
+    [currentItem, isEditMode, systemNumber, withLoading]
+  );
 
-        setIsDialogOpen(false);
-      } catch (error: any) {
-        console.error(error);
-        toast({
-          title: isEditMode ? "Error updating system" : "Error creating system",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
-    });
-  }, [currentItem, isEditMode, systemNumber, withLoading]);
+  const handleToggleActive = useCallback(
+    async (item: System) => {
+      const action = item.is_active ? "deactivate" : "activate";
+      if (
+        !window.confirm(
+          `Are you sure you want to ${action} this system? This will ${
+            action === "deactivate" ? "hide" : "show"
+          } the system in the list.`
+        )
+      )
+        return;
 
-  const handleDelete = useCallback(async (item: System) => {
-    if (!window.confirm("Are you sure you want to delete this system?")) return;
-
-    withLoading(async () => {
-      try {
-        await deleteSystemMutation.mutateAsync(item.id);
-        toast({ title: "System deleted successfully" });
-        queryClient.invalidateQueries({ queryKey: ["systems"] });
-      } catch (error: any) {
-        toast({
-          title: "Error deleting system",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
-    });
-  }, [withLoading]);
+      withLoading(async () => {
+        try {
+          await updateSystemMutation.mutateAsync({
+            ...item,
+            is_active: !item.is_active,
+          });
+          toast({
+            title: item.is_active ? "System deactivated" : "System activated",
+          });
+          queryClient.invalidateQueries({ queryKey: ["systems"] });
+        } catch (error: any) {
+          toast({
+            title: "Error updating system status",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
+      });
+    },
+    [updateSystemMutation, queryClient, toast, withLoading]
+  );
 
   const handleSearch = useCallback(() => {
     // Already handled in memoized filteredSystems
@@ -241,18 +289,53 @@ const SystemPage: React.FC = () => {
 
       <Card>
         <CardContent className="pt-6">
-          <SearchFilters
-            text="System"
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            handleSearch={handleSearch}
-          />
+          <div className="flex justify-between">
+            <div className="flex-1 mr-4">
+              <SearchFilters
+                text="System"
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                handleSearch={handleSearch}
+              />
+            </div>
+            {/* Location Filter */}
+            <div className="flex gap-2">
+              <Select value={locationFilter} onValueChange={setLocationFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by Location" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Locations</SelectItem>
+                  {facilities?.map((facility) => (
+                    <SelectItem key={facility.id} value={facility.id.toString()}>
+                      {facility.location_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {/* Active Status Filter */}
+              <Select value={activeFilter} onValueChange={setActiveFilter}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Filter by Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
           <DataTable
             columns={columns}
             data={filteredSystems}
             onEdit={handleEdit}
-            onDelete={handleDelete}
+            {...(profile?.role?.name === "admin" ||
+            profile?.role?.name === "super admin"
+              ? { onToggleActive: handleToggleActive }
+              : {})}
+            toggleEntityLabel="system"
           />
         </CardContent>
       </Card>
@@ -286,7 +369,7 @@ const SystemPage: React.FC = () => {
             {/* Facility Selection */}
             <div>
               <Label htmlFor="facility_id">
-                Location <span className="text-red-500">*</span>
+                Facility Location <span className="text-red-500">*</span>
               </Label>
               <Controller
                 name="facility_id"

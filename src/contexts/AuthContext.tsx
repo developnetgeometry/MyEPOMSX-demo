@@ -6,6 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 interface Profile {
   id: string;
   email: string | null;
+  role: {
+    name: string | null;
+  }
   full_name: string | null;
   avatar_url: string | null;
   created_at: string;
@@ -49,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("*")
+        .select("*, role:user_type_id(name)")
         .eq("id", userId)
         .single();
 
